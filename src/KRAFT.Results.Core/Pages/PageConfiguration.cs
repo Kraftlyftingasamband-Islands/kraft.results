@@ -10,9 +10,9 @@ internal class PageConfiguration : IEntityTypeConfiguration<Page>
         builder.ToTable("Pages", "dbo");
 
         builder.Property(e => e.CreatedBy)
-            .HasMaxLength(50
-
+            .HasMaxLength(50)
             .HasDefaultValue("klaus", "DF_Pages_CreatedBy");
+
         builder.Property(e => e.CreatedOn)
             .HasDefaultValueSql("(getdate())", "DF_Pages_CreatedOn")
             .HasColumnType("datetime");
