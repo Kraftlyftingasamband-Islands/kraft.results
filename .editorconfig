@@ -385,5 +385,8 @@ dotnet_diagnostic.SA0001.severity = none
 # SA1600: Elements should be documented
 dotnet_diagnostic.SA1600.severity = none
 
+# SA1601: Partial elements should be documented
+dotnet_diagnostic.SA1601.severity = none
+
 # SA1633 The file header is missing or not located at the top of the file.
 dotnet_diagnostic.SA1633.severity = none
