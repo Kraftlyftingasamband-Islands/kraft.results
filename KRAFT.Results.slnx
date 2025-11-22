@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/KRAFT.Results.WebApi/KRAFT.Results.WebApi.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj" />
+  </Folder>
 </Solution>
