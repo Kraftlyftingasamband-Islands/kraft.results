@@ -4,7 +4,7 @@ using KRAFT.Results.Core.Photos;
 
 namespace KRAFT.Results.Core.Meets;
 
-internal class Meet
+internal sealed class Meet
 {
     public int MeetId { get; set; }
 
@@ -52,9 +52,9 @@ internal class Meet
 
     public string CreatedBy { get; set; } = null!;
 
-    public virtual MeetType MeetType { get; set; } = null!;
+    public MeetType MeetType { get; set; } = null!;
 
-    public virtual ICollection<Participation> Participations { get; } = [];
+    public ICollection<Participation> Participations { get; } = [];
 
-    public virtual ICollection<Photo> Photos { get; } = [];
+    public ICollection<Photo> Photos { get; } = [];
 }

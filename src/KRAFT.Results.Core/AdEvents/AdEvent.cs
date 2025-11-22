@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.AdEvents;
 
-internal class AdEvent
+internal sealed class AdEvent
 {
     public int AdEventId { get; set; }
 

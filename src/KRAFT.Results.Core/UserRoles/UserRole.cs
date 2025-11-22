@@ -3,7 +3,7 @@ using KRAFT.Results.Core.Users;
 
 namespace KRAFT.Results.Core.UserRoles;
 
-internal class UserRole
+internal sealed class UserRole
 {
     public int UserRoleId { get; set; }
 
@@ -19,7 +19,7 @@ internal class UserRole
 
     public string CreatedBy { get; set; } = null!;
 
-    public virtual Role Role { get; set; } = null!;
+    public Role Role { get; set; } = null!;
 
-    public virtual User User { get; set; } = null!;
+    public User User { get; set; } = null!;
 }

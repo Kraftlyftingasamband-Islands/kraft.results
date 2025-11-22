@@ -3,7 +3,7 @@ using KRAFT.Results.Core.WeightCategories;
 
 namespace KRAFT.Results.Core.EraWeightCategories;
 
-internal class EraWeightCategory
+internal sealed class EraWeightCategory
 {
     public int EraWeightCategoryId { get; set; }
 
@@ -17,7 +17,7 @@ internal class EraWeightCategory
 
     public DateTime CreatedOn { get; set; }
 
-    public virtual Era Era { get; set; } = null!;
+    public Era Era { get; set; } = null!;
 
-    public virtual WeightCategory WeightCategory { get; set; } = null!;
+    public WeightCategory WeightCategory { get; set; } = null!;
 }

@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.Wilks;
 
-internal class Wilk
+internal sealed class Wilk
 {
     public decimal Weight { get; set; }
 

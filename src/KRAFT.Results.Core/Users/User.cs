@@ -2,7 +2,7 @@
 
 namespace KRAFT.Results.Core.Users;
 
-internal class User
+internal sealed class User
 {
     public int UserId { get; set; }
 
@@ -26,5 +26,5 @@ internal class User
 
     public int? FacebookUserId { get; set; }
 
-    public virtual ICollection<UserRole> UserRoles { get; } = [];
+    public ICollection<UserRole> UserRoles { get; } = [];
 }

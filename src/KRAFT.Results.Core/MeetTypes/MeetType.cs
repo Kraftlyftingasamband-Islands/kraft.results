@@ -2,11 +2,11 @@
 
 namespace KRAFT.Results.Core.MeetTypes;
 
-internal class MeetType
+internal sealed class MeetType
 {
     public int MeetTypeId { get; set; }
 
     public string Title { get; set; } = null!;
 
-    public virtual ICollection<Meet> Meets { get; } = [];
+    public ICollection<Meet> Meets { get; } = [];
 }

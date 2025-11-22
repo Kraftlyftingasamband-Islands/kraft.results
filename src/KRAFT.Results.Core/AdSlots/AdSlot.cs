@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.AdSlots;
 
-internal class AdSlot
+internal sealed class AdSlot
 {
     public string Id { get; set; } = null!;
 

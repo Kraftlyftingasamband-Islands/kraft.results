@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.Bans;
 
-internal class Ban
+internal sealed class Ban
 {
     public int BanId { get; set; }
 

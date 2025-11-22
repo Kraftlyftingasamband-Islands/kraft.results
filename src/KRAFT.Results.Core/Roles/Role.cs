@@ -2,7 +2,7 @@
 
 namespace KRAFT.Results.Core.Roles;
 
-internal class Role
+internal sealed class Role
 {
     public int RoleId { get; set; }
 
@@ -10,5 +10,5 @@ internal class Role
 
     public DateTime CreatedOn { get; set; }
 
-    public virtual ICollection<UserRole> UserRoles { get; } = [];
+    public ICollection<UserRole> UserRoles { get; } = [];
 }

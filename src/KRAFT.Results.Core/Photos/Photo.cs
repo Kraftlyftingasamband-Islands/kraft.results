@@ -2,7 +2,7 @@
 
 namespace KRAFT.Results.Core.Photos;
 
-internal class Photo
+internal sealed class Photo
 {
     public int PhotoId { get; set; }
 
@@ -22,5 +22,5 @@ internal class Photo
 
     public string ModifiedBy { get; set; } = null!;
 
-    public virtual Meet? Meet { get; set; }
+    public Meet? Meet { get; set; }
 }

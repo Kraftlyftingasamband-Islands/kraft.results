@@ -2,7 +2,7 @@
 
 namespace KRAFT.Results.Core.Pages;
 
-internal class Page
+internal sealed class Page
 {
     public int PageId { get; set; }
 
@@ -20,5 +20,5 @@ internal class Page
 
     public string CreatedBy { get; set; } = null!;
 
-    public virtual PageGroup PageGroup { get; set; } = null!;
+    public PageGroup PageGroup { get; set; } = null!;
 }

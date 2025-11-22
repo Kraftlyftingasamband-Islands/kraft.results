@@ -5,7 +5,7 @@ using KRAFT.Results.Core.WeightCategories;
 
 namespace KRAFT.Results.Core.Records;
 
-internal class Record
+internal sealed class Record
 {
     public int RecordId { get; set; }
 
@@ -33,11 +33,11 @@ internal class Record
 
     public string CreatedBy { get; set; } = null!;
 
-    public virtual AgeCategory AgeCategory { get; set; } = null!;
+    public AgeCategory AgeCategory { get; set; } = null!;
 
-    public virtual Attempt? Attempt { get; set; }
+    public Attempt? Attempt { get; set; }
 
-    public virtual Era Era { get; set; } = null!;
+    public Era Era { get; set; } = null!;
 
-    public virtual WeightCategory WeightCategory { get; set; } = null!;
+    public WeightCategory WeightCategory { get; set; } = null!;
 }

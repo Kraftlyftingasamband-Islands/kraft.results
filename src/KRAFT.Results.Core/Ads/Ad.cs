@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.Ads;
 
-internal class Ad
+internal sealed class Ad
 {
     public int AdId { get; set; }
 

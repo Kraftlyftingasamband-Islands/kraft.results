@@ -3,7 +3,7 @@ using KRAFT.Results.Core.Records;
 
 namespace KRAFT.Results.Core.Attempts;
 
-internal class Attempt
+internal sealed class Attempt
 {
     public int AttemptId { get; set; }
 
@@ -25,7 +25,7 @@ internal class Attempt
 
     public string CreatedBy { get; set; } = null!;
 
-    public virtual Participation Participation { get; set; } = null!;
+    public Participation Participation { get; set; } = null!;
 
-    public virtual ICollection<Record> Records { get; } = [];
+    public ICollection<Record> Records { get; } = [];
 }

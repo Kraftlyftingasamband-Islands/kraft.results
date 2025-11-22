@@ -7,7 +7,7 @@ using KRAFT.Results.Core.WeightCategories;
 
 namespace KRAFT.Results.Core.Participations;
 
-internal class Participation
+internal sealed class Participation
 {
     public int ParticipationId { get; set; }
 
@@ -51,15 +51,15 @@ internal class Participation
 
     public int? TeamPoints { get; set; }
 
-    public virtual AgeCategory AgeCategory { get; set; } = null!;
+    public AgeCategory AgeCategory { get; set; } = null!;
 
-    public virtual Athlete Athlete { get; set; } = null!;
+    public Athlete Athlete { get; set; } = null!;
 
-    public virtual ICollection<Attempt> Attempts { get; } = [];
+    public ICollection<Attempt> Attempts { get; } = [];
 
-    public virtual Meet Meet { get; set; } = null!;
+    public Meet Meet { get; set; } = null!;
 
-    public virtual Team? Team { get; set; }
+    public Team? Team { get; set; }
 
-    public virtual WeightCategory WeightCategory { get; set; } = null!;
+    public WeightCategory WeightCategory { get; set; } = null!;
 }

@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.AthleteAliases;
 
-internal class AthleteAlias
+internal sealed class AthleteAlias
 {
     public int AthleteAliasId { get; set; }
 

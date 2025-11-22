@@ -3,7 +3,7 @@ using KRAFT.Results.Core.Records;
 
 namespace KRAFT.Results.Core.AgeCategories;
 
-internal class AgeCategory
+internal sealed class AgeCategory
 {
     public int AgeCategoryId { get; set; }
 
@@ -15,7 +15,7 @@ internal class AgeCategory
 
     public string? Slug { get; set; }
 
-    public virtual ICollection<Participation> Participations { get; set; } = [];
+    public ICollection<Participation> Participations { get; } = [];
 
-    public virtual ICollection<Record> Records { get; set; } = [];
+    public ICollection<Record> Records { get; } = [];
 }

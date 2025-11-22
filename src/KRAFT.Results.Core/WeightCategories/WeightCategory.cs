@@ -4,7 +4,7 @@ using KRAFT.Results.Core.Records;
 
 namespace KRAFT.Results.Core.WeightCategories;
 
-internal class WeightCategory
+internal sealed class WeightCategory
 {
     public int WeightCategoryId { get; set; }
 
@@ -22,9 +22,9 @@ internal class WeightCategory
 
     public string? Slug { get; set; }
 
-    public virtual ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
+    public ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
 
-    public virtual ICollection<Participation> Participations { get; } = [];
+    public ICollection<Participation> Participations { get; } = [];
 
-    public virtual ICollection<Record> Records { get; } = [];
+    public ICollection<Record> Records { get; } = [];
 }

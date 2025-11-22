@@ -28,62 +28,62 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.Core;
 
-internal class ResultsDbContext : DbContext
+internal sealed class ResultsDbContext : DbContext
 {
     public ResultsDbContext(DbContextOptions<ResultsDbContext> options)
         : base(options)
     {
     }
 
-    public virtual DbSet<Ad> Ads { get; set; }
+    public DbSet<Ad> Ads { get; set; }
 
-    public virtual DbSet<AdEvent> AdEvents { get; set; }
+    public DbSet<AdEvent> AdEvents { get; set; }
 
-    public virtual DbSet<AdSlot> AdSlots { get; set; }
+    public DbSet<AdSlot> AdSlots { get; set; }
 
-    public virtual DbSet<AgeCategory> AgeCategories { get; set; }
+    public DbSet<AgeCategory> AgeCategories { get; set; }
 
-    public virtual DbSet<Athlete> Athletes { get; set; }
+    public DbSet<Athlete> Athletes { get; set; }
 
-    public virtual DbSet<AthleteAlias> AthleteAliases { get; set; }
+    public DbSet<AthleteAlias> AthleteAliases { get; set; }
 
-    public virtual DbSet<Attempt> Attempts { get; set; }
+    public DbSet<Attempt> Attempts { get; set; }
 
-    public virtual DbSet<Ban> Bans { get; set; }
+    public DbSet<Ban> Bans { get; set; }
 
-    public virtual DbSet<Case> Cases { get; set; }
+    public DbSet<Case> Cases { get; set; }
 
-    public virtual DbSet<Country> Countries { get; set; }
+    public DbSet<Country> Countries { get; set; }
 
-    public virtual DbSet<Era> Eras { get; set; }
+    public DbSet<Era> Eras { get; set; }
 
-    public virtual DbSet<EraWeightCategory> EraWeightCategories { get; set; }
+    public DbSet<EraWeightCategory> EraWeightCategories { get; set; }
 
-    public virtual DbSet<Meet> Meets { get; set; }
+    public DbSet<Meet> Meets { get; set; }
 
-    public virtual DbSet<MeetType> MeetTypes { get; set; }
+    public DbSet<MeetType> MeetTypes { get; set; }
 
-    public virtual DbSet<Page> Pages { get; set; }
+    public DbSet<Page> Pages { get; set; }
 
-    public virtual DbSet<PageGroup> PageGroups { get; set; }
+    public DbSet<PageGroup> PageGroups { get; set; }
 
-    public virtual DbSet<Participation> Participations { get; set; }
+    public DbSet<Participation> Participations { get; set; }
 
-    public virtual DbSet<Photo> Photos { get; set; }
+    public DbSet<Photo> Photos { get; set; }
 
-    public virtual DbSet<Record> Records { get; set; }
+    public DbSet<Record> Records { get; set; }
 
-    public virtual DbSet<Role> Roles { get; set; }
+    public DbSet<Role> Roles { get; set; }
 
-    public virtual DbSet<Team> Teams { get; set; }
+    public DbSet<Team> Teams { get; set; }
 
-    public virtual DbSet<User> Users { get; set; }
+    public DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
 
-    public virtual DbSet<WeightCategory> WeightCategories { get; set; }
+    public DbSet<WeightCategory> WeightCategories { get; set; }
 
-    public virtual DbSet<Wilk> Wilks { get; set; }
+    public DbSet<Wilk> Wilks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KRAFT.Results.Core.Pages;
 
-internal class PageConfiguration : IEntityTypeConfiguration<Page>
+internal sealed class PageConfiguration : IEntityTypeConfiguration<Page>
 {
     public void Configure(EntityTypeBuilder<Page> builder)
     {

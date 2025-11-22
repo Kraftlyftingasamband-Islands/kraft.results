@@ -2,7 +2,7 @@
 
 namespace KRAFT.Results.Core.PageGroups;
 
-internal class PageGroup
+internal sealed class PageGroup
 {
     public int PageGroupId { get; set; }
 
@@ -10,5 +10,5 @@ internal class PageGroup
 
     public DateTime CreatedOn { get; set; }
 
-    public virtual ICollection<Page> Pages { get; } = [];
+    public ICollection<Page> Pages { get; } = [];
 }

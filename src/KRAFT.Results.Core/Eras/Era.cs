@@ -3,7 +3,7 @@ using KRAFT.Results.Core.Records;
 
 namespace KRAFT.Results.Core.Eras;
 
-internal class Era
+internal sealed class Era
 {
     public int EraId { get; set; }
 
@@ -17,7 +17,7 @@ internal class Era
 
     public string? Slug { get; set; }
 
-    public virtual ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
+    public ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
 
-    public virtual ICollection<Record> Records { get; } = [];
+    public ICollection<Record> Records { get; } = [];
 }

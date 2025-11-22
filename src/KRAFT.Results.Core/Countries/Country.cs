@@ -3,7 +3,7 @@ using KRAFT.Results.Core.Teams;
 
 namespace KRAFT.Results.Core.Countries;
 
-internal class Country
+internal sealed class Country
 {
     public int CountryId { get; set; }
 
@@ -13,7 +13,7 @@ internal class Country
 
     public string Name { get; set; } = null!;
 
-    public virtual ICollection<Athlete> Athletes { get; set; } = [];
+    public ICollection<Athlete> Athletes { get; set; } = [];
 
-    public virtual ICollection<Team> Teams { get; set; } = [];
+    public ICollection<Team> Teams { get; set; } = [];
 }

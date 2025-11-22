@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Core.Cases;
 
-internal class Case
+internal sealed class Case
 {
     public int CaseId { get; set; }
 

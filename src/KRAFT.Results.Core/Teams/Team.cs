@@ -4,7 +4,7 @@ using KRAFT.Results.Core.Participations;
 
 namespace KRAFT.Results.Core.Teams;
 
-internal class Team
+internal sealed class Team
 {
     public int TeamId { get; set; }
 
@@ -28,9 +28,9 @@ internal class Team
 
     public string CreatedBy { get; set; } = null!;
 
-    public virtual ICollection<Athlete> Athletes { get; } = [];
+    public ICollection<Athlete> Athletes { get; } = [];
 
-    public virtual Country? Country { get; set; }
+    public Country? Country { get; set; }
 
-    public virtual ICollection<Participation> Participations { get; } = [];
+    public ICollection<Participation> Participations { get; } = [];
 }
