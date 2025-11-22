@@ -1,0 +1,12 @@
+﻿namespace KRAFT.Results.Core.Wilks;
+
+internal class Wilk
+{
+    public decimal Weight { get; set; }
+
+    public decimal Coefficient { get; set; }
+
+    public string Gender { get; set; } = null!;
+
+    public int Id { get; set; }
+}
