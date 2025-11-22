@@ -1,0 +1,6 @@
+@KRAFT.Results.WebApi_HostAddress = http://localhost:5070
+
+GET {{KRAFT.Results.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

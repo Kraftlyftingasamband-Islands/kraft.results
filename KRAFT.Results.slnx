@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KRAFT.Results.WebApi/KRAFT.Results.WebApi.csproj" />
+  </Folder>
+</Solution>
