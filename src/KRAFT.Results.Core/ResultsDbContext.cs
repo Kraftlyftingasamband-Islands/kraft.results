@@ -1,5 +1,4 @@
-﻿using KRAFT.Results.Core.AdEvents;
-using KRAFT.Results.Core.Ads;
+﻿using KRAFT.Results.Core.Ads;
 using KRAFT.Results.Core.AdSlots;
 using KRAFT.Results.Core.AgeCategories;
 using KRAFT.Results.Core.AthleteAliases;
