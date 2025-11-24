@@ -382,11 +382,11 @@ dotnet_diagnostic.CA1812.severity = none
 # CA2007: Consider calling ConfigureAwait on the awaited task
 dotnet_diagnostic.CA2007.severity = none
 
-# IDE0058: Expression value is never used
-dotnet_diagnostic.IDE0058.severity = none
-
 # SA0001 XML comment analysis is disabled due to project configuration
 dotnet_diagnostic.SA0001.severity = none
+
+# SA1101: Prefix local calls with this
+dotnet_diagnostic.SA1101.severity = none
 
 # SA1309: Field names should not begin with underscore
 dotnet_diagnostic.SA1309.severity = none
