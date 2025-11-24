@@ -1,7 +1,4 @@
-﻿using KRAFT.Results.Core.AdEvents;
-using KRAFT.Results.Core.Ads;
-using KRAFT.Results.Core.AdSlots;
-using KRAFT.Results.Core.AgeCategories;
+﻿using KRAFT.Results.Core.AgeCategories;
 using KRAFT.Results.Core.AthleteAliases;
 using KRAFT.Results.Core.Athletes;
 using KRAFT.Results.Core.Attempts;
@@ -34,12 +31,6 @@ internal sealed class ResultsDbContext : DbContext
         : base(options)
     {
     }
-
-    public DbSet<Ad> Ads { get; set; }
-
-    public DbSet<AdEvent> AdEvents { get; set; }
-
-    public DbSet<AdSlot> AdSlots { get; set; }
 
     public DbSet<AgeCategory> AgeCategories { get; set; }
 
