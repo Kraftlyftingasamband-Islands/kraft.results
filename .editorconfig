@@ -388,6 +388,9 @@ dotnet_diagnostic.IDE0058.severity = none
 # SA0001 XML comment analysis is disabled due to project configuration
 dotnet_diagnostic.SA0001.severity = none
 
+# SA1309: Field names should not begin with underscore
+dotnet_diagnostic.SA1309.severity = none
+
 # SA1600: Elements should be documented
 dotnet_diagnostic.SA1600.severity = none
 
