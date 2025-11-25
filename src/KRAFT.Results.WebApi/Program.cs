@@ -1,7 +1,15 @@
+using KRAFT.Results.WebApi;
+
+using Microsoft.EntityFrameworkCore;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddDbContext<ResultsDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+});
 
+builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
 WebApplication app = builder.Build();
