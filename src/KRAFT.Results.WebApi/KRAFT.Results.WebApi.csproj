@@ -15,8 +15,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KRAFT.Results.Core\KRAFT.Results.Core.csproj" />
-  </ItemGroup>
-
 </Project>
