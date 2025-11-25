@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Records;
+namespace KRAFT.Results.WebApi.Features.Records;
 
 internal sealed class RecordConfiguration : IEntityTypeConfiguration<Record>
 {

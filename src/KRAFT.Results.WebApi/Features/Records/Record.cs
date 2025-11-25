@@ -1,9 +1,9 @@
-﻿using KRAFT.Results.Core.Features.AgeCategories;
-using KRAFT.Results.Core.Features.Attempts;
-using KRAFT.Results.Core.Features.Eras;
-using KRAFT.Results.Core.Features.WeightCategories;
+﻿using KRAFT.Results.WebApi.Features.AgeCategories;
+using KRAFT.Results.WebApi.Features.Attempts;
+using KRAFT.Results.WebApi.Features.Eras;
+using KRAFT.Results.WebApi.Features.WeightCategories;
 
-namespace KRAFT.Results.Core.Features.Records;
+namespace KRAFT.Results.WebApi.Features.Records;
 
 internal sealed class Record
 {

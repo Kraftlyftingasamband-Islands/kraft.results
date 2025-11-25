@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Wilks;
+namespace KRAFT.Results.WebApi.Features.Wilks;
 
 internal sealed class WilkConfiguration : IEntityTypeConfiguration<Wilk>
 {

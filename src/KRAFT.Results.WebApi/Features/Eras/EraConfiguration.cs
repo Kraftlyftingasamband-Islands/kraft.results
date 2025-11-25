@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Eras;
+namespace KRAFT.Results.WebApi.Features.Eras;
 
 internal sealed class EraConfiguration : IEntityTypeConfiguration<Era>
 {

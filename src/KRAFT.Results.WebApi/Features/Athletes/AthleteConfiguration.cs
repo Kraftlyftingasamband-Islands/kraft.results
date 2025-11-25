@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Athletes;
+namespace KRAFT.Results.WebApi.Features.Athletes;
 
 internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
 {

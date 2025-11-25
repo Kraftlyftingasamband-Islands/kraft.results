@@ -1,6 +1,6 @@
-﻿using KRAFT.Results.Core.Features.UserRoles;
+﻿using KRAFT.Results.WebApi.Features.UserRoles;
 
-namespace KRAFT.Results.Core.Features.Users;
+namespace KRAFT.Results.WebApi.Features.Users;
 
 internal sealed class User
 {

@@ -1,8 +1,8 @@
-﻿using KRAFT.Results.Core.Features.Athletes;
-using KRAFT.Results.Core.Features.Countries;
-using KRAFT.Results.Core.Features.Participations;
+﻿using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.Countries;
+using KRAFT.Results.WebApi.Features.Participations;
 
-namespace KRAFT.Results.Core.Features.Teams;
+namespace KRAFT.Results.WebApi.Features.Teams;
 
 internal sealed class Team
 {

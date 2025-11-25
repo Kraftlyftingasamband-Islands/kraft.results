@@ -1,4 +1,4 @@
-﻿namespace KRAFT.Results.Core.Features.Wilks;
+﻿namespace KRAFT.Results.WebApi.Features.Wilks;
 
 internal sealed class Wilk
 {

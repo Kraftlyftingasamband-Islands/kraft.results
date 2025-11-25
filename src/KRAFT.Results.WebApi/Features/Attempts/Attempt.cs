@@ -1,7 +1,7 @@
-﻿using KRAFT.Results.Core.Features.Participations;
-using KRAFT.Results.Core.Features.Records;
+﻿using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Records;
 
-namespace KRAFT.Results.Core.Features.Attempts;
+namespace KRAFT.Results.WebApi.Features.Attempts;
 
 internal sealed class Attempt
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Teams;
+namespace KRAFT.Results.WebApi.Features.Teams;
 
 internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
 {

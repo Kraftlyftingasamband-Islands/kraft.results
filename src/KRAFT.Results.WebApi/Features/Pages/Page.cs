@@ -1,6 +1,6 @@
-﻿using KRAFT.Results.Core.Features.PageGroups;
+﻿using KRAFT.Results.WebApi.Features.PageGroups;
 
-namespace KRAFT.Results.Core.Features.Pages;
+namespace KRAFT.Results.WebApi.Features.Pages;
 
 internal sealed class Page
 {

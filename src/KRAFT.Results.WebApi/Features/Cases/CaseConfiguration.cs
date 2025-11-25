@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Cases;
+namespace KRAFT.Results.WebApi.Features.Cases;
 
 internal sealed class CaseConfiguration : IEntityTypeConfiguration<Case>
 {

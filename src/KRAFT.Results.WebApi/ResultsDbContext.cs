@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace KRAFT.Results.Core;
+namespace KRAFT.Results.WebApi;
 
 #pragma warning disable CA1515 // Consider making public types internal
 public sealed class ResultsDbContext(DbContextOptions<ResultsDbContext> options) : DbContext(options)

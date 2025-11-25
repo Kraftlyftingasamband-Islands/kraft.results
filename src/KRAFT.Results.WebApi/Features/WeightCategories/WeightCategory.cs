@@ -1,8 +1,8 @@
-﻿using KRAFT.Results.Core.Features.EraWeightCategories;
-using KRAFT.Results.Core.Features.Participations;
-using KRAFT.Results.Core.Features.Records;
+﻿using KRAFT.Results.WebApi.Features.EraWeightCategories;
+using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Records;
 
-namespace KRAFT.Results.Core.Features.WeightCategories;
+namespace KRAFT.Results.WebApi.Features.WeightCategories;
 
 internal sealed class WeightCategory
 {

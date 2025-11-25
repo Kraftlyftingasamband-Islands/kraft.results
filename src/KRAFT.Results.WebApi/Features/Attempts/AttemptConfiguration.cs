@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Attempts;
+namespace KRAFT.Results.WebApi.Features.Attempts;
 
 internal sealed class AttemptConfiguration : IEntityTypeConfiguration<Attempt>
 {

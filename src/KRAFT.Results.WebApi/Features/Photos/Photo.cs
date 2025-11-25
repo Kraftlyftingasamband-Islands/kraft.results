@@ -1,6 +1,6 @@
-﻿using KRAFT.Results.Core.Features.Meets;
+﻿using KRAFT.Results.WebApi.Features.Meets;
 
-namespace KRAFT.Results.Core.Features.Photos;
+namespace KRAFT.Results.WebApi.Features.Photos;
 
 internal sealed class Photo
 {

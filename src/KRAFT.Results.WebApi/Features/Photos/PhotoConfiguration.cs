@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Photos;
+namespace KRAFT.Results.WebApi.Features.Photos;
 
 internal sealed class PhotoConfiguration : IEntityTypeConfiguration<Photo>
 {

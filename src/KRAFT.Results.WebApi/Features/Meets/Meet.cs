@@ -1,8 +1,8 @@
-﻿using KRAFT.Results.Core.Features.MeetTypes;
-using KRAFT.Results.Core.Features.Participations;
-using KRAFT.Results.Core.Features.Photos;
+﻿using KRAFT.Results.WebApi.Features.MeetTypes;
+using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Photos;
 
-namespace KRAFT.Results.Core.Features.Meets;
+namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal sealed class Meet
 {

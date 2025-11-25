@@ -1,7 +1,7 @@
-﻿using KRAFT.Results.Core.Features.Eras;
-using KRAFT.Results.Core.Features.WeightCategories;
+﻿using KRAFT.Results.WebApi.Features.Eras;
+using KRAFT.Results.WebApi.Features.WeightCategories;
 
-namespace KRAFT.Results.Core.Features.EraWeightCategories;
+namespace KRAFT.Results.WebApi.Features.EraWeightCategories;
 
 internal sealed class EraWeightCategory
 {

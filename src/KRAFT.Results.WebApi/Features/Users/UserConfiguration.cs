@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Users;
+namespace KRAFT.Results.WebApi.Features.Users;
 
 internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {

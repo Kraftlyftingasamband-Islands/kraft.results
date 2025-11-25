@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.WeightCategories;
+namespace KRAFT.Results.WebApi.Features.WeightCategories;
 
 internal sealed class WeightCategoryConfiguration : IEntityTypeConfiguration<WeightCategory>
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.UserRoles;
+namespace KRAFT.Results.WebApi.Features.UserRoles;
 
 internal sealed class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
 {

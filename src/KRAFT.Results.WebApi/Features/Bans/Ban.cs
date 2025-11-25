@@ -1,4 +1,4 @@
-﻿namespace KRAFT.Results.Core.Features.Bans;
+﻿namespace KRAFT.Results.WebApi.Features.Bans;
 
 internal sealed class Ban
 {

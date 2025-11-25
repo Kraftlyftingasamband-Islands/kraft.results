@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.AgeCategories;
+namespace KRAFT.Results.WebApi.Features.AgeCategories;
 
 internal sealed class AgeCategoryConfiguration : IEntityTypeConfiguration<AgeCategory>
 {

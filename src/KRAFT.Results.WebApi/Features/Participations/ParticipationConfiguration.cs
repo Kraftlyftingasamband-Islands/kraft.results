@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Participations;
+namespace KRAFT.Results.WebApi.Features.Participations;
 
 internal sealed class ParticipationConfiguration : IEntityTypeConfiguration<Participation>
 {

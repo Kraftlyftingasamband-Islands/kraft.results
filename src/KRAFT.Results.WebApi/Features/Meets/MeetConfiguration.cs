@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.Meets;
+namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal sealed class MeetConfiguration : IEntityTypeConfiguration<Meet>
 {

@@ -1,11 +1,11 @@
-﻿using KRAFT.Results.Core.Features.AgeCategories;
-using KRAFT.Results.Core.Features.Athletes;
-using KRAFT.Results.Core.Features.Attempts;
-using KRAFT.Results.Core.Features.Meets;
-using KRAFT.Results.Core.Features.Teams;
-using KRAFT.Results.Core.Features.WeightCategories;
+﻿using KRAFT.Results.WebApi.Features.AgeCategories;
+using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.Attempts;
+using KRAFT.Results.WebApi.Features.Meets;
+using KRAFT.Results.WebApi.Features.Teams;
+using KRAFT.Results.WebApi.Features.WeightCategories;
 
-namespace KRAFT.Results.Core.Features.Participations;
+namespace KRAFT.Results.WebApi.Features.Participations;
 
 internal sealed class Participation
 {

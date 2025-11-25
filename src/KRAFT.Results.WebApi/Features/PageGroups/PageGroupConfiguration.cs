@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.PageGroups;
+namespace KRAFT.Results.WebApi.Features.PageGroups;
 
 internal sealed class PageGroupConfiguration : IEntityTypeConfiguration<PageGroup>
 {

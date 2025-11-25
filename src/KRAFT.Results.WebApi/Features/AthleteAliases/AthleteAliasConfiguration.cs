@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.Core.Features.AthleteAliases;
+namespace KRAFT.Results.WebApi.Features.AthleteAliases;
 
 internal sealed class AthleteAliasConfiguration : IEntityTypeConfiguration<AthleteAlias>
 {
