@@ -2,17 +2,15 @@
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests;
+namespace KRAFT.Results.WebApi.IntegrationTests.Features.HealthChecks;
 
-public sealed class HealthCheckTests : IClassFixture<IntegrationTestFactory>
+public sealed class HealthCheckTests : IClassFixture<IntegrationTestFixture>
 {
     private readonly HttpClient _httpClient;
 
-    public HealthCheckTests(IntegrationTestFactory factory)
+    public HealthCheckTests(IntegrationTestFixture fixture)
     {
-        ArgumentNullException.ThrowIfNull(factory);
-
-        _httpClient = factory.CreateClient();
+        _httpClient = fixture.Factory.CreateClient();
     }
 
     [Fact]

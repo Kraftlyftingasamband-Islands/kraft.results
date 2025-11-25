@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Countries;
+﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Teams;
 
@@ -6,25 +7,26 @@ namespace KRAFT.Results.WebApi.Features.Athletes;
 
 internal sealed class Athlete
 {
+    // For EF core
+    private Athlete()
+    {
+    }
+
     public int AthleteId { get; set; }
 
-    public string Firstname { get; set; } = null!;
+    public required string Firstname { get; set; }
 
-    public string Lastname { get; set; } = null!;
+    public required string Lastname { get; set; }
 
     public string? Slug { get; set; }
 
     public DateOnly? DateOfBirth { get; set; }
 
-    public string Gender { get; set; } = null!;
+    public required string Gender { get; init; }
 
-    public DateTime CreatedOn { get; set; }
+    public required DateTime CreatedOn { get; init; }
 
     public DateTime ModifiedOn { get; set; }
-
-    public int? TeamId { get; set; }
-
-    public int CountryId { get; set; }
 
     public string? ProfileImageFilename { get; set; }
 
@@ -32,9 +34,42 @@ internal sealed class Athlete
 
     public string CreatedBy { get; set; } = null!;
 
+    public int CountryId { get; set; }
+
     public Country Country { get; set; } = null!;
+
+    public int? TeamId { get; set; }
+
+    public Team? Team { get; set; }
 
     public ICollection<Participation> Participations { get; } = [];
 
-    public Team? Team { get; set; }
+    internal static Result<Athlete> Create(string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            return AthleteErrors.FirstNameIsEmpty;
+        }
+
+        if (string.IsNullOrWhiteSpace(lastName))
+        {
+            return AthleteErrors.LastNameIsEmpty;
+        }
+
+        if (!gender.Equals("m", StringComparison.OrdinalIgnoreCase) && !gender.Equals("f", StringComparison.OrdinalIgnoreCase))
+        {
+            return AthleteErrors.InvalidGender;
+        }
+
+        return new Athlete
+        {
+            Firstname = firstName,
+            Lastname = lastName,
+            Gender = gender,
+            DateOfBirth = dateOfBirth,
+            Country = country,
+            Team = team,
+            CreatedOn = DateTime.UtcNow,
+        };
+    }
 }
