@@ -16,7 +16,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices(async services =>
         {
             ServiceDescriptor? descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<ResultsDbContext>));
@@ -30,6 +30,16 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             {
                 options.UseSqlServer(_databaseFixture.ConnectionString);
             });
+
+            ServiceProvider provider = services.BuildServiceProvider();
+            ResultsDbContext dbContext = provider.GetRequiredService<ResultsDbContext>();
+
+            dbContext.Database.EnsureCreated();
+            dbContext.Database.Migrate();
+            dbContext.Database.ExecuteSqlRaw("""
+                    INSERT INTO "Countries" (CountryId, ISO2, ISO3, Name)
+                    VALUES (1, 'IS', 'ISL', 'Iceland')
+                """);
         });
     }
 }

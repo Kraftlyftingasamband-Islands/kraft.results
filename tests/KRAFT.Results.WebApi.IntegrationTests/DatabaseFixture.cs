@@ -1,8 +1,4 @@
-﻿using KRAFT.Results.WebApi.IntegrationTests;
-
-using Testcontainers.MsSql;
-
-[assembly: AssemblyFixture(typeof(DatabaseFixture))]
+﻿using Testcontainers.MsSql;
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
