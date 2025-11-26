@@ -27,7 +27,7 @@ internal sealed class CreateAthleteHandler
                 command.LastName,
                 command.CountryId);
 
-            return AthleteErrors.CountryDoesNotExist(command.CountryId);
+            return CountryErrors.CountryDoesNotExist(command.CountryId);
         }
 
         Team? team = command.TeamId.HasValue
@@ -42,7 +42,7 @@ internal sealed class CreateAthleteHandler
                 command.LastName,
                 command.TeamId);
 
-            return AthleteErrors.TeamDoesNotExist(command.TeamId.Value);
+            return TeamErrors.TeamDoesNotExist(command.TeamId.Value);
         }
 
         Result<Athlete> result = Athlete.Create(

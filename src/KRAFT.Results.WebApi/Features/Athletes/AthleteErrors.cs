@@ -15,12 +15,4 @@ internal static class AthleteErrors
     internal static Error InvalidGender => new(
         "Athletes.InvalidGender",
         "Gender must be 'm' or 'f'.");
-
-    internal static Error CountryDoesNotExist(int id) => new(
-        "Athletes.CountryDoesNotExist",
-        $"Country with Id {id} does not exist.");
-
-    internal static Error TeamDoesNotExist(int id) => new(
-        "Athletes.TeamDoesNotExist",
-        $"Team with Id {id} does not exist.");
 }
