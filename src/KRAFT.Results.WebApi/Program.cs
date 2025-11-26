@@ -1,5 +1,6 @@
 using KRAFT.Results.WebApi;
 using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.Teams;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ builder.Services.AddDbContext<ResultsDbContext>(options =>
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddAthletes();
+builder.Services.AddTeams();
 
 WebApplication app = builder.Build();
 
@@ -23,6 +25,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthChecks("/healthz");
 app.MapAthleteEndpoints();
+app.MapTeamEndpoints();
 
 app.UseHttpsRedirection();
 

@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Athletes;
+﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
 
@@ -6,6 +7,8 @@ namespace KRAFT.Results.WebApi.Features.Teams;
 
 internal sealed class Team
 {
+    private const int ShortTitleLength = 3;
+
     public int TeamId { get; set; }
 
     public string Title { get; set; } = null!;
@@ -33,4 +36,33 @@ internal sealed class Team
     public Country? Country { get; set; }
 
     public ICollection<Participation> Participations { get; } = [];
+
+    internal static Result<Team> Create(string title, string titleShort, string titleFull, Country country)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return TeamErrors.EmptyTitle;
+        }
+
+        if (string.IsNullOrWhiteSpace(titleShort) || titleShort.Length != ShortTitleLength)
+        {
+            return TeamErrors.InvalidTitleShort;
+        }
+
+        if (string.IsNullOrWhiteSpace(titleFull))
+        {
+            return TeamErrors.EmptyTitleFull;
+        }
+
+        Team team = new()
+        {
+            Title = title,
+            TitleShort = titleShort,
+            TitleFull = titleFull,
+            Country = country,
+            CreatedOn = DateTime.UtcNow,
+        };
+
+        return team;
+    }
 }
