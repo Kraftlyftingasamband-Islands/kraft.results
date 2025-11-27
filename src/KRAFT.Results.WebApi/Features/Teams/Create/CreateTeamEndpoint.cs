@@ -24,7 +24,8 @@ internal static class CreateTeamEndpoint
         .WithDescription("Adds a new Team to the database and returns its Id.")
         .Produces<int>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization();
 
         return endpoints;
     }

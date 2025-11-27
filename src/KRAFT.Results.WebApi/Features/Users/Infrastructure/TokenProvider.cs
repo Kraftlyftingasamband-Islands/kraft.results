@@ -28,6 +28,8 @@ internal sealed class TokenProvider
             [
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString(CultureInfo.InvariantCulture)),
                 new Claim(JwtRegisteredClaimNames.Name, user.Username.ToString(CultureInfo.InvariantCulture)),
+                new Claim(JwtRegisteredClaimNames.Iss, _options.Value.Issuer),
+                new Claim(JwtRegisteredClaimNames.Aud, _options.Value.Audience),
             ]),
             Expires = DateTime.UtcNow.AddMinutes(_options.Value.ExpirationInMinutes),
             SigningCredentials = credentials,
