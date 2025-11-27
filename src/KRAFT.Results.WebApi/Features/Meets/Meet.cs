@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.MeetTypes;
+﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.MeetTypes;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
 
@@ -6,6 +7,8 @@ namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal sealed class Meet
 {
+    internal const int StartDateMinimumYear = 1900;
+
     public int MeetId { get; set; }
 
     public string Title { get; set; } = null!;
@@ -57,4 +60,31 @@ internal sealed class Meet
     public ICollection<Participation> Participations { get; } = [];
 
     public ICollection<Photo> Photos { get; } = [];
+
+    internal static Result<Meet> Create(MeetType type, string title, DateOnly startDate)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return MeetErrors.EmptyTitle;
+        }
+
+        if (startDate.Year < StartDateMinimumYear)
+        {
+            return MeetErrors.InvalidStartDate(startDate);
+        }
+
+        DateTime date = startDate.ToDateTime(TimeOnly.MinValue);
+
+        Meet meet = new()
+        {
+            MeetType = type,
+            Title = title,
+            StartDate = date,
+            EndDate = date,
+            Slug = ValueObjects.Slug.Create(title),
+            CreatedOn = DateTime.UtcNow,
+        };
+
+        return meet;
+    }
 }

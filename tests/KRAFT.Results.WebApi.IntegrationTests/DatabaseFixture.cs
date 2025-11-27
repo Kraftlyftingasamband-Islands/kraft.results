@@ -36,6 +36,9 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
             INSERT INTO Users (Username, Password)
             VALUES ('testuser', 'TestPassword123!');
+
+            INSERT INTO MeetTypes (MeetTypeId, Title)
+            Values (1, 'Powerlifting');
         """);
     }
 }
