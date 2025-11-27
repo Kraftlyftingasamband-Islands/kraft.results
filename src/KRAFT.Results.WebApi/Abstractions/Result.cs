@@ -70,10 +70,15 @@ internal sealed class Result<TValue> : Result
 
     public TResult Match<TResult>(Func<TValue, TResult> success, Func<Error, TResult> failure)
     {
-        ArgumentNullException.ThrowIfNull(_value);
         ArgumentNullException.ThrowIfNull(success);
         ArgumentNullException.ThrowIfNull(failure);
 
-        return IsSuccess ? success(_value) : failure(Error);
+        if (IsFailure)
+        {
+            return failure(Error);
+        }
+
+        ArgumentNullException.ThrowIfNull(_value);
+        return success(_value);
     }
 }

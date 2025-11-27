@@ -40,6 +40,10 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
                     INSERT INTO "Countries" (CountryId, ISO2, ISO3, Name)
                     VALUES (1, 'IS', 'ISL', 'Iceland')
                 """);
+            dbContext.Database.ExecuteSqlRaw("""
+                    INSERT INTO "Users" (Username, Password)
+                    VALUES ('testuser', 'TestPassword123!')
+                """);
         });
     }
 }
