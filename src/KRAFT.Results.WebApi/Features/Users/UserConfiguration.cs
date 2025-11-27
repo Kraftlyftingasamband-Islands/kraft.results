@@ -37,7 +37,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasColumnType("datetime");
 
         builder.Property(e => e.Password)
-            .HasMaxLength(50);
+            .HasMaxLength(128);
 
         builder.Property(e => e.Username)
             .HasMaxLength(50);
