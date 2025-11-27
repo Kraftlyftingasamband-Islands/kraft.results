@@ -32,12 +32,10 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
         await dbContext.Database.ExecuteSqlRawAsync("""
             INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
-            VALUES (1, 'IS', 'ISL', 'Iceland')
-        """);
+            VALUES (1, 'IS', 'ISL', 'Iceland');
 
-        await dbContext.Database.ExecuteSqlRawAsync("""
             INSERT INTO Users (Username, Password)
-            VALUES ('testuser', 'TestPassword123!')
+            VALUES ('testuser', 'TestPassword123!');
         """);
     }
 }
