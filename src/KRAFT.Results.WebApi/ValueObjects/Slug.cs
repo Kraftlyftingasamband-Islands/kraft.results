@@ -20,9 +20,9 @@ internal sealed partial class Slug(string value)
 
         input = input.ToLowerInvariant();
         input = RemoveDiacritics(input);
-        input = RemoveCharactersThatAreNotNonAlphanumercSpacesOrHyphens().Replace(input, string.Empty);
-        input = ReplaceSpacesWithHyphens().Replace(input, "-");
-        input = ReplaceMultipleHyphensWithSingleOne().Replace(input, "-");
+        input = NonAlphanumercsSpacesAndHyphens().Replace(input, string.Empty);
+        input = ExtraSpaces().Replace(input, "-");
+        input = MultipleHyphens().Replace(input, "-");
 
         return new Slug(input.Trim());
     }
@@ -46,11 +46,11 @@ internal sealed partial class Slug(string value)
     }
 
     [GeneratedRegex(@"[^a-z0-9\s-]")]
-    private static partial Regex RemoveCharactersThatAreNotNonAlphanumercSpacesOrHyphens();
+    private static partial Regex NonAlphanumercsSpacesAndHyphens();
 
     [GeneratedRegex(@"\s+")]
-    private static partial Regex ReplaceSpacesWithHyphens();
+    private static partial Regex ExtraSpaces();
 
     [GeneratedRegex(@"-+")]
-    private static partial Regex ReplaceMultipleHyphensWithSingleOne();
+    private static partial Regex MultipleHyphens();
 }
