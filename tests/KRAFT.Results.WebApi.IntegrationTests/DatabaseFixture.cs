@@ -1,4 +1,6 @@
-﻿using Testcontainers.MsSql;
+﻿using Microsoft.EntityFrameworkCore;
+
+using Testcontainers.MsSql;
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
@@ -19,5 +21,23 @@ public sealed class DatabaseFixture : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         await _dbContainer.StartAsync();
+
+        DbContextOptions<ResultsDbContext> options = new DbContextOptionsBuilder<ResultsDbContext>()
+            .UseSqlServer(ConnectionString)
+            .Options;
+
+        await using var dbContext = new ResultsDbContext(options);
+
+        await dbContext.Database.MigrateAsync();
+
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
+            VALUES (1, 'IS', 'ISL', 'Iceland')
+        """);
+
+        await dbContext.Database.ExecuteSqlRawAsync("""
+            INSERT INTO Users (Username, Password)
+            VALUES ('testuser', 'TestPassword123!')
+        """);
     }
 }
