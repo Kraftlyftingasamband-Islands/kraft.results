@@ -6,10 +6,14 @@ using KRAFT.Results.WebApi.Abstractions;
 
 namespace KRAFT.Results.WebApi.ValueObjects;
 
-internal sealed partial class Slug(string value)
-    : ValueObject<string>(value)
+internal sealed partial class Slug : ValueObject<string>
 {
     internal static readonly Slug Empty = new(string.Empty);
+
+    private Slug(string value)
+        : base(value)
+    {
+    }
 
     public static Slug Create(string input)
     {
@@ -18,21 +22,15 @@ internal sealed partial class Slug(string value)
             return Empty;
         }
 
-        input = input.ToLowerInvariant();
-        input = RemoveDiacritics(input);
-        input = NonAlphanumercsSpacesAndHyphens().Replace(input, string.Empty);
-        input = ExtraSpaces().Replace(input, "-");
-        input = MultipleHyphens().Replace(input, "-");
+        string normalized = input
+            .Replace('ð', 'd')
+            .Replace("þ", "th", StringComparison.OrdinalIgnoreCase)
+            .Replace("æ", "ae", StringComparison.OrdinalIgnoreCase)
+            .Normalize(NormalizationForm.FormD);
 
-        return new Slug(input.Trim());
-    }
-
-    private static string RemoveDiacritics(string text)
-    {
-        string normalizedString = text.Normalize(NormalizationForm.FormD);
         StringBuilder stringBuilder = new();
 
-        foreach (char c in normalizedString)
+        foreach (char c in normalized)
         {
             UnicodeCategory unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
 
@@ -42,7 +40,14 @@ internal sealed partial class Slug(string value)
             }
         }
 
-        return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        string cleaned = stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        cleaned = cleaned.ToLowerInvariant();
+        cleaned = NonAlphanumercsSpacesAndHyphens().Replace(cleaned, string.Empty);
+        cleaned = ExtraSpaces().Replace(cleaned, "-");
+        cleaned = MultipleHyphens().Replace(cleaned, "-");
+        cleaned = cleaned.Trim('-').Trim();
+
+        return new Slug(cleaned);
     }
 
     [GeneratedRegex(@"[^a-z0-9\s-]")]

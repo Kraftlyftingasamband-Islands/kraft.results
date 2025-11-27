@@ -2,7 +2,6 @@
 using KRAFT.Results.WebApi.Features.MeetTypes;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
-using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -82,7 +81,7 @@ internal sealed class Meet
             Title = title,
             StartDate = date,
             EndDate = date,
-            Slug = new Slug(title),
+            Slug = ValueObjects.Slug.Create(title),
             CreatedOn = DateTime.UtcNow,
         };
 
