@@ -5,6 +5,8 @@ using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.EntityFrameworkCore;
 
+using Scalar.AspNetCore;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ResultsDbContext>(options =>
@@ -23,6 +25,7 @@ WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.MapHealthChecks("/healthz");
