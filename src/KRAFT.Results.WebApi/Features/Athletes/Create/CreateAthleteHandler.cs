@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+﻿using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;

@@ -1,4 +1,6 @@
-﻿namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
+﻿using KRAFT.Results.Contracts.Users;
+
+namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class CreateUserCommandBuilder
 {
@@ -38,15 +40,6 @@ internal sealed class CreateUserCommandBuilder
         return this;
     }
 
-    public object Build()
-    {
-        return new
-        {
-            Username = _username,
-            FirstName = _firstName,
-            LastName = _lastName,
-            Email = _email,
-            Password = _password,
-        };
-    }
+    public CreateUserCommand Build() =>
+        new(_username, _firstName, _lastName, _email, _password);
 }

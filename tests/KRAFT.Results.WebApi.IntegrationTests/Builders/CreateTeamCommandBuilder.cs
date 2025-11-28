@@ -1,4 +1,6 @@
-﻿namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
+﻿using KRAFT.Results.Contracts.Teams;
+
+namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class CreateTeamCommandBuilder
 {
@@ -31,14 +33,6 @@ internal sealed class CreateTeamCommandBuilder
         return this;
     }
 
-    public object Build()
-    {
-        return new
-        {
-            Title = _title,
-            TitleShort = _titleShort,
-            TitleFull = _titleFull,
-            CountryId = _countryId,
-        };
-    }
+    public CreateTeamCommand Build() =>
+        new(_title, _titleShort, _titleFull, _countryId);
 }

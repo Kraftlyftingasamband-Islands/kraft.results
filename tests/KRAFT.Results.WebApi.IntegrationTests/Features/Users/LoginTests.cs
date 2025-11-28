@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 using Shouldly;
@@ -29,6 +30,20 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Deserializes()
+    {
+        // Arrange
+        var body = new LoginCommandBuilder().Build();
+
+        // Act
+        HttpResponseMessage message = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        AuthenticatedResponse? response = await message.Content.ReadFromJsonAsync<AuthenticatedResponse>(CancellationToken.None);
+
+        // Assert
+        response.ShouldNotBeNull();
     }
 
     [Fact]

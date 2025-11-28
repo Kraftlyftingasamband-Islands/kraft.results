@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+﻿using KRAFT.Results.Contracts.Users;
+using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Services;
 using KRAFT.Results.WebApi.ValueObjects;
 

@@ -1,4 +1,6 @@
-﻿namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
+﻿using KRAFT.Results.Contracts.Meets;
+
+namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class CreateMeetCommandBuilder
 {
@@ -24,13 +26,6 @@ internal sealed class CreateMeetCommandBuilder
         return this;
     }
 
-    public object Build()
-    {
-        return new
-        {
-            Title = _title,
-            StartDate = _startDate,
-            MeetTypeId = _meetTypeId,
-        };
-    }
+    public CreateMeetCommand Build() =>
+        new(_title, _startDate, _meetTypeId);
 }

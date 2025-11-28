@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using KRAFT.Results.Contracts.Athletes;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace KRAFT.Results.WebApi.Features.Athletes.Get;
 

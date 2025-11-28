@@ -9,6 +9,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/KRAFT.Results.Contracts/KRAFT.Results.Contracts.csproj" />
     <Project Path="src/KRAFT.Results.WebApi/KRAFT.Results.WebApi.csproj" />
   </Folder>
   <Folder Name="/tests/">
