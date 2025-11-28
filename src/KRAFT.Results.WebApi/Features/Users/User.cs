@@ -7,31 +7,36 @@ namespace KRAFT.Results.WebApi.Features.Users;
 
 internal sealed class User
 {
+    // For EF core
+    private User()
+    {
+    }
+
     public int UserId { get; set; }
 
-    public string Username { get; set; } = null!;
+    public required string Username { get; set; }
 
-    public string? Email { get; set; }
+    public required string? Email { get; set; }
 
-    public string Password { get; set; } = null!;
+    public required string Password { get; set; }
 
-    public string? Firstname { get; set; }
+    public required string? Firstname { get; set; }
 
-    public string? Lastname { get; set; }
+    public required string? Lastname { get; set; }
 
-    public DateTime CreatedOn { get; set; }
+    public required DateTime CreatedOn { get; set; }
 
     public DateTime ModifiedOn { get; set; }
 
     public string ModifiedBy { get; set; } = null!;
 
-    public string CreatedBy { get; set; } = null!;
+    public required string CreatedBy { get; set; }
 
     public int? FacebookUserId { get; set; }
 
     public ICollection<UserRole> UserRoles { get; } = [];
 
-    internal static Result<User> Create(string userName, string firstName, string lastName, Email email, string password)
+    internal static Result<User> Create(User creator, string userName, string firstName, string lastName, Email email, string password)
     {
         if (string.IsNullOrWhiteSpace(userName))
         {
@@ -61,6 +66,7 @@ internal sealed class User
             Email = email,
             Password = PasswordHasher.Hash(password),
             CreatedOn = DateTime.UtcNow,
+            CreatedBy = creator.Username,
         };
 
         return user;

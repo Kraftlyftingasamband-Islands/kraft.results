@@ -35,17 +35,12 @@ public sealed class CreateUserTests
     public async Task ReturnsConflict_WhenUsernameExists()
     {
         // Arrange
-        string username = "SomeUser";
-        var firstBody = new CreateUserCommandBuilder()
-            .WithUsername(username)
+        var body = new CreateUserCommandBuilder()
+            .WithUsername(Constants.TestUsername)
             .Build();
-        var secondBody = new CreateUserCommandBuilder()
-            .WithUsername(username)
-            .Build();
-        await _httpClient.PostAsJsonAsync(Path, firstBody, CancellationToken.None);
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, secondBody, CancellationToken.None);
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -55,17 +50,12 @@ public sealed class CreateUserTests
     public async Task ReturnsConflict_WhenEmailExists()
     {
         // Arrange
-        string email = "somebody@something.com";
-        var firstBody = new CreateUserCommandBuilder()
-            .WithEmail(email)
+        var body = new CreateUserCommandBuilder()
+            .WithEmail(Constants.TestEmail)
             .Build();
-        var secondBody = new CreateUserCommandBuilder()
-            .WithEmail(email)
-            .Build();
-        await _httpClient.PostAsJsonAsync(Path, firstBody, CancellationToken.None);
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, secondBody, CancellationToken.None);
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);

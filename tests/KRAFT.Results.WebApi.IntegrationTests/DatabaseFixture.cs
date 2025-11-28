@@ -26,16 +26,16 @@ public sealed class DatabaseFixture : IAsyncLifetime
             .UseSqlServer(ConnectionString)
             .Options;
 
-        await using var dbContext = new ResultsDbContext(options);
+        await using ResultsDbContext dbContext = new(options);
 
         await dbContext.Database.MigrateAsync();
 
-        await dbContext.Database.ExecuteSqlRawAsync("""
+        await dbContext.Database.ExecuteSqlRawAsync($"""
             INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
             VALUES (1, 'IS', 'ISL', 'Iceland');
 
-            INSERT INTO Users (Username, Password)
-            VALUES ('testuser', 'TestPassword123!');
+            INSERT INTO Users (Username, Password, Email)
+            VALUES ('{Constants.TestUsername}', '{Constants.TestPassword}', '{Constants.TestEmail}');
 
             INSERT INTO MeetTypes (MeetTypeId, Title)
             Values (1, 'Powerlifting');

@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
@@ -23,7 +24,7 @@ internal sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSche
     {
         ClaimsIdentity identity = new(
         [
-            new Claim(ClaimTypes.Name, "TestUser"),
+            new Claim(JwtRegisteredClaimNames.Name, Constants.TestUsername),
             new Claim(ClaimTypes.Role, "Admin"),
         ],
         "Test");

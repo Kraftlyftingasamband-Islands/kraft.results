@@ -2,8 +2,8 @@
 
 internal sealed class LoginCommandBuilder
 {
-    private string _username = "testuser";
-    private string _password = "TestPassword123!";
+    private string _username = Constants.TestUsername;
+    private string _password = Constants.TestPassword;
 
     public LoginCommandBuilder WithUsername(string username)
     {

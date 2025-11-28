@@ -2,8 +2,8 @@
 
 internal sealed class CreateAthleteCommandBuilder
 {
-    private string _firstName = Guid.NewGuid().ToString();
-    private string _lastName = Guid.NewGuid().ToString();
+    private string _firstName = Guid.NewGuid().ToString()[..20];
+    private string _lastName = Guid.NewGuid().ToString()[..20];
     private string _gender = "m";
     private DateOnly _dateOfBirth = DateOnly.FromDateTime(DateTime.Today.AddYears(-14));
     private int _countryId = 1;

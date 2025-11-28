@@ -2,6 +2,7 @@
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Users;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
@@ -9,11 +10,18 @@ internal sealed class Team
 {
     private const int ShortTitleLength = 3;
 
+    // For EF core
+    private Team()
+    {
+    }
+
     public int TeamId { get; set; }
 
-    public string Title { get; set; } = null!;
+    public required string Title { get; set; }
 
-    public string TitleShort { get; set; } = null!;
+    public required string TitleShort { get; set; }
+
+    public required string TitleFull { get; set; }
 
     public int? CountryId { get; set; }
 
@@ -21,15 +29,13 @@ internal sealed class Team
 
     public string? Slug { get; set; }
 
-    public string TitleFull { get; set; } = null!;
-
-    public DateTime CreatedOn { get; set; }
+    public required DateTime CreatedOn { get; set; }
 
     public DateTime ModifiedOn { get; set; }
 
     public string ModifiedBy { get; set; } = null!;
 
-    public string CreatedBy { get; set; } = null!;
+    public required string CreatedBy { get; set; } = null!;
 
     public ICollection<Athlete> Athletes { get; } = [];
 
@@ -37,7 +43,7 @@ internal sealed class Team
 
     public ICollection<Participation> Participations { get; } = [];
 
-    internal static Result<Team> Create(string title, string titleShort, string titleFull, Country country)
+    internal static Result<Team> Create(User creator, string title, string titleShort, string titleFull, Country country)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -61,6 +67,7 @@ internal sealed class Team
             TitleFull = titleFull,
             Country = country,
             CreatedOn = DateTime.UtcNow,
+            CreatedBy = creator.Username,
         };
 
         return team;
