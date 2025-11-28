@@ -4,9 +4,35 @@ namespace KRAFT.Results.WebApi.Features.Users;
 
 internal static class UserErrors
 {
-    internal const string InvalidUsernameOrPasswordCode = "Authentication.InvalidUsernameOrPassword";
+    internal const string InvalidUsernameOrPasswordCode = "Users.InvalidUsernameOrPassword";
+    internal const string UserNameExistsCode = "Users.UserNameExists";
+    internal const string EmailExistsCode = "Users.EmailExists";
 
     internal static readonly Error InvalidUsernameOrPassword = new(
         Code: InvalidUsernameOrPasswordCode,
         Description: "Invalid username or password.");
+
+    internal static readonly Error UserNameExists = new(
+        Code: EmailExistsCode,
+        Description: "There is already a user with that e-mail");
+
+    internal static readonly Error EmailExists = new(
+        Code: UserNameExistsCode,
+        Description: "User name already exists");
+
+    internal static readonly Error UserNameEmpty = new(
+        Code: "Users.UserNameEmpty",
+        Description: "Username must contain a value");
+
+    internal static readonly Error FirstNameEmpty = new(
+        Code: "Users.FirstNameEmpty",
+        Description: "First name must contain a value");
+
+    internal static readonly Error LastNameEmpty = new(
+        Code: "Users.LastNameEmpty",
+        Description: "Last name must contain a value");
+
+    internal static readonly Error PasswordEmpty = new(
+        Code: "Users.PasswordNameEmpty",
+        Description: "Password must contain a value");
 }
