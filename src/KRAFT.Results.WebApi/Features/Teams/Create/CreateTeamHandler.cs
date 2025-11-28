@@ -1,5 +1,7 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Countries;
+using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.Services;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -9,16 +11,20 @@ internal sealed class CreateTeamHandler
 {
     private readonly ILogger<CreateTeamHandler> _logger;
     private readonly ResultsDbContext _dbContext;
+    private readonly IHttpContextService _httpContextService;
 
-    public CreateTeamHandler(ILogger<CreateTeamHandler> logger, ResultsDbContext dbContext)
+    public CreateTeamHandler(ILogger<CreateTeamHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _httpContextService = httpContextService;
     }
 
     public async Task<Result<int>> Handle(CreateTeamCommand command, CancellationToken cancellationToken)
     {
-        if (await _dbContext.Set<Country>().FirstOrDefaultAsync(x => x.CountryId == command.CountryId, cancellationToken) is not Country country)
+        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
         {
             _logger.LogWarning(
                 "Failed to create team {Title}: Country with Id {CountryId} does not exist",
@@ -30,10 +36,12 @@ internal sealed class CreateTeamHandler
 
         if (await _dbContext.Set<Team>().AnyAsync(x => x.TitleShort == command.TitleShort, cancellationToken: cancellationToken))
         {
+            _logger.LogWarning("Short title {Title} already exists", command.TitleShort);
             return TeamErrors.ShortTitleExists(command.TitleShort);
         }
 
         Result<Team> result = Team.Create(
+            creator: creator,
             title: command.Title,
             titleShort: command.TitleShort,
             titleFull: command.TitleFull,

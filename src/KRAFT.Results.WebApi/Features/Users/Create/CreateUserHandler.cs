@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Services;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -9,15 +10,19 @@ internal sealed class CreateUserHandler
 {
     private readonly ILogger<CreateUserHandler> _logger;
     private readonly ResultsDbContext _dbContext;
+    private readonly IHttpContextService _httpContextService;
 
-    public CreateUserHandler(ILogger<CreateUserHandler> logger, ResultsDbContext dbContext)
+    public CreateUserHandler(ILogger<CreateUserHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _httpContextService = httpContextService;
     }
 
     public async Task<Result<int>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
+        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
         Result<Email> email = Email.Create(command.Email);
 
         if (email.IsFailure)
@@ -26,6 +31,7 @@ internal sealed class CreateUserHandler
         }
 
         Result<User> user = User.Create(
+            creator: creator,
             userName: command.UserName,
             firstName: command.FirstName,
             lastName: command.LastName,
@@ -45,8 +51,8 @@ internal sealed class CreateUserHandler
 
         if (await _dbContext.Set<User>().AnyAsync(x => x.Email == email.FromResult(), cancellationToken))
         {
-            _logger.LogWarning("Username {Username} already exists", command.UserName);
-            return UserErrors.UserNameExists;
+            _logger.LogWarning("User e-mail {Email} already exists", command.Email);
+            return UserErrors.EmailExists;
         }
 
         _dbContext.Set<User>().Add(user);

@@ -1,5 +1,7 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace KRAFT.Results.WebApi.Features.Athletes.Create;
 
 internal static class CreateAthleteEndpoint
@@ -8,9 +10,12 @@ internal static class CreateAthleteEndpoint
 
     internal static RouteGroupBuilder MapCreateAthleteEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapPost("/", static async (CreateAthleteCommand command, CreateAthleteHandler handler) =>
+        endpoints.MapPost("/", static async (
+            [FromBody] CreateAthleteCommand command,
+            [FromServices] CreateAthleteHandler handler,
+            CancellationToken cancellationToken) =>
         {
-            Result<int> result = await handler.Handle(command);
+            Result<int> result = await handler.Handle(command, cancellationToken);
 
             return result.Match<IResult>(
                 success: athleteId => TypedResults.Created($"/{athleteId}", new { AthleteId = athleteId }),

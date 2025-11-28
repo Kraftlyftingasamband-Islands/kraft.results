@@ -2,6 +2,7 @@
 using KRAFT.Results.WebApi.Features.MeetTypes;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
+using KRAFT.Results.WebApi.Features.Users;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -9,15 +10,20 @@ internal sealed class Meet
 {
     internal const int StartDateMinimumYear = 1900;
 
+    // For EF core
+    private Meet()
+    {
+    }
+
     public int MeetId { get; set; }
 
-    public string Title { get; set; } = null!;
+    public required string Title { get; set; }
 
-    public string Slug { get; set; } = null!;
+    public required string Slug { get; set; }
 
-    public DateTime StartDate { get; set; }
+    public required DateTime StartDate { get; set; }
 
-    public DateTime EndDate { get; set; }
+    public required DateTime EndDate { get; set; }
 
     public int MeetTypeId { get; set; }
 
@@ -47,13 +53,13 @@ internal sealed class Meet
 
     public bool IsRaw { get; set; }
 
-    public DateTime CreatedOn { get; set; }
+    public required DateTime CreatedOn { get; set; }
 
     public DateTime ModifiedOn { get; set; }
 
     public string ModifiedBy { get; set; } = null!;
 
-    public string CreatedBy { get; set; } = null!;
+    public required string CreatedBy { get; set; }
 
     public MeetType MeetType { get; set; } = null!;
 
@@ -61,7 +67,7 @@ internal sealed class Meet
 
     public ICollection<Photo> Photos { get; } = [];
 
-    internal static Result<Meet> Create(MeetType type, string title, DateOnly startDate)
+    internal static Result<Meet> Create(User creator, MeetType type, string title, DateOnly startDate)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -83,6 +89,7 @@ internal sealed class Meet
             EndDate = date,
             Slug = ValueObjects.Slug.Create(title),
             CreatedOn = DateTime.UtcNow,
+            CreatedBy = creator.Username,
         };
 
         return meet;

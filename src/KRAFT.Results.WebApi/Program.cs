@@ -7,6 +7,7 @@ using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Middleware;
+using KRAFT.Results.WebApi.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -52,6 +53,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<IHttpContextService, HttpContextService>();
 builder.Services.AddAthletes();
 builder.Services.AddUsers(builder.Configuration);
 builder.Services.AddTeams();

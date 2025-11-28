@@ -9,9 +9,11 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
     {
         builder.ToTable("Athletes", "dbo");
 
-        builder.HasIndex(e => new { e.Firstname, e.Lastname, e.DateOfBirth }, "IX_Athletes_NameYearUnique").IsUnique();
+        builder.HasIndex(e => new { e.Firstname, e.Lastname, e.DateOfBirth }, "IX_Athletes_NameYearUnique")
+            .IsUnique();
 
-        builder.HasIndex(e => e.Slug, "IX_Athletes_Slug_Unique").IsUnique();
+        builder.HasIndex(e => e.Slug, "IX_Athletes_Slug_Unique")
+            .IsUnique();
 
         builder.HasIndex(e => new { e.CountryId, e.AthleteId }, "_dta_index_Athletes_20_971150505__K8_K1");
 
@@ -48,14 +50,17 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
         builder.Property(e => e.ProfileImageFilename)
             .HasMaxLength(200);
 
-        builder.Property(e => e.Slug).HasMaxLength(50);
+        builder.Property(e => e.Slug)
+            .HasMaxLength(50);
 
-        builder.HasOne(d => d.Country).WithMany(p => p.Athletes)
+        builder.HasOne(d => d.Country)
+            .WithMany(p => p.Athletes)
             .HasForeignKey(d => d.CountryId)
             .OnDelete(DeleteBehavior.ClientSetNull)
             .HasConstraintName("FK_Athletes_Countries");
 
-        builder.HasOne(d => d.Team).WithMany(p => p.Athletes)
+        builder.HasOne(d => d.Team)
+            .WithMany(p => p.Athletes)
             .HasForeignKey(d => d.TeamId)
             .HasConstraintName("FK_Athletes_Teams");
     }

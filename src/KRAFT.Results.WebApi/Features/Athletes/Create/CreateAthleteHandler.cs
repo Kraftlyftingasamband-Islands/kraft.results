@@ -1,6 +1,8 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Teams;
+using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.Services;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -10,16 +12,20 @@ internal sealed class CreateAthleteHandler
 {
     private readonly ILogger<CreateAthleteHandler> _logger;
     private readonly ResultsDbContext _dbContext;
+    private readonly IHttpContextService _httpContextService;
 
-    public CreateAthleteHandler(ILogger<CreateAthleteHandler> logger, ResultsDbContext dbContext)
+    public CreateAthleteHandler(ILogger<CreateAthleteHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _httpContextService = httpContextService;
     }
 
-    public async Task<Result<int>> Handle(CreateAthleteCommand command)
+    public async Task<Result<int>> Handle(CreateAthleteCommand command, CancellationToken cancellationToken)
     {
-        if (await _dbContext.Set<Country>().FirstOrDefaultAsync(x => x.CountryId == command.CountryId) is not Country country)
+        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
         {
             _logger.LogWarning(
                 "Failed to create athlete {First} {Last}: Country with Id {CountryId} does not exist",
@@ -30,8 +36,8 @@ internal sealed class CreateAthleteHandler
             return CountryErrors.CountryDoesNotExist(command.CountryId);
         }
 
-        Team? team = command.TeamId.HasValue
-            ? await _dbContext.Set<Team>().FirstOrDefaultAsync(x => x.TeamId == command.TeamId.Value)
+        Team? team = command.TeamId is int teamId
+            ? await GetTeamAsync(teamId, cancellationToken)
             : null;
 
         if (command.TeamId.HasValue && team is null)
@@ -46,6 +52,7 @@ internal sealed class CreateAthleteHandler
         }
 
         Result<Athlete> result = Athlete.Create(
+            creator: creator,
             firstName: command.FirstName,
             lastName: command.LastName,
             gender: command.Gender,
@@ -61,10 +68,15 @@ internal sealed class CreateAthleteHandler
         Athlete athlete = result.FromResult();
         _dbContext.Set<Athlete>().Add(athlete);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Created athlete {First} {Last} with Id {AthleteId}", athlete.Firstname, athlete.Lastname, athlete.AthleteId);
 
         return athlete.AthleteId;
     }
+
+    private Task<Team?> GetTeamAsync(int teamId, CancellationToken cancellationToken) =>
+        _dbContext.Set<Team>()
+        .Where(x => x.TeamId == teamId)
+        .FirstOrDefaultAsync(cancellationToken);
 }

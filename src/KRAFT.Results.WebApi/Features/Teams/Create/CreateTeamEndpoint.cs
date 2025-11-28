@@ -1,5 +1,7 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace KRAFT.Results.WebApi.Features.Teams.Create;
 
 internal static class CreateTeamEndpoint
@@ -8,7 +10,10 @@ internal static class CreateTeamEndpoint
 
     internal static RouteGroupBuilder MapCreateTeamEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapPost("/", static async (CreateTeamCommand command, CreateTeamHandler handler, CancellationToken cancellationToken) =>
+        endpoints.MapPost("/", static async (
+            [FromBody] CreateTeamCommand command,
+            [FromServices] CreateTeamHandler handler,
+            CancellationToken cancellationToken) =>
         {
             Result<int> result = await handler.Handle(command, cancellationToken);
 
