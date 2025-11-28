@@ -20,7 +20,7 @@ internal sealed class Athlete
 
     public required string Lastname { get; set; }
 
-    public required string? Slug { get; set; }
+    public required string Slug { get; set; }
 
     public required DateOnly? DateOfBirth { get; set; }
 
