@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KRAFT.Results.WebApi.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KRAFT.Results.WebApi.Features.Athletes;
@@ -34,7 +36,10 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
         builder.Property(e => e.Gender)
             .HasMaxLength(1)
             .IsUnicode(false)
-            .HasDefaultValue("m", "DF_Athletes_Gender");
+            .HasDefaultValue(Gender.Male, "DF_Athletes_Gender")
+            .HasConversion(
+                x => x.Value,
+                x => Gender.Parse(x));
 
         builder.Property(e => e.Lastname)
             .HasMaxLength(50);

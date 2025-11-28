@@ -3,6 +3,7 @@ using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Athletes;
 
@@ -23,7 +24,7 @@ internal sealed class Athlete
 
     public required DateOnly? DateOfBirth { get; set; }
 
-    public required string Gender { get; init; }
+    public required Gender Gender { get; init; }
 
     public required DateTime CreatedOn { get; init; }
 
@@ -45,7 +46,7 @@ internal sealed class Athlete
 
     public ICollection<Participation> Participations { get; } = [];
 
-    internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
+    internal static Result<Athlete> Create(User creator, string firstName, string lastName, Gender gender, Country country, DateOnly? dateOfBirth, Team? team)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -55,11 +56,6 @@ internal sealed class Athlete
         if (string.IsNullOrWhiteSpace(lastName))
         {
             return AthleteErrors.LastNameIsEmpty;
-        }
-
-        if (!gender.Equals("m", StringComparison.OrdinalIgnoreCase) && !gender.Equals("f", StringComparison.OrdinalIgnoreCase))
-        {
-            return AthleteErrors.InvalidGender;
         }
 
         return new Athlete
