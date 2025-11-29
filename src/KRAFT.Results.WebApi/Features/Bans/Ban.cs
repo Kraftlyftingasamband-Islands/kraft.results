@@ -2,13 +2,13 @@
 
 internal sealed class Ban
 {
-    public int BanId { get; set; }
+    public int BanId { get; private set; }
 
-    public int AthleteId { get; set; }
+    public int AthleteId { get; private set; }
 
-    public DateTime FromDate { get; set; }
+    public DateTime FromDate { get; private set; }
 
-    public DateTime ToDate { get; set; }
+    public DateTime ToDate { get; private set; }
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 }

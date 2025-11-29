@@ -9,57 +9,57 @@ namespace KRAFT.Results.WebApi.Features.Participations;
 
 internal sealed class Participation
 {
-    public int ParticipationId { get; set; }
+    public int ParticipationId { get; private set; }
 
-    public int AthleteId { get; set; }
+    public int AthleteId { get; private set; }
 
-    public int MeetId { get; set; }
+    public int MeetId { get; private set; }
 
-    public decimal Weight { get; set; }
+    public decimal Weight { get; private set; }
 
-    public int WeightCategoryId { get; set; }
+    public int WeightCategoryId { get; private set; }
 
-    public int? TeamId { get; set; }
+    public int? TeamId { get; private set; }
 
-    public int AgeCategoryId { get; set; }
+    public int AgeCategoryId { get; private set; }
 
-    public int Place { get; set; }
+    public int Place { get; private set; }
 
-    public bool Disqualified { get; set; }
+    public bool Disqualified { get; private set; }
 
-    public decimal Squat { get; set; }
+    public decimal Squat { get; private set; }
 
-    public decimal Benchpress { get; set; }
+    public decimal Benchpress { get; private set; }
 
-    public decimal Deadlift { get; set; }
+    public decimal Deadlift { get; private set; }
 
-    public decimal Total { get; set; }
+    public decimal Total { get; private set; }
 
-    public decimal Wilks { get; set; }
+    public decimal Wilks { get; private set; }
 
-    public decimal? Ipfpoints { get; set; }
+    public decimal? Ipfpoints { get; private set; }
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; private set; } = null!;
 
-    public int LotNo { get; set; }
+    public int LotNo { get; private set; }
 
-    public int? TeamPoints { get; set; }
+    public int? TeamPoints { get; private set; }
 
-    public AgeCategory AgeCategory { get; set; } = null!;
+    public AgeCategory AgeCategory { get; private set; } = null!;
 
-    public Athlete Athlete { get; set; } = null!;
+    public Athlete Athlete { get; private set; } = null!;
 
     public ICollection<Attempt> Attempts { get; } = [];
 
-    public Meet Meet { get; set; } = null!;
+    public Meet Meet { get; private set; } = null!;
 
-    public Team? Team { get; set; }
+    public Team? Team { get; private set; }
 
-    public WeightCategory WeightCategory { get; set; } = null!;
+    public WeightCategory WeightCategory { get; private set; } = null!;
 }

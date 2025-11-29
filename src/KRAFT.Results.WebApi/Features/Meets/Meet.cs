@@ -14,53 +14,53 @@ internal sealed class Meet
     {
     }
 
-    public int MeetId { get; set; }
+    public int MeetId { get; private set; }
 
-    public required string Title { get; set; }
+    public string Title { get; private set; } = null!;
 
-    public required string Slug { get; set; }
+    public string Slug { get; private set; } = null!;
 
-    public required DateTime StartDate { get; set; }
+    public DateTime StartDate { get; private set; }
 
-    public required DateTime EndDate { get; set; }
+    public DateTime EndDate { get; private set; }
 
-    public int MeetTypeId { get; set; }
+    public int MeetTypeId { get; private set; }
 
-    public bool CalcPlaces { get; set; }
+    public bool CalcPlaces { get; private set; }
 
-    public string? Text { get; set; }
+    public string? Text { get; private set; }
 
-    public string? Location { get; set; }
+    public string? Location { get; private set; }
 
-    public bool PublishedResults { get; set; }
+    public bool PublishedResults { get; private set; }
 
-    public int ResultModeId { get; set; }
+    public int ResultModeId { get; private set; }
 
-    public bool PublishedInCalendar { get; set; }
+    public bool PublishedInCalendar { get; private set; }
 
-    public bool IsInTeamCompetition { get; set; }
+    public bool IsInTeamCompetition { get; private set; }
 
-    public bool ShowWilks { get; set; }
+    public bool ShowWilks { get; private set; }
 
-    public bool ShowTeamPoints { get; set; }
+    public bool ShowTeamPoints { get; private set; }
 
-    public bool ShowBodyWeight { get; set; }
+    public bool ShowBodyWeight { get; private set; }
 
-    public bool ShowTeams { get; set; }
+    public bool ShowTeams { get; private set; }
 
-    public bool RecordsPossible { get; set; }
+    public bool RecordsPossible { get; private set; }
 
-    public bool IsRaw { get; set; }
+    public bool IsRaw { get; private set; }
 
-    public required DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public required string CreatedBy { get; set; }
+    public string CreatedBy { get; private set; } = null!;
 
-    public MeetType MeetType { get; set; } = null!;
+    public MeetType MeetType { get; private set; } = null!;
 
     public ICollection<Participation> Participations { get; } = [];
 

@@ -5,15 +5,15 @@ namespace KRAFT.Results.WebApi.Features.Countries;
 
 internal sealed class Country
 {
-    public int CountryId { get; set; }
+    public int CountryId { get; private set; }
 
-    public string Iso2 { get; set; } = null!;
+    public string Iso2 { get; private set; } = null!;
 
-    public string Iso3 { get; set; } = null!;
+    public string Iso3 { get; private set; } = null!;
 
-    public string Name { get; set; } = null!;
+    public string Name { get; private set; } = null!;
 
-    public ICollection<Athlete> Athletes { get; set; } = [];
+    public ICollection<Athlete> Athletes { get; private set; } = [];
 
-    public ICollection<Team> Teams { get; set; } = [];
+    public ICollection<Team> Teams { get; private set; } = [];
 }

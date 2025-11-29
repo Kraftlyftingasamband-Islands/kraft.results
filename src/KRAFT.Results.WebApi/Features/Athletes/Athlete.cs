@@ -14,35 +14,35 @@ internal sealed class Athlete
     {
     }
 
-    public int AthleteId { get; set; }
+    public int AthleteId { get; private set; }
 
-    public required string Firstname { get; set; }
+    public string Firstname { get; private set; } = default!;
 
-    public required string Lastname { get; set; }
+    public string Lastname { get; private set; } = default!;
 
-    public required string Slug { get; set; }
+    public string Slug { get; private set; } = default!;
 
-    public required DateOnly? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; private set; } = default!;
 
-    public required Gender Gender { get; init; }
+    public Gender Gender { get; private set; } = default!;
 
-    public required DateTime CreatedOn { get; init; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string? ProfileImageFilename { get; set; }
+    public string? ProfileImageFilename { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = default!;
 
-    public required string CreatedBy { get; set; }
+    public string CreatedBy { get; private set; } = default!;
 
-    public int CountryId { get; set; }
+    public int CountryId { get; private set; }
 
-    public Country Country { get; set; } = null!;
+    public Country Country { get; private set; } = default!;
 
-    public int? TeamId { get; set; }
+    public int? TeamId { get; private set; }
 
-    public Team? Team { get; set; }
+    public Team? Team { get; private set; }
 
     public ICollection<Participation> Participations { get; } = [];
 

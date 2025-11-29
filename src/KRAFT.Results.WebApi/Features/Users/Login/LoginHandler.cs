@@ -36,7 +36,7 @@ internal sealed class LoginHandler
         if (command.Password == user.Password)
         {
             _logger.LogInformation("Migrating password hash for user: {Username}", command.Username);
-            user.Password = PasswordHasher.Hash(user.Password);
+            user.UpdatePassword(PasswordHasher.Hash(user.Password));
         }
 
         if (!PasswordHasher.Verify(command.Password, user.Password))
