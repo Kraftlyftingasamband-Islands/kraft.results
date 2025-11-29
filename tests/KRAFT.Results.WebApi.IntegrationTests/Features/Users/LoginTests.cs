@@ -23,7 +23,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsOk_WhenSuccessful()
     {
         // Arrange
-        var body = new LoginCommandBuilder().Build();
+        LoginCommand body = new LoginCommandBuilder().Build();
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
@@ -36,7 +36,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
     public async Task Deserializes()
     {
         // Arrange
-        var body = new LoginCommandBuilder().Build();
+        LoginCommand body = new LoginCommandBuilder().Build();
 
         // Act
         HttpResponseMessage message = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
@@ -50,7 +50,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsUnauthorized_WhenUsernameIsEmpty()
     {
         // Arrange
-        var body = new LoginCommandBuilder()
+        LoginCommand body = new LoginCommandBuilder()
             .WithUsername(string.Empty)
             .Build();
 
@@ -65,7 +65,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsUnauthorized_WhenUserDoesNotExist()
     {
         // Arrange
-        var body = new LoginCommandBuilder()
+        LoginCommand body = new LoginCommandBuilder()
             .WithUsername(Guid.NewGuid().ToString())
             .Build();
 
@@ -80,7 +80,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsUnauthorized_WhenPasswordIsEmpty()
     {
         // Arrange
-        var body = new LoginCommandBuilder()
+        LoginCommand body = new LoginCommandBuilder()
             .WithPassword(string.Empty)
             .Build();
 
@@ -95,7 +95,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsUnauthorized_WhenPasswordIsWrong()
     {
         // Arrange
-        var body = new LoginCommandBuilder()
+        LoginCommand body = new LoginCommandBuilder()
             .WithPassword(Guid.NewGuid().ToString())
             .Build();
 
