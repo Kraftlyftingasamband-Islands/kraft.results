@@ -6,7 +6,7 @@ internal static class TeamServices
 {
     internal static IServiceCollection AddTeams(this IServiceCollection services)
     {
-        services.AddTransient<CreateTeamHandler>();
+        services.AddScoped<CreateTeamHandler>();
 
         return services;
     }

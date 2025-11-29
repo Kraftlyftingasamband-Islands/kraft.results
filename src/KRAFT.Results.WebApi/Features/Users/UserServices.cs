@@ -8,9 +8,9 @@ internal static class UserServices
 {
     internal static IServiceCollection AddUsers(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<LoginHandler>();
-        services.AddTransient<TokenProvider>();
-        services.AddTransient<CreateUserHandler>();
+        services.AddScoped<LoginHandler>();
+        services.AddScoped<TokenProvider>();
+        services.AddScoped<CreateUserHandler>();
 
         // Configure JWT options from appsettings
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
