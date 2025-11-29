@@ -1,6 +1,5 @@
 ﻿using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.MeetTypes;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 

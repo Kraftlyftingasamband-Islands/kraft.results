@@ -1,5 +1,4 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.MeetTypes;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
 using KRAFT.Results.WebApi.Features.Users;
