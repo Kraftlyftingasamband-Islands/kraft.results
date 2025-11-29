@@ -6,4 +6,5 @@ internal static class Constants
     internal const string TestPassword = "testuser";
     internal const string TestEmail = "test@email.com";
     internal const string TestMeetType = "Powerlifting";
+    internal const string TestAthleteSlug = "testie-mctestface";
 }
