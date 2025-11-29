@@ -21,7 +21,7 @@ internal sealed class WeightCategory
 
     public bool JuniorsOnly { get; set; }
 
-    public string? Slug { get; set; }
+    public required string Slug { get; set; }
 
     public ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
 
