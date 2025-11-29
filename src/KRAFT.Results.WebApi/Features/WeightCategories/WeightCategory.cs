@@ -7,21 +7,21 @@ namespace KRAFT.Results.WebApi.Features.WeightCategories;
 
 internal sealed class WeightCategory
 {
-    public int WeightCategoryId { get; set; }
+    public int WeightCategoryId { get; private set; }
 
-    public required string Title { get; set; }
+    public string Title { get; private set; } = null!;
 
-    public required decimal MinWeight { get; set; }
+    public decimal MinWeight { get; private set; }
 
-    public required decimal MaxWeight { get; set; }
+    public decimal MaxWeight { get; private set; }
 
-    public required Gender Gender { get; set; }
+    public Gender Gender { get; private set; } = null!;
 
-    public required DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public bool JuniorsOnly { get; set; }
+    public bool JuniorsOnly { get; private set; }
 
-    public required string Slug { get; set; }
+    public string Slug { get; private set; } = null!;
 
     public ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
 

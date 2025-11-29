@@ -2,11 +2,11 @@
 
 internal sealed class AthleteAlias
 {
-    public int AthleteAliasId { get; set; }
+    public int AthleteAliasId { get; private set; }
 
-    public int AthleteId { get; set; }
+    public int AthleteId { get; private set; }
 
-    public string Alias { get; set; } = null!;
+    public string Alias { get; private set; } = null!;
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 }

@@ -4,21 +4,21 @@ namespace KRAFT.Results.WebApi.Features.Pages;
 
 internal sealed class Page
 {
-    public int PageId { get; set; }
+    public int PageId { get; private set; }
 
-    public string Title { get; set; } = null!;
+    public string Title { get; private set; } = null!;
 
-    public string Text { get; set; } = null!;
+    public string Text { get; private set; } = null!;
 
-    public int PageGroupId { get; set; }
+    public int PageGroupId { get; private set; }
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; private set; } = null!;
 
-    public PageGroup PageGroup { get; set; } = null!;
+    public PageGroup PageGroup { get; private set; } = null!;
 }

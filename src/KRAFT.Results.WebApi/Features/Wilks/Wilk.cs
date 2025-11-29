@@ -2,11 +2,11 @@
 
 internal sealed class Wilk
 {
-    public decimal Weight { get; set; }
+    public decimal Weight { get; private set; }
 
-    public decimal Coefficient { get; set; }
+    public decimal Coefficient { get; private set; }
 
-    public string Gender { get; set; } = null!;
+    public string Gender { get; private set; } = null!;
 
-    public int Id { get; set; }
+    public int Id { get; private set; }
 }

@@ -7,37 +7,37 @@ namespace KRAFT.Results.WebApi.Features.Records;
 
 internal sealed class Record
 {
-    public int RecordId { get; set; }
+    public int RecordId { get; private set; }
 
-    public int EraId { get; set; }
+    public int EraId { get; private set; }
 
-    public int AgeCategoryId { get; set; }
+    public int AgeCategoryId { get; private set; }
 
-    public int WeightCategoryId { get; set; }
+    public int WeightCategoryId { get; private set; }
 
-    public int RecordCategoryId { get; set; }
+    public int RecordCategoryId { get; private set; }
 
-    public decimal Weight { get; set; }
+    public decimal Weight { get; private set; }
 
-    public DateOnly Date { get; set; }
+    public DateOnly Date { get; private set; }
 
-    public bool IsStandard { get; set; }
+    public bool IsStandard { get; private set; }
 
-    public int? AttemptId { get; set; }
+    public int? AttemptId { get; private set; }
 
-    public bool IsCurrent { get; set; }
+    public bool IsCurrent { get; private set; }
 
-    public bool IsRaw { get; set; }
+    public bool IsRaw { get; private set; }
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; private set; } = null!;
 
-    public AgeCategory AgeCategory { get; set; } = null!;
+    public AgeCategory AgeCategory { get; private set; } = null!;
 
-    public Attempt? Attempt { get; set; }
+    public Attempt? Attempt { get; private set; }
 
-    public Era Era { get; set; } = null!;
+    public Era Era { get; private set; } = null!;
 
-    public WeightCategory WeightCategory { get; set; } = null!;
+    public WeightCategory WeightCategory { get; private set; } = null!;
 }

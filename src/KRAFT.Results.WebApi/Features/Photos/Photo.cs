@@ -4,23 +4,23 @@ namespace KRAFT.Results.WebApi.Features.Photos;
 
 internal sealed class Photo
 {
-    public int PhotoId { get; set; }
+    public int PhotoId { get; private set; }
 
-    public int? MeetId { get; set; }
+    public int? MeetId { get; private set; }
 
-    public string? Photographer { get; set; }
+    public string? Photographer { get; private set; }
 
-    public DateTime Date { get; set; }
+    public DateTime Date { get; private set; }
 
-    public string? ImageFilname { get; set; }
+    public string? ImageFilname { get; private set; }
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; private set; } = null!;
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public Meet? Meet { get; set; }
+    public Meet? Meet { get; private set; }
 }

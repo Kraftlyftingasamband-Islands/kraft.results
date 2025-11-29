@@ -5,21 +5,21 @@ namespace KRAFT.Results.WebApi.Features.UserRoles;
 
 internal sealed class UserRole
 {
-    public int UserRoleId { get; set; }
+    public int UserRoleId { get; private set; }
 
-    public int UserId { get; set; }
+    public int UserId { get; private set; }
 
-    public int RoleId { get; set; }
+    public int RoleId { get; private set; }
 
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; private set; } = null!;
 
-    public Role Role { get; set; } = null!;
+    public Role Role { get; private set; } = null!;
 
-    public User User { get; set; } = null!;
+    public User User { get; private set; } = null!;
 }

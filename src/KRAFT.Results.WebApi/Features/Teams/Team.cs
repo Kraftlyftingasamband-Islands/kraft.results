@@ -15,31 +15,31 @@ internal sealed class Team
     {
     }
 
-    public int TeamId { get; set; }
+    public int TeamId { get; private set; }
 
-    public required string Title { get; set; }
+    public string Title { get; private set; } = null!;
 
-    public required string TitleShort { get; set; }
+    public string TitleShort { get; private set; } = null!;
 
-    public required string TitleFull { get; set; }
+    public string TitleFull { get; private set; } = null!;
 
-    public int? CountryId { get; set; }
+    public int? CountryId { get; private set; }
 
-    public string? LogoImageFilename { get; set; }
+    public string? LogoImageFilename { get; private set; }
 
-    public required string Slug { get; set; }
+    public string Slug { get; private set; } = null!;
 
-    public required DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public required string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; private set; } = null!;
 
     public ICollection<Athlete> Athletes { get; } = [];
 
-    public Country? Country { get; set; }
+    public Country? Country { get; private set; }
 
     public ICollection<Participation> Participations { get; } = [];
 

@@ -12,27 +12,27 @@ internal sealed class User
     {
     }
 
-    public int UserId { get; set; }
+    public int UserId { get; private set; }
 
-    public required string Username { get; set; }
+    public string Username { get; private set; } = null!;
 
-    public required string? Email { get; set; }
+    public string? Email { get; private set; }
 
-    public required string Password { get; set; }
+    public string Password { get; private set; } = null!;
 
-    public required string? Firstname { get; set; }
+    public string? Firstname { get; private set; }
 
-    public required string? Lastname { get; set; }
+    public string? Lastname { get; private set; }
 
-    public required DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; private set; }
 
-    public DateTime ModifiedOn { get; set; }
+    public DateTime ModifiedOn { get; private set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; private set; } = null!;
 
-    public required string CreatedBy { get; set; }
+    public string CreatedBy { get; private set; } = null!;
 
-    public int? FacebookUserId { get; set; }
+    public int? FacebookUserId { get; private set; }
 
     public ICollection<UserRole> UserRoles { get; } = [];
 
@@ -70,5 +70,10 @@ internal sealed class User
         };
 
         return user;
+    }
+
+    internal void UpdatePassword(string password)
+    {
+        Password = password;
     }
 }
