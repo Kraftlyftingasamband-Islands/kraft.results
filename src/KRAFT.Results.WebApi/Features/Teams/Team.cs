@@ -27,7 +27,7 @@ internal sealed class Team
 
     public string? LogoImageFilename { get; set; }
 
-    public string? Slug { get; set; }
+    public required string Slug { get; set; }
 
     public required DateTime CreatedOn { get; set; }
 
@@ -66,6 +66,7 @@ internal sealed class Team
             TitleShort = titleShort,
             TitleFull = titleFull,
             Country = country,
+            Slug = ValueObjects.Slug.Create(title),
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };
