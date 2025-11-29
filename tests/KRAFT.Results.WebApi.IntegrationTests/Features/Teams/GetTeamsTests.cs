@@ -41,4 +41,16 @@ public sealed class GetTeamsTests : IClassFixture<IntegrationTestFixture>
         // Assert
         response.ShouldNotBeNull();
     }
+
+    [Fact]
+    public async Task ReturnsTestTeam()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<TeamSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        response!.ShouldContain(x => x.Slug == Constants.TestTeamSlug);
+    }
 }

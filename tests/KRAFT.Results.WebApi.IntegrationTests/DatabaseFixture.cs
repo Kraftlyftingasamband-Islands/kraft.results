@@ -42,6 +42,9 @@ public sealed class DatabaseFixture : IAsyncLifetime
         
             INSERT INTO Athletes (Firstname, Lastname, Gender, CountryId, Slug)
             VALUES ('Testie', 'McTestFace', 'm', 1, '{Constants.TestAthleteSlug}');
+
+            INSERT INTO Teams (Title, TitleShort, TitleFull, CountryId, Slug)
+            VALUES ('Test team', 'TTM', 'Test team', 1, '{Constants.TestTeamSlug}');
         """);
     }
 }

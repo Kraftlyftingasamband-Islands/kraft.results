@@ -7,4 +7,5 @@ internal static class Constants
     internal const string TestEmail = "test@email.com";
     internal const string TestMeetType = "Powerlifting";
     internal const string TestAthleteSlug = "testie-mctestface";
+    internal const string TestTeamSlug = "test-team";
 }
