@@ -38,7 +38,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
             VALUES ('{Constants.TestUsername}', '{Constants.TestPassword}', '{Constants.TestEmail}');
 
             INSERT INTO MeetTypes (MeetTypeId, Title)
-            Values (1, 'Powerlifting');
+            Values (1, '{Constants.TestMeetType}');
         """);
     }
 }

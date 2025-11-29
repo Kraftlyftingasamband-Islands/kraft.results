@@ -1,6 +1,4 @@
-﻿using KRAFT.Results.WebApi.Features.Meets;
-
-namespace KRAFT.Results.WebApi.Features.MeetTypes;
+﻿namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal sealed class MeetType
 {

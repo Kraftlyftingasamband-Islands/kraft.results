@@ -74,7 +74,8 @@ internal sealed class MeetConfiguration : IEntityTypeConfiguration<Meet>
         builder.Property(e => e.Title)
             .HasMaxLength(100);
 
-        builder.HasOne(d => d.MeetType).WithMany(p => p.Meets)
+        builder.HasOne(d => d.MeetType)
+            .WithMany(p => p.Meets)
             .HasForeignKey(d => d.MeetTypeId)
             .HasConstraintName("FK_Meets_MeetTypes");
     }
