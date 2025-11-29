@@ -14,8 +14,6 @@ internal sealed class Meet
     {
     }
 
-    public int MeetId { get; private set; }
-
     public string Title { get; private set; } = null!;
 
     public string Slug { get; private set; } = null!;
@@ -23,8 +21,6 @@ internal sealed class Meet
     public DateTime StartDate { get; private set; }
 
     public DateTime EndDate { get; private set; }
-
-    public int MeetTypeId { get; private set; }
 
     public bool CalcPlaces { get; private set; }
 

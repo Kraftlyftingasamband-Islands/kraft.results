@@ -16,10 +16,10 @@ internal static class CreateMeetEndpoint
             [FromServices] CreateMeetHandler handler,
             CancellationToken cancellationToken) =>
         {
-            Result<int> result = await handler.Handle(command, cancellationToken);
+            Result<string> result = await handler.Handle(command, cancellationToken);
 
             return result.Match<IResult>(
-                success: id => TypedResults.Created($"/{id}", new { MeetId = id }),
+                success: slug => TypedResults.Created($"/{slug}", new { Slug = slug }),
                 failure: error => error.Code switch
                 {
                     MeetErrors.MeetExistsCode => TypedResults.Conflict(),
