@@ -27,6 +27,16 @@ internal sealed class CreateAthleteHandler
     {
         User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
+        if (await IsDuplicateAthlete(command.FirstName, command.LastName, command.DateOfBirth, cancellationToken))
+        {
+            _logger.LogWarning(
+                "Failed to create athlete {First} {Last}: Athlete with date of birth {DateOfBirth:yyyy-MM-dd} already exists",
+                command.FirstName,
+                command.LastName,
+                command.DateOfBirth);
+            return AthleteErrors.AlreadyExists(command.FirstName, command.LastName, command.DateOfBirth);
+        }
+
         if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
         {
             _logger.LogWarning(
@@ -92,4 +102,11 @@ internal sealed class CreateAthleteHandler
         _dbContext.Set<Team>()
         .Where(x => x.TeamId == teamId)
         .FirstOrDefaultAsync(cancellationToken);
+
+    private Task<bool> IsDuplicateAthlete(string firstName, string lastName, DateOnly dateOfBirth, CancellationToken cancellationToken) =>
+        _dbContext.Set<Athlete>()
+        .Where(x => x.Firstname == firstName)
+        .Where(x => x.Lastname == lastName)
+        .Where(x => x.DateOfBirth == dateOfBirth)
+        .AnyAsync(cancellationToken);
 }
