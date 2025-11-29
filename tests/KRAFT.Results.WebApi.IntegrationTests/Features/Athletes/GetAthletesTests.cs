@@ -24,7 +24,7 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
         // Arrange
 
         // Act
-        var response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
