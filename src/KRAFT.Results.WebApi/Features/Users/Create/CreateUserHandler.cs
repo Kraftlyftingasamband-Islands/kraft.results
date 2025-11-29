@@ -31,13 +31,20 @@ internal sealed class CreateUserHandler
             return email.Error;
         }
 
+        Result<Password> password = Password.Hash(command.Password);
+
+        if (password.IsFailure)
+        {
+            return password.Error;
+        }
+
         Result<User> user = User.Create(
             creator: creator,
             userName: command.UserName,
             firstName: command.FirstName,
             lastName: command.LastName,
             email: email,
-            password: command.Password);
+            password: password);
 
         if (user.IsFailure)
         {
