@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KRAFT.Results.WebApi.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KRAFT.Results.WebApi.Features.WeightCategories;
@@ -16,7 +18,10 @@ internal sealed class WeightCategoryConfiguration : IEntityTypeConfiguration<Wei
         builder.Property(e => e.Gender)
             .HasMaxLength(1)
             .IsUnicode(false)
-            .HasDefaultValue("M", "DF_WeightCategories_Gender");
+            .HasDefaultValue(Gender.Male, "DF_WeightCategories_Gender")
+            .HasConversion(
+                x => x.Value,
+                x => Gender.Parse(x));
 
         builder.Property(e => e.MaxWeight)
             .HasColumnType("numeric(18, 2)");
