@@ -1,6 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.UserRoles;
-using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Users;
@@ -18,7 +17,7 @@ internal sealed class User
 
     public string? Email { get; private set; }
 
-    public string Password { get; private set; } = null!;
+    public Password Password { get; set; } = null!;
 
     public string? Firstname { get; private set; }
 
@@ -36,7 +35,7 @@ internal sealed class User
 
     public ICollection<UserRole> UserRoles { get; } = [];
 
-    internal static Result<User> Create(User creator, string userName, string firstName, string lastName, Email email, string password)
+    internal static Result<User> Create(User creator, string userName, string firstName, string lastName, Email email, Password password)
     {
         if (string.IsNullOrWhiteSpace(userName))
         {
@@ -64,16 +63,11 @@ internal sealed class User
             Firstname = firstName,
             Lastname = lastName,
             Email = email,
-            Password = PasswordHasher.Hash(password),
+            Password = password,
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };
 
         return user;
-    }
-
-    internal void UpdatePassword(string password)
-    {
-        Password = password;
     }
 }

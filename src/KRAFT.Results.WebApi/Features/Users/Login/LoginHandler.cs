@@ -1,6 +1,7 @@
 ﻿using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -36,10 +37,10 @@ internal sealed class LoginHandler
         if (command.Password == user.Password)
         {
             _logger.LogInformation("Migrating password hash for user: {Username}", command.Username);
-            user.UpdatePassword(PasswordHasher.Hash(user.Password));
+            user.Password = Password.Hash(user.Password);
         }
 
-        if (!PasswordHasher.Verify(command.Password, user.Password))
+        if (!user.Password.Verify(command.Password))
         {
             _logger.LogWarning("Login attempt with invalid password for username: {Username}", command.Username);
             return UserErrors.InvalidUsernameOrPassword;
