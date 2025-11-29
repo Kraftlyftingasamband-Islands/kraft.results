@@ -20,7 +20,7 @@ internal sealed class CreateMeetHandler
         _httpContextService = httpContextService;
     }
 
-    public async Task<Result<int>> Handle(CreateMeetCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateMeetCommand command, CancellationToken cancellationToken)
     {
         User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
@@ -55,7 +55,7 @@ internal sealed class CreateMeetHandler
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return meet.MeetId;
+        return meet.Slug;
     }
 
     private Task<bool> IsDuplicateAsync(string title, DateOnly startDate, CancellationToken cancellationToken) =>
