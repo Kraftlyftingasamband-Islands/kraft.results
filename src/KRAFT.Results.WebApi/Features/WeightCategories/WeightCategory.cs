@@ -1,6 +1,7 @@
 ﻿using KRAFT.Results.WebApi.Features.EraWeightCategories;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
+using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.WeightCategories;
 
@@ -8,19 +9,19 @@ internal sealed class WeightCategory
 {
     public int WeightCategoryId { get; set; }
 
-    public string Title { get; set; } = null!;
+    public required string Title { get; set; }
 
-    public decimal MinWeight { get; set; }
+    public required decimal MinWeight { get; set; }
 
-    public decimal MaxWeight { get; set; }
+    public required decimal MaxWeight { get; set; }
 
-    public string? Gender { get; set; }
+    public required Gender Gender { get; set; }
 
-    public DateTime CreatedOn { get; set; }
+    public required DateTime CreatedOn { get; set; }
 
     public bool JuniorsOnly { get; set; }
 
-    public string? Slug { get; set; }
+    public required string Slug { get; set; }
 
     public ICollection<EraWeightCategory> EraWeightCategories { get; } = [];
 
