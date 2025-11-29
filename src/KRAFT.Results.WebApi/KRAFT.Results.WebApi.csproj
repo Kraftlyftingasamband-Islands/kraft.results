@@ -18,4 +18,8 @@
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\KRAFT.Results.Contracts\KRAFT.Results.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

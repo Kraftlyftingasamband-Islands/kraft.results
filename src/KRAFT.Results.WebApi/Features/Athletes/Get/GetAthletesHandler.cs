@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KRAFT.Results.Contracts.Athletes;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Athletes.Get;
 

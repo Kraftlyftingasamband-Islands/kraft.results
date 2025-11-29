@@ -1,6 +1,6 @@
-﻿namespace KRAFT.Results.WebApi.Features.Athletes.Create;
+﻿namespace KRAFT.Results.Contracts.Athletes;
 
-internal sealed record class CreateAthleteCommand(
+public sealed record class CreateAthleteCommand(
     string FirstName,
     string LastName,
     int CountryId,

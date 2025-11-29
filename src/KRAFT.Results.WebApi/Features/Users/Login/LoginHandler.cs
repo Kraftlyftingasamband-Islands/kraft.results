@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+﻿using KRAFT.Results.Contracts.Users;
+using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;

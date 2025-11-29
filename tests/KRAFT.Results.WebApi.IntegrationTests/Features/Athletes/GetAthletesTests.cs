@@ -1,4 +1,7 @@
 ﻿using System.Net;
+using System.Net.Http.Json;
+
+using KRAFT.Results.Contracts.Athletes;
 
 using Shouldly;
 
@@ -25,5 +28,17 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Deserializes()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<AthleteSummary>? response = await _httpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Root, CancellationToken.None);
+
+        // Assert
+        response.ShouldNotBeNull();
     }
 }

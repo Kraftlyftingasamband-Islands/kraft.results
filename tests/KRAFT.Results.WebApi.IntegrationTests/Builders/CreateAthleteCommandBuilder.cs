@@ -1,4 +1,6 @@
-﻿namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
+﻿using KRAFT.Results.Contracts.Athletes;
+
+namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class CreateAthleteCommandBuilder
 {
@@ -45,16 +47,6 @@ internal sealed class CreateAthleteCommandBuilder
         return this;
     }
 
-    public object Build()
-    {
-        return new
-        {
-            FirstName = _firstName,
-            LastName = _lastName,
-            Gender = _gender,
-            CountryId = _countryId,
-            TeamId = _teamId,
-            DateOfBirth = _dateOfBirth,
-        };
-    }
+    public CreateAthleteCommand Build() =>
+        new(_firstName, _lastName, _countryId, _teamId, _dateOfBirth, _gender);
 }
