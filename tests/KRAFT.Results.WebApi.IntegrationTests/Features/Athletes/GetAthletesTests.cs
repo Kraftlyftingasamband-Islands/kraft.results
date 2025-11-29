@@ -9,13 +9,13 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Athletes;
 
 public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
 {
-    private const string Root = "/athletes";
+    private const string Path = "/athletes";
 
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _unauthorizedHttpClient;
 
     public GetAthletesTests(IntegrationTestFixture fixture)
     {
-        _httpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
         // Arrange
 
         // Act
-        var response = await _httpClient.GetAsync(Root, CancellationToken.None);
+        var response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -36,7 +36,7 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
         // Arrange
 
         // Act
-        IReadOnlyList<AthleteSummary>? response = await _httpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Root, CancellationToken.None);
+        IReadOnlyList<AthleteSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();

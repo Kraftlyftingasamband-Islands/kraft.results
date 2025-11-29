@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 using Shouldly;
@@ -9,38 +10,53 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
 
 public sealed class CreateTeamTests : IClassFixture<IntegrationTestFixture>
 {
-    private const string Root = "/teams";
+    private const string Path = "/teams";
 
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _authorizedHttpClient;
+    private readonly HttpClient _unauthorizedHttpClient;
 
     public CreateTeamTests(IntegrationTestFixture fixture)
     {
-        _httpClient = fixture.Factory.CreateClient();
+        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+        _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
     [Fact]
-    public async Task ReturnsCreated_WhenBodyIsValid()
+    public async Task ReturnsCreated_WhenSuccessful()
     {
         // Arrange
-        var body = new CreateTeamCommandBuilder().Build();
+        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Root, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     [Fact]
+    public async Task ReturnsUnauthorized_WhenHttpClientIsUnauthorized()
+    {
+        // Arrange
+        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
+
+        // Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task ReturnsBadRequest_WhenTitleIsEmpty()
     {
         // Arrange
-        var body = new CreateTeamCommandBuilder()
+        CreateTeamCommand command = new CreateTeamCommandBuilder()
             .WithTitle(string.Empty)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Root, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -50,12 +66,12 @@ public sealed class CreateTeamTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsBadRequest_WhenFullTitleIsEmpty()
     {
         // Arrange
-        var body = new CreateTeamCommandBuilder()
+        CreateTeamCommand command = new CreateTeamCommandBuilder()
             .WithTitleFull(string.Empty)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Root, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -68,12 +84,12 @@ public sealed class CreateTeamTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsBadRequest_WhenShortTitleIsInvalid(string value)
     {
         // Arrange
-        var body = new CreateTeamCommandBuilder()
+        CreateTeamCommand command = new CreateTeamCommandBuilder()
             .WithTitleShort(value)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Root, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -84,16 +100,16 @@ public sealed class CreateTeamTests : IClassFixture<IntegrationTestFixture>
     {
         // Arrange
         string shortTitle = "ABC";
-        var firstBody = new CreateTeamCommandBuilder()
+        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
-        var secondBody = new CreateTeamCommandBuilder()
+        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
-        _ = await _httpClient.PostAsJsonAsync(Root, firstBody, CancellationToken.None);
+        _ = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Root, secondBody, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, secondCommand, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
