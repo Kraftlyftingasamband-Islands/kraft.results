@@ -7,8 +7,8 @@ internal static class AthleteServices
 {
     internal static IServiceCollection AddAthletes(this IServiceCollection services)
     {
-        services.AddTransient<CreateAthleteHandler>();
-        services.AddTransient<GetAthletesHandler>();
+        services.AddScoped<CreateAthleteHandler>();
+        services.AddScoped<GetAthletesHandler>();
 
         return services;
     }

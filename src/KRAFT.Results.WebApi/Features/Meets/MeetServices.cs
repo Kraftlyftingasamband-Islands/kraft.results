@@ -6,7 +6,7 @@ internal static class MeetServices
 {
     internal static IServiceCollection AddMeets(this IServiceCollection services)
     {
-        services.AddTransient<CreateMeetHandler>();
+        services.AddScoped<CreateMeetHandler>();
 
         return services;
     }
