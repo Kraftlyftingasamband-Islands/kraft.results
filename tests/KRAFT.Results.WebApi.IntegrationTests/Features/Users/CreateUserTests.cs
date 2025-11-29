@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 using Shouldly;
@@ -11,36 +12,51 @@ public sealed class CreateUserTests
 {
     private const string Path = "/users";
 
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _authorizedHttpClient;
+    private readonly HttpClient _unauthorizedHttpClient;
 
     public CreateUserTests(IntegrationTestFixture fixture)
     {
-        _httpClient = fixture.Factory.CreateClient();
+        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+        _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
     [Fact]
-    public async Task ReturnsCreated_WhenBodyIsValid()
+    public async Task ReturnsCreated_WhenSuccessful()
     {
         // Arrange
-        var body = new CreateUserCommandBuilder().Build();
+        CreateUserCommand body = new CreateUserCommandBuilder().Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     [Fact]
+    public async Task ReturnsUnauthorized_WhenHttpClientIsUnauthorized()
+    {
+        // Arrange
+        CreateUserCommand command = new CreateUserCommandBuilder().Build();
+
+        // Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task ReturnsConflict_WhenUsernameExists()
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithUsername(Constants.TestUsername)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -50,12 +66,12 @@ public sealed class CreateUserTests
     public async Task ReturnsConflict_WhenEmailExists()
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithEmail(Constants.TestEmail)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -66,12 +82,12 @@ public sealed class CreateUserTests
     public async Task ReturnsBadRequest_WhenUsernameIsInvalid(string username)
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithUsername(username)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -82,12 +98,12 @@ public sealed class CreateUserTests
     public async Task ReturnsBadRequest_WhenFirstNameIsInvalid(string username)
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithFirstName(username)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -98,12 +114,12 @@ public sealed class CreateUserTests
     public async Task ReturnsBadRequest_WhenLastNameIsInvalid(string username)
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithLastName(username)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -117,12 +133,12 @@ public sealed class CreateUserTests
     public async Task ReturnsBadRequest_WhenEmailIsInvalid(string username)
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithEmail(username)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -133,12 +149,12 @@ public sealed class CreateUserTests
     public async Task ReturnsBadRequest_WhenPasswordIsInvalid(string username)
     {
         // Arrange
-        var body = new CreateUserCommandBuilder()
+        CreateUserCommand command = new CreateUserCommandBuilder()
             .WithPassword(username)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

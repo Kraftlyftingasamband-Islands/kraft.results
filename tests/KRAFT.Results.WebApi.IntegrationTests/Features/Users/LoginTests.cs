@@ -12,21 +12,21 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
 {
     private const string Path = "/users/login";
 
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _unauthorizedHttpClient;
 
     public LoginTests(IntegrationTestFixture fixture)
     {
-        _httpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
     [Fact]
-    public async Task ReturnsOk_WhenBodyIsValid()
+    public async Task ReturnsOk_WhenSuccessful()
     {
         // Arrange
         var body = new LoginCommandBuilder().Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -39,7 +39,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
         var body = new LoginCommandBuilder().Build();
 
         // Act
-        HttpResponseMessage message = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage message = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
         AuthenticatedResponse? response = await message.Content.ReadFromJsonAsync<AuthenticatedResponse>(CancellationToken.None);
 
         // Assert
@@ -55,7 +55,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -70,7 +70,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -85,7 +85,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -100,7 +100,7 @@ public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);

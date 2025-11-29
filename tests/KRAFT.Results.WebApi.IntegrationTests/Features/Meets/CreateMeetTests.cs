@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 using Shouldly;
@@ -11,35 +12,50 @@ public sealed class CreateMeetTests : IClassFixture<IntegrationTestFixture>
 {
     private const string Path = "/meets";
 
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _authorizedHttpClient;
+    private readonly HttpClient _unauthorizedHttpClient;
 
     public CreateMeetTests(IntegrationTestFixture fixture)
     {
-        _httpClient = fixture.Factory.CreateClient();
+        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+        _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
     [Fact]
-    public async Task ReturnsCreated_WhenBodyIsValid()
+    public async Task ReturnsCreated_WhenSuccessful()
     {
         // Arrange
-        var body = new CreateMeetCommandBuilder().Build();
+        CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     [Fact]
+    public async Task ReturnsUnauthorized_WhenHttpClientIsUnauthorized()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
+
+        // Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task ReturnsConflict_WhenMeetExists()
     {
         // Arrange
-        var body = new CreateMeetCommandBuilder().Build();
-        _ = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
+        _ = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -49,12 +65,12 @@ public sealed class CreateMeetTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsBadRequest_WhenTitleIsEmpty()
     {
         // Arrange
-        var body = new CreateMeetCommandBuilder()
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithTitle(string.Empty)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -64,12 +80,12 @@ public sealed class CreateMeetTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsBadRequest_WhenDateIsBefore1900()
     {
         // Arrange
-        var body = new CreateMeetCommandBuilder()
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithStartDate(new DateOnly(1899, 1, 1))
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -79,12 +95,12 @@ public sealed class CreateMeetTests : IClassFixture<IntegrationTestFixture>
     public async Task ReturnsBadRequest_WhenMeetTypeDoesNotExist()
     {
         // Arrange
-        var body = new CreateMeetCommandBuilder()
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithMeetTypeId(int.MaxValue)
             .Build();
 
         // Act
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(Path, body, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
