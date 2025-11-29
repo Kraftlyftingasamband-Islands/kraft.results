@@ -39,6 +39,9 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
             INSERT INTO MeetTypes (MeetTypeId, Title)
             Values (1, '{Constants.TestMeetType}');
+        
+            INSERT INTO Athletes (Firstname, Lastname, Gender, CountryId, Slug)
+            VALUES ('Testie', 'McTestFace', 'm', 1, '{Constants.TestAthleteSlug}');
         """);
     }
 }

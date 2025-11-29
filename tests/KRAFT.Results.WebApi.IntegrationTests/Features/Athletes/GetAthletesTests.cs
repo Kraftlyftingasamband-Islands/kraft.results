@@ -41,4 +41,16 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
         // Assert
         response.ShouldNotBeNull();
     }
+
+    [Fact]
+    public async Task ReturnsTestAthlete()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<AthleteSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        response!.ShouldContain(x => x.Slug == Constants.TestAthleteSlug);
+    }
 }
