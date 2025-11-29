@@ -22,6 +22,7 @@ internal static class CreateAthleteEndpoint
                 success: athleteId => TypedResults.Created($"/{athleteId}", new { AthleteId = athleteId }),
                 failure: error => error.Code switch
                 {
+                    AthleteErrors.AlreadyExistsCode => TypedResults.Conflict(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

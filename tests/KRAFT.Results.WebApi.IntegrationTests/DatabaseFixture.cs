@@ -30,6 +30,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
         await dbContext.Database.MigrateAsync();
 
+#pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
         await dbContext.Database.ExecuteSqlRawAsync($"""
             INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
             VALUES (1, 'IS', 'ISL', 'Iceland');
@@ -39,12 +40,13 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
             INSERT INTO MeetTypes (MeetTypeId, Title)
             Values (1, '{Constants.TestMeetType}');
-        
-            INSERT INTO Athletes (Firstname, Lastname, Gender, CountryId, Slug)
-            VALUES ('Testie', 'McTestFace', 'm', 1, '{Constants.TestAthleteSlug}');
+
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('{Constants.TestAthleteFirstName}', '{Constants.TestAthleteLastName}', '{Constants.TestAthleteDateOfBirth:yyyy-MM-dd}', 'm', 1, '{Constants.TestAthleteSlug}');
 
             INSERT INTO Teams (Title, TitleShort, TitleFull, CountryId, Slug)
             VALUES ('Test team', 'TTM', 'Test team', 1, '{Constants.TestTeamSlug}');
         """);
+#pragma warning restore EF1002 // Risk of vulnerability to SQL injection.
     }
 }

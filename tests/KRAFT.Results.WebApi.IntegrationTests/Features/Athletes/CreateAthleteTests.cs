@@ -48,6 +48,23 @@ public class CreateAthleteTests : IClassFixture<IntegrationTestFixture>
     }
 
     [Fact]
+    public async Task ReturnsConflict_WhenAthleteExists()
+    {
+        // Arrange
+        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
+            .WithFirstName(Constants.TestAthleteFirstName)
+            .WithLastName(Constants.TestAthleteLastName)
+            .WithDateOfBirth(Constants.TestAthleteDateOfBirth)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
     public async Task ReturnsBadRequest_WhenCountryIdDoesNotExist()
     {
         // Arrange
