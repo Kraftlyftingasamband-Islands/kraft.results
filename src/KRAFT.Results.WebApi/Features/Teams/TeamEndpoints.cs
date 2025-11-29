@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Teams.Create;
+using KRAFT.Results.WebApi.Features.Teams.Get;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
@@ -10,6 +11,7 @@ internal static class TeamEndpoints
             .WithTags("Teams");
 
         group.MapCreateTeamEndpoint();
+        group.MapGetTeamsEndpoint();
 
         return group;
     }
