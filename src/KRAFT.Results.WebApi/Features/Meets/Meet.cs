@@ -82,7 +82,7 @@ internal sealed class Meet
             Title = title,
             StartDate = date,
             EndDate = date,
-            Slug = ValueObjects.Slug.Create(title),
+            Slug = ValueObjects.Slug.Create($"{title} {startDate.Year}"),
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };
