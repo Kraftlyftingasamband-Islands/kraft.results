@@ -3,10 +3,6 @@ using System.Text;
 
 using KRAFT.Results.WebApi;
 using KRAFT.Results.WebApi.Features;
-using KRAFT.Results.WebApi.Features.Athletes;
-using KRAFT.Results.WebApi.Features.Meets;
-using KRAFT.Results.WebApi.Features.Teams;
-using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Middleware;
 using KRAFT.Results.WebApi.Services;
 
@@ -67,11 +63,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/healthz");
-
-app.MapAthleteEndpoints();
-app.MapTeamEndpoints();
-app.MapUserEndpoints();
-app.MapMeetEndpoints();
+app.MapFeatureEndpoints();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
