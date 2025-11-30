@@ -10,6 +10,7 @@ internal static class Constants
     internal const string TestAthleteLastName = "McTestFace";
     internal const string TestAthleteSlug = "testie-mctestface";
     internal const string TestTeamSlug = "test-team";
+    internal const string TestCountryName = "Iceland";
 
     internal static readonly DateOnly TestAthleteDateOfBirth = new(1985, 7, 2);
 }
