@@ -33,7 +33,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
 #pragma warning disable EF1002 // Risk of vulnerability to SQL injection.
         await dbContext.Database.ExecuteSqlRawAsync($"""
             INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
-            VALUES (1, 'IS', 'ISL', 'Iceland');
+            VALUES (1, 'IS', 'ISL', '{Constants.TestCountryName}');
 
             INSERT INTO Users (Username, Password, Email)
             VALUES ('{Constants.TestUsername}', '{Constants.TestPassword}', '{Constants.TestEmail}');
