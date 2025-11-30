@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 
 using KRAFT.Results.WebApi;
+using KRAFT.Results.WebApi.Features;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Teams;
@@ -55,10 +56,7 @@ builder.Services.AddHealthChecks();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IHttpContextService, HttpContextService>();
-builder.Services.AddAthletes();
-builder.Services.AddUsers(builder.Configuration);
-builder.Services.AddTeams();
-builder.Services.AddMeets();
+builder.Services.AddFeatures(builder.Configuration);
 
 WebApplication app = builder.Build();
 
