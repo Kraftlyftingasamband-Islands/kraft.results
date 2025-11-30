@@ -3,7 +3,7 @@ using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 
-namespace KRAFT.Results.WebApi.IntegrationTests;
+namespace KRAFT.Results.WebApi.Features;
 
 internal static class FeatureServices
 {
