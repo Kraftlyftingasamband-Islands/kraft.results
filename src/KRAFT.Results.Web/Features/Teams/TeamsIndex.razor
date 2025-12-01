@@ -1,0 +1,37 @@
+﻿@page "/teams"
+
+@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Web.Services
+
+@inject IApiService _apiService;
+
+<h3>Teams</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>ShortTitle</th>
+            <th>Athletes with results</th>
+        </tr>
+    </thead>
+
+    @foreach (TeamSummary team in Teams)
+    {
+        <tr>
+            <td>@team.Title</td>
+            <td>@team.ShortTitle</td>
+            <td>@team.AthleteCount</td>
+        </tr>
+    }
+</table>
+
+@code {
+    private IReadOnlyCollection<TeamSummary> Teams = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Teams = await _apiService.GetAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
+    }
+}

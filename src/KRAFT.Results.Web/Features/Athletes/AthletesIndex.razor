@@ -1,0 +1,34 @@
+﻿@page "/athletes"
+
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Web.Services
+
+@inject IApiService _apiService;
+
+<h3>Athletes</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+        </tr>
+    </thead>
+
+    @foreach (AthleteSummary athlete in Athletes)
+    {
+        <tr>
+            <td>@(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")</td>
+        </tr>
+    }
+</table>
+
+@code {
+
+    private IReadOnlyCollection<AthleteSummary> Athletes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Athletes = await _apiService.GetAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
+    }
+}
