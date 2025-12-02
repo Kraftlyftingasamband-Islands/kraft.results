@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Users.Create;
+using KRAFT.Results.WebApi.Features.Users.Get;
 using KRAFT.Results.WebApi.Features.Users.Login;
 
 namespace KRAFT.Results.WebApi.Features.Users;
@@ -12,6 +13,7 @@ internal static class UserEndpoints
 
         group.MapLoginEndpoint();
         group.MapCreateUserEndpoint();
+        group.MapGetUsersEndpoint();
 
         return endpoints;
     }

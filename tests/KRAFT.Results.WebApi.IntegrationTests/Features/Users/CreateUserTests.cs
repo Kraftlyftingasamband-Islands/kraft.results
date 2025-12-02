@@ -52,7 +52,7 @@ public sealed class CreateUserTests
     {
         // Arrange
         CreateUserCommand command = new CreateUserCommandBuilder()
-            .WithUsername(Constants.TestUsername)
+            .WithUsername(Constants.TestUser.Username)
             .Build();
 
         // Act
@@ -67,7 +67,7 @@ public sealed class CreateUserTests
     {
         // Arrange
         CreateUserCommand command = new CreateUserCommandBuilder()
-            .WithEmail(Constants.TestEmail)
+            .WithEmail(Constants.TestUser.Email)
             .Build();
 
         // Act
