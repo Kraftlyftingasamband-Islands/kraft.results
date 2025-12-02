@@ -9,7 +9,9 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/KRAFT.Results.AppHost/KRAFT.Results.AppHost.csproj" />
     <Project Path="src/KRAFT.Results.Contracts/KRAFT.Results.Contracts.csproj" />
+    <Project Path="src/KRAFT.Results.ServiceDefaults/KRAFT.Results.ServiceDefaults.csproj" />
     <Project Path="src/KRAFT.Results.Web/KRAFT.Results.Web.csproj" />
     <Project Path="src/KRAFT.Results.WebApi/KRAFT.Results.WebApi.csproj" />
   </Folder>
