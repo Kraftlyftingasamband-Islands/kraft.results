@@ -1,0 +1,39 @@
+﻿@page "/users"
+
+@using KRAFT.Results.Contracts.Users
+@using KRAFT.Results.Web.Services
+
+@inject IApiService _apiService;
+
+<h3>Notendur</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nafn</th>
+            <th>Tölvupóstfang</th>
+            <th>Hlutverk</th>
+            <th>Stofnaður</th>
+        </tr>
+    </thead>
+
+    @foreach (UserSummary User in Users)
+    {
+        <tr>
+            <td>@User.Name</td>
+            <td>@User.Email</td>
+            <td>@string.Join(", ", User.Roles)</td>
+            <td>@User.CreatedOn.ToShortDateString()</td>
+        </tr>
+    }
+</table>
+
+@code {
+    private IReadOnlyCollection<UserSummary> Users = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Users = await _apiService.GetAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
+    }
+}

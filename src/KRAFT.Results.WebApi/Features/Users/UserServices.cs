@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Users.Create;
+using KRAFT.Results.WebApi.Features.Users.Get;
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 using KRAFT.Results.WebApi.Features.Users.Login;
 
@@ -11,6 +12,7 @@ internal static class UserServices
         services.AddScoped<LoginHandler>();
         services.AddScoped<TokenProvider>();
         services.AddScoped<CreateUserHandler>();
+        services.AddScoped<GetUsersHandler>();
 
         // Configure JWT options from appsettings
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));

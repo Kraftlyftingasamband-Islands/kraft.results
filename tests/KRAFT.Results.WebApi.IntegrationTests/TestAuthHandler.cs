@@ -24,7 +24,7 @@ internal sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSche
     {
         ClaimsIdentity identity = new(
         [
-            new Claim(JwtRegisteredClaimNames.Name, Constants.TestUsername),
+            new Claim(JwtRegisteredClaimNames.Name, Constants.TestUser.Username),
             new Claim(ClaimTypes.Role, "Admin"),
         ],
         "Test");

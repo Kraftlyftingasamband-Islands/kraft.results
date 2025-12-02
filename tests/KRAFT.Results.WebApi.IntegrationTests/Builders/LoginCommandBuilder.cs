@@ -4,8 +4,8 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class LoginCommandBuilder
 {
-    private string _username = Constants.TestUsername;
-    private string _password = Constants.TestPassword;
+    private string _username = Constants.TestUser.Username;
+    private string _password = Constants.TestUser.Password;
 
     public LoginCommandBuilder WithUsername(string username)
     {
