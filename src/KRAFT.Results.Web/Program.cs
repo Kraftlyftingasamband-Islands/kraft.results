@@ -7,6 +7,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<IApiService, ApiService>();
+builder.Services.AddScoped<RedirectManager>();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 {
