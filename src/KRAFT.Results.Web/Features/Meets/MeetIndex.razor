@@ -1,0 +1,67 @@
+﻿@page "/meets/{year:int?}"
+
+@using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Services
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+
+@inject IApiService Api;
+@inject NavigationManager NavigationManager
+
+<ul class="nav justify-content-center">
+    <li class="nav-item">
+        <NavLink class="nav-link" href="@($"/meets/{Year - 1}")">
+            <span class="bi bi-arrow-left-square" aria-hidden="true"></span>
+        </NavLink>
+    </li>
+    <li class="nav-item">
+        <h3>Mótaskrá @Year</h3>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="@($"/meets/{Year + 1}")">
+            <span class="bi bi-arrow-right-square" aria-hidden="true"></span>
+        </NavLink>
+    </li>
+</ul>
+
+@foreach (var group in Meets.GroupBy(x => x.StartDate.ToString("MMMM", CultureInfo.CurrentCulture)))
+{
+    <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
+    @foreach (var meet in group)
+    {
+        <table class="table table-hover">
+            <tr>
+                <td style="width: 50px">
+                    <div class="date-box">
+                        @meet.StartDate.ToString("dd")
+                    </div>
+                </td>
+                <td>
+                    <NavLink class="nav-link" href="@($"/meets/{meet.Slug}")">
+                        <div class="index-item-title">@meet.Title</div>
+                    </NavLink>
+                    <div class="location"><span class="bi bi-geo-alt" style="margin-right: 5px"></span>@meet.Location</div>
+                </td>
+            </tr>
+        </table>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Year { get; set; }
+
+    private IReadOnlyCollection<MeetSummary> Meets = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Year == 0)
+        {
+            Year = DateTime.Now.Year;
+        }
+
+        Meets = await Api.GetAsync<IReadOnlyCollection<MeetSummary>>($"/meets?year={Year}") ?? [];
+    }
+}
