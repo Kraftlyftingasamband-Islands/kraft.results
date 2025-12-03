@@ -15,6 +15,9 @@ internal sealed class GetAthletesHandler
 
     public Task<List<AthleteSummary>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<Athlete>()
+        .OrderBy(x => x.Firstname)
+        .ThenBy(x => x.Lastname)
+        .ThenBy(x => x.DateOfBirth)
         .Select(x => new AthleteSummary(
             x.Slug,
             $"{x.Firstname} {x.Lastname}",
