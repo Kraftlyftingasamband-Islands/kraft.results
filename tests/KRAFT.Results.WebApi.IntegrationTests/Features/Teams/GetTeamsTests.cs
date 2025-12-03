@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 using Shouldly;
 
@@ -11,10 +12,12 @@ public sealed class GetTeamsTests : IClassFixture<IntegrationTestFixture>
 {
     private const string Path = "/teams";
 
+    private readonly HttpClient _authorizedHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
 
     public GetTeamsTests(IntegrationTestFixture fixture)
     {
+        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
@@ -52,5 +55,21 @@ public sealed class GetTeamsTests : IClassFixture<IntegrationTestFixture>
 
         // Assert
         response!.ShouldContain(x => x.Slug == Constants.TestTeamSlug);
+    }
+
+    [Fact]
+    public async Task OrdersTeamsByTitle()
+    {
+        // Arrange
+        CreateTeamCommand command = new CreateTeamCommandBuilder()
+            .WithTitle("A")
+            .Build();
+        await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Act
+        IReadOnlyList<TeamSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        response![0].Title.ShouldBe(command.Title);
     }
 }
