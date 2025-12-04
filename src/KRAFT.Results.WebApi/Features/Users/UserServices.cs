@@ -7,15 +7,17 @@ namespace KRAFT.Results.WebApi.Features.Users;
 
 internal static class UserServices
 {
-    internal static IServiceCollection AddUsers(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection AddUsers(this IServiceCollection services)
     {
         services.AddScoped<LoginHandler>();
         services.AddScoped<TokenProvider>();
         services.AddScoped<CreateUserHandler>();
         services.AddScoped<GetUsersHandler>();
 
-        // Configure JWT options from appsettings
-        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddOptions<JwtOptions>()
+            .Configure<IConfiguration>((options, configuration)
+                => configuration.GetRequiredSection(JwtOptions.SectionName).Bind(options))
+            .ValidateOnStart();
 
         return services;
     }

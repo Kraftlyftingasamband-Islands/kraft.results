@@ -54,7 +54,7 @@ builder.Services.AddHealthChecks();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IHttpContextService, HttpContextService>();
-builder.Services.AddFeatures(builder.Configuration);
+builder.Services.AddFeatures();
 
 WebApplication app = builder.Build();
 
