@@ -8,12 +8,12 @@ namespace KRAFT.Results.WebApi.Features;
 
 internal static class FeatureServices
 {
-    internal static IServiceCollection AddFeatures(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection AddFeatures(this IServiceCollection services)
     {
         services.AddAthletes();
         services.AddCountries();
         services.AddMeets();
-        services.AddUsers(configuration);
+        services.AddUsers();
         services.AddTeams();
 
         return services;
