@@ -2,36 +2,34 @@
 
 @using KRAFT.Results.Contracts.Teams
 @using KRAFT.Results.Web.Services
+@using Microsoft.AspNetCore.Components.Routing
 
 @inject IApiService _apiService;
+@inject NavigationManager NavigationManager;
 
 <h3>Félög</h3>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Heiti</th>
-            <th>Skammstöfun</th>
-            <th>Fjöldi keppenda með úrslit</th>
-        </tr>
-    </thead>
-
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
     @foreach (TeamSummary team in Teams)
     {
-        <tr>
-            <td>@team.Title</td>
-            <td>@team.ShortTitle</td>
-            <td>@team.AthleteCount</td>
-        </tr>
+        <div class="col">
+            <div class="card h-100 card-clickable">
+                <div class="card-body">
+                    <a class="stretched-link" href="@($"/teams/{team.Slug}")"></a>
+                    <h5 class="card-title">@team.Title</h5>
+                    <p class="card-text">@team.ShortTitle</p>
+                    <p class="cart-text">Fjöldi keppenda með úrslit: @team.AthleteCount</p>
+                </div>
+            </div>
+        </div>
     }
-</table>
+</div>
 
 @code {
     private IReadOnlyCollection<TeamSummary> Teams = [];
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
         Teams = await _apiService.GetAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
     }
 }
