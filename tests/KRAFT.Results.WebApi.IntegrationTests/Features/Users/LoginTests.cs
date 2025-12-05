@@ -8,16 +8,11 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
-public sealed class LoginTests : IClassFixture<IntegrationTestFixture>
+public sealed class LoginTests(IntegrationTestFixture fixture)
 {
     private const string Path = "/users/login";
 
-    private readonly HttpClient _unauthorizedHttpClient;
-
-    public LoginTests(IntegrationTestFixture fixture)
-    {
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
-    }
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
     public async Task ReturnsOk_WhenSuccessful()
