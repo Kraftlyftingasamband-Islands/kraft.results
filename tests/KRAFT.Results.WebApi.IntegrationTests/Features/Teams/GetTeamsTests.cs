@@ -56,7 +56,7 @@ public sealed class GetTeamsTests(IntegrationTestFixture fixture)
     {
         // Arrange
         CreateTeamCommand command = new CreateTeamCommandBuilder()
-            .WithTitle("A")
+            .WithTitle("0")
             .Build();
         await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 

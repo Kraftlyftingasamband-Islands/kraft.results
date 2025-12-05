@@ -1,0 +1,39 @@
+﻿@page "/teams/{slug}"
+
+@using KRAFT
+@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Web.Services
+@using Microsoft.AspNetCore.Components.Routing
+
+@inject IApiService _apiService;
+
+<h3>@Team?.FullTitle (@Team?.ShortTitle)</h3>
+
+<br/>
+
+<h4>Keppendur</h4>
+
+<table class="table table-hover">
+    @foreach (var member in Team?.Members ?? [])
+    {
+        <tr>
+            <td>
+                <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
+                    @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
+                </NavLink>
+            </td>
+        </tr>
+    }
+</table>
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private TeamDetails? Team;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Team = await _apiService.GetAsync<TeamDetails>($"/teams/{Slug}");
+    }
+}
