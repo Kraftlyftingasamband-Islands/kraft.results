@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Teams.GetBySlug;
+namespace KRAFT.Results.WebApi.Features.Teams.GetDetails;
 
 internal static class GetTeamDetailsEndpoint
 {
