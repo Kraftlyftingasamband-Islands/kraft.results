@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
-namespace KRAFT.Results.WebApi.Features.Teams.GetBySlug;
+namespace KRAFT.Results.WebApi.Features.Teams.GetDetails;
 
 internal sealed class GetTeamDetailsHandler
 {

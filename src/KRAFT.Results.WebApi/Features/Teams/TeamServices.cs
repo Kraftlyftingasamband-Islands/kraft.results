@@ -1,6 +1,6 @@
 ﻿using KRAFT.Results.WebApi.Features.Teams.Create;
 using KRAFT.Results.WebApi.Features.Teams.Get;
-using KRAFT.Results.WebApi.Features.Teams.GetBySlug;
+using KRAFT.Results.WebApi.Features.Teams.GetDetails;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
