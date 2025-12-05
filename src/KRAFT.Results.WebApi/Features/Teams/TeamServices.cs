@@ -1,5 +1,6 @@
 ﻿using KRAFT.Results.WebApi.Features.Teams.Create;
 using KRAFT.Results.WebApi.Features.Teams.Get;
+using KRAFT.Results.WebApi.Features.Teams.GetBySlug;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
@@ -9,6 +10,7 @@ internal static class TeamServices
     {
         services.AddScoped<CreateTeamHandler>();
         services.AddScoped<GetTeamsHandler>();
+        services.AddScoped<GetTeamDetailsHandler>();
 
         return services;
     }
