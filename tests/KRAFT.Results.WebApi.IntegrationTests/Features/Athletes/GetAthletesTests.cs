@@ -8,18 +8,12 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Athletes;
 
-public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
+public sealed class GetAthletesTests(IntegrationTestFixture fixture)
 {
     private const string Path = "/athletes";
 
-    private readonly HttpClient _authorizedHttpClient;
-    private readonly HttpClient _unauthorizedHttpClient;
-
-    public GetAthletesTests(IntegrationTestFixture fixture)
-    {
-        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
-    }
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
     public async Task ReturnsOk()
@@ -62,8 +56,8 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
     {
         // Arrange
         CreateAthleteCommand command = new CreateAthleteCommandBuilder()
-            .WithFirstName("A")
-            .WithLastName("A")
+            .WithFirstName("0")
+            .WithLastName("0")
             .Build();
         await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
@@ -71,6 +65,6 @@ public sealed class GetAthletesTests : IClassFixture<IntegrationTestFixture>
         IReadOnlyList<AthleteSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
 
         // Assert
-        response![0].Name.ShouldBe("A A");
+        response![0].Name.ShouldBe("0 0");
     }
 }

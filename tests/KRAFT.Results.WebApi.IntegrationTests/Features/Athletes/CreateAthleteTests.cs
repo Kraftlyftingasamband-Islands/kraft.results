@@ -8,18 +8,12 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Athletes;
 
-public class CreateAthleteTests : IClassFixture<IntegrationTestFixture>
+public class CreateAthleteTests(IntegrationTestFixture fixture)
 {
     private const string Path = "/athletes";
 
-    private readonly HttpClient _authorizedHttpClient;
-    private readonly HttpClient _unauthorizedHttpClient;
-
-    public CreateAthleteTests(IntegrationTestFixture fixture)
-    {
-        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
-    }
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
     public async Task ReturnsCreated_WhenSuccessful()

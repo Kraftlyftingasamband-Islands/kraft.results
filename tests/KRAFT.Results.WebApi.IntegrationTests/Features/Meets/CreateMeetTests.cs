@@ -8,18 +8,12 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
-public sealed class CreateMeetTests : IClassFixture<IntegrationTestFixture>
+public sealed class CreateMeetTests(IntegrationTestFixture fixture)
 {
     private const string Path = "/meets";
 
-    private readonly HttpClient _authorizedHttpClient;
-    private readonly HttpClient _unauthorizedHttpClient;
-
-    public CreateMeetTests(IntegrationTestFixture fixture)
-    {
-        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
-    }
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
     public async Task ReturnsCreated_WhenSuccessful()

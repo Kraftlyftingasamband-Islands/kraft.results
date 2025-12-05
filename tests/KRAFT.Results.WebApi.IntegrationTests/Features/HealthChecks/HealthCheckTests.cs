@@ -4,14 +4,9 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.HealthChecks;
 
-public sealed class HealthCheckTests : IClassFixture<IntegrationTestFixture>
+public sealed class HealthCheckTests(IntegrationTestFixture fixture)
 {
-    private readonly HttpClient _httpClient;
-
-    public HealthCheckTests(IntegrationTestFixture fixture)
-    {
-        _httpClient = fixture.Factory.CreateClient();
-    }
+    private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
 
     [Fact]
     public async Task HealthCheckReturnsHealthyStatus()
