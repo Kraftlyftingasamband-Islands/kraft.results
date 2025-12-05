@@ -2,6 +2,7 @@
 
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Services
+@using Microsoft.AspNetCore.Components.Routing
 
 @inject IApiService _apiService;
 
@@ -17,7 +18,11 @@
     @foreach (AthleteSummary athlete in Athletes)
     {
         <tr>
-            <td>@(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")</td>
+            <td>
+                <NavLink class="nav-link" href="@($"/athletes/{athlete.Slug}")">
+                    @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
+                </NavLink>
+            </td>
         </tr>
     }
 </table>
