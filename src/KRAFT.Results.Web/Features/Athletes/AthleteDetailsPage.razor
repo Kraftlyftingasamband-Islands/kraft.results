@@ -1,5 +1,6 @@
 ﻿@page "/athletes/{slug}"
 
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Components.Pages
 @using KRAFT.Results.Web.Services
@@ -26,7 +27,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                 <Card>
                     <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
                     <h5 class="card-title">@best.Discipline @(best.MeetType == "Kraftlyftingar" ? string.Empty : "(stök lyfta)")</h5>
-                    <h1>@($"{best.Weight:F1} kg")</h1>
+                    <h3>@($"{best.Weight:F1} kg")</h3>
                     @best.Meet<br />
                     Þyngdarflokkur: @best.WeightCategory<br />
                     Líkamsþyngd: @best.BodyWeight kg
@@ -119,15 +120,15 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                         <th style="text-align: center;">Þyngd</th>
 
                         <th style="text-align: center;">
-                            @(meetType.Any(x => x.Squat > 0) ? "Hnébeygja" : string.Empty)
+                            @(meetType.Any(x => x.Squat > 0) ? Constants.Squat : string.Empty)
                         </th>
 
                         <th style="text-align: center;">
-                            @(meetType.Any(x => x.Benchpress > 0) ? "Bekkpressa" : string.Empty)
+                            @(meetType.Any(x => x.Benchpress > 0) ? Constants.Bench : string.Empty)
                         </th>
 
                         <th style="text-align: center;">
-                            @(meetType.Any(x => x.Deadlift > 0) ? "Réttstöðulyfta" : string.Empty)
+                            @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
                         </th>
 
                         <th style="text-align: center;">Samanlagt</th>

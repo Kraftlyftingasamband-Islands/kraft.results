@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.Contracts.Athletes;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
@@ -40,17 +41,23 @@ internal sealed class GetAthleteDetailsHandler
         return athlete;
     }
 
+    private static bool IsSquat(int disciplineId) => disciplineId == (byte)Discipline.Squat;
+
+    private static bool IsBench(int disciplineId) => disciplineId == (byte)Discipline.Bench;
+
+    private static bool IsDeadlift(int disciplineId) => disciplineId == (byte)Discipline.Deadlift;
+
 #pragma warning disable S3358 // Ternary operators should not be nested
     private static string MapDiscipline(int disciplineId) =>
-        disciplineId == (byte)Discipline.Squat ? "Hnébeygja"
-        : disciplineId == (byte)Discipline.Bench ? "Bekkpressa"
-        : disciplineId == (byte)Discipline.Deadlift ? "Réttstöðulyfta"
-        : "Samanlagt";
+        IsSquat(disciplineId) ? Constants.Squat
+        : IsBench(disciplineId) ? Constants.Bench
+        : IsDeadlift(disciplineId) ? Constants.Deadlift
+        : Constants.Total;
 
     private static string MapMeetType(string type) =>
-        type == "Powerlifting" ? "Kraftlyftingar"
-        : type == "Benchpress" ? "Bekkpressa (stök lyfta)"
-        : type == "Deadlift" ? "Réttstöðulyfta (stök lyfta)"
+        type == "Powerlifting" ? Constants.Powerlifting
+        : type == "Benchpress" ? $"{Constants.Bench} ({Constants.SingeLift})"
+        : type == "Deadlift" ? $"{Constants.Deadlift} ({Constants.SingeLift})"
         : type;
 #pragma warning restore S3358 // Ternary operators should not be nested
 
@@ -59,14 +66,15 @@ internal sealed class GetAthleteDetailsHandler
         .Where(x => x.Attempt!.Participation.Athlete.Slug == slug)
         .Where(x => x.IsCurrent)
         .Where(x => x.Era.EndDate.Year > DateTime.UtcNow.Year)
-        .OrderBy(x => x.WeightCategoryId)
+        .OrderByDescending(x => x.Attempt!.Participation.Meet.StartDate)
+        .ThenBy(x => x.WeightCategoryId)
         .ThenBy(x => x.AgeCategory.AgeCategoryId)
         .ThenBy(x => x.Attempt!.DisciplineId)
         .Select(x => new AthleteRecord(
             x.Date,
             x.WeightCategory.Title,
             x.AgeCategory.Title,
-            MapDiscipline(x.Attempt!.DisciplineId),
+            x.Attempt!.Participation.Meet.MeetType.Title == "Powerlifting" && x.Attempt!.Participation.Total == x.Weight ? Constants.Total : MapDiscipline(x.Attempt!.DisciplineId),
             x.Weight,
             $"{x.Attempt!.Participation.Meet.Title} {x.Attempt!.Participation.Meet.StartDate.Year}",
             x.Attempt!.Participation.Meet.Slug))
