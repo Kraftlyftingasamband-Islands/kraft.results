@@ -47,6 +47,8 @@ internal sealed class GetAthleteDetailsHandler
 
     private static bool IsDeadlift(int disciplineId) => disciplineId == (byte)Discipline.Deadlift;
 
+    private static bool IsSingleLift(string meetType) => meetType != "Powerlifting";
+
 #pragma warning disable S3358 // Ternary operators should not be nested
     private static string MapDiscipline(int disciplineId) =>
         IsSquat(disciplineId) ? Constants.Squat
@@ -55,7 +57,7 @@ internal sealed class GetAthleteDetailsHandler
         : Constants.Total;
 
     private static string MapMeetType(string type) =>
-        type == "Powerlifting" ? Constants.Powerlifting
+        !IsSingleLift(type) ? Constants.Powerlifting
         : type == "Benchpress" ? $"{Constants.Bench} ({Constants.SingeLift})"
         : type == "Deadlift" ? $"{Constants.Deadlift} ({Constants.SingeLift})"
         : type;
@@ -70,14 +72,30 @@ internal sealed class GetAthleteDetailsHandler
         .ThenBy(x => x.WeightCategoryId)
         .ThenBy(x => x.AgeCategory.AgeCategoryId)
         .ThenBy(x => x.Attempt!.DisciplineId)
+        .Select(x => new
+        {
+            x.Date,
+            IsClassic = x.Attempt!.Participation.Meet.IsRaw,
+            IsSingleLift = IsSingleLift(x.Attempt!.Participation.Meet.MeetType.Title),
+            WeightCategory = x.WeightCategory.Title,
+            AgeCategory = x.AgeCategory.Title,
+            x.Attempt!.Participation.Total,
+            x.Weight,
+            x.Attempt!.DisciplineId,
+            MeetTitle = x.Attempt!.Participation.Meet.Title,
+            MeetYear = x.Attempt!.Participation.Meet.StartDate.Year,
+            MeetSlug = x.Attempt!.Participation.Meet.Slug,
+        })
         .Select(x => new AthleteRecord(
             x.Date,
-            x.WeightCategory.Title,
-            x.AgeCategory.Title,
-            x.Attempt!.Participation.Meet.MeetType.Title == "Powerlifting" && x.Attempt!.Participation.Total == x.Weight ? Constants.Total : MapDiscipline(x.Attempt!.DisciplineId),
+            x.IsClassic,
+            x.IsSingleLift,
+            x.WeightCategory,
+            x.AgeCategory,
+            !x.IsSingleLift && x.Total == x.Weight ? Constants.Total : MapDiscipline(x.DisciplineId),
             x.Weight,
-            $"{x.Attempt!.Participation.Meet.Title} {x.Attempt!.Participation.Meet.StartDate.Year}",
-            x.Attempt!.Participation.Meet.Slug))
+            $"{x.MeetTitle} {x.MeetYear}",
+            x.MeetSlug))
         .ToListAsync(cancellationToken);
 
     private Task<List<AthleteParticipation>> GetParticipationsAsync(string slug, CancellationToken cancellationToken) =>
@@ -121,13 +139,13 @@ internal sealed class GetAthleteDetailsHandler
                 .OrderByDescending(a => a.Weight)
                 .Select(a => new PersonalBestRecord(
                     a.Participation.Meet.IsRaw,
+                    IsSingleLift(a.Participation.Meet.MeetType.Title),
                     a.DisciplineId,
                     a.Weight,
                     a.Participation.WeightCategory.Title,
                     a.Participation.Weight,
                     a.Participation.Meet.Title,
                     a.Participation.Meet.Slug,
-                    a.Participation.Meet.MeetType.Title,
                     a.Participation.Meet.MeetType.MeetTypeId,
                     a.Participation.Meet.StartDate))
                 .First())
@@ -146,13 +164,13 @@ internal sealed class GetAthleteDetailsHandler
                 .OrderByDescending(p => p.Total)
                 .Select(p => new PersonalBestRecord(
                     p.Meet.IsRaw,
+                    false,
                     0,
                     p.Total,
                     p.WeightCategory.Title,
                     p.Weight,
                     p.Meet.Title,
                     p.Meet.Slug,
-                    p.Meet.MeetType.Title,
                     p.Meet.MeetType.MeetTypeId,
                     p.Meet.StartDate))
                 .First())
@@ -164,11 +182,11 @@ internal sealed class GetAthleteDetailsHandler
             .OrderBy(x => x.MeetTypeId)
             .Select(x => new AthletePersonalBest(
             x.IsRaw,
+            x.IsSingleLiftRecord,
             MapDiscipline(x.DisciplineId),
             x.Weight,
             x.WeightCategoryTitle,
             x.BodyWeight,
-            $"{x.MeetTitle} {x.MeetDate.Year}",
             x.MeetSlug,
             MapMeetType(x.MeetType),
             DateOnly.FromDateTime(x.MeetDate)))];
@@ -176,11 +194,11 @@ internal sealed class GetAthleteDetailsHandler
 
     private sealed record class PersonalBestRecord(
         bool IsRaw,
+        bool IsSingleLiftRecord,
         int DisciplineId,
         decimal Weight,
         string WeightCategoryTitle,
         decimal BodyWeight,
-        string MeetTitle,
         string MeetSlug,
         string MeetType,
         int MeetTypeId,

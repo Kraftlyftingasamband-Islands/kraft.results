@@ -16,26 +16,28 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
 <br />
 
-@foreach (var group in Athlete?.PersonalBests.GroupBy(x => x.IsClassic) ?? [])
+@if (Athlete is not null && Athlete.PersonalBests.Count > 0)
 {
-    <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
-        @foreach (var best in group)
-        {
-            @if (best.Weight > 0)
+    @foreach (var group in Athlete?.PersonalBests.GroupBy(x => x.IsClassic) ?? [])
+    {
+        <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-auto g-3">
+            @foreach (var best in group)
             {
-                <Card>
-                    <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
-                    <h5 class="card-title">@best.Discipline @(best.MeetType == "Kraftlyftingar" ? string.Empty : "(stök lyfta)")</h5>
-                    <h3>@($"{best.Weight:F1} kg")</h3>
-                    @best.Meet<br />
-                    Þyngdarflokkur: @best.WeightCategory<br />
-                    Líkamsþyngd: @best.BodyWeight kg
-                </Card>
+                @if (best.Weight > 0)
+                {
+                    <Card>
+                        <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
+                        <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
+                        <h3>@($"{best.Weight:F1} kg")</h3>
+                        Þyngdarflokkur: @best.WeightCategory<br />
+                        Líkamsþyngd: @best.BodyWeight kg
+                    </Card>
+                }
             }
-        }
-    </div>
-    <br />
+        </div>
+        <br />
+    }
 }
 
 @if (Athlete is not null && Athlete.Records.Count > 0)
@@ -51,6 +53,8 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                 <th style="width: 120px">Þyngdarflokkur</th>
                 <th style="width: 120px">Aldursflokkur</th>
                 <th style="width: 120px">Grein</th>
+                <th style="width: 80px"></th>
+                <th style="width: 80px"></th>
                 <th style="width: 120px">Þyngd</th>
             </tr>
         </thead>
@@ -68,6 +72,18 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                     <td>@record.WeightCategory</td>
                     <td>@record.AgeCategory</td>
                     <td>@record.Discipline</td>
+                    <td>
+                        @if (record.IsSingleLift)
+                        {
+                            @Constants.SingeLift
+                        }
+                    </td>
+                    <td>
+                        @if (!record.IsClassic)
+                        {
+                            @("í búnaði")
+                        }
+                    </td>
                     <td>@($"{record.Weight:F1}")</td>
                 </tr>
             }

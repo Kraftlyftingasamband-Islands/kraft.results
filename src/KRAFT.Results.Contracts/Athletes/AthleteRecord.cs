@@ -2,6 +2,8 @@
 
 public sealed record class AthleteRecord(
     DateOnly Date,
+    bool IsClassic,
+    bool IsSingleLift,
     string WeightCategory,
     string AgeCategory,
     string Discipline,
