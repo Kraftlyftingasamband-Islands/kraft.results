@@ -1,6 +1,7 @@
 ﻿@page "/teams"
 
 @using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Web.Components.Pages
 @using KRAFT.Results.Web.Services
 @using Microsoft.AspNetCore.Components.Routing
 
@@ -12,16 +13,12 @@
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
     @foreach (TeamSummary team in Teams)
     {
-        <div class="col">
-            <div class="card h-100 card-clickable">
-                <div class="card-body">
-                    <a class="stretched-link" href="@($"/teams/{team.Slug}")"></a>
-                    <h5 class="card-title">@team.Title</h5>
-                    <p class="card-text">@team.ShortTitle</p>
-                    <p class="card-text">Meðlimir: @team.AthleteCount</p>
-                </div>
-            </div>
-        </div>
+        <Card>
+            <a class="stretched-link" href="@($"/teams/{team.Slug}")"></a>
+            <h5 class="card-title">@team.Title</h5>
+            <p class="card-text">@team.ShortTitle</p>
+            <p class="card-text">Meðlimir: @team.AthleteCount</p>
+        </Card>
     }
 </div>
 

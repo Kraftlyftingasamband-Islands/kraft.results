@@ -1,5 +1,6 @@
 ﻿using KRAFT.Results.WebApi.Features.Athletes.Create;
 using KRAFT.Results.WebApi.Features.Athletes.Get;
+using KRAFT.Results.WebApi.Features.Athletes.GetDetails;
 
 namespace KRAFT.Results.WebApi.Features.Athletes;
 
@@ -12,6 +13,7 @@ internal static class AthleteEndpoints
 
         group.MapCreateAthleteEndpoint();
         group.MapGetAthletesEndpoint();
+        group.MapGetAthleteDetailsEndpoint();
 
         return group;
     }
