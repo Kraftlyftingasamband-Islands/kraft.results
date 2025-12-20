@@ -53,7 +53,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
             {
                 <Card>
                     <a class="stretched-link" href="@($"/meets/{record.MeetSlug}")"></a>
-                    <h5 class="card-title">@record.Discipline @(record.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
+                    <h5 class="card-title">@record.Type</h5>
                     <p>
                         @($"{record.Date:dd-MM-yyyy}")<br />
                         @record.AgeCategory @record.WeightCategory

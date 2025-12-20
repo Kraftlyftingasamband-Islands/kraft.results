@@ -6,7 +6,7 @@ public sealed record class AthleteRecord(
     bool IsSingleLift,
     string WeightCategory,
     string AgeCategory,
-    string Discipline,
+    string Type,
     decimal Weight,
     string Meet,
     string MeetSlug);

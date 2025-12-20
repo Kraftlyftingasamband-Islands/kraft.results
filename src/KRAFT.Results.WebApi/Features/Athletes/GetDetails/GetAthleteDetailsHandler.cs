@@ -62,6 +62,15 @@ internal sealed class GetAthleteDetailsHandler
         : type == "Benchpress" ? $"{Constants.Bench} ({Constants.SingeLift})"
         : type == "Deadlift" ? $"{Constants.Deadlift} ({Constants.SingeLift})"
         : type;
+
+    private static string MapRecordType(RecordCategory category) =>
+        category == RecordCategory.Squat ? Constants.Squat
+        : category == RecordCategory.Bench ? Constants.Bench
+        : category == RecordCategory.Deadlift ? Constants.Deadlift
+        : category == RecordCategory.Total ? Constants.Total
+        : category == RecordCategory.BenchSingle ? $"{Constants.Bench} ({Constants.SingeLift})"
+        : category == RecordCategory.DeadliftSingle ? $"{Constants.Deadlift} ({Constants.SingeLift})"
+        : string.Empty;
 #pragma warning restore S3358 // Ternary operators should not be nested
 
     private Task<List<AthleteRecord>> GetRecordsAsync(string slug, CancellationToken cancellationToken) =>
@@ -83,6 +92,7 @@ internal sealed class GetAthleteDetailsHandler
             x.Attempt!.Participation.Total,
             x.Weight,
             x.Attempt!.DisciplineId,
+            x.RecordCategoryId,
             MeetTitle = x.Attempt!.Participation.Meet.Title,
             MeetYear = x.Attempt!.Participation.Meet.StartDate.Year,
             MeetSlug = x.Attempt!.Participation.Meet.Slug,
@@ -93,7 +103,7 @@ internal sealed class GetAthleteDetailsHandler
             x.IsSingleLift,
             x.WeightCategory,
             x.AgeCategory,
-            !x.IsSingleLift && x.Total == x.Weight ? Constants.Total : MapDiscipline(x.DisciplineId),
+            MapRecordType(x.RecordCategoryId),
             x.Weight,
             $"{x.MeetTitle} {x.MeetYear}",
             x.MeetSlug))
@@ -125,7 +135,7 @@ internal sealed class GetAthleteDetailsHandler
 
     private async Task<List<AthletePersonalBest>> GetPersonalBestsAsync(string slug, CancellationToken cancellationToken)
     {
-        List<PersonalBestRecord> bestLifts = await _dbContext.Set<Attempt>()
+        List<PersonalBest> bestLifts = await _dbContext.Set<Attempt>()
             .Where(x => x.Participation.Athlete.Slug == slug)
             .Where(x => !x.Participation.Disqualified)
             .Where(x => x.Good)
@@ -138,7 +148,7 @@ internal sealed class GetAthleteDetailsHandler
             .OrderBy(x => x.Key.MeetTypeId)
             .Select(x => x
                 .OrderByDescending(a => a.Weight)
-                .Select(a => new PersonalBestRecord(
+                .Select(a => new PersonalBest(
                     a.Participation.Meet.IsRaw,
                     IsSingleLift(a.Participation.Meet.MeetType.Title),
                     a.DisciplineId,
@@ -152,7 +162,7 @@ internal sealed class GetAthleteDetailsHandler
                 .First())
             .ToListAsync(cancellationToken);
 
-        List<PersonalBestRecord> bestTotals = await _dbContext.Set<Participation>()
+        List<PersonalBest> bestTotals = await _dbContext.Set<Participation>()
             .Where(p => p.Athlete.Slug == slug)
             .Where(p => !p.Disqualified)
             .Where(p => p.Meet.MeetType.Title == "Powerlifting")
@@ -163,7 +173,7 @@ internal sealed class GetAthleteDetailsHandler
             })
             .Select(g => g
                 .OrderByDescending(p => p.Total)
-                .Select(p => new PersonalBestRecord(
+                .Select(p => new PersonalBest(
                     p.Meet.IsRaw,
                     false,
                     0,
@@ -177,7 +187,7 @@ internal sealed class GetAthleteDetailsHandler
                 .First())
             .ToListAsync(cancellationToken);
 
-        List<PersonalBestRecord> combined = [.. bestLifts, .. bestTotals];
+        List<PersonalBest> combined = [.. bestLifts, .. bestTotals];
 
         return [.. combined
             .OrderBy(x => x.MeetTypeId)
@@ -193,7 +203,7 @@ internal sealed class GetAthleteDetailsHandler
             DateOnly.FromDateTime(x.MeetDate)))];
     }
 
-    private sealed record class PersonalBestRecord(
+    private sealed record class PersonalBest(
         bool IsRaw,
         bool IsSingleLiftRecord,
         int DisciplineId,
