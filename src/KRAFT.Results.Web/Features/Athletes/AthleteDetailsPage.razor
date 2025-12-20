@@ -29,7 +29,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                     <Card>
                         <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
                         <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
-                        <h3>@($"{best.Weight:F1} kg")</h3>
+                        <h3 style="color: mediumseagreen">@($"{best.Weight:F1} kg")</h3>
                         Þyngdarflokkur: @best.WeightCategory<br />
                         Líkamsþyngd: @best.BodyWeight kg
                     </Card>
@@ -50,7 +50,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
             <tr>
                 <th style="width: 90px">Dags.</th>
                 <th>Mót</th>
-                <th style="width: 120px">Þyngdarflokkur</th>
+                <th style="width: 120px;">Þyngdarflokkur</th>
                 <th style="width: 120px">Aldursflokkur</th>
                 <th style="width: 120px">Grein</th>
                 <th style="width: 90px"></th>
@@ -69,8 +69,8 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                             @record.Meet
                         </NavLink>
                     </td>
-                    <td>@record.WeightCategory</td>
-                    <td>@record.AgeCategory</td>
+                    <td style="text-align: center;">@record.WeightCategory</td>
+                    <td style="text-align: center;">@record.AgeCategory</td>
                     <td>@record.Discipline</td>
                     <td>
                         @if (record.IsSingleLift)
@@ -84,7 +84,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                             @("í búnaði")
                         }
                     </td>
-                    <td>@($"{record.Weight:F1}")</td>
+                    <td style="text-align: right;">@($"{record.Weight:F1}")</td>
                 </tr>
             }
         </tbody>
@@ -133,7 +133,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
                         <th style="text-align: center;">Þyngdarflokkur</th>
 
-                        <th style="text-align: center;">Þyngd</th>
+                        <th style="text-align: center;">Líkamsþyngd</th>
 
                         <th style="text-align: center;">
                             @(meetType.Any(x => x.Squat > 0) ? Constants.Squat : string.Empty)
