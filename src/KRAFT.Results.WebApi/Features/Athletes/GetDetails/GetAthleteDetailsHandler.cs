@@ -4,6 +4,7 @@ using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -118,7 +119,7 @@ internal sealed class GetAthleteDetailsHandler
             p.Deadlift,
             p.Total,
             p.Wilks,
-            p.Ipfpoints,
+            IpfPoints.Create(p.Meet.IsRaw, p.Athlete.Gender, p.Meet.MeetType.Title, p.Weight, p.Total),
             p.Disqualified))
         .ToListAsync(cancellationToken);
 
