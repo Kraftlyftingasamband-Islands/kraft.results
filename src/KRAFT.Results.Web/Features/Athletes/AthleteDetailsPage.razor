@@ -21,7 +21,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     @foreach (var group in Athlete?.PersonalBests.GroupBy(x => x.IsClassic) ?? [])
     {
         <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-auto g-3">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
             @foreach (var best in group)
             {
                 @if (best.Weight > 0)
@@ -29,9 +29,11 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                     <Card>
                         <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
                         <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
-                        <h3 style="color: mediumseagreen">@($"{best.Weight:F1} kg")</h3>
-                        Þyngdarflokkur: @best.WeightCategory<br />
-                        Líkamsþyngd: @best.BodyWeight kg
+                        <p>
+                            @($"{best.Date:dd-MM-yyyy}")<br />
+                            Líkamsþyngd: @best.BodyWeight kg
+                        </p>
+                        <h3 style="color: mediumseagreen; text-align: right">@($"{best.Weight:F1} kg")</h3>
                     </Card>
                 }
             }
@@ -43,55 +45,28 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 @if (Athlete is not null && Athlete.Records.Count > 0)
 {
     <h3>Núverandi íslandsmet (@Athlete.Records.Count)</h3>
-
-    <table class="table table-hover">
-
-        <thead>
-            <tr>
-                <th style="width: 90px">Dags.</th>
-                <th>Mót</th>
-                <th style="width: 120px;">Þyngdarflokkur</th>
-                <th style="width: 120px">Aldursflokkur</th>
-                <th style="width: 120px">Grein</th>
-                <th style="width: 90px"></th>
-                <th style="width: 80px"></th>
-                <th style="width: 120px">Þyngd</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var record in Athlete.Records)
+    @foreach (var group in Athlete.Records.GroupBy(x => x.IsClassic))
+    {
+        <h4>@(group.Key ? "Án búnaðar" : "Með búnaði")</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+            @foreach(var record in group)
             {
-                <tr>
-                    <td>@($"{record.Date:dd-MM-yyyy}")</td>
-                    <td>
-                        <NavLink class="nav-link" href="@($"/meets/{record.MeetSlug}")">
-                            @record.Meet
-                        </NavLink>
-                    </td>
-                    <td style="text-align: center;">@record.WeightCategory</td>
-                    <td style="text-align: center;">@record.AgeCategory</td>
-                    <td>@record.Discipline</td>
-                    <td>
-                        @if (record.IsSingleLift)
-                        {
-                            @Constants.SingeLift
-                        }
-                    </td>
-                    <td>
-                        @if (!record.IsClassic)
-                        {
-                            @("í búnaði")
-                        }
-                    </td>
-                    <td style="text-align: right;">@($"{record.Weight:F1}")</td>
-                </tr>
+                <Card>
+                    <a class="stretched-link" href="@($"/meets/{record.MeetSlug}")"></a>
+                    <h5 class="card-title">@record.Discipline @(record.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
+                    <p>
+                        @($"{record.Date:dd-MM-yyyy}")<br />
+                        @record.AgeCategory @record.WeightCategory
+                    </p>
+                    <h3 style="color: mediumseagreen; text-align: right">@($"{record.Weight:F1} kg")</h3>
+                </Card>
             }
-        </tbody>
+        </div>
+        <br />
+    }
 
-    </table>
+    <br />
 }
-
 
 @if (Athlete is not null && Athlete.Participations.Count > 0)
 {    
