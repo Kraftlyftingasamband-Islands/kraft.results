@@ -145,8 +145,8 @@ internal sealed class GetAthleteDetailsHandler
                     a.Weight,
                     a.Participation.WeightCategory.Title,
                     a.Participation.Weight,
-                    a.Participation.Meet.Title,
                     a.Participation.Meet.Slug,
+                    a.Participation.Meet.MeetType.Title,
                     a.Participation.Meet.MeetType.MeetTypeId,
                     a.Participation.Meet.StartDate))
                 .First())
