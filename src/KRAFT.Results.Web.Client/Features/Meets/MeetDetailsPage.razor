@@ -1,5 +1,6 @@
 ﻿@page "/meets/{slug}"
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient;
 
@@ -14,14 +15,92 @@
     @Meet?.Location<br />
 </p>
 
+@foreach (var genderAgeAgeCategory in Participations
+    .GroupBy(x => new { x.Gender, x.AgeCategory})
+    .OrderBy(x => x.Key.AgeCategory)
+    .ThenByDescending(x => x.Key.Gender))
+{
+   <div class="col">
+       <div class="card h-100">
+            <div class="card-body">
+                <h4 class="card-title">@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
+                <br />
+
+                @foreach (var weightCategory in genderAgeAgeCategory
+                    .GroupBy(x => x.WeightCategory)
+                    .OrderBy(x => x.Max(y => y.BodyWeight)))
+                {
+                    <h5>@weightCategory.Key kg</h5>
+                    <table class="table table-hover">
+                        <tbody>
+                            <tr>
+                                <th style="text-align: center; width: 80px;">#</th>
+                                <th>Nafn</th>
+                                <th style="text-align: center; width: 80px;">Fæðingarár</th>
+                                <th style="text-align: center; width: 80px;">Félag</th>
+                                <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
+
+                                @foreach (var round in weightCategory.First().Attempts)
+                                {
+                                    <th class="@(round.Round == 1 ? "border-start" : string.Empty)" style="text-align: right; padding-right: 25px; width: 80px;">@round.Discipline[0]@round.Round</th>
+                                }
+
+                                <th class="border-start" style="text-align: right; width: 80px;">Samtala</th>
+                                <th style="text-align: right; width: 80px;">IPF stig</th>
+                            </tr>
+
+                            @foreach (var p in weightCategory.OrderBy(x => x.Rank))
+                            {
+                                <tr>
+                                    <td style="text-align: center">@(p.Rank < int.MaxValue ? p.Rank : "-")</td>
+                            
+                                    <td>
+                                        <NavLink class="nav-link" href="@($"/athletes/{p.AthleteSlug}")">
+                                            @p.Athlete
+                                        </NavLink>
+                                    </td>
+
+                                    <td style="text-align: center;">@p.YearOfBirth</td>
+
+                                    <td style="text-align: center;">
+                                        <NavLink class="nav-link" href="@($"/teams/{p.ClubSlug}")">
+                                            @p.Club
+                                        </NavLink>
+                                    </td>
+
+                                    <td style="text-align: center;">@($"{p.BodyWeight:F2}")</td>
+
+                                    @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
+                                    {
+                                        @foreach (var attempt in discipline.OrderBy(a => a.Round))
+                                        {
+                                            <AttemptCell Attempt="attempt" />
+                                        }
+                                    }
+
+                                    <td style="text-align: right;">@(p.Total > 0 ? $"{p.Total:F2}" : "-")</td>
+                                    <td style="text-align: right;">@(p.IpfPoints > 0 ? $"{p.IpfPoints:F2}" : "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+    <br />
+}
+
 @code {
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
     private MeetDetails? Meet;
+    private IReadOnlyList<MeetParticipation> Participations = [];
 
     protected override async Task OnInitializedAsync()
     {
         Meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
+        Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
     }
 }

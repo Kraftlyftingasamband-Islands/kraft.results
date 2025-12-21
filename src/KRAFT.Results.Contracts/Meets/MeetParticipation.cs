@@ -2,7 +2,8 @@
 
 public sealed record class MeetParticipation(
     int Rank,
-    string Name,
+    string Athlete,
+    string AthleteSlug,
     string Gender,
     int YearOfBirth,
     string AgeCategory,
