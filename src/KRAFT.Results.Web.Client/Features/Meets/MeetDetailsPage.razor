@@ -1,0 +1,27 @@
+﻿@page "/meets/{slug}"
+@using KRAFT.Results.Contracts.Meets
+
+@inject HttpClient HttpClient;
+
+<h1>@Meet?.Title</h1>
+<p>
+    @($"{Meet?.StartDate:dd-MM-yyyy}")
+    @if (Meet?.EndDate is DateOnly endDate && endDate != Meet?.StartDate)
+    {
+        <span> - @($"{endDate:dd-MM-yyyy}")</span>
+    }
+    <br />
+    @Meet?.Location<br />
+</p>
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private MeetDetails? Meet;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
+    }
+}
