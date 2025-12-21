@@ -16,9 +16,9 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
 <br/>
 
-@if (Athlete is not null && Athlete.PersonalBests.Any())
+@if (PersonalBests.Count > 0)
 {
-    @foreach (var group in Athlete.PersonalBests.GroupBy(x => x.IsClassic))
+    @foreach (var group in PersonalBests.GroupBy(x => x.IsClassic))
     {
         <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
 
@@ -191,9 +191,11 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     public string Slug { get; set; } = string.Empty;
 
     private AthleteDetails? Athlete;
+    private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
 
     protected override async Task OnInitializedAsync()
     {
         Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
+        PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
     }
 }
