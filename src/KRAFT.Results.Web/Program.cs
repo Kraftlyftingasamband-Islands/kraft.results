@@ -1,30 +1,37 @@
 using KRAFT.Results.Web.Components;
-using KRAFT.Results.Web.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents()
+    .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddScoped<IApiService, ApiService>();
-builder.Services.AddScoped<RedirectManager>();
-builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient(
+    "WebApi",
+    client =>
+    {
+        Uri baseAddress = builder.Configuration.GetValue<Uri>("API:BaseAddress")
+            ?? throw new InvalidOperationException("No API base address");
 
-builder.Services.AddHttpClient<IApiService, ApiService>(client =>
-{
-    Uri baseAddress = builder.Configuration.GetValue<Uri>("API:BaseAddress")
-        ?? throw new InvalidOperationException("No API base address");
+        client.BaseAddress = baseAddress;
+    });
 
-    client.BaseAddress = baseAddress;
-});
+builder.Services.AddScoped(services => services.GetRequiredService<IHttpClientFactory>()
+    .CreateClient("WebApi"));
 
 WebApplication app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseWebAssemblyDebugging();
+}
+else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
+
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -35,6 +42,8 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddInteractiveWebAssemblyRenderMode()
+    .AddAdditionalAssemblies(typeof(KRAFT.Results.Web.Client._Imports).Assembly);
 
 await app.RunAsync();

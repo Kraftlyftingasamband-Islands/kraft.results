@@ -1,13 +1,12 @@
 ﻿@page "/meets/{year:int?}"
 
-@using KRAFT.Results.Contracts.Meets
-@using KRAFT.Results.Web.Services
 @using System.Globalization
+@using KRAFT.Results.Contracts.Meets
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 
-@inject IApiService Api;
+@inject HttpClient HttpClient;
 @inject NavigationManager NavigationManager
 
 <ul class="nav justify-content-center">
@@ -62,6 +61,6 @@
             Year = DateTime.Now.Year;
         }
 
-        Meets = await Api.GetAsync<IReadOnlyCollection<MeetSummary>>($"/meets?year={Year}") ?? [];
+        Meets = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<MeetSummary>>($"/meets?year={Year}") ?? [];
     }
 }

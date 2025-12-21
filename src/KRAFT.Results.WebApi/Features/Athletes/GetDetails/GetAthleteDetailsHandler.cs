@@ -139,6 +139,7 @@ internal sealed class GetAthleteDetailsHandler
             .Where(x => x.Participation.Athlete.Slug == slug)
             .Where(x => !x.Participation.Disqualified)
             .Where(x => x.Good)
+            .Where(x => x.Weight > 0)
             .GroupBy(x => new
             {
                 x.DisciplineId,

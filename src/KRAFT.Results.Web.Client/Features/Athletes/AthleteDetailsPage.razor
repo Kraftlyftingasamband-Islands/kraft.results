@@ -2,11 +2,11 @@
 
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
-@using KRAFT.Results.Web.Components.Pages
-@using KRAFT.Results.Web.Services
+@using KRAFT.Results.Web.Client.Components
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 
-@inject IApiService _apiService;
+@inject HttpClient HttpClient;
 
 <h1>@Athlete?.Name</h1>
 Fæðingarár: @Athlete?.YearOfBirth<br />
@@ -14,28 +14,26 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     @Athlete?.Club
 </NavLink>
 
-<br />
+<br/>
 
-@if (Athlete is not null && Athlete.PersonalBests.Count > 0)
+@if (Athlete is not null && Athlete.PersonalBests.Any())
 {
-    @foreach (var group in Athlete?.PersonalBests.GroupBy(x => x.IsClassic) ?? [])
+    @foreach (var group in Athlete.PersonalBests.GroupBy(x => x.IsClassic))
     {
         <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
+
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
             @foreach (var best in group)
             {
-                @if (best.Weight > 0)
-                {
-                    <Card>
-                        <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
-                        <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
-                        <p>
-                            @($"{best.Date:dd-MM-yyyy}")<br />
-                            Líkamsþyngd: @best.BodyWeight kg
-                        </p>
-                        <h3 style="color: mediumseagreen; text-align: right">@($"{best.Weight:F1} kg")</h3>
-                    </Card>
-                }
+                <Card>
+                    <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
+                    <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
+                    <p>
+                        @($"{best.Date:dd-MM-yyyy}")<br />
+                        Líkamsþyngd: @best.BodyWeight kg
+                    </p>
+                    <h3 style="color: mediumseagreen; text-align: right">@($"{best.Weight:F1} kg")</h3>
+                </Card>
             }
         </div>
         <br />
@@ -196,6 +194,6 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
     protected override async Task OnInitializedAsync()
     {
-        Athlete = await _apiService.GetAsync<AthleteDetails>($"/athletes/{Slug}");
+        Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
     }
 }

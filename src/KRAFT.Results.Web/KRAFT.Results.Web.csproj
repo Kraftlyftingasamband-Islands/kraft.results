@@ -5,8 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KRAFT.Results.Contracts\KRAFT.Results.Contracts.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KRAFT.Results.ServiceDefaults\KRAFT.Results.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\KRAFT.Results.Web.Client\KRAFT.Results.Web.Client.csproj" />
   </ItemGroup>
 
 </Project>

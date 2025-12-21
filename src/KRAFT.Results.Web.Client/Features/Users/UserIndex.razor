@@ -1,9 +1,8 @@
 ﻿@page "/users"
 
 @using KRAFT.Results.Contracts.Users
-@using KRAFT.Results.Web.Services
 
-@inject IApiService _apiService;
+@inject HttpClient HttpClient;
 
 <h3>Notendur</h3>
 
@@ -34,6 +33,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        Users = await _apiService.GetAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
+        Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
     }
 }

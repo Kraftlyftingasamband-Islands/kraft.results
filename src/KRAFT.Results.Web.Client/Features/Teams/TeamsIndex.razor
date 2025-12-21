@@ -1,11 +1,10 @@
 ﻿@page "/teams"
 
 @using KRAFT.Results.Contracts.Teams
-@using KRAFT.Results.Web.Components.Pages
-@using KRAFT.Results.Web.Services
+@using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
 
-@inject IApiService _apiService;
+@inject HttpClient HttpClient;
 @inject NavigationManager NavigationManager;
 
 <h3>Félög</h3>
@@ -27,6 +26,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Teams = await _apiService.GetAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
+        Teams = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
     }
 }
