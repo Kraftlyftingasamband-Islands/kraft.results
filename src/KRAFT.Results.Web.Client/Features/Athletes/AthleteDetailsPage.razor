@@ -1,0 +1,205 @@
+﻿@page "/athletes/{slug}"
+
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Web.Client.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+
+@inject HttpClient HttpClient;
+
+<h1>@Athlete?.Name</h1>
+Fæðingarár: @Athlete?.YearOfBirth<br />
+<NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
+    @Athlete?.Club
+</NavLink>
+
+<br/>
+
+@if (PersonalBests.Count > 0)
+{
+    @foreach (var group in PersonalBests.GroupBy(x => x.IsClassic))
+    {
+        <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+            @foreach (var best in group)
+            {
+                <Card>
+                    <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
+                    <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
+                    <p>
+                        @($"{best.Date:dd-MM-yyyy}")<br />
+                        Líkamsþyngd: @best.BodyWeight kg
+                    </p>
+                    <h3 style="color: mediumseagreen; text-align: right">@($"{best.Weight:F1} kg")</h3>
+                </Card>
+            }
+        </div>
+        <br />
+    }
+}
+
+@if (Records.Count > 0)
+{
+    <h3>Núverandi íslandsmet (@Records.Count)</h3>
+    @foreach (var group in Records.GroupBy(x => x.IsClassic))
+    {
+        <h4>@(group.Key ? "Án búnaðar" : "Með búnaði") (@group.Count())</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+            @foreach(var record in group)
+            {
+                <Card>
+                    <a class="stretched-link" href="@($"/meets/{record.MeetSlug}")"></a>
+                    <h5 class="card-title">@record.Type</h5>
+                    <p>
+                        @($"{record.Date:dd-MM-yyyy}")<br />
+                        @record.AgeCategory @record.WeightCategory
+                    </p>
+                    <h3 style="color: mediumseagreen; text-align: right">@($"{record.Weight:F1} kg")</h3>
+                </Card>
+            }
+        </div>
+        <br />
+    }
+
+    <br />
+}
+
+@if (Participations.Count > 0)
+{    
+    <h3>Ferill (@Participations.Count mót)</h3>
+
+    <br />
+
+    @foreach (var meetType in Participations.GroupBy(x => x.MeetType) ?? [])
+    {
+        <h4>@meetType.Key</h4>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+
+                <colgroup>
+                    <col style="width: 90px" />
+                    <col />
+                    <col style="width: 140px" />
+                    <col style="width: 80px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                    <col style="width: 120px" />
+                </colgroup>
+
+                <thead>
+                    <tr>
+                        <th>Dags.</th>
+
+                        <th>Mót</th>
+
+                        <th style="text-align: center;">Félag</th>
+
+                        <th style="text-align: center;">Sæti</th>
+
+                        <th style="text-align: center;">Þyngdarflokkur</th>
+
+                        <th style="text-align: center;">Líkamsþyngd</th>
+
+                        <th style="text-align: center;">
+                            @(meetType.Any(x => x.Squat > 0) ? Constants.Squat : string.Empty)
+                        </th>
+
+                        <th style="text-align: center;">
+                            @(meetType.Any(x => x.Benchpress > 0) ? Constants.Bench : string.Empty)
+                        </th>
+
+                        <th style="text-align: center;">
+                            @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
+                        </th>
+
+                        <th style="text-align: center;">Samanlagt</th>
+
+                        <th style="text-align: center;">Wilks</th>
+
+                        <th style="text-align: center;">IPF stig</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (AthleteParticipation p in meetType)
+                    {
+                        <tr>
+                            <td>@p.Date.ToString("dd.MM.yyyy")</td>
+
+                            <td>
+                                <NavLink class="nav-link" href="@($"/meets/{p.MeetSlug}")">
+                                    @p.Meet
+                                </NavLink>
+                            </td>
+
+                            <td style="text-align: center;">
+                                <NavLink class="nav-link" href="@($"/teams/{p.ClubSlug}")">
+                                    @p.Club
+                                </NavLink>
+                            </td>
+
+                            <td style="text-align: center;">
+                                @(p.IsDisqualified || p.Rank == int.MaxValue ? string.Empty : p.Rank)
+                            </td>
+
+                            <td style="text-align: center;">@p.WeightCategory</td>
+
+                            <td style="text-align: right;">@p.BodyWeight kg</td>
+
+                            <td style="text-align: right;">
+                                @(p.Squat == 0 ? string.Empty : $"{p.Squat:F1} kg")
+                            </td>
+
+                            <td style="text-align: right;">
+                                @(p.Benchpress == 0 ? string.Empty : $"{p.Benchpress:F1} kg")
+                            </td>
+
+                            <td style="text-align: right;">
+                                @(p.Deadlift == 0 ? string.Empty : $"{p.Deadlift:F1} kg")
+                            </td>
+
+                            <td style="text-align: right;">
+                                @(p.Total == 0 ? string.Empty : $"{p.Total:F1} kg")
+                            </td>
+
+                            <td style="text-align: right;">
+                                @(p.Wilks == 0 ? string.Empty : p.Wilks)
+                            </td>
+
+                            <td style="text-align: right;">
+                                @(p.IpfPoints == 0 ? string.Empty : $"{p.IpfPoints:F1}")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private AthleteDetails? Athlete;
+    private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
+    private IReadOnlyList<AthleteRecord> Records = [];
+    private IReadOnlyList<AthleteParticipation> Participations = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
+        PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
+        Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
+        Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
+    }
+}

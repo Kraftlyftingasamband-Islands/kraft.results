@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.AgeCategories;
+﻿using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.WeightCategories;
@@ -15,7 +16,7 @@ internal sealed class Record
 
     public int WeightCategoryId { get; private set; }
 
-    public int RecordCategoryId { get; private set; }
+    public RecordCategory RecordCategoryId { get; private set; }
 
     public decimal Weight { get; private set; }
 
