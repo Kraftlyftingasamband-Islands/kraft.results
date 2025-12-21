@@ -1,8 +1,6 @@
 ﻿using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
-using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Participations;
-using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +18,6 @@ internal sealed class GetAthleteDetailsHandler
 
     public async Task<AthleteDetails?> Handle(string slug, CancellationToken cancellationToken)
     {
-        IReadOnlyList<AthleteRecord> records = await GetRecordsAsync(slug, cancellationToken);
         IReadOnlyList<AthleteParticipation> participations = await GetParticipationsAsync(slug, cancellationToken);
 
         AthleteDetails? athlete = await _dbContext.Set<Athlete>()
@@ -32,7 +29,6 @@ internal sealed class GetAthleteDetailsHandler
                 x.Team != null ? x.Team.TitleFull : null,
                 x.Team != null ? x.Team.Slug : null,
                 0,
-                records,
                 participations))
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -47,52 +43,7 @@ internal sealed class GetAthleteDetailsHandler
         : type == "Benchpress" ? $"{Constants.Bench} ({Constants.SingeLift})"
         : type == "Deadlift" ? $"{Constants.Deadlift} ({Constants.SingeLift})"
         : type;
-
-    private static string MapRecordType(RecordCategory category) =>
-        category == RecordCategory.Squat ? Constants.Squat
-        : category == RecordCategory.Bench ? Constants.Bench
-        : category == RecordCategory.Deadlift ? Constants.Deadlift
-        : category == RecordCategory.Total ? Constants.Total
-        : category == RecordCategory.BenchSingle ? $"{Constants.Bench} ({Constants.SingeLift})"
-        : category == RecordCategory.DeadliftSingle ? $"{Constants.Deadlift} ({Constants.SingeLift})"
-        : string.Empty;
 #pragma warning restore S3358 // Ternary operators should not be nested
-
-    private Task<List<AthleteRecord>> GetRecordsAsync(string slug, CancellationToken cancellationToken) =>
-        _dbContext.Set<Record>()
-        .Where(x => x.Attempt!.Participation.Athlete.Slug == slug)
-        .Where(x => x.IsCurrent)
-        .Where(x => x.Era.EndDate.Year > DateTime.UtcNow.Year)
-        .OrderByDescending(x => x.Attempt!.Participation.Meet.StartDate)
-        .ThenBy(x => x.WeightCategoryId)
-        .ThenBy(x => x.AgeCategory.AgeCategoryId)
-        .ThenBy(x => x.Attempt!.DisciplineId)
-        .Select(x => new
-        {
-            x.Date,
-            IsClassic = x.Attempt!.Participation.Meet.IsRaw,
-            IsSingleLift = IsSingleLift(x.Attempt!.Participation.Meet.MeetType.Title),
-            WeightCategory = x.WeightCategory.Title,
-            AgeCategory = x.AgeCategory.Title,
-            x.Attempt!.Participation.Total,
-            x.Weight,
-            x.Attempt!.DisciplineId,
-            x.RecordCategoryId,
-            MeetTitle = x.Attempt!.Participation.Meet.Title,
-            MeetYear = x.Attempt!.Participation.Meet.StartDate.Year,
-            MeetSlug = x.Attempt!.Participation.Meet.Slug,
-        })
-        .Select(x => new AthleteRecord(
-            x.Date,
-            x.IsClassic,
-            x.IsSingleLift,
-            x.WeightCategory,
-            x.AgeCategory,
-            MapRecordType(x.RecordCategoryId),
-            x.Weight,
-            $"{x.MeetTitle} {x.MeetYear}",
-            x.MeetSlug))
-        .ToListAsync(cancellationToken);
 
     private Task<List<AthleteParticipation>> GetParticipationsAsync(string slug, CancellationToken cancellationToken) =>
         _dbContext.Set<Participation>()

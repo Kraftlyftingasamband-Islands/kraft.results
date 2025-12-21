@@ -40,10 +40,10 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     }
 }
 
-@if (Athlete is not null && Athlete.Records.Count > 0)
+@if (Records.Count > 0)
 {
-    <h3>Núverandi íslandsmet (@Athlete.Records.Count)</h3>
-    @foreach (var group in Athlete.Records.GroupBy(x => x.IsClassic))
+    <h3>Núverandi íslandsmet (@Records.Count)</h3>
+    @foreach (var group in Records.GroupBy(x => x.IsClassic))
     {
         <h4>@(group.Key ? "Án búnaðar" : "Með búnaði") (@group.Count())</h4>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
@@ -192,10 +192,12 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
     private AthleteDetails? Athlete;
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
+    private IReadOnlyList<AthleteRecord> Records = [];
 
     protected override async Task OnInitializedAsync()
     {
         Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
         PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
+        Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
     }
 }

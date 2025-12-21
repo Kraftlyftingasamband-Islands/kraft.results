@@ -2,6 +2,7 @@
 using KRAFT.Results.WebApi.Features.Athletes.Get;
 using KRAFT.Results.WebApi.Features.Athletes.GetDetails;
 using KRAFT.Results.WebApi.Features.Athletes.GetPersonalBests;
+using KRAFT.Results.WebApi.Features.Athletes.GetRecords;
 
 namespace KRAFT.Results.WebApi.Features.Athletes;
 
@@ -16,6 +17,7 @@ internal static class AthleteEndpoints
         group.MapGetAthletesEndpoint();
         group.MapGetAthleteDetailsEndpoint();
         group.MapGetAthletePersonalBestsEndpoint();
+        group.MapGetAthleteRecordsEndpoint();
 
         return group;
     }

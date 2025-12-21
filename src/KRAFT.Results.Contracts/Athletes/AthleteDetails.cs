@@ -7,5 +7,4 @@ public sealed record class AthleteDetails(
     string? Club,
     string? ClubSlug,
     int RecordCount,
-    IReadOnlyList<AthleteRecord> Records,
     IReadOnlyList<AthleteParticipation> Participations);
