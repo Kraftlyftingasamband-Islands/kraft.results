@@ -1,5 +1,4 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
 using KRAFT.Results.WebApi.Features.Users;
@@ -31,7 +30,7 @@ internal sealed class Meet
 
     public bool PublishedResults { get; private set; }
 
-    public ResultMode ResultModeId { get; private set; }
+    public int ResultModeId { get; private set; }
 
     public bool PublishedInCalendar { get; private set; }
 
