@@ -1,5 +1,6 @@
 ﻿using KRAFT.Results.WebApi.Features.Meets.Create;
 using KRAFT.Results.WebApi.Features.Meets.Get;
+using KRAFT.Results.WebApi.Features.Meets.GetDetails;
 using KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
@@ -11,6 +12,7 @@ internal static class MeetServices
         services.AddScoped<CreateMeetHandler>();
         services.AddScoped<GetMeetTypesHandler>();
         services.AddScoped<GetMeetsHandler>();
+        services.AddScoped<GetMeetDetailsHandler>();
 
         return services;
     }
