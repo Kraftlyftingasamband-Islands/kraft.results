@@ -66,13 +66,13 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     <br />
 }
 
-@if (Athlete is not null && Athlete.Participations.Count > 0)
+@if (Participations.Count > 0)
 {    
-    <h3>Ferill (@Athlete?.Participations.Count mót)</h3>
+    <h3>Ferill (@Participations.Count mót)</h3>
 
     <br />
 
-    @foreach (var meetType in Athlete?.Participations.GroupBy(x => x.MeetType) ?? [])
+    @foreach (var meetType in Participations.GroupBy(x => x.MeetType) ?? [])
     {
         <h4>@meetType.Key</h4>
 
@@ -193,11 +193,13 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     private AthleteDetails? Athlete;
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
     private IReadOnlyList<AthleteRecord> Records = [];
+    private IReadOnlyList<AthleteParticipation> Participations = [];
 
     protected override async Task OnInitializedAsync()
     {
         Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
         PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
         Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
+        Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
     }
 }

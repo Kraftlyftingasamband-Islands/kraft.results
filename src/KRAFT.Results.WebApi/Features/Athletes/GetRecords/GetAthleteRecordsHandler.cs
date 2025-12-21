@@ -7,17 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Athletes.GetRecords;
 
-internal sealed class GetAthleteRecordsHandler
+internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
 {
-    private readonly ResultsDbContext _dbContext;
-
-    public GetAthleteRecordsHandler(ResultsDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
     public Task<List<AthleteRecord>> Handle(string slug, CancellationToken cancellationToken) =>
-        _dbContext.Set<Record>()
+        dbContext.Set<Record>()
         .Where(x => x.Attempt!.Participation.Athlete.Slug == slug)
         .Where(x => x.IsCurrent)
         .Where(x => x.Era.EndDate.Year > DateTime.UtcNow.Year)

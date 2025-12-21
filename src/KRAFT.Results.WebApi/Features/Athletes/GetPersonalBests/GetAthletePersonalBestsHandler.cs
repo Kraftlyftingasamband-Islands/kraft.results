@@ -8,18 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Athletes.GetPersonalBests;
 
-internal sealed class GetAthletePersonalBestsHandler
+internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
 {
-    private readonly ResultsDbContext _dbContext;
-
-    public GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
     public async Task<List<AthletePersonalBest>> Handle(string slug, CancellationToken cancellationToken)
     {
-        List<PersonalBest> bestLifts = await _dbContext.Set<Attempt>()
+        List<PersonalBest> bestLifts = await dbContext.Set<Attempt>()
             .Where(x => x.Participation.Athlete.Slug == slug)
             .Where(x => !x.Participation.Disqualified)
             .Where(x => x.Good)
@@ -47,7 +40,7 @@ internal sealed class GetAthletePersonalBestsHandler
                 .First())
             .ToListAsync(cancellationToken);
 
-        List<PersonalBest> bestTotals = await _dbContext.Set<Participation>()
+        List<PersonalBest> bestTotals = await dbContext.Set<Participation>()
             .Where(p => p.Athlete.Slug == slug)
             .Where(p => !p.Disqualified)
             .Where(p => p.Meet.MeetType.Title == "Powerlifting")
