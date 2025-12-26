@@ -27,7 +27,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
             p.Attempts
                 .Where(a => a.Round < 4)
                 .Select(a => new MeetAttempt(
-                    DisciplineMapper.Map(a.DisciplineId),
+                    $"{DisciplineMapper.Map(a.DisciplineId)[0]}{a.Round}",
                     a.Round,
                     a.Weight,
                     a.Good,

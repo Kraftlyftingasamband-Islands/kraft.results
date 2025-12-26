@@ -1,3 +1,23 @@
 ﻿td {
     text-align: right;
 }
+
+.attempt-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
+    border-radius: 7px;
+}
+
+.record {
+    font-weight: 600;
+}
+
+.good-lift {
+    background-color: lightgreen;
+}
+
+.bad-lift{
+    background-color: lightcoral;
+}

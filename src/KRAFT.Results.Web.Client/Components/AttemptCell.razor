@@ -1,8 +1,10 @@
 ﻿@using KRAFT.Results.Contracts.Meets
 @using System.Text
 
-<td class="@Border" style="color: @Color; font-weight: @FontWeight;">
-    @($"{Attempt.Weight}")
+<td class="@Border">
+    <div class="@Classes">
+        @(Attempt.Weight > 0 ? $"{Attempt.Weight}" : string.Empty)
+    </div>
 </td>
 
 @code {
@@ -10,19 +12,39 @@
     [EditorRequired]
     public MeetAttempt Attempt { get; set; }
 
-    private string Color = "green";
+    private string Classes = string.Empty;
     private string Border = string.Empty;
-    private int FontWeight = 500;
 
     protected override void OnInitialized()
     {
-        Color = Attempt.IsGood ? "green" : "red";
-        FontWeight = Attempt.IsRecord ? 600 : 500;
         Border = Attempt.Round switch
         {
             1 => "border-start",
             3 => "border-end",
             _ => string.Empty,
         };
+
+        if (Attempt.Weight == 0)
+        {
+            return;
+        }
+
+        StringBuilder stringBuilder = new("attempt-box ");
+
+        if (Attempt.IsGood)
+        {
+            stringBuilder.Append(" good-lift");
+        }
+        else
+        {
+            stringBuilder.Append(" bad-lift");
+        }
+
+        if (Attempt.IsRecord)
+        {
+            stringBuilder.Append(" record");
+        }
+
+        Classes = stringBuilder.ToString();
     }
 }

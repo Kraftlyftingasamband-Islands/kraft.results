@@ -1,4 +1,5 @@
 ﻿@page "/meets/{slug}"
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
 
@@ -16,8 +17,9 @@
 </p>
 
 @foreach (var genderAgeAgeCategory in Participations
-    .GroupBy(x => new { x.Gender, x.AgeCategory})
-    .OrderBy(x => x.Key.AgeCategory)
+    .GroupBy(x => new { x.Gender, x.AgeCategory })
+    .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategory[0]))
+    .ThenBy(x => x.Key.AgeCategory)
     .ThenByDescending(x => x.Key.Gender))
 {
    <div class="col">
@@ -31,7 +33,7 @@
                     .OrderBy(x => x.Max(y => y.BodyWeight)))
                 {
                     <h5>@weightCategory.Key kg</h5>
-                    <table class="table table-hover">
+                    <table class="table table-hover table-responsive">
                         <tbody>
                             <tr>
                                 <th style="text-align: center; width: 80px;">#</th>
@@ -40,9 +42,9 @@
                                 <th style="text-align: center; width: 80px;">Félag</th>
                                 <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
-                                @foreach (var round in weightCategory.First().Attempts)
+                                @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines[a.Discipline[0]]))
                                 {
-                                    <th class="@(round.Round == 1 ? "border-start" : string.Empty)" style="text-align: right; padding-right: 25px; width: 80px;">@round.Discipline[0]@round.Round</th>
+                                    <th class="@(round.Round == 1 ? "border-start" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
                                 }
 
                                 <th class="border-start" style="text-align: right; width: 80px;">Samtala</th>
@@ -72,7 +74,7 @@
 
                                     @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
                                     {
-                                        @foreach (var attempt in discipline.OrderBy(a => a.Round))
+                                        @foreach (var attempt in discipline.Where(a => IncludedDisciplines[a.Discipline[0]]).OrderBy(a => a.Round))
                                         {
                                             <AttemptCell Attempt="attempt" />
                                         }
@@ -97,10 +99,16 @@
 
     private MeetDetails? Meet;
     private IReadOnlyList<MeetParticipation> Participations = [];
+    private Dictionary<char, bool> IncludedDisciplines = new();
 
     protected override async Task OnInitializedAsync()
     {
         Meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
         Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
+
+        IncludedDisciplines = Participations
+            .SelectMany(participation => participation.Attempts)
+            .GroupBy(attempt => attempt.Discipline[0])
+            .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
     }
 }
