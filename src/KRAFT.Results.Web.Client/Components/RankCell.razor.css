@@ -1,0 +1,23 @@
+﻿td {
+    text-align: center;
+}
+
+.rank-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
+    border-radius: 7px;
+}
+
+.first {
+    background-color: gold;
+}
+
+.second {
+    background-color: silver;
+}
+
+.third {
+    background-color: rgb(205, 127, 50);
+}

@@ -16,78 +16,126 @@
     @Meet?.Location<br />
 </p>
 
+@if (Meet?.CalculatePlaces is true)
+{
+    <h3>Stigahæstu keppendur</h3>
+    <br />
+    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 g-3">
+        @foreach (var gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4>@gender.Key</h4>
+                        <table class="table table-hover table-responsive">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 42px;">#</th>
+                                    <th>Nafn</th>
+                                    <th style="text-align: center; width: 80px;">Fæðingarár</th>
+                                    <th style="text-align: center; width: 80px;">Félag</th>
+                                    <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
+                                    <th style="text-align: right; width: 80px;">IPF stig</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in gender.OrderByDescending(p => p.IpfPoints).Select((participation, index) => (Rank: index + 1, Participation: participation)).Take(3))
+                                {
+                                    <tr>
+                                        <RankCell Rank="p.Rank" />
+                                        <td>
+                                            <NavLink class="nav-link" href="@($"/athletes/{p.Participation.AthleteSlug}")">
+                                                @p.Participation.Athlete
+                                            </NavLink>
+                                        </td>
+
+                                        <td style="text-align: center;">@p.Participation.YearOfBirth</td>
+
+                                        <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" />
+                                        <td style="text-align: right;">@($"{p.Participation.BodyWeight:F2}")</td>
+
+                                        <td style="text-align: right;">
+                                            @(p.Participation.IpfPoints > 0 ? $"{p.Participation.IpfPoints:F2}" : "-")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <br />
+        }
+    </div>
+    <br/>
+}
+
 @foreach (var genderAgeAgeCategory in Participations
     .GroupBy(x => new { x.Gender, x.AgeCategory })
     .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategory[0]))
     .ThenBy(x => x.Key.AgeCategory)
     .ThenByDescending(x => x.Key.Gender))
 {
-   <div class="col">
-       <div class="card h-100">
-            <div class="card-body">
-                <h4 class="card-title">@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
-                <br />
+    <div class="card h-100">
+        <div class="card-body">
+            <h4 class="card-title">@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
+            <br />
 
-                @foreach (var weightCategory in genderAgeAgeCategory
-                    .GroupBy(x => x.WeightCategory)
-                    .OrderBy(x => x.Max(y => y.BodyWeight)))
-                {
-                    <h5>@weightCategory.Key kg</h5>
-                    <table class="table table-hover table-responsive">
-                        <tbody>
+            @foreach (var weightCategory in genderAgeAgeCategory
+                .GroupBy(x => x.WeightCategory)
+                .OrderBy(x => x.Max(y => y.BodyWeight)))
+            {
+                <h5>@weightCategory.Key kg</h5>
+                <table class="table table-hover table-responsive">
+                    <tbody>
+                        <tr>
+                            <th style="text-align: center; width: 42px;">#</th>
+                            <th>Nafn</th>
+                            <th style="text-align: center; width: 80px;">Fæðingarár</th>
+                            <th style="text-align: center; width: 80px;">Félag</th>
+                            <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
+
+                            @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines[a.Discipline[0]]))
+                            {
+                                <th class="@(round.Round == 1 ? "border-start" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
+                            }
+
+                            <th class="border-start" style="text-align: right; width: 80px;">Samtala</th>
+                            <th style="text-align: right; width: 80px;">IPF stig</th>
+                        </tr>
+
+                        @foreach (var p in weightCategory.OrderBy(x => x.Rank))
+                        {
                             <tr>
-                                <th style="text-align: center; width: 80px;">#</th>
-                                <th>Nafn</th>
-                                <th style="text-align: center; width: 80px;">Fæðingarár</th>
-                                <th style="text-align: center; width: 80px;">Félag</th>
-                                <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
+                                <RankCell Rank="p.Rank"/>
+                            
+                                <td>
+                                    <NavLink class="nav-link" href="@($"/athletes/{p.AthleteSlug}")">
+                                        @p.Athlete
+                                    </NavLink>
+                                </td>
 
-                                @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines[a.Discipline[0]]))
+                                <td style="text-align: center;">@p.YearOfBirth</td>
+
+                                <ClubCell Club="@p.Club" Slug="@p.ClubSlug" />
+
+                                <td style="text-align: right;">@($"{p.BodyWeight:F2}")</td>
+
+                                @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
                                 {
-                                    <th class="@(round.Round == 1 ? "border-start" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
+                                    @foreach (var attempt in discipline.Where(a => IncludedDisciplines[a.Discipline[0]]).OrderBy(a => a.Round))
+                                    {
+                                        <AttemptCell Attempt="attempt" />
+                                    }
                                 }
 
-                                <th class="border-start" style="text-align: right; width: 80px;">Samtala</th>
-                                <th style="text-align: right; width: 80px;">IPF stig</th>
+                                <td style="text-align: right;">@(p.Total > 0 ? $"{p.Total:F2}" : "-")</td>
+                                <td style="text-align: right;">@(p.IpfPoints > 0 ? $"{p.IpfPoints:F2}" : "-")</td>
                             </tr>
-
-                            @foreach (var p in weightCategory.OrderBy(x => x.Rank))
-                            {
-                                <tr>
-                                    <td style="text-align: center">@(p.Rank < int.MaxValue ? p.Rank : "-")</td>
-                            
-                                    <td>
-                                        <NavLink class="nav-link" href="@($"/athletes/{p.AthleteSlug}")">
-                                            @p.Athlete
-                                        </NavLink>
-                                    </td>
-
-                                    <td style="text-align: center;">@p.YearOfBirth</td>
-
-                                    <td style="text-align: center;">
-                                        <NavLink class="nav-link" href="@($"/teams/{p.ClubSlug}")">
-                                            @p.Club
-                                        </NavLink>
-                                    </td>
-
-                                    <td style="text-align: center;">@($"{p.BodyWeight:F2}")</td>
-
-                                    @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
-                                    {
-                                        @foreach (var attempt in discipline.Where(a => IncludedDisciplines[a.Discipline[0]]).OrderBy(a => a.Round))
-                                        {
-                                            <AttemptCell Attempt="attempt" />
-                                        }
-                                    }
-
-                                    <td style="text-align: right;">@(p.Total > 0 ? $"{p.Total:F2}" : "-")</td>
-                                    <td style="text-align: right;">@(p.IpfPoints > 0 ? $"{p.IpfPoints:F2}" : "-")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-            </div>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
     </div>
     <br />

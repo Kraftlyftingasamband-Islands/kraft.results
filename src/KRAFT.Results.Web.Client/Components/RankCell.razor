@@ -1,0 +1,26 @@
+﻿<td>
+    <div class="@Classes">
+        @(Rank < int.MaxValue ? Rank : "-")
+    </div>
+</td>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public int Rank { get; init; }
+
+    public string Classes { get; private set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        string color = Rank switch
+        {
+            1 => "first",
+            2 => "second",
+            3 => "third",
+            _ => string.Empty,
+        };
+
+        Classes = $"rank-box {color}";
+    }
+}
