@@ -16,7 +16,7 @@
     @Meet?.Location<br />
 </p>
 
-@if (Meet?.CalculatePlaces is true)
+@if (ShowIpfPointLeaders)
 {
     <h3>Stigahæstu keppendur</h3>
     <br />
@@ -101,7 +101,11 @@
                             }
 
                             <th class="border-start" style="text-align: right; width: 80px;">Samtala</th>
-                            <th style="text-align: right; width: 80px;">IPF stig</th>
+
+                            @if (ShowIpfPoints)
+                            {
+                                <th style="text-align: right; width: 80px;">IPF stig</th>
+                            }
                         </tr>
 
                         @foreach (var p in weightCategory.OrderBy(x => x.Rank))
@@ -130,7 +134,11 @@
                                 }
 
                                 <td style="text-align: right;">@(p.Total > 0 ? $"{p.Total:F2}" : "-")</td>
-                                <td style="text-align: right;">@(p.IpfPoints > 0 ? $"{p.IpfPoints:F2}" : "-")</td>
+
+                                @if (ShowIpfPoints)
+                                {
+                                    <td style="text-align: right;">@(p.IpfPoints > 0 ? $"{p.IpfPoints:F2}" : "-")</td>
+                                }
                             </tr>
                         }
                     </tbody>
@@ -148,6 +156,8 @@
     private MeetDetails? Meet;
     private IReadOnlyList<MeetParticipation> Participations = [];
     private Dictionary<char, bool> IncludedDisciplines = new();
+    private bool ShowIpfPoints;
+    private bool ShowIpfPointLeaders;
 
     protected override async Task OnInitializedAsync()
     {
@@ -158,5 +168,8 @@
             .SelectMany(participation => participation.Attempts)
             .GroupBy(attempt => attempt.Discipline[0])
             .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
+
+        ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
+        ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
     }
 }
