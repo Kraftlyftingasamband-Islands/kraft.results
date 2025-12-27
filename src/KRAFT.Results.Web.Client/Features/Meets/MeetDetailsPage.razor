@@ -18,8 +18,7 @@
 
 @if (ShowIpfPointLeaders)
 {
-    <h3>Stigahæstu keppendur</h3>
-    <br />
+    <h2>Stigahæstu keppendur</h2>
     <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 g-3">
         @foreach (var gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
         {
@@ -76,6 +75,7 @@
     .ThenBy(x => x.Key.AgeCategory)
     .ThenByDescending(x => x.Key.Gender))
 {
+    <h2>Úrslit</h2>
     <div class="card h-100">
         <div class="card-body">
             <h4 class="card-title">@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
