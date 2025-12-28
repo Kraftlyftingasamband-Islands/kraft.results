@@ -25,14 +25,13 @@
             _ => string.Empty,
         };
 
-        StringBuilder stringBuilder = new("rounded-box ");
-
         if (Attempt.Weight == 0)
         {
-            stringBuilder.Append(" skipped-lift");
-            Classes = stringBuilder.ToString();
+            Classes = "skipped-lift";
             return;
         }
+
+        StringBuilder stringBuilder = new("rounded-box ");
 
         Value = $"{Attempt.Weight:F1}";
 
