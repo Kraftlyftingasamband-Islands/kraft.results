@@ -1,7 +1,9 @@
 ﻿<td>
-    <NavLink class="nav-link" href="@($"/teams/{Slug}")">
-        @Club
-    </NavLink>
+    <div class="@Classes">
+        <NavLink class="nav-link" href="@($"/teams/{Slug}")">
+            @Club
+        </NavLink>
+    </div>
 </td>
 
 @code {
@@ -12,4 +14,11 @@
     [Parameter]
     [EditorRequired]
     public string Slug { get; init; }
+
+    private string Classes = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        Classes = "rounded-box";
+    }
 }
