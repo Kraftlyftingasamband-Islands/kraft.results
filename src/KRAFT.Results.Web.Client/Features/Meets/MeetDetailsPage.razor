@@ -112,12 +112,7 @@
                         {
                             <tr>
                                 <RankCell Rank="p.Rank"/>
-                            
-                                <td>
-                                    <NavLink class="nav-link" href="@($"/athletes/{p.AthleteSlug}")">
-                                        @p.Athlete
-                                    </NavLink>
-                                </td>
+                                <AthleteCell Athlete="@p.Athlete" Slug="@p.AthleteSlug" />
 
                                 <td style="text-align: center;">@p.YearOfBirth</td>
 
