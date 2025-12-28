@@ -3,17 +3,18 @@
 
 <td class="@Border">
     <div class="@Classes">
-        @(Attempt.Weight > 0 ? $"{Attempt.Weight}" : string.Empty)
+        @Value
     </div>
 </td>
 
 @code {
     [Parameter]
     [EditorRequired]
-    public MeetAttempt Attempt { get; set; }
+    public MeetAttempt Attempt { get; init; }
 
     private string Classes = string.Empty;
     private string Border = string.Empty;
+    private string Value = "-";
 
     protected override void OnInitialized()
     {
@@ -24,12 +25,16 @@
             _ => string.Empty,
         };
 
+        StringBuilder stringBuilder = new("attempt-box ");
+
         if (Attempt.Weight == 0)
         {
+            stringBuilder.Append(" skipped-lift");
+            Classes = stringBuilder.ToString();
             return;
         }
 
-        StringBuilder stringBuilder = new("attempt-box ");
+        Value = $"{Attempt.Weight:F1}";
 
         if (Attempt.IsGood)
         {

@@ -18,6 +18,10 @@
     background-color: lightgreen;
 }
 
-.bad-lift{
+.bad-lift {
     background-color: lightcoral;
+}
+
+.skipped-lift {
+    text-align: center;
 }
