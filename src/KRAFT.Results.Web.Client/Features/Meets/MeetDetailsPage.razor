@@ -69,13 +69,14 @@
     <br/>
 }
 
+<h2>Úrslit</h2>
+
 @foreach (var genderAgeAgeCategory in Participations
     .GroupBy(x => new { x.Gender, x.AgeCategory })
     .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategory[0]))
     .ThenBy(x => x.Key.AgeCategory)
     .ThenByDescending(x => x.Key.Gender))
 {
-    <h2>Úrslit</h2>
     <div class="card h-100">
         <div class="card-body">
             <h4 class="card-title">@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
