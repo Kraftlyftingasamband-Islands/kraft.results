@@ -20,14 +20,12 @@
 
     protected override void OnInitialized()
     {
-        Classes = "rounded-box";
-
         if (string.IsNullOrWhiteSpace(Club))
         {
-            Club = "-";
             return;
         }
 
+        Classes = "rounded-box";
         Link = $"/teams/{Slug}";
     }
 }
