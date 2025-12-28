@@ -79,30 +79,14 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
         <div class="table-responsive">
             <table class="table table-hover">
 
-                <colgroup>
-                    <col style="width: 90px" />
-                    <col />
-                    <col style="width: 140px" />
-                    <col style="width: 80px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                </colgroup>
-
                 <thead>
                     <tr>
                         <th>Dags.</th>
 
                         <th>Mót</th>
 
-                        <th style="text-align: center;">Félag</th>
-
-                        <th style="text-align: center;">Sæti</th>
+                        <th style="text-align: center; width: 80px;">Félag</th>
+                        <th style="text-align: center; width: 42px;">#</th>
 
                         <th style="text-align: center;">Þyngdarflokkur</th>
 
@@ -140,15 +124,9 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                                 </NavLink>
                             </td>
 
-                            <td style="text-align: center;">
-                                <NavLink class="nav-link" href="@($"/teams/{p.ClubSlug}")">
-                                    @p.Club
-                                </NavLink>
-                            </td>
+                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug"/>
 
-                            <td style="text-align: center;">
-                                @(p.IsDisqualified || p.Rank == int.MaxValue ? string.Empty : p.Rank)
-                            </td>
+                            <RankCell Rank="@p.Rank" />
 
                             <td style="text-align: center;">@p.WeightCategory</td>
 
