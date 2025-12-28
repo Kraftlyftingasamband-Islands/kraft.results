@@ -1,6 +1,6 @@
 ﻿<td>
     <div class="@Classes">
-        <NavLink class="nav-link" href="@($"/teams/{Slug}")">
+        <NavLink class="nav-link" href="@Link">
             @Club
         </NavLink>
     </div>
@@ -9,16 +9,25 @@
 @code {
     [Parameter]
     [EditorRequired]
-    public string Club { get; init; }
+    public string Club { get; set; }
 
     [Parameter]
     [EditorRequired]
     public string Slug { get; init; }
 
     private string Classes = string.Empty;
+    private string? Link;
 
     protected override void OnInitialized()
     {
         Classes = "rounded-box";
+
+        if (string.IsNullOrWhiteSpace(Club))
+        {
+            Club = "-";
+            return;
+        }
+
+        Link = $"/teams/{Slug}";
     }
 }
