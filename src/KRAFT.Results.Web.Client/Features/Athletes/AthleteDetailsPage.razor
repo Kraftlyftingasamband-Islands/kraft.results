@@ -85,30 +85,40 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
                         <th>Mót</th>
 
-                        <th style="text-align: center; width: 80px;">Félag</th>
                         <th style="text-align: center; width: 42px;">#</th>
+                        <th style="text-align: center; width: 80px;">Félag</th>
 
-                        <th style="text-align: center;">Þyngdarflokkur</th>
+                        <th style="text-align: center; width: 80px;">Þyngdarflokkur</th>
 
-                        <th style="text-align: center;">Líkamsþyngd</th>
+                        <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
-                        <th style="text-align: center;">
-                            @(meetType.Any(x => x.Squat > 0) ? Constants.Squat : string.Empty)
-                        </th>
+                        @if (meetType.Key == Constants.Powerlifting)
+                        {
+                            <th style="text-align: center; width: 80px;">
+                                @Constants.Squat
+                            </th>
+                        }
 
-                        <th style="text-align: center;">
-                            @(meetType.Any(x => x.Benchpress > 0) ? Constants.Bench : string.Empty)
-                        </th>
+                        @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Bench))
+                        {
+                            <th style="text-align: center; width: 80px;">
+                                @Constants.Bench
+                            </th>
+                        }
 
-                        <th style="text-align: center;">
-                            @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
-                        </th>
+                        @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Deadlift))
+                        {
+                            <th style="text-align: center; width: 80px;">
+                                @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
+                            </th>
+                        }
 
-                        <th style="text-align: center;">Samanlagt</th>
+                        @if (meetType.Key == Constants.Powerlifting)
+                        {
+                            <th style="text-align: center; width: 80px;">Samanlagt</th>
+                        }
 
-                        <th style="text-align: center;">Wilks</th>
-
-                        <th style="text-align: center;">IPF stig</th>
+                        <th style="text-align: center; width: 80px;">IPF stig</th>
                     </tr>
                 </thead>
 
@@ -124,37 +134,34 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                                 </NavLink>
                             </td>
 
-                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug"/>
-
                             <RankCell Rank="@p.Rank" />
+                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug"/>
 
                             <td style="text-align: center;">@p.WeightCategory</td>
 
-                            <td style="text-align: right;">@p.BodyWeight kg</td>
+                            <WeightCell Weight="@p.BodyWeight" SignificantDigits="2" />
 
-                            <td style="text-align: right;">
-                                @(p.Squat == 0 ? string.Empty : $"{p.Squat:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting)
+                            {
+                                <WeightCell Weight="@p.Squat" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Benchpress == 0 ? string.Empty : $"{p.Benchpress:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Bench))
+                            {
+                                <WeightCell Weight="@p.Benchpress" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Deadlift == 0 ? string.Empty : $"{p.Deadlift:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Deadlift))
+                            {
+                                <WeightCell Weight="@p.Deadlift" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Total == 0 ? string.Empty : $"{p.Total:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting)
+                            {
+                                <WeightCell Weight="@p.Total" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Wilks == 0 ? string.Empty : p.Wilks)
-                            </td>
-
-                            <td style="text-align: right;">
-                                @(p.IpfPoints == 0 ? string.Empty : $"{p.IpfPoints:F1}")
-                            </td>
+                            <WeightCell Weight="@p.IpfPoints" SignificantDigits="2" />
                         </tr>
                     }
                 </tbody>

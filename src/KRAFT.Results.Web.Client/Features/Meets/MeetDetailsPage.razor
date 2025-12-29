@@ -42,20 +42,11 @@
                                 {
                                     <tr>
                                         <RankCell Rank="p.Rank" />
-                                        <td>
-                                            <NavLink class="nav-link" href="@($"/athletes/{p.Participation.AthleteSlug}")">
-                                                @p.Participation.Athlete
-                                            </NavLink>
-                                        </td>
-
+                                        <AthleteCell Athlete="@p.Participation.Athlete" Slug="@p.Participation.AthleteSlug" />
                                         <td style="text-align: center;">@p.Participation.YearOfBirth</td>
-
                                         <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" />
-                                        <td style="text-align: right;">@($"{p.Participation.BodyWeight:F2}")</td>
-
-                                        <td style="text-align: right;">
-                                            @(p.Participation.IpfPoints > 0 ? $"{p.Participation.IpfPoints:F2}" : "-")
-                                        </td>
+                                        <WeightCell Weight="p.Participation.BodyWeight" SignificantDigits="2" />
+                                        <WeightCell Weight="p.Participation.IpfPoints" SignificantDigits="2" />
                                     </tr>
                                 }
                             </tbody>
@@ -114,12 +105,9 @@
                             <tr>
                                 <RankCell Rank="p.Rank"/>
                                 <AthleteCell Athlete="@p.Athlete" Slug="@p.AthleteSlug" />
-
                                 <td style="text-align: center;">@p.YearOfBirth</td>
-
                                 <ClubCell Club="@p.Club" Slug="@p.ClubSlug" />
-
-                                <td style="text-align: right;">@($"{p.BodyWeight:F2}")</td>
+                                <WeightCell Weight="p.BodyWeight" SignificantDigits="2" />
 
                                 @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
                                 {
@@ -129,11 +117,11 @@
                                     }
                                 }
 
-                                <td style="text-align: right;">@(p.Total > 0 ? $"{p.Total:F1}" : "-")</td>
+                                <WeightCell Weight="p.Total" />
 
                                 @if (ShowIpfPoints)
                                 {
-                                    <td style="text-align: right;">@(p.IpfPoints > 0 ? $"{p.IpfPoints:F2}" : "-")</td>
+                                    <WeightCell Weight="p.IpfPoints" SignificantDigits="2" />
                                 }
                             </tr>
                         }
