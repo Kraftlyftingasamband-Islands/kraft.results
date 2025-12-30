@@ -1,6 +1,6 @@
 ﻿<td>
     <div class="@Classes">
-        @(Rank < int.MaxValue ? Rank : "-")
+        @Value
     </div>
 </td>
 
@@ -8,6 +8,8 @@
     [Parameter]
     [EditorRequired]
     public int Rank { get; init; }
+
+    public string Value { get; private set; } = "-";
 
     public string Classes { get; private set; } = string.Empty;
 
@@ -22,5 +24,10 @@
         };
 
         Classes = $"rounded-box {color}";
+
+        if (Rank > 0 && Rank < int.MaxValue - 1)
+        {
+            Value = Rank.ToString();
+        }
     }
 }
