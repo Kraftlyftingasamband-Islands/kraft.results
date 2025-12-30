@@ -32,7 +32,12 @@
                                     <th style="text-align: center; width: 42px;">#</th>
                                     <th>Nafn</th>
                                     <th style="text-align: center; width: 80px;">Fæðingarár</th>
-                                    <th style="text-align: center; width: 80px;">Félag</th>
+
+                                    @if (ShowClubs)
+                                    {
+                                        <th style="text-align: center; width: 80px;">Félag</th>
+                                    }
+
                                     <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
                                     <th style="text-align: right; width: 80px;">IPF stig</th>
                                 </tr>
@@ -44,7 +49,7 @@
                                         <RankCell Rank="p.Rank" />
                                         <AthleteCell Athlete="@p.Participation.Athlete" Slug="@p.Participation.AthleteSlug" />
                                         <td style="text-align: center;">@p.Participation.YearOfBirth</td>
-                                        <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" />
+                                        <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" IsVisible="@ShowClubs" />
                                         <WeightCell Weight="p.Participation.BodyWeight" SignificantDigits="2" />
                                         <WeightCell Weight="p.Participation.IpfPoints" SignificantDigits="2" />
                                     </tr>
@@ -84,7 +89,12 @@
                             <th style="text-align: center; width: 42px;">#</th>
                             <th>Nafn</th>
                             <th style="text-align: center; width: 80px;">Fæðingarár</th>
-                            <th style="text-align: center; width: 80px;">Félag</th>
+
+                            @if (ShowClubs)
+                            {
+                                <th style="text-align: center; width: 80px;">Félag</th>
+                            }
+
                             <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
                             @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines[a.Discipline[0]]))
@@ -106,7 +116,7 @@
                                 <RankCell Rank="p.Rank"/>
                                 <AthleteCell Athlete="@p.Athlete" Slug="@p.AthleteSlug" />
                                 <td style="text-align: center;">@p.YearOfBirth</td>
-                                <ClubCell Club="@p.Club" Slug="@p.ClubSlug" />
+                                <ClubCell Club="@p.Club" Slug="@p.ClubSlug" IsVisible="@ShowClubs" />
                                 <WeightCell Weight="p.BodyWeight" SignificantDigits="2" />
 
                                 @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
@@ -142,6 +152,7 @@
     private Dictionary<char, bool> IncludedDisciplines = new();
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
+    private bool ShowClubs;
 
     protected override async Task OnInitializedAsync()
     {
@@ -155,5 +166,6 @@
 
         ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
         ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
+        ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
     }
 }

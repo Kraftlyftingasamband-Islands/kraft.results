@@ -1,10 +1,13 @@
-﻿<td>
-    <div class="@Classes">
-        <NavLink class="nav-link" href="@Link">
-            @Club
-        </NavLink>
-    </div>
-</td>
+﻿@if (IsVisible)
+{
+    <td>
+        <div class="@Classes">
+            <NavLink class="nav-link" href="@Link">
+                @Club
+            </NavLink>
+        </div>
+    </td>
+}
 
 @code {
     [Parameter]
@@ -14,6 +17,9 @@
     [Parameter]
     [EditorRequired]
     public string Slug { get; init; }
+
+    [Parameter]
+    public bool IsVisible { get; init; } = true;
 
     private string Classes = string.Empty;
     private string? Link;
