@@ -10,9 +10,12 @@
 
 <h1>@Athlete?.Name</h1>
 Fæðingarár: @Athlete?.YearOfBirth<br />
-<NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
-    @Athlete?.Club
-</NavLink>
+@if (ShowClubs)
+{
+    <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
+        @Athlete?.Club
+    </NavLink>
+}
 
 <br/>
 
@@ -86,7 +89,11 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                         <th>Mót</th>
 
                         <th style="text-align: center; width: 42px;">#</th>
-                        <th style="text-align: center; width: 80px;">Félag</th>
+
+                        @if (ShowClubs)
+                        {
+                            <th style="text-align: center; width: 80px;">Félag</th>
+                        }
 
                         <th style="text-align: center; width: 80px;">Þyngdarflokkur</th>
 
@@ -135,7 +142,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                             </td>
 
                             <RankCell Rank="@p.Rank" />
-                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug"/>
+                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug" IsVisible="@ShowClubs"/>
 
                             <td style="text-align: center;">@p.WeightCategory</td>
 
@@ -176,6 +183,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     public string Slug { get; set; } = string.Empty;
 
     private AthleteDetails? Athlete;
+    private bool ShowClubs;
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
     private IReadOnlyList<AthleteRecord> Records = [];
     private IReadOnlyList<AthleteParticipation> Participations = [];
@@ -186,5 +194,6 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
         PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
         Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
         Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
+        ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
     }
 }
