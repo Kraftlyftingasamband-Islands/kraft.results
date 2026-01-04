@@ -1,19 +1,33 @@
-﻿td {
-    text-align: right;
+﻿.side {
+    display: flex;
+    justify-content: right;
+    flex: 1;
+    padding: 0 3px 0 3px;
+}
+
+.discipline-round {
+    font-weight: 600;
+    border-right: 1px solid #333;
+    max-width: 30px;
+}
+
+.attempt {
+    border-radius: 0 7px 7px 0;
+    min-width: 47px;
 }
 
 .record {
     font-weight: 600;
 }
 
-.good-lift {
+.good {
     background-color: lightgreen;
 }
 
-.bad-lift {
+.bad {
     background-color: lightcoral;
 }
 
-.skipped-lift {
-    text-align: center;
+.skipped {
+    justify-content: center !important;
 }

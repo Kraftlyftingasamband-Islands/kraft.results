@@ -2,8 +2,14 @@
 @using System.Text
 
 <td class="@Border">
-    <div class="@Classes">
-        @Value
+    <div class="rounded-box">
+        <div class="side discipline-round">
+            @Attempt.Discipline[0]@Attempt.Round
+        </div>
+
+        <div class="@Classes">
+            @Value
+        </div>
     </div>
 </td>
 
@@ -25,23 +31,25 @@
             _ => string.Empty,
         };
 
+        StringBuilder stringBuilder = new("side");
+
         if (Attempt.Weight == 0)
         {
-            Classes = "skipped-lift";
+            Classes = " skipped";
             return;
         }
 
-        StringBuilder stringBuilder = new("rounded-box ");
+        stringBuilder.Append(" attempt");
 
         Value = $"{Attempt.Weight:F1}";
 
         if (Attempt.IsGood)
         {
-            stringBuilder.Append(" good-lift");
+            stringBuilder.Append(" good");
         }
         else
         {
-            stringBuilder.Append(" bad-lift");
+            stringBuilder.Append(" bad");
         }
 
         if (Attempt.IsRecord)
