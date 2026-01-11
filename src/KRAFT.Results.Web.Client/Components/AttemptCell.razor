@@ -2,23 +2,23 @@
 @using System.Text
 
 <td class="@Border">
-    <div class="rounded-box">
+    <div class="attempt-container">
         <div class="side discipline-round">
             @Attempt.Discipline[0]@Attempt.Round
         </div>
 
-        <div class="@Classes">
+        <div class="side weight @StateClasses">
             @Value
         </div>
     </div>
 </td>
 
+
 @code {
-    [Parameter]
-    [EditorRequired]
+    [Parameter, EditorRequired]
     public MeetAttempt Attempt { get; init; }
 
-    private string Classes = string.Empty;
+    private string StateClasses = string.Empty;
     private string Border = string.Empty;
     private string Value = "-";
 
@@ -31,15 +31,14 @@
             _ => string.Empty,
         };
 
-        StringBuilder stringBuilder = new("side");
+        StringBuilder stringBuilder = new("side attempt");
 
         if (Attempt.Weight == 0)
         {
-            Classes = " skipped";
+            stringBuilder.Append(" skipped");
+            StateClasses = stringBuilder.ToString();
             return;
         }
-
-        stringBuilder.Append(" attempt");
 
         Value = $"{Attempt.Weight:F1}";
 
@@ -57,6 +56,6 @@
             stringBuilder.Append(" record");
         }
 
-        Classes = stringBuilder.ToString();
+        StateClasses = stringBuilder.ToString();
     }
 }
