@@ -1,0 +1,8 @@
+﻿<SplitCell Header="@Header" Value="@($"{Value:F2}")" />
+
+@code {
+    public const string Header = "LÞ";
+
+    [Parameter, EditorRequired]
+    public decimal Value { get; init; }
+}
