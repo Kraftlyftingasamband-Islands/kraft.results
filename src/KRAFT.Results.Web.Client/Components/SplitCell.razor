@@ -1,0 +1,17 @@
+﻿<div class="body-weight-container">
+    <div class="side left">
+        @Header
+    </div>
+
+    <div class="side right">
+        @Value
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Header { get; init; }
+
+    [Parameter, EditorRequired]
+    public string Value { get; init; }
+}
