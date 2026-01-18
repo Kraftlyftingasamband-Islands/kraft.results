@@ -1,4 +1,4 @@
-﻿.body-weight-container {
+﻿.birth-year-container {
     display: inline-flex;
     border: 1px solid black;
     border-radius: 7px;
@@ -13,12 +13,12 @@
 
 .left {
     justify-content: flex-end;
-    font-weight: 600;
     border-right: 1px solid #333;
 }
 
 .right {
-    width: 54px;
-    justify-content: flex-end;
+    width: 27px;
+    justify-content: center;
     border-radius: 0 7px 7px 0;
+    color: gray;
 }

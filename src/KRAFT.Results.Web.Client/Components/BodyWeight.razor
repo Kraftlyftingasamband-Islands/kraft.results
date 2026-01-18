@@ -1,4 +1,12 @@
-﻿<SplitCell Header="@Header" Value="@($"{Value:F2}")" />
+﻿<div class="body-weight-container">
+    <div class="side left">
+        @Header
+    </div>
+
+    <div class="side right">
+        @($"{Value:F2}")
+    </div>
+</div>
 
 @code {
     public const string Header = "LÞ";

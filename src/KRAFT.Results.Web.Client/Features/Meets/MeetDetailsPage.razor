@@ -48,9 +48,13 @@
                                     <tr>
                                         <RankCell Rank="p.Rank" />
                                         <AthleteCell Athlete="@p.Participation.Athlete" Slug="@p.Participation.AthleteSlug" />
-                                        <td style="text-align: center;">@p.Participation.YearOfBirth</td>
+                                        <td>
+                                            <BirthYear Year="@p.Participation.YearOfBirth" RelativeYear="@(Meet?.StartDate.Year ?? 0)" />
+                                        </td>
                                         <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" IsVisible="@ShowClubs" />
-                                        <WeightCell Weight="p.Participation.BodyWeight" SignificantDigits="2" />
+                                        <td>
+                                            <BodyWeight Value="p.Participation.BodyWeight" />
+                                        </td>
                                         <WeightCell Weight="p.Participation.IpfPoints" SignificantDigits="2" />
                                     </tr>
                                 }
@@ -115,9 +119,13 @@
                             <tr>
                                 <RankCell Rank="p.Rank"/>
                                 <AthleteCell Athlete="@p.Athlete" Slug="@p.AthleteSlug" />
-                                <td style="text-align: center;">@p.YearOfBirth</td>
+                                <td>
+                                    <BirthYear Year="@p.YearOfBirth" RelativeYear="@(Meet?.StartDate.Year ?? 0)" />
+                                </td>
                                 <ClubCell Club="@p.Club" Slug="@p.ClubSlug" IsVisible="@ShowClubs" />
-                                <WeightCell Weight="p.BodyWeight" SignificantDigits="2" />
+                                <td>
+                                    <BodyWeight Value="p.BodyWeight" />
+                                </td>
 
                                 @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
                                 {

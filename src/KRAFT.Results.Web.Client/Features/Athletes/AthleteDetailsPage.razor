@@ -146,7 +146,9 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 
                             <td style="text-align: center;">@p.WeightCategory</td>
 
-                            <WeightCell Weight="@p.BodyWeight" SignificantDigits="2" />
+                            <td>
+                                <BodyWeight Value="p.BodyWeight"/>
+                            </td>
 
                             @if (meetType.Key == Constants.Powerlifting)
                             {

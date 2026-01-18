@@ -1,4 +1,4 @@
-﻿.attempt-container {
+﻿.body-weight-container {
     display: inline-flex;
     border: 1px solid black;
     border-radius: 7px;
@@ -18,23 +18,7 @@
 }
 
 .right {
-    width: 50px;
+    width: 54px;
     justify-content: flex-end;
     border-radius: 0 7px 7px 0;
-}
-
-.good {
-    background-color: lightgreen;
-}
-
-.bad {
-    background-color: lightcoral;
-}
-
-.skipped {
-    justify-content: center !important;
-}
-
-.record {
-    font-weight: 600;
 }
