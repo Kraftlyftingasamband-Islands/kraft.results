@@ -9,15 +9,16 @@
 @inject HttpClient HttpClient;
 
 <h1>@Athlete?.Name</h1>
-Fæðingarár: @Athlete?.YearOfBirth<br />
-@if (ShowClubs)
-{
-    <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
-        @Athlete?.Club
-    </NavLink>
-}
-
-<br/>
+<div class="athlete-meta">
+    <span>Fæðingarár: @Athlete?.YearOfBirth</span>
+    @if (ShowClubs)
+    {
+        <span class="meta-separator">&middot;</span>
+        <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
+            @Athlete?.Club
+        </NavLink>
+    }
+</div>
 
 @if (PersonalBests.Count > 0)
 {
@@ -30,12 +31,15 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
             {
                 <Card>
                     <a href="@($"/meets/{best.MeetSlug}")" aria-label="@best.Discipline"></a>
-                    <h5>@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
-                    <p>
-                        @($"{best.Date:dd-MM-yyyy}")<br />
-                        Líkamsþyngd: @best.BodyWeight kg
-                    </p>
-                    <h3 style="color: mediumseagreen; text-align: right">@($"{best.Weight:F1} kg")</h3>
+                    @if (best.IsSingleLift)
+                    {
+                        <div class="card-badge">@Constants.SingeLift</div>
+                    }
+                    <div class="card-label">@best.Discipline</div>
+                    <div class="card-weight">@($"{best.Weight:F1}") <span class="card-unit">kg</span></div>
+                    <div class="card-meta">
+                        @($"{best.Date:dd-MM-yyyy}") &middot; @best.BodyWeight kg
+                    </div>
                 </Card>
             }
         </div>
@@ -54,12 +58,11 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
             {
                 <Card>
                     <a href="@($"/meets/{record.MeetSlug}")" aria-label="@record.Type"></a>
-                    <h5>@record.Type</h5>
-                    <p>
-                        @($"{record.Date:dd-MM-yyyy}")<br />
-                        @record.AgeCategory @record.WeightCategory
-                    </p>
-                    <h3 style="color: mediumseagreen; text-align: right">@($"{record.Weight:F1} kg")</h3>
+                    <div class="card-label">@record.Type</div>
+                    <div class="card-weight">@($"{record.Weight:F1}") <span class="card-unit">kg</span></div>
+                    <div class="card-meta">
+                        @($"{record.Date:dd-MM-yyyy}") &middot; @record.AgeCategory @record.WeightCategory
+                    </div>
                 </Card>
             }
         </div>
