@@ -1,6 +1,8 @@
 ﻿using KRAFT.Results.WebApi.Features.Meets.Create;
 using KRAFT.Results.WebApi.Features.Meets.Get;
+using KRAFT.Results.WebApi.Features.Meets.GetDetails;
 using KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
+using KRAFT.Results.WebApi.Features.Meets.GetParticipations;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -14,6 +16,8 @@ internal static class MeetEndpoints
         group.MapCreateMeetEndpoint();
         group.MapGetMeetTypesEndpoint();
         group.MapGetMeetsEndpoint();
+        group.MapGetMeetDetailsEndpoint();
+        group.MapGetMeetParticipationsEndpoint();
 
         return group;
     }

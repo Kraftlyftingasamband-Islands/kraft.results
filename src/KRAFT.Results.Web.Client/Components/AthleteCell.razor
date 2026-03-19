@@ -1,0 +1,15 @@
+﻿<td>
+    <NavLink class="nav-link" href="@($"/athletes/{Slug}")">
+        @Athlete
+    </NavLink>
+</td>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public string Athlete { get; init; }
+
+    [Parameter]
+    [EditorRequired]
+    public string Slug { get; init; }
+}

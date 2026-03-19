@@ -1,0 +1,19 @@
+﻿td {
+    text-align: right;
+}
+
+.record {
+    font-weight: 600;
+}
+
+.good-lift {
+    background-color: lightgreen;
+}
+
+.bad-lift {
+    background-color: lightcoral;
+}
+
+.skipped-lift {
+    text-align: center;
+}

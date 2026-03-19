@@ -1,0 +1,33 @@
+﻿<td>
+    <div class="@Classes">
+        @Value
+    </div>
+</td>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public int Rank { get; init; }
+
+    public string Value { get; private set; } = "-";
+
+    public string Classes { get; private set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        string color = Rank switch
+        {
+            1 => "first",
+            2 => "second",
+            3 => "third",
+            _ => string.Empty,
+        };
+
+        Classes = $"rounded-box {color}";
+
+        if (Rank > 0 && Rank < int.MaxValue - 1)
+        {
+            Value = Rank.ToString();
+        }
+    }
+}

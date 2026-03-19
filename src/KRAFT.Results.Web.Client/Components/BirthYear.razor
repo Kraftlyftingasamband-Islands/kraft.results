@@ -1,0 +1,28 @@
+﻿<div class="birth-year-container">
+    <div class="side left">
+        @Year
+    </div>
+
+    <div class="side right">
+        @AgeCategory
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public int Year { get; init; }
+
+    [Parameter, EditorRequired]
+    public int RelativeYear { get; init; }
+
+    public string AgeCategory => (RelativeYear - Year) switch
+    {
+        <= 18 => "SJ",
+        > 18 and <= 23 => "J",
+        >= 70 => "M4",
+        >= 60 => "M3",
+        >= 50 => "M2",
+        >= 40 => "M1",
+        _ => "O",
+    };
+}

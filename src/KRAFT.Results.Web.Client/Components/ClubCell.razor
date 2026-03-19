@@ -1,0 +1,37 @@
+﻿@if (IsVisible)
+{
+    <td>
+        <div class="@Classes">
+            <NavLink class="nav-link" href="@Link">
+                @Club
+            </NavLink>
+        </div>
+    </td>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public string Club { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string Slug { get; init; }
+
+    [Parameter]
+    public bool IsVisible { get; init; } = true;
+
+    private string Classes = string.Empty;
+    private string? Link;
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrWhiteSpace(Club))
+        {
+            return;
+        }
+
+        Classes = "rounded-box";
+        Link = $"/teams/{Slug}";
+    }
+}

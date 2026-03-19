@@ -10,9 +10,12 @@
 
 <h1>@Athlete?.Name</h1>
 Fæðingarár: @Athlete?.YearOfBirth<br />
-<NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
-    @Athlete?.Club
-</NavLink>
+@if (ShowClubs)
+{
+    <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
+        @Athlete?.Club
+    </NavLink>
+}
 
 <br/>
 
@@ -79,52 +82,50 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
         <div class="table-responsive">
             <table class="table table-hover">
 
-                <colgroup>
-                    <col style="width: 90px" />
-                    <col />
-                    <col style="width: 140px" />
-                    <col style="width: 80px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                    <col style="width: 120px" />
-                </colgroup>
-
                 <thead>
                     <tr>
                         <th>Dags.</th>
 
                         <th>Mót</th>
 
-                        <th style="text-align: center;">Félag</th>
+                        <th style="text-align: center; width: 42px;">#</th>
 
-                        <th style="text-align: center;">Sæti</th>
+                        @if (ShowClubs)
+                        {
+                            <th style="text-align: center; width: 80px;">Félag</th>
+                        }
 
-                        <th style="text-align: center;">Þyngdarflokkur</th>
+                        <th style="text-align: center; width: 80px;">Þyngdarflokkur</th>
 
-                        <th style="text-align: center;">Líkamsþyngd</th>
+                        <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
-                        <th style="text-align: center;">
-                            @(meetType.Any(x => x.Squat > 0) ? Constants.Squat : string.Empty)
-                        </th>
+                        @if (meetType.Key == Constants.Powerlifting)
+                        {
+                            <th style="text-align: center; width: 80px;">
+                                @Constants.Squat
+                            </th>
+                        }
 
-                        <th style="text-align: center;">
-                            @(meetType.Any(x => x.Benchpress > 0) ? Constants.Bench : string.Empty)
-                        </th>
+                        @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Bench))
+                        {
+                            <th style="text-align: center; width: 80px;">
+                                @Constants.Bench
+                            </th>
+                        }
 
-                        <th style="text-align: center;">
-                            @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
-                        </th>
+                        @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Deadlift))
+                        {
+                            <th style="text-align: center; width: 80px;">
+                                @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
+                            </th>
+                        }
 
-                        <th style="text-align: center;">Samanlagt</th>
+                        @if (meetType.Key == Constants.Powerlifting)
+                        {
+                            <th style="text-align: center; width: 80px;">Samanlagt</th>
+                        }
 
-                        <th style="text-align: center;">Wilks</th>
-
-                        <th style="text-align: center;">IPF stig</th>
+                        <th style="text-align: center; width: 80px;">IPF stig</th>
                     </tr>
                 </thead>
 
@@ -140,43 +141,36 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
                                 </NavLink>
                             </td>
 
-                            <td style="text-align: center;">
-                                <NavLink class="nav-link" href="@($"/teams/{p.ClubSlug}")">
-                                    @p.Club
-                                </NavLink>
-                            </td>
-
-                            <td style="text-align: center;">
-                                @(p.IsDisqualified || p.Rank == int.MaxValue ? string.Empty : p.Rank)
-                            </td>
+                            <RankCell Rank="@p.Rank" />
+                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug" IsVisible="@ShowClubs"/>
 
                             <td style="text-align: center;">@p.WeightCategory</td>
 
-                            <td style="text-align: right;">@p.BodyWeight kg</td>
-
-                            <td style="text-align: right;">
-                                @(p.Squat == 0 ? string.Empty : $"{p.Squat:F1} kg")
+                            <td>
+                                <BodyWeight Value="p.BodyWeight"/>
                             </td>
 
-                            <td style="text-align: right;">
-                                @(p.Benchpress == 0 ? string.Empty : $"{p.Benchpress:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting)
+                            {
+                                <WeightCell Weight="@p.Squat" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Deadlift == 0 ? string.Empty : $"{p.Deadlift:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Bench))
+                            {
+                                <WeightCell Weight="@p.Benchpress" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Total == 0 ? string.Empty : $"{p.Total:F1} kg")
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Deadlift))
+                            {
+                                <WeightCell Weight="@p.Deadlift" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.Wilks == 0 ? string.Empty : p.Wilks)
-                            </td>
+                            @if (meetType.Key == Constants.Powerlifting)
+                            {
+                                <WeightCell Weight="@p.Total" />
+                            }
 
-                            <td style="text-align: right;">
-                                @(p.IpfPoints == 0 ? string.Empty : $"{p.IpfPoints:F1}")
-                            </td>
+                            <WeightCell Weight="@p.IpfPoints" SignificantDigits="2" />
                         </tr>
                     }
                 </tbody>
@@ -191,6 +185,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     public string Slug { get; set; } = string.Empty;
 
     private AthleteDetails? Athlete;
+    private bool ShowClubs;
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
     private IReadOnlyList<AthleteRecord> Records = [];
     private IReadOnlyList<AthleteParticipation> Participations = [];
@@ -201,5 +196,6 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
         PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
         Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
         Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
+        ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
     }
 }

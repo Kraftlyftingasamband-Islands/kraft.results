@@ -1,0 +1,40 @@
+﻿.attempt-container {
+    display: inline-flex;
+    border: 1px solid black;
+    border-radius: 7px;
+}
+
+.side {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    flex-shrink: 0;
+}
+
+.left {
+    justify-content: flex-end;
+    font-weight: 600;
+    border-right: 1px solid #333;
+}
+
+.right {
+    width: 50px;
+    justify-content: flex-end;
+    border-radius: 0 7px 7px 0;
+}
+
+.good {
+    background-color: lightgreen;
+}
+
+.bad {
+    background-color: lightcoral;
+}
+
+.skipped {
+    justify-content: center !important;
+}
+
+.record {
+    font-weight: 600;
+}

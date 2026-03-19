@@ -1,8 +1,8 @@
 ﻿using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
-using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Mappers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -72,7 +72,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
             .Select(x => new AthletePersonalBest(
             x.IsRaw,
             x.IsSingleLiftRecord,
-            MapDiscipline(x.DisciplineId),
+            DisciplineMapper.Map(x.DisciplineId),
             x.Weight,
             x.WeightCategoryTitle,
             x.BodyWeight,
@@ -80,12 +80,6 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
             MapMeetType(x.MeetType),
             DateOnly.FromDateTime(x.MeetDate)))];
     }
-
-    private static bool IsSquat(int disciplineId) => disciplineId == (byte)Discipline.Squat;
-
-    private static bool IsBench(int disciplineId) => disciplineId == (byte)Discipline.Bench;
-
-    private static bool IsDeadlift(int disciplineId) => disciplineId == (byte)Discipline.Deadlift;
 
     private static bool IsSingleLift(string meetType) => meetType != "Powerlifting";
 
@@ -95,12 +89,6 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
         : type == "Benchpress" ? $"{Constants.Bench} ({Constants.SingeLift})"
         : type == "Deadlift" ? $"{Constants.Deadlift} ({Constants.SingeLift})"
         : type;
-
-    private static string MapDiscipline(int disciplineId) =>
-        IsSquat(disciplineId) ? Constants.Squat
-        : IsBench(disciplineId) ? Constants.Bench
-        : IsDeadlift(disciplineId) ? Constants.Deadlift
-        : Constants.Total;
 #pragma warning restore S3358 // Ternary operators should not be nested
 
     private sealed record class PersonalBest(

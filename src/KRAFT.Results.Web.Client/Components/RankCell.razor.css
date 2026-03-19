@@ -1,0 +1,15 @@
+﻿td {
+    text-align: center;
+}
+
+.first {
+    background-color: gold;
+}
+
+.second {
+    background-color: silver;
+}
+
+.third {
+    background-color: rgb(205, 127, 50);
+}

@@ -1,0 +1,61 @@
+﻿@using KRAFT.Results.Contracts.Meets
+@using System.Text
+
+<td class="@Border">
+    <div class="attempt-container">
+        <div class="side left">
+            @Attempt.Discipline[0]@Attempt.Round
+        </div>
+
+        <div class="side right @StateClasses">
+            @Value
+        </div>
+    </div>
+</td>
+
+
+@code {
+    [Parameter, EditorRequired]
+    public MeetAttempt Attempt { get; init; }
+
+    private string StateClasses = string.Empty;
+    private string Border = string.Empty;
+    private string Value = "-";
+
+    protected override void OnInitialized()
+    {
+        Border = Attempt.Round switch
+        {
+            1 => "border-start",
+            3 => "border-end",
+            _ => string.Empty,
+        };
+
+        StringBuilder stringBuilder = new("side attempt");
+
+        if (Attempt.Weight == 0)
+        {
+            stringBuilder.Append(" skipped");
+            StateClasses = stringBuilder.ToString();
+            return;
+        }
+
+        Value = $"{Attempt.Weight:F1}";
+
+        if (Attempt.IsGood)
+        {
+            stringBuilder.Append(" good");
+        }
+        else
+        {
+            stringBuilder.Append(" bad");
+        }
+
+        if (Attempt.IsRecord)
+        {
+            stringBuilder.Append(" record");
+        }
+
+        StateClasses = stringBuilder.ToString();
+    }
+}

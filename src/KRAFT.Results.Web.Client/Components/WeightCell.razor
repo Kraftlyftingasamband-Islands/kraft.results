@@ -1,0 +1,37 @@
+﻿@using System.Text
+
+<td class="@Border">
+    <div class="@Classes">
+        @Value
+    </div>
+</td>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public decimal? Weight { get; set; }
+
+    [Parameter]
+    public int SignificantDigits { get; init; } = 1;
+
+    public string Border { get; set; } = string.Empty;
+
+    public string Classes { get; set; } = string.Empty;
+
+    public string Value { get; set; } = "-";
+
+    protected override void OnInitialized()
+    {
+        if (Weight is null or 0)
+        {
+            Classes = "skipped-lift";
+            return;
+        }
+
+        Value = Weight?.ToString($"F{SignificantDigits}") ?? "-";
+
+        StringBuilder stringBuilder = new("rounded-box ");
+
+        Classes = stringBuilder.ToString();
+    }
+}
