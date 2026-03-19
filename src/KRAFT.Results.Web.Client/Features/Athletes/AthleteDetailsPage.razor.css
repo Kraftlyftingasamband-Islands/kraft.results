@@ -1,0 +1,9 @@
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.table-overflow {
+    overflow-x: auto;
+}

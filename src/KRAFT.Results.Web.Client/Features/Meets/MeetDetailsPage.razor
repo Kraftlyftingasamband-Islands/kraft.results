@@ -1,4 +1,4 @@
-﻿@page "/meets/{slug}"
+@page "/meets/{slug}"
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
@@ -19,50 +19,48 @@
 @if (ShowIpfPointLeaders)
 {
     <h2>Stigahæstu keppendur</h2>
-    <div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 g-3">
+    <div class="card-grid card-grid-2">
         @foreach (var gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
         {
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h4>@gender.Key</h4>
-                        <table class="table table-hover table-responsive">
-                            <thead>
-                                <tr>
-                                    <th style="text-align: center; width: 42px;">#</th>
-                                    <th>Nafn</th>
-                                    <th style="text-align: center; width: 80px;">Fæðingarár</th>
+            <section class="card-section">
+                <h4>@gender.Key</h4>
+                <div class="table-overflow">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; width: 42px;">#</th>
+                                <th>Nafn</th>
+                                <th style="text-align: center; width: 80px;">Fæðingarár</th>
 
-                                    @if (ShowClubs)
-                                    {
-                                        <th style="text-align: center; width: 80px;">Félag</th>
-                                    }
-
-                                    <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
-                                    <th style="text-align: right; width: 80px;">IPF stig</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var p in gender.OrderByDescending(p => p.IpfPoints).Select((participation, index) => (Rank: index + 1, Participation: participation)).Take(3))
+                                @if (ShowClubs)
                                 {
-                                    <tr>
-                                        <RankCell Rank="p.Rank" />
-                                        <AthleteCell Athlete="@p.Participation.Athlete" Slug="@p.Participation.AthleteSlug" />
-                                        <td>
-                                            <BirthYear Year="@p.Participation.YearOfBirth" RelativeYear="@(Meet?.StartDate.Year ?? 0)" />
-                                        </td>
-                                        <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" IsVisible="@ShowClubs" />
-                                        <td>
-                                            <BodyWeight Value="p.Participation.BodyWeight" />
-                                        </td>
-                                        <WeightCell Weight="p.Participation.IpfPoints" SignificantDigits="2" />
-                                    </tr>
+                                    <th style="text-align: center; width: 80px;">Félag</th>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+
+                                <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
+                                <th style="text-align: right; width: 80px;">IPF stig</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in gender.OrderByDescending(p => p.IpfPoints).Select((participation, index) => (Rank: index + 1, Participation: participation)).Take(3))
+                            {
+                                <tr>
+                                    <RankCell Rank="p.Rank" />
+                                    <AthleteCell Athlete="@p.Participation.Athlete" Slug="@p.Participation.AthleteSlug" />
+                                    <td>
+                                        <BirthYear Year="@p.Participation.YearOfBirth" RelativeYear="@(Meet?.StartDate.Year ?? 0)" />
+                                    </td>
+                                    <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" IsVisible="@ShowClubs" />
+                                    <td>
+                                        <BodyWeight Value="p.Participation.BodyWeight" />
+                                    </td>
+                                    <WeightCell Weight="p.Participation.IpfPoints" SignificantDigits="2" />
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            </section>
         <br />
         }
     </div>
@@ -77,17 +75,17 @@
     .ThenBy(x => x.Key.AgeCategory)
     .ThenByDescending(x => x.Key.Gender))
 {
-    <div class="card h-100">
-        <div class="card-body">
-            <h4 class="card-title">@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
-            <br />
+    <section class="card-section">
+        <h4>@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
+        <br />
 
-            @foreach (var weightCategory in genderAgeAgeCategory
-                .GroupBy(x => x.WeightCategory)
-                .OrderBy(x => x.Max(y => y.BodyWeight)))
-            {
-                <h5>@weightCategory.Key kg</h5>
-                <table class="table table-hover table-responsive">
+        @foreach (var weightCategory in genderAgeAgeCategory
+            .GroupBy(x => x.WeightCategory)
+            .OrderBy(x => x.Max(y => y.BodyWeight)))
+        {
+            <h5>@weightCategory.Key kg</h5>
+            <div class="table-overflow">
+                <table>
                     <tbody>
                         <tr>
                             <th style="text-align: center; width: 42px;">#</th>
@@ -103,10 +101,10 @@
 
                             @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines[a.Discipline[0]]))
                             {
-                                <th class="@(round.Round == 1 ? "border-start" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
+                                <th class="@(round.Round == 1 ? "first-attempt" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
                             }
 
-                            <th class="border-start" style="text-align: right; width: 80px;">Samtala</th>
+                            <th class="first-attempt" style="text-align: right; width: 80px;">Samtala</th>
 
                             @if (ShowIpfPoints)
                             {
@@ -145,9 +143,9 @@
                         }
                     </tbody>
                 </table>
-            }
-        </div>
-    </div>
+            </div>
+        }
+    </section>
     <br />
 }
 

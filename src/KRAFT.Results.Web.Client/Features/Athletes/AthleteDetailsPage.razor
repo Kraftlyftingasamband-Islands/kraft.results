@@ -1,4 +1,4 @@
-﻿@page "/athletes/{slug}"
+@page "/athletes/{slug}"
 
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
@@ -25,12 +25,12 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     {
         <h3>Besti árangur @(group.Key ? "án búnaðar" : "með búnaði")</h3>
 
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+        <div class="card-grid">
             @foreach (var best in group)
             {
                 <Card>
-                    <a class="stretched-link" href="@($"/meets/{best.MeetSlug}")"></a>
-                    <h5 class="card-title">@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
+                    <a href="@($"/meets/{best.MeetSlug}")" aria-label="@best.Discipline"></a>
+                    <h5>@best.Discipline @(best.IsSingleLift ? $"({Constants.SingeLift})" : string.Empty)</h5>
                     <p>
                         @($"{best.Date:dd-MM-yyyy}")<br />
                         Líkamsþyngd: @best.BodyWeight kg
@@ -49,12 +49,12 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     @foreach (var group in Records.GroupBy(x => x.IsClassic))
     {
         <h4>@(group.Key ? "Án búnaðar" : "Með búnaði") (@group.Count())</h4>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-6 g-3">
+        <div class="card-grid">
             @foreach(var record in group)
             {
                 <Card>
-                    <a class="stretched-link" href="@($"/meets/{record.MeetSlug}")"></a>
-                    <h5 class="card-title">@record.Type</h5>
+                    <a href="@($"/meets/{record.MeetSlug}")" aria-label="@record.Type"></a>
+                    <h5>@record.Type</h5>
                     <p>
                         @($"{record.Date:dd-MM-yyyy}")<br />
                         @record.AgeCategory @record.WeightCategory
@@ -70,7 +70,7 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
 }
 
 @if (Participations.Count > 0)
-{    
+{
     <h3>Ferill (@Participations.Count mót)</h3>
 
     <br />
@@ -79,8 +79,8 @@ Fæðingarár: @Athlete?.YearOfBirth<br />
     {
         <h4>@meetType.Key</h4>
 
-        <div class="table-responsive">
-            <table class="table table-hover">
+        <div class="table-overflow">
+            <table>
 
                 <thead>
                     <tr>

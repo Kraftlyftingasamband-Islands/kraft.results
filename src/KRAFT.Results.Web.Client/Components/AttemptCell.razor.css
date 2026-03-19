@@ -1,4 +1,4 @@
-﻿.attempt-container {
+.attempt-container {
     display: inline-flex;
     border: 1px solid black;
     border-radius: 7px;
@@ -37,4 +37,12 @@
 
 .record {
     font-weight: 600;
+}
+
+.first-attempt {
+    border-left: 1px solid #dee2e6;
+}
+
+.last-attempt {
+    border-right: 1px solid #dee2e6;
 }

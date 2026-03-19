@@ -1,0 +1,22 @@
+.card-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.card-grid-2 {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+
+.card-section {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.table-overflow {
+    overflow-x: auto;
+}
+
+.first-attempt {
+    border-left: 1px solid #dee2e6;
+}
