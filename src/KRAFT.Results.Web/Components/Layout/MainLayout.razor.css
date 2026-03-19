@@ -19,15 +19,17 @@ main {
     height: 3.5rem;
     display: flex;
     align-items: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
+    .top-row ::deep a {
         white-space: nowrap;
         margin-left: 1.5rem;
         text-decoration: none;
     }
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
+    .top-row ::deep a:hover {
         text-decoration: underline;
     }
 
@@ -41,7 +43,7 @@ main {
         justify-content: space-between;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
+    .top-row ::deep a {
         margin-left: 0;
     }
 }
@@ -71,8 +73,8 @@ main {
     }
 
     .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+        padding-left: 2rem;
+        padding-right: 1.5rem;
     }
 }
 

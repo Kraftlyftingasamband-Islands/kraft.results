@@ -1,4 +1,4 @@
-﻿@page "/meets/{year:int?}"
+@page "/meets/{year:int?}"
 
 @using System.Globalization
 @using KRAFT.Results.Contracts.Meets
@@ -9,42 +9,46 @@
 @inject HttpClient HttpClient;
 @inject NavigationManager NavigationManager
 
-<ul class="nav justify-content-center">
-    <li class="nav-item">
-        <NavLink class="nav-link" href="@($"/meets/{Year - 1}")">
-            <span class="bi bi-arrow-left-square" aria-hidden="true"></span>
-        </NavLink>
-    </li>
-    <li class="nav-item">
-        <h3>Mótaskrá @Year</h3>
-    </li>
-    <li class="nav-item">
-        <NavLink class="nav-link" href="@($"/meets/{Year + 1}")">
-            <span class="bi bi-arrow-right-square" aria-hidden="true"></span>
-        </NavLink>
-    </li>
-</ul>
+<nav class="year-nav">
+    <NavLink class="nav-link" href="@($"/meets/{Year - 1}")" aria-label="Fyrra ár">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill-rule="evenodd" d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+            <path fill-rule="evenodd" d="M10.205 12.456A.5.5 0 0 0 10.5 12V4a.5.5 0 0 0-.832-.374l-4.5 4a.5.5 0 0 0 0 .748l4.5 4a.5.5 0 0 0 .537.082"/>
+        </svg>
+    </NavLink>
+
+    <h3>Mótaskrá @Year</h3>
+
+    <NavLink class="nav-link" href="@($"/meets/{Year + 1}")" aria-label="Næsta ár">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill-rule="evenodd" d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+            <path fill-rule="evenodd" d="M5.795 12.456A.5.5 0 0 1 5.5 12V4a.5.5 0 0 1 .832-.374l4.5 4a.5.5 0 0 1 0 .748l-4.5 4a.5.5 0 0 1-.537.082"/>
+        </svg>
+    </NavLink>
+</nav>
 
 @foreach (var group in Meets.GroupBy(x => x.StartDate.ToString("MMMM", CultureInfo.CurrentCulture)))
 {
     <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
     @foreach (var meet in group)
     {
-        <table class="table table-hover">
-            <tr>
-                <td style="width: 50px">
-                    <div class="date-box">
-                        @meet.StartDate.ToString("dd")
-                    </div>
-                </td>
-                <td>
-                    <NavLink class="nav-link" href="@($"/meets/{meet.Slug}")">
-                        <div class="index-item-title">@meet.Title</div>
-                    </NavLink>
-                    <div class="location"><span class="bi bi-geo-alt" style="margin-right: 5px"></span>@meet.Location</div>
-                </td>
-            </tr>
-        </table>
+        <article class="meet-item">
+            <div class="date-box">
+                @meet.StartDate.ToString("dd")
+            </div>
+            <div>
+                <NavLink class="nav-link" href="@($"/meets/{meet.Slug}")">
+                    <div class="index-item-title">@meet.Title</div>
+                </NavLink>
+                <div class="location">
+                    <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A32 32 0 0 1 8 14.58a32 32 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10"/>
+                        <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4m0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                    </svg>
+                    @meet.Location
+                </div>
+            </div>
+        </article>
     }
 }
 

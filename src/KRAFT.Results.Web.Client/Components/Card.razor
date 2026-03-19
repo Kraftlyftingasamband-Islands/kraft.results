@@ -1,10 +1,6 @@
-﻿<div class="col">
-    <div class="card h-100 card-clickable">
-        <div class="card-body">
-            @ChildContent
-        </div>
-    </div>
-</div>
+<article class="card">
+    @ChildContent
+</article>
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
