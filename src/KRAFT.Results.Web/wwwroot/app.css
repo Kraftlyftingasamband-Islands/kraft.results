@@ -1,13 +1,45 @@
+:root {
+    --color-primary: #c41e3a;
+    --color-primary-dark: #9a1830;
+    --color-primary-light: #fef2f4;
+    --color-white: #ffffff;
+    --color-bg: #fafafa;
+    --color-text: #1a1a2e;
+    --color-text-muted: #6b7280;
+    --color-border: #e5e7eb;
+    --color-success: #16a34a;
+    --color-danger: #dc2626;
+
+    --font-heading: "DM Sans", system-ui, -apple-system, sans-serif;
+    --font-body: "Source Sans 3", system-ui, -apple-system, sans-serif;
+
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    --transition-fast: 150ms;
+    --transition-base: 200ms;
+}
+
 *, *::before, *::after {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: var(--font-body);
     line-height: 1.5;
-    color: #212529;
+    color: var(--color-text);
     -webkit-font-smoothing: antialiased;
+}
+
+:is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-heading);
+    line-height: 1.25;
 }
 
 img, svg {
@@ -16,7 +48,13 @@ img, svg {
 }
 
 a {
-    color: #006bb7;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+a:hover {
+    color: var(--color-primary-dark);
 }
 
 table {
@@ -29,6 +67,17 @@ th, td {
     text-align: left;
 }
 
+th {
+    background-color: var(--color-text);
+    color: var(--color-white);
+    font-family: var(--font-heading);
+    font-weight: 500;
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--color-primary-light);
+}
+
 .content {
     padding-top: 1.1rem;
 }
@@ -38,15 +87,27 @@ h1:focus {
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 1px solid var(--color-success);
 }
 
 .invalid {
-    outline: 1px solid #e50000;
+    outline: 1px solid var(--color-danger);
 }
 
 .validation-message {
-    color: #e50000;
+    color: var(--color-danger);
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 .blazor-error-boundary {
@@ -57,12 +118,4 @@ h1:focus {
 
 .blazor-error-boundary::after {
     content: "An error has occurred."
-}
-
-.rounded-box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid black;
-    border-radius: 7px;
 }
