@@ -8,9 +8,11 @@
 }
 
 .card-section {
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    border-block-start: 3px solid var(--color-primary);
     padding: 1rem;
+    background: var(--color-white);
 }
 
 .table-overflow {
@@ -18,5 +20,5 @@
 }
 
 .first-attempt {
-    border-left: 1px solid #dee2e6;
+    border-inline-start: 1px solid var(--color-border);
 }

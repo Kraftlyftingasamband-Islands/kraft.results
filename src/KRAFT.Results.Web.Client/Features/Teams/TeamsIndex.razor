@@ -14,9 +14,12 @@
     {
         <Card>
             <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
-            <h5>@team.Title</h5>
-            <p>@team.ShortTitle</p>
-            <p>Meðlimir: @team.AthleteCount</p>
+            <div class="team-name">@team.Title</div>
+            <div class="team-short">@team.ShortTitle</div>
+            <div class="team-count">
+                <span class="count-value">@team.AthleteCount</span>
+                <span class="count-label">keppendur</span>
+            </div>
         </Card>
     }
 </div>

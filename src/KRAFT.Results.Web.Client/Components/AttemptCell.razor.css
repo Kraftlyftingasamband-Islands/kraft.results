@@ -1,7 +1,7 @@
 .attempt-container {
     display: inline-flex;
-    border: 1px solid black;
-    border-radius: 7px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
 }
 
 .side {
@@ -14,21 +14,23 @@
 .left {
     justify-content: flex-end;
     font-weight: 600;
-    border-right: 1px solid #333;
+    border-inline-end: 1px solid var(--color-border);
 }
 
 .right {
     width: 50px;
     justify-content: flex-end;
-    border-radius: 0 7px 7px 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 .good {
-    background-color: lightgreen;
+    background-color: var(--color-success);
+    color: var(--color-white);
 }
 
 .bad {
-    background-color: lightcoral;
+    background-color: var(--color-danger);
+    color: var(--color-white);
 }
 
 .skipped {
@@ -40,9 +42,9 @@
 }
 
 .first-attempt {
-    border-left: 1px solid #dee2e6;
+    border-inline-start: 1px solid var(--color-border);
 }
 
 .last-attempt {
-    border-right: 1px solid #dee2e6;
+    border-inline-end: 1px solid var(--color-border);
 }
