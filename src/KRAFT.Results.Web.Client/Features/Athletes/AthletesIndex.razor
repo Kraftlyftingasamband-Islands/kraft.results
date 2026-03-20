@@ -1,38 +1,109 @@
-﻿@page "/athletes"
+@page "/athletes"
 
 @using KRAFT.Results.Contracts.Athletes
 @using Microsoft.AspNetCore.Components.Routing
+
+@implements IAsyncDisposable
 
 @inject HttpClient HttpClient;
 
 <h3>Keppendur</h3>
 
-<table>
-    <thead>
-        <tr>
-            <th>Nafn</th>
-        </tr>
-    </thead>
+@if (_isLoading)
+{
+    <p>Sæki keppendur...</p>
+}
+else
+{
+    <div class="search-container">
+        <input type="search"
+               class="search-input"
+               placeholder="Leita af keppanda..."
+               aria-label="Leita af keppanda"
+               @bind="_searchTerm"
+               @bind:event="oninput"
+               @bind:after="OnSearchInputAsync" />
+    </div>
 
-    @foreach (AthleteSummary athlete in Athletes)
+    @if (_filteredAthletes.Count > 0)
     {
-        <tr>
-            <td>
-                <NavLink class="nav-link" href="@($"/athletes/{athlete.Slug}")">
-                    @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
-                </NavLink>
-            </td>
-        </tr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nafn</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (AthleteSummary athlete in _filteredAthletes)
+                {
+                    <tr>
+                        <td>
+                            <NavLink class="nav-link" href="@($"/athletes/{athlete.Slug}")">
+                                @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
+                            </NavLink>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
-</table>
+
+    @if (_filteredAthletes.Count == 0 && _athletes.Count > 0)
+    {
+        <div class="empty-state">
+            Enginn keppandi fannst.
+        </div>
+    }
+}
 
 @code {
 
-    private IReadOnlyCollection<AthleteSummary> Athletes = [];
+    private IReadOnlyCollection<AthleteSummary> _athletes = [];
+    private string _searchTerm = string.Empty;
+    private bool _isLoading = true;
+
+    private IReadOnlyCollection<AthleteSummary> _filteredAthletes = [];
+
+    private CancellationTokenSource _debounceCts = new();
+
+    private void ApplyFilter()
+    {
+        _filteredAthletes = string.IsNullOrWhiteSpace(_searchTerm)
+            ? _athletes
+            : _athletes
+                .Where(a => a.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+    }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        Athletes = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
+        _athletes = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
+        ApplyFilter();
+        _isLoading = false;
+    }
+
+    private async Task OnSearchInputAsync()
+    {
+        await _debounceCts.CancelAsync();
+        _debounceCts.Dispose();
+        _debounceCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(250, _debounceCts.Token);
+            ApplyFilter();
+        }
+        catch (TaskCanceledException)
+        {
+            // Debounce cancelled by newer keystroke — expected
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _debounceCts.CancelAsync();
+        _debounceCts.Dispose();
     }
 }
