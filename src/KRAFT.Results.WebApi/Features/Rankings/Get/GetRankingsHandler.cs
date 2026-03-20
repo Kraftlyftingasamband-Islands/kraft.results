@@ -1,6 +1,7 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Rankings;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -70,41 +71,124 @@ internal sealed class GetRankingsHandler
             string genderLower = gender.ToLowerInvariant();
             if (genderLower is "m" or "f")
             {
-                query = query.Where(p => p.Athlete.Gender == ValueObjects.Gender.Parse(genderLower));
+                query = query.Where(p => p.Athlete.Gender == Gender.Parse(genderLower));
             }
         }
 
-        IQueryable<int> bestPerAthlete = query
-            .GroupBy(p => p.AthleteId)
-            .Select(g => g.OrderByDescending(p => p.Ipfpoints).Select(p => p.ParticipationId).First());
-
-        query = query.Where(p => bestPerAthlete.Contains(p.ParticipationId));
-
-        int totalCount = await query.CountAsync(cancellationToken);
-
-        query = query.OrderByDescending(p => p.Ipfpoints);
-
-        int skip = (page - 1) * pageSize;
-
-        IQueryable<Participation> paged = query
-            .Skip(skip)
-            .Take(pageSize);
-
-        IQueryable<RankingEntry> projection = disciplineKey switch
+        IQueryable<RawRankingData> rawQuery = disciplineKey switch
         {
-            "squat" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Squat, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
-            "bench" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Benchpress, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
-            "deadlift" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Deadlift, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
-            _ => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Total, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
+            "squat" => query.Select(p => new RawRankingData(
+                p.AthleteId,
+                p.Athlete.Firstname + " " + p.Athlete.Lastname,
+                p.Athlete.Slug,
+                p.Athlete.Gender.Value,
+                p.Squat,
+                p.WeightCategory.Title,
+                p.Weight,
+                p.Wilks,
+                p.Meet.Title,
+                p.Meet.Slug,
+                p.Meet.StartDate,
+                p.Meet.IsRaw)),
+            "bench" => query.Select(p => new RawRankingData(
+                p.AthleteId,
+                p.Athlete.Firstname + " " + p.Athlete.Lastname,
+                p.Athlete.Slug,
+                p.Athlete.Gender.Value,
+                p.Benchpress,
+                p.WeightCategory.Title,
+                p.Weight,
+                p.Wilks,
+                p.Meet.Title,
+                p.Meet.Slug,
+                p.Meet.StartDate,
+                p.Meet.IsRaw)),
+            "deadlift" => query.Select(p => new RawRankingData(
+                p.AthleteId,
+                p.Athlete.Firstname + " " + p.Athlete.Lastname,
+                p.Athlete.Slug,
+                p.Athlete.Gender.Value,
+                p.Deadlift,
+                p.WeightCategory.Title,
+                p.Weight,
+                p.Wilks,
+                p.Meet.Title,
+                p.Meet.Slug,
+                p.Meet.StartDate,
+                p.Meet.IsRaw)),
+            _ => query.Select(p => new RawRankingData(
+                p.AthleteId,
+                p.Athlete.Firstname + " " + p.Athlete.Lastname,
+                p.Athlete.Slug,
+                p.Athlete.Gender.Value,
+                p.Total,
+                p.WeightCategory.Title,
+                p.Weight,
+                p.Wilks,
+                p.Meet.Title,
+                p.Meet.Slug,
+                p.Meet.StartDate,
+                p.Meet.IsRaw)),
         };
 
-        List<RankingEntry> items = await projection.ToListAsync(cancellationToken);
+        List<RawRankingData> rawData = await rawQuery.ToListAsync(cancellationToken);
 
-        for (int i = 0; i < items.Count; i++)
-        {
-            items[i] = items[i] with { Rank = skip + i + 1 };
-        }
+        string ipfType = disciplineKey == "bench" ? "Benchpress" : "Powerlifting";
+
+        List<RawRankingData> bestPerAthlete = rawData
+            .GroupBy(r => r.AthleteId)
+            .Select(g => g.OrderByDescending(r => CalculateIpfPoints(r, ipfType)).First())
+            .OrderByDescending(r => CalculateIpfPoints(r, ipfType))
+            .ToList();
+
+        int totalCount = bestPerAthlete.Count;
+        int skip = (page - 1) * pageSize;
+
+        List<RankingEntry> items = bestPerAthlete
+            .Skip(skip)
+            .Take(pageSize)
+            .Select((r, i) => new RankingEntry(
+                skip + i + 1,
+                r.AthleteName,
+                r.AthleteSlug,
+                r.Gender,
+                r.Result,
+                r.WeightCategory,
+                r.BodyWeight,
+                CalculateIpfPoints(r, ipfType),
+                r.Wilks,
+                r.MeetTitle,
+                r.MeetSlug,
+                DateOnly.FromDateTime(r.MeetStartDate),
+                r.IsRaw))
+            .ToList();
 
         return new PagedResponse<RankingEntry>(items, page, pageSize, totalCount);
     }
+
+    private static decimal CalculateIpfPoints(RawRankingData row, string type)
+    {
+        IpfPoints ipfPoints = IpfPoints.Create(
+            row.IsRaw,
+            Gender.Parse(row.Gender),
+            type,
+            row.BodyWeight,
+            row.Result);
+
+        return ipfPoints.Value;
+    }
+
+    private sealed record RawRankingData(
+        int AthleteId,
+        string AthleteName,
+        string AthleteSlug,
+        string Gender,
+        decimal Result,
+        string WeightCategory,
+        decimal BodyWeight,
+        decimal Wilks,
+        string MeetTitle,
+        string MeetSlug,
+        DateTime MeetStartDate,
+        bool IsRaw);
 }
