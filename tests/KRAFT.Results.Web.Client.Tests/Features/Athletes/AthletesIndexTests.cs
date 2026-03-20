@@ -23,7 +23,9 @@ public sealed class AthletesIndexTests : IDisposable
         IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
 
         // Assert
-        cut.Find("p").TextContent.ShouldBe("Sæki keppendur...");
+        cut.Find("[role='status']").ShouldNotBeNull();
+        cut.Find(".spinner").ShouldNotBeNull();
+        cut.Find(".visually-hidden").TextContent.ShouldBe("Sæki keppendur...");
     }
 
     [Fact]
