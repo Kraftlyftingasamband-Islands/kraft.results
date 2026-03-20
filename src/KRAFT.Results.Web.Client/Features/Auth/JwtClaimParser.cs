@@ -32,12 +32,19 @@ public static class JwtClaimParser
             {
                 foreach (JsonElement element in claim.Value.EnumerateArray())
                 {
-                    result.Add(new Claim(claim.Key, element.GetString() ?? string.Empty));
+                    string value = element.ValueKind == JsonValueKind.String
+                        ? element.GetString() ?? string.Empty
+                        : element.GetRawText();
+                    result.Add(new Claim(claim.Key, value));
                 }
+            }
+            else if (claim.Value.ValueKind == JsonValueKind.String)
+            {
+                result.Add(new Claim(claim.Key, claim.Value.GetString() ?? string.Empty));
             }
             else
             {
-                result.Add(new Claim(claim.Key, claim.Value.GetString() ?? claim.Value.GetRawText()));
+                result.Add(new Claim(claim.Key, claim.Value.GetRawText()));
             }
         }
 

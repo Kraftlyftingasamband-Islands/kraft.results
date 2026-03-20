@@ -30,9 +30,9 @@ IResourceBuilder<ProjectResource> api = builder.AddProject<Projects.KRAFT_Result
     .WaitFor(db);
 
 builder.AddProject<Projects.KRAFT_Results_Web>("web")
-    .WithExternalHttpEndpoints()
     .WithReference(api)
-    .WaitFor(api);
+    .WaitFor(api)
+    .WithExternalHttpEndpoints();
 
 DistributedApplication app = builder.Build();
 

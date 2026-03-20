@@ -15,22 +15,19 @@ builder.Services.AddCascadingAuthenticationState();
 Uri apiBaseAddress = builder.Configuration.GetValue<Uri>("API:BaseAddress")
     ?? throw new InvalidOperationException("No API base address");
 
-builder.Services.AddTransient(services =>
+builder.Services.AddScoped(services =>
 {
     TokenStorageService tokenStorage = services.GetRequiredService<TokenStorageService>();
-    return new AuthorizationMessageHandler(tokenStorage, apiBaseAddress);
-});
-
-builder.Services.AddHttpClient(
-    "WebApi",
-    client =>
+    AuthorizationMessageHandler handler = new(tokenStorage, apiBaseAddress)
     {
-        client.BaseAddress = apiBaseAddress;
-    })
-    .AddHttpMessageHandler<AuthorizationMessageHandler>();
+        InnerHandler = new HttpClientHandler(),
+    };
 
-builder.Services.AddScoped(services => services.GetRequiredService<IHttpClientFactory>()
-    .CreateClient("WebApi"));
+    return new HttpClient(handler)
+    {
+        BaseAddress = apiBaseAddress,
+    };
+});
 
 WebApplication app = builder.Build();
 
