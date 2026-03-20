@@ -9,6 +9,7 @@
 # Claude Code
 .claude/
 CLAUDE.md
+docs/superpowers/
 
 # User-specific files
 *.rsuser
