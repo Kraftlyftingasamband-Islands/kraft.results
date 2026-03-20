@@ -1,0 +1,245 @@
+@page "/rankings"
+
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Rankings
+@using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Stigatöflur</PageTitle>
+
+<h1>Stigatöflur</h1>
+
+<div class="filter-bar">
+    <div class="filter-group">
+        <label class="filter-label" for="discipline">Grein</label>
+        <select id="discipline" class="filter-select" @bind="Discipline" @bind:after="OnFilterChangedAsync">
+            <option value="total">Heild</option>
+            <option value="squat">Squat</option>
+            <option value="bench">Bekkpessa</option>
+            <option value="deadlift">Eindráttur</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label class="filter-label" for="year">Ár</label>
+        <select id="year" class="filter-select" @bind="Year" @bind:after="OnFilterChangedAsync">
+            <option value="">Öll ár</option>
+            @for (int y = DateTime.Now.Year; y >= 1985; y--)
+            {
+                <option value="@y">@y</option>
+            }
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label class="filter-label" for="equipmentType">Flokkur</label>
+        <select id="equipmentType" class="filter-select" @bind="EquipmentType" @bind:after="OnFilterChangedAsync">
+            <option value="">Allir</option>
+            <option value="classic">Klassískt</option>
+            <option value="equipped">Með búnaði</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label class="filter-label" for="gender">Kyn</label>
+        <select id="gender" class="filter-select" @bind="Gender" @bind:after="OnFilterChangedAsync">
+            <option value="">Allir</option>
+            <option value="m">Karlar</option>
+            <option value="f">Konur</option>
+        </select>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki stigatöflur...</span>
+    </div>
+}
+else if (_hasError)
+{
+    <div class="error-state" role="alert">
+        <p>Villa kom upp. Reyndu aftur.</p>
+        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
+    </div>
+}
+else if (_response is not null && _response.Items.Count > 0)
+{
+    <div class="table-wrapper">
+        <table aria-label="Stigatafla">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Keppandi</th>
+                    <th class="text-end">Úrslit</th>
+                    <th class="text-center">Þyngdarfl.</th>
+                    <th class="text-end hide-mobile">Líkamsþ.</th>
+                    <th class="text-end hide-mobile">IPF stig</th>
+                    <th>Mót</th>
+                    <th>Dagsetning</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (RankingEntry entry in _response.Items)
+                {
+                    <tr>
+                        <RankCell Rank="entry.Rank" />
+                        <AthleteCell Athlete="entry.Athlete" Slug="entry.AthleteSlug" />
+                        <td class="text-end result-value">@entry.Result.ToString("F1")</td>
+                        <td class="text-center">@entry.WeightCategory</td>
+                        <td class="text-end hide-mobile">@entry.BodyWeight.ToString("F2")</td>
+                        <td class="text-end hide-mobile">@(entry.IpfPoints?.ToString("F2") ?? "-")</td>
+                        <td>
+                            <NavLink class="nav-link" href="@($"/meets/{entry.MeetSlug}")">
+                                @entry.MeetTitle
+                            </NavLink>
+                        </td>
+                        <td>@entry.MeetDate.ToString("dd.MM.yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (TotalPages > 1)
+    {
+        <div class="pagination">
+            <button class="page-btn" disabled="@(_page <= 1)" @onclick="OnPreviousPageAsync" aria-label="Fyrri síða">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+                </svg>
+            </button>
+
+            <span class="page-info">Síða @_page af @TotalPages</span>
+
+            <button class="page-btn" disabled="@(_page >= TotalPages)" @onclick="OnNextPageAsync" aria-label="Næsta síða">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+                </svg>
+            </button>
+        </div>
+    }
+}
+else
+{
+    <div class="empty-state">
+        Engar niðurstöður fundust.
+    </div>
+}
+
+@code {
+    private const int PageSize = 50;
+
+    [SupplyParameterFromQuery]
+    public string? Discipline { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Year { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? EquipmentType { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Gender { get; set; }
+
+    [SupplyParameterFromQuery(Name = "page")]
+    public int? PageParam { get; set; }
+
+    private int _page = 1;
+    private bool _isLoading = true;
+    private bool _hasError;
+    private PagedResponse<RankingEntry>? _response;
+
+    private int TotalPages => _response is null || _response.TotalCount == 0
+        ? 1
+        : (int)Math.Ceiling((double)_response.TotalCount / PageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Discipline ??= "total";
+        _page = PageParam ?? 1;
+
+        await LoadDataAsync();
+    }
+
+    private async Task OnFilterChangedAsync()
+    {
+        _page = 1;
+        UpdateUrl();
+        await LoadDataAsync();
+    }
+
+    private async Task OnPreviousPageAsync()
+    {
+        if (_page > 1)
+        {
+            _page--;
+            UpdateUrl();
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OnNextPageAsync()
+    {
+        if (_page < TotalPages)
+        {
+            _page++;
+            UpdateUrl();
+            await LoadDataAsync();
+        }
+    }
+
+    private void UpdateUrl()
+    {
+        string url = NavigationManager.GetUriWithQueryParameters("/rankings", new Dictionary<string, object?>
+        {
+            ["discipline"] = Discipline == "total" ? null : Discipline,
+            ["year"] = string.IsNullOrEmpty(Year) ? null : Year,
+            ["equipmentType"] = string.IsNullOrEmpty(EquipmentType) ? null : EquipmentType,
+            ["gender"] = string.IsNullOrEmpty(Gender) ? null : Gender,
+            ["page"] = _page > 1 ? _page : null,
+        });
+
+        NavigationManager.NavigateTo(url, replace: true);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _hasError = false;
+
+        try
+        {
+            string url = $"/rankings?discipline={Uri.EscapeDataString(Discipline ?? "total")}&page={_page}&pageSize={PageSize}";
+
+            if (!string.IsNullOrEmpty(Year))
+            {
+                url += $"&year={Uri.EscapeDataString(Year)}";
+            }
+
+            if (!string.IsNullOrEmpty(EquipmentType))
+            {
+                url += $"&equipmentType={Uri.EscapeDataString(EquipmentType)}";
+            }
+
+            if (!string.IsNullOrEmpty(Gender))
+            {
+                url += $"&gender={Uri.EscapeDataString(Gender)}";
+            }
+
+            _response = await HttpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(url);
+        }
+        catch
+        {
+            _hasError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
