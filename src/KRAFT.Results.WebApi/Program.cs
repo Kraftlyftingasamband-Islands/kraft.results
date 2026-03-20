@@ -58,6 +58,13 @@ builder.Services.AddFeatures();
 
 WebApplication app = builder.Build();
 
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "IF COL_LENGTH('dbo.Users', 'Password') IS NOT NULL AND COL_LENGTH('dbo.Users', 'Password') < 512 ALTER TABLE dbo.Users ALTER COLUMN Password nvarchar(256) NOT NULL");
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
