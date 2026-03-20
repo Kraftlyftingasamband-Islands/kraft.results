@@ -197,7 +197,7 @@ else
     {
         string url = NavigationManager.GetUriWithQueryParameters("/rankings", new Dictionary<string, object?>
         {
-            ["discipline"] = Discipline == "total" ? null : Discipline,
+            ["discipline"] = Discipline,
             ["year"] = string.IsNullOrEmpty(Year) ? null : Year,
             ["equipmentType"] = string.IsNullOrEmpty(EquipmentType) ? null : EquipmentType,
             ["gender"] = string.IsNullOrEmpty(Gender) ? null : Gender,
