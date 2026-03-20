@@ -1,6 +1,7 @@
 ﻿using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Meets;
+using KRAFT.Results.WebApi.Features.Rankings;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 
@@ -13,6 +14,7 @@ internal static class FeatureServices
         services.AddAthletes();
         services.AddCountries();
         services.AddMeets();
+        services.AddRankings();
         services.AddUsers();
         services.AddTeams();
 

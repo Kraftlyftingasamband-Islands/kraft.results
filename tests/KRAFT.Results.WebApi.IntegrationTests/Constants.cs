@@ -8,6 +8,8 @@ internal static class Constants
     internal const string TestAthleteSlug = "testie-mctestface";
     internal const string TestTeamSlug = "test-team";
     internal const string TestCountryName = "Iceland";
+    internal const string TestMeetTitle = "Test Meet 2025";
+    internal const string TestMeetSlug = "test-meet-2025";
 
     internal static readonly DateOnly TestAthleteDateOfBirth = new(1985, 7, 2);
 

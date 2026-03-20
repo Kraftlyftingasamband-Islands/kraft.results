@@ -2,6 +2,10 @@
     <div class="rank-cell">
         <span class="medal @MedalClass" aria-hidden="true"></span>
         <span class="rank-number">@Value</span>
+        @if (!string.IsNullOrEmpty(MedalName))
+        {
+            <span class="visually-hidden">(@MedalName)</span>
+        }
     </div>
 </td>
 
@@ -14,6 +18,8 @@
 
     public string MedalClass { get; private set; } = string.Empty;
 
+    public string MedalName { get; private set; } = string.Empty;
+
     protected override void OnInitialized()
     {
         MedalClass = Rank switch
@@ -21,6 +27,14 @@
             1 => "gold",
             2 => "silver",
             3 => "bronze",
+            _ => string.Empty,
+        };
+
+        MedalName = Rank switch
+        {
+            1 => "gull",
+            2 => "silfur",
+            3 => "brons",
             _ => string.Empty,
         };
 
