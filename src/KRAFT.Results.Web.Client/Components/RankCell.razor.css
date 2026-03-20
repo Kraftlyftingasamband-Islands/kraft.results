@@ -1,15 +1,38 @@
-﻿td {
+td {
     text-align: center;
 }
 
-.first {
-    background-color: gold;
+.rank-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
 }
 
-.second {
-    background-color: silver;
+.rank-number {
+    min-width: 1.25rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
-.third {
-    background-color: rgb(205, 127, 50);
+.medal {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gold {
+    background: linear-gradient(135deg, #ffd700, #daa520);
+    box-shadow: 0 0 3px rgba(218, 165, 32, 0.5);
+}
+
+.silver {
+    background: linear-gradient(135deg, #e8e8e8, #a8a8a8);
+    box-shadow: 0 0 3px rgba(168, 168, 168, 0.5);
+}
+
+.bronze {
+    background: linear-gradient(135deg, #cd7f32, #a0522d);
+    box-shadow: 0 0 3px rgba(160, 82, 45, 0.5);
 }

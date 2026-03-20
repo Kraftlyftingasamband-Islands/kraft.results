@@ -1,6 +1,7 @@
-﻿<td>
-    <div class="@Classes">
-        @Value
+<td>
+    <div class="rank-cell">
+        <span class="medal @MedalClass" aria-hidden="true"></span>
+        <span class="rank-number">@Value</span>
     </div>
 </td>
 
@@ -11,19 +12,17 @@
 
     public string Value { get; private set; } = "-";
 
-    public string Classes { get; private set; } = string.Empty;
+    public string MedalClass { get; private set; } = string.Empty;
 
     protected override void OnInitialized()
     {
-        string color = Rank switch
+        MedalClass = Rank switch
         {
-            1 => "first",
-            2 => "second",
-            3 => "third",
+            1 => "gold",
+            2 => "silver",
+            3 => "bronze",
             _ => string.Empty,
         };
-
-        Classes = $"rounded-box {color}";
 
         if (Rank > 0 && Rank < int.MaxValue - 1)
         {
