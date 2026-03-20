@@ -63,7 +63,10 @@ public sealed class DatabaseFixture : IAsyncLifetime
             VALUES (1, 1, 80.5, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.5, 1);
 
             INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES (1, 1, 80.5, 1, 1, 2, 1, 180.0, 120.0, 230.0, 530.0, 370.0, 78.0, 2);
+            VALUES (1, 1, 80.5, 1, 1, 2, 0, 180.0, 120.0, 230.0, 550.0, 370.0, 75.0, 2);
+
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES (1, 1, 80.5, 1, 1, 3, 1, 180.0, 120.0, 230.0, 530.0, 360.0, 78.0, 3);
         """);
     }
 }

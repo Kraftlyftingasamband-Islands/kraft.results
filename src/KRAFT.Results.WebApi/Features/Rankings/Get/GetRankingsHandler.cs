@@ -41,6 +41,15 @@ internal sealed class GetRankingsHandler
             _ => query.Where(p => p.Total > 0),
         };
 
+        query = disciplineKey switch
+        {
+            "total" => query.Where(p => p.Meet.MeetType.MeetTypeId == 1),
+            "bench" => query.Where(p => new[] { 1, 2, 5 }.Contains(p.Meet.MeetType.MeetTypeId)),
+            "squat" => query.Where(p => new[] { 1, 4 }.Contains(p.Meet.MeetType.MeetTypeId)),
+            "deadlift" => query.Where(p => new[] { 1, 3 }.Contains(p.Meet.MeetType.MeetTypeId)),
+            _ => query.Where(p => p.Meet.MeetType.MeetTypeId == 1),
+        };
+
         if (year is not null && year > 0)
         {
             query = query.Where(p => p.Meet.StartDate.Year == year);
@@ -65,15 +74,15 @@ internal sealed class GetRankingsHandler
             }
         }
 
+        IQueryable<int> bestPerAthlete = query
+            .GroupBy(p => p.AthleteId)
+            .Select(g => g.OrderByDescending(p => p.Ipfpoints).Select(p => p.ParticipationId).First());
+
+        query = query.Where(p => bestPerAthlete.Contains(p.ParticipationId));
+
         int totalCount = await query.CountAsync(cancellationToken);
 
-        query = disciplineKey switch
-        {
-            "squat" => query.OrderByDescending(p => p.Squat).ThenByDescending(p => p.Ipfpoints),
-            "bench" => query.OrderByDescending(p => p.Benchpress).ThenByDescending(p => p.Ipfpoints),
-            "deadlift" => query.OrderByDescending(p => p.Deadlift).ThenByDescending(p => p.Ipfpoints),
-            _ => query.OrderByDescending(p => p.Total).ThenByDescending(p => p.Ipfpoints),
-        };
+        query = query.OrderByDescending(p => p.Ipfpoints);
 
         int skip = (page - 1) * pageSize;
 
@@ -83,10 +92,10 @@ internal sealed class GetRankingsHandler
 
         IQueryable<RankingEntry> projection = disciplineKey switch
         {
-            "squat" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Squat, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
-            "bench" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Benchpress, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
-            "deadlift" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Deadlift, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
-            _ => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Total, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
+            "squat" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Squat, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
+            "bench" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Benchpress, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
+            "deadlift" => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Deadlift, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
+            _ => paged.Select(p => new RankingEntry(0, p.Athlete.Firstname + " " + p.Athlete.Lastname, p.Athlete.Slug, p.Athlete.Gender.Value, p.Total, p.WeightCategory.Title, p.Weight, p.Ipfpoints, p.Wilks, p.Meet.Title, p.Meet.Slug, DateOnly.FromDateTime(p.Meet.StartDate), p.Meet.IsRaw)),
         };
 
         List<RankingEntry> items = await projection.ToListAsync(cancellationToken);

@@ -176,6 +176,47 @@ public sealed class GetRankingsTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task ShowsBestResultPerAthlete()
+    {
+        // Arrange — seed has two non-DQ participations for athlete 1 (IPF 85.5 and 75.0)
+
+        // Act
+        PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>($"{Path}?year=2025", CancellationToken.None);
+
+        // Assert — grouping should keep only the best (85.5 IPF, 580 total)
+        response!.Items.Count.ShouldBe(1);
+        response.Items[0].IpfPoints.ShouldBe(85.5m);
+        response.Items[0].Result.ShouldBe(580.0m);
+    }
+
+    [Fact]
+    public async Task OrdersByIpfPointsDescending()
+    {
+        // Arrange
+
+        // Act
+        PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(Path, CancellationToken.None);
+
+        // Assert
+        response!.Items.ShouldNotBeEmpty();
+        response.Items[0].IpfPoints.ShouldBe(85.5m);
+        response.Items[0].Rank.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task IncludesWilks()
+    {
+        // Arrange
+
+        // Act
+        PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(Path, CancellationToken.None);
+
+        // Assert
+        response!.Items.ShouldNotBeEmpty();
+        response.Items[0].Wilks.ShouldBe(400.0m);
+    }
+
+    [Fact]
     public async Task Paginates()
     {
         // Arrange
