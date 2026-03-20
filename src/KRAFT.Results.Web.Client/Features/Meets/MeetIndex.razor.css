@@ -71,8 +71,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    inline-size: 2.5rem;
-    block-size: 2.5rem;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
     border-radius: var(--radius-md);
     color: var(--color-text);
     background-color: var(--color-white);

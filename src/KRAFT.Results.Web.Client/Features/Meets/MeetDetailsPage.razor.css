@@ -4,13 +4,19 @@
 }
 
 .card-grid-2 {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 1200px) {
+    .card-grid-2 {
+        grid-template-columns: 1fr;
+    }
 }
 
 .card-section {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    border-block-start: 3px solid var(--color-primary);
+    border-inline-start: 4px solid var(--color-primary);
     padding: 1rem;
     background: var(--color-white);
 }
