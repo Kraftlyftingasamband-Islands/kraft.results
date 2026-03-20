@@ -74,7 +74,7 @@ else if (_response is not null && _response.Items.Count > 0)
                 <tr>
                     <th>#</th>
                     <th>Keppandi</th>
-                    <th class="text-end">Úrslit</th>
+                    <th class="text-end">@DisciplineLabel</th>
                     <th class="text-center">Þyngdarfl.</th>
                     <th class="text-end hide-mobile">Líkamsþ.</th>
                     <th class="text-end hide-mobile">IPF stig</th>
@@ -160,9 +160,19 @@ else
         ? 1
         : (int)Math.Ceiling((double)_response.TotalCount / PageSize);
 
+    private string DisciplineLabel => Discipline?.ToLowerInvariant() switch
+    {
+        "squat" => "Hnébeygja",
+        "bench" => "Bekkpessa",
+        "deadlift" => "Réttstöðulyfta",
+        _ => "Samtala",
+    };
+
     protected override async Task OnInitializedAsync()
     {
         Discipline ??= "total";
+        Year ??= DateTime.Now.Year.ToString();
+        EquipmentType ??= "classic";
         _page = PageParam ?? 1;
 
         await LoadDataAsync();
