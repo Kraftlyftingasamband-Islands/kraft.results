@@ -9,6 +9,10 @@ namespace KRAFT.Results.WebApi.Features.Rankings.Get;
 
 internal sealed class GetRankingsHandler
 {
+    private static readonly int[] BenchMeetTypes = [1, 2, 5];
+    private static readonly int[] SquatMeetTypes = [1, 4];
+    private static readonly int[] DeadliftMeetTypes = [1, 3];
+
     private readonly ResultsDbContext _dbContext;
 
     public GetRankingsHandler(ResultsDbContext dbContext)
@@ -45,9 +49,9 @@ internal sealed class GetRankingsHandler
         query = disciplineKey switch
         {
             "total" => query.Where(p => p.Meet.MeetType.MeetTypeId == 1),
-            "bench" => query.Where(p => new[] { 1, 2, 5 }.Contains(p.Meet.MeetType.MeetTypeId)),
-            "squat" => query.Where(p => new[] { 1, 4 }.Contains(p.Meet.MeetType.MeetTypeId)),
-            "deadlift" => query.Where(p => new[] { 1, 3 }.Contains(p.Meet.MeetType.MeetTypeId)),
+            "bench" => query.Where(p => BenchMeetTypes.Contains(p.Meet.MeetType.MeetTypeId)),
+            "squat" => query.Where(p => SquatMeetTypes.Contains(p.Meet.MeetType.MeetTypeId)),
+            "deadlift" => query.Where(p => DeadliftMeetTypes.Contains(p.Meet.MeetType.MeetTypeId)),
             _ => query.Where(p => p.Meet.MeetType.MeetTypeId == 1),
         };
 
@@ -135,10 +139,17 @@ internal sealed class GetRankingsHandler
 
         string ipfType = disciplineKey == "bench" ? "Benchpress" : "Powerlifting";
 
+        foreach (RawRankingData row in rawData)
+        {
+            Gender parsedGender = Gender.Parse(row.Gender);
+            IpfPoints ipfPoints = IpfPoints.Create(row.IsRaw, parsedGender, ipfType, row.BodyWeight, row.Result);
+            row.CalculatedIpfPoints = ipfPoints.Value;
+        }
+
         List<RawRankingData> bestPerAthlete = rawData
             .GroupBy(r => r.AthleteId)
-            .Select(g => g.OrderByDescending(r => CalculateIpfPoints(r, ipfType)).First())
-            .OrderByDescending(r => CalculateIpfPoints(r, ipfType))
+            .Select(g => g.OrderByDescending(r => r.CalculatedIpfPoints).First())
+            .OrderByDescending(r => r.CalculatedIpfPoints)
             .ToList();
 
         int totalCount = bestPerAthlete.Count;
@@ -155,7 +166,7 @@ internal sealed class GetRankingsHandler
                 r.Result,
                 r.WeightCategory,
                 r.BodyWeight,
-                CalculateIpfPoints(r, ipfType),
+                r.CalculatedIpfPoints,
                 r.Wilks,
                 r.MeetTitle,
                 r.MeetSlug,
@@ -164,18 +175,6 @@ internal sealed class GetRankingsHandler
             .ToList();
 
         return new PagedResponse<RankingEntry>(items, page, pageSize, totalCount);
-    }
-
-    private static decimal CalculateIpfPoints(RawRankingData row, string type)
-    {
-        IpfPoints ipfPoints = IpfPoints.Create(
-            row.IsRaw,
-            Gender.Parse(row.Gender),
-            type,
-            row.BodyWeight,
-            row.Result);
-
-        return ipfPoints.Value;
     }
 
     private sealed record RawRankingData(
@@ -190,5 +189,8 @@ internal sealed class GetRankingsHandler
         string MeetTitle,
         string MeetSlug,
         DateTime MeetStartDate,
-        bool IsRaw);
+        bool IsRaw)
+    {
+        public decimal CalculatedIpfPoints { get; set; }
+    }
 }
