@@ -11,15 +11,19 @@
 
 @if (_isLoading)
 {
-    <p>Sæki keppendur...</p>
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki keppendur...</span>
+    </div>
 }
 else
 {
     <div class="search-container">
-        <input type="search"
+        <input @ref="_searchInput"
+               type="search"
                class="search-input"
-               placeholder="Leita af keppanda..."
-               aria-label="Leita af keppanda"
+               placeholder="Finna keppanda..."
+               aria-label="Finna keppanda"
                @bind="_searchTerm"
                @bind:event="oninput"
                @bind:after="OnSearchInputAsync" />
@@ -62,6 +66,8 @@ else
     private IReadOnlyCollection<AthleteSummary> _athletes = [];
     private string _searchTerm = string.Empty;
     private bool _isLoading = true;
+    private bool _shouldFocusSearch;
+    private ElementReference _searchInput;
 
     private IReadOnlyCollection<AthleteSummary> _filteredAthletes = [];
 
@@ -82,6 +88,16 @@ else
         _athletes = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
         ApplyFilter();
         _isLoading = false;
+        _shouldFocusSearch = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocusSearch)
+        {
+            _shouldFocusSearch = false;
+            await _searchInput.FocusAsync();
+        }
     }
 
     private async Task OnSearchInputAsync()
