@@ -15,10 +15,10 @@
     <div class="filter-group">
         <label class="filter-label" for="discipline">Grein</label>
         <select id="discipline" class="filter-select" @bind="Discipline" @bind:after="OnFilterChangedAsync">
-            <option value="total">Heild</option>
-            <option value="squat">Squat</option>
+            <option value="total">Samtala</option>
+            <option value="squat">Hnébeygja</option>
             <option value="bench">Bekkpessa</option>
-            <option value="deadlift">Eindráttur</option>
+            <option value="deadlift">Réttstöðulyfta</option>
         </select>
     </div>
 
@@ -87,8 +87,8 @@ else if (_response is not null && _response.Items.Count > 0)
                 @foreach (RankingEntry entry in _response.Items)
                 {
                     <tr>
-                        <RankCell Rank="entry.Rank" />
-                        <AthleteCell Athlete="entry.Athlete" Slug="entry.AthleteSlug" />
+                        <RankCell Rank="@entry.Rank" />
+                        <AthleteCell Athlete="@entry.Athlete" Slug="@entry.AthleteSlug" />
                         <td class="text-end result-value">@entry.Result.ToString("F1")</td>
                         <td class="text-center">@entry.WeightCategory</td>
                         <td class="text-end hide-mobile">@entry.BodyWeight.ToString("F2")</td>
