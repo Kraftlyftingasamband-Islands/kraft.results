@@ -1,46 +1,16 @@
 # Populate local database with production backup
 
-1. Export database dump from [Plesk](https://plesk8600.is.cc:8443/smb/database/list) and download it.
-1. Extract zip file. It contains a single file with no extension. Add a `.bak` extension to it.
-1. Copy the `.bak` file to the SQL container (change the first part of the command to use the filename of your file).
+1. Export database dump from [Plesk](https://plesk8600.is.cc:8443/smb/database/list) and download the zip file.
+1. Start the Aspire AppHost if not already running:
 
     ```bash
-    docker cp backup.bak kraft-sql:/var/opt/mssql/data/backup.bak
+    dotnet run --project src/KRAFT.Results.AppHost
     ```
 
-1. Run the following SQL script to get the logical data and log names
+1. Run the restore script:
 
-    ```sql
-    RESTORE FILELISTONLY
-    FROM DISK = '/var/opt/mssql/data/backup.bak';
+    ```bash
+    ./restore-db.sh /path/to/dump.zip
     ```
 
-1. Use `master` database
-
-    ```sql
-    USE master;
-    ```
-
-1. Set `kraft-db` database to only accept a single connection.
-
-    ```sql
-    ALTER DATABASE [kraft-db] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    ```
-
-1. Restore the backup (the names after tha `MOVE` command are the logical data and log names).
-
-    ```sql
-    RESTORE DATABASE [kraft-db]
-    FROM DISK = '/var/opt/mssql/data/backup.bak'
-    WITH
-        MOVE 'resultskraftisdev' TO '/var/opt/mssql/data/kraft-db.mdf',
-        MOVE 'resultskraftisdev_log' TO '/var/opt/mssql/data/kraft-db.ldf',
-        REPLACE,
-        STATS = 10;
-    ```
-
-1. Set `kraft-db` to accept multiple connections.
-
-    ```sql
-    ALTER DATABASE [kraft-db] SET MULTI_USER;
-    ```
+    The script will extract the zip, copy the backup into the SQL container, and restore it to the `kraft-db` database.
