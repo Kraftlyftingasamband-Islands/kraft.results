@@ -9,6 +9,7 @@ public sealed record class RankingEntry(
     string WeightCategory,
     decimal BodyWeight,
     decimal? IpfPoints,
+    decimal Wilks,
     string MeetTitle,
     string MeetSlug,
     DateOnly MeetDate,

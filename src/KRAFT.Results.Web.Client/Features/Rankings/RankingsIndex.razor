@@ -78,6 +78,7 @@ else if (_response is not null && _response.Items.Count > 0)
                     <th class="text-center">Þyngdarfl.</th>
                     <th class="text-end hide-mobile">Líkamsþ.</th>
                     <th class="text-end hide-mobile">IPF stig</th>
+                    <th class="text-end hide-mobile">Wilks</th>
                     <th>Mót</th>
                     <th>Dagsetning</th>
                 </tr>
@@ -93,6 +94,7 @@ else if (_response is not null && _response.Items.Count > 0)
                         <td class="text-center">@entry.WeightCategory</td>
                         <td class="text-end hide-mobile">@entry.BodyWeight.ToString("F2")</td>
                         <td class="text-end hide-mobile">@(entry.IpfPoints?.ToString("F2") ?? "-")</td>
+                        <td class="text-end hide-mobile">@entry.Wilks.ToString("F2")</td>
                         <td>
                             <NavLink class="nav-link" href="@($"/meets/{entry.MeetSlug}")">
                                 @entry.MeetTitle
