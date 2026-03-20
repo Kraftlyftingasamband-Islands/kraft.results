@@ -65,12 +65,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/healthz");
-app.MapFeatureEndpoints();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapFeatureEndpoints();
 
 await app.RunAsync();
