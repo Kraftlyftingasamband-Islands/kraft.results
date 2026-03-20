@@ -1,0 +1,134 @@
+@page "/login"
+
+@rendermode InteractiveWebAssembly
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net
+@using System.Net.Http.Json
+@using KRAFT.Results.Contracts.Users
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject TokenStorageService TokenStorage
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <h1 class="login-title">KRAFT.Results</h1>
+
+        <EditForm Model="_model" OnValidSubmit="HandleLogin" FormName="login">
+            <DataAnnotationsValidator />
+
+            <div class="form-field">
+                <label class="form-label" for="username">Notandanafn</label>
+                <InputText id="username"
+                           class="form-input"
+                           autocomplete="username"
+                           aria-describedby="@(HasError ? "login-error" : null)"
+                           @bind-Value="_model.Username"
+                           disabled="@_isLoading" />
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="password">Lykilorð</label>
+                <InputText type="password"
+                           id="password"
+                           class="form-input"
+                           autocomplete="current-password"
+                           aria-describedby="@(HasError ? "login-error" : null)"
+                           @bind-Value="_model.Password"
+                           disabled="@_isLoading" />
+            </div>
+
+            <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
+                @if (_isLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>Innskr&#225;</span>
+                }
+            </button>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div id="login-error" class="error-message" role="alert">@_errorMessage</div>
+            }
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private readonly LoginModel _model = new();
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    private bool HasError => !string.IsNullOrEmpty(_errorMessage);
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            LoginCommand command = new(_model.Username, _model.Password);
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/users/login", command);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _errorMessage = "Rangt notandanafn e\u00f0a lykilor\u00f0.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur s\u00ed\u00f0ar.";
+                return;
+            }
+
+            AuthenticatedResponse? authResponse = await response.Content.ReadFromJsonAsync<AuthenticatedResponse>();
+
+            if (authResponse is null)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur s\u00ed\u00f0ar.";
+                return;
+            }
+
+            await TokenStorage.SetTokenAsync(authResponse.AccessToken);
+            AuthStateProvider.MarkUserAsAuthenticated(authResponse.AccessToken);
+            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur s\u00ed\u00f0ar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        [Required]
+        public string Username { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}

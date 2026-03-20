@@ -1,5 +1,9 @@
 ﻿@page "/users"
 
+@rendermode InteractiveWebAssembly
+
+@attribute [Authorize]
+
 @using KRAFT.Results.Contracts.Users
 
 @inject HttpClient HttpClient;

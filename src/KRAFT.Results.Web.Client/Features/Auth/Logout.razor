@@ -1,0 +1,21 @@
+@page "/logout"
+
+@rendermode InteractiveWebAssembly
+
+@inject NavigationManager NavigationManager
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject TokenStorageService TokenStorage
+
+<div class="logout-wrapper" role="status" aria-live="polite">
+    <h1 class="visually-hidden">Utskra</h1>
+    <span class="logout-message">Skr&#225;ir &#254;ig &#250;t...</span>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await TokenStorage.RemoveTokenAsync();
+        AuthStateProvider.MarkUserAsLoggedOut();
+        NavigationManager.NavigateTo("/login");
+    }
+}

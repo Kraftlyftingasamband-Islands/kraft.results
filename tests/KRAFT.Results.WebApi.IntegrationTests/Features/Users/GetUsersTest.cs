@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Users;
@@ -11,10 +11,12 @@ public sealed class GetUsersTest
 {
     private const string Path = "/users";
 
+    private readonly HttpClient _authorizedHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
 
     public GetUsersTest(IntegrationTestFixture fixture)
     {
+        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
@@ -24,7 +26,7 @@ public sealed class GetUsersTest
         // Arrange
 
         // Act
-        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.GetAsync(Path, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -36,7 +38,7 @@ public sealed class GetUsersTest
         // Arrange
 
         // Act
-        IReadOnlyList<UserSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<UserSummary>>(Path, CancellationToken.None);
+        IReadOnlyList<UserSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<UserSummary>>(Path, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -48,9 +50,21 @@ public sealed class GetUsersTest
         // Arrange
 
         // Act
-        IReadOnlyList<UserSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<UserSummary>>(Path, CancellationToken.None);
+        IReadOnlyList<UserSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<UserSummary>>(Path, CancellationToken.None);
 
         // Assert
         response!.ShouldContain(x => x.Email == Constants.TestUser.Email);
+    }
+
+    [Fact]
+    public async Task ReturnsUnauthorized_WhenHttpClientIsUnauthorized()
+    {
+        // Arrange
+
+        // Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 }

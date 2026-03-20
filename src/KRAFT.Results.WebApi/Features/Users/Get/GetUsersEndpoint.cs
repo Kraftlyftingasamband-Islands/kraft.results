@@ -22,7 +22,9 @@ internal static class GetUsersEndpoint
         .WithSummary("Gets users")
         .WithDescription("Gets a list of all users")
         .Produces<IReadOnlyList<UserSummary>>()
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization();
 
         return endpoints;
     }
