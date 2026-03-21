@@ -70,6 +70,16 @@ else if (_response is not null && _response.Items.Count > 0)
 {
     <div class="table-wrapper">
         <table aria-label="Stigatafla">
+            <colgroup>
+                <col class="col-rank" />
+                <col />
+                <col class="col-numeric" />
+                <col class="col-numeric" />
+                <col class="col-numeric" />
+                <col class="col-numeric" />
+                <col class="col-numeric" />
+                <col class="col-meet" />
+            </colgroup>
             <thead>
                 <tr>
                     <th>#</th>
@@ -89,11 +99,11 @@ else if (_response is not null && _response.Items.Count > 0)
                     <tr>
                         <RankCell Rank="@entry.Rank" />
                         <AthleteCell Athlete="@entry.Athlete" Slug="@entry.AthleteSlug" />
-                        <td class="text-center">@entry.WeightCategory</td>
-                        <td class="text-end hide-mobile">@entry.BodyWeight.ToString("F2")</td>
-                        <td class="text-end result-value">@entry.Result.ToString("F1")</td>
-                        <td class="text-end hide-mobile">@(entry.IpfPoints?.ToString("F2") ?? "-")</td>
-                        <td class="text-end hide-mobile">@entry.Wilks.ToString("F2")</td>
+                        <td class="text-center numeric-value">@entry.WeightCategory</td>
+                        <td class="text-end hide-mobile numeric-value">@entry.BodyWeight.ToString("F2")</td>
+                        <td class="text-end numeric-value">@entry.Result.ToString("F1")</td>
+                        <td class="text-end hide-mobile numeric-value">@(entry.IpfPoints?.ToString("F2") ?? "-")</td>
+                        <td class="text-end hide-mobile numeric-value">@entry.Wilks.ToString("F2")</td>
                         <td>
                             <NavLink class="nav-link" href="@($"/meets/{entry.MeetSlug}")">
                                 @entry.MeetTitle

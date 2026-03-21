@@ -42,7 +42,23 @@
     overflow-x: auto;
 }
 
-.result-value {
+table {
+    table-layout: fixed;
+}
+
+.col-rank {
+    width: 3rem;
+}
+
+.col-numeric {
+    width: 7rem;
+}
+
+.col-meet {
+    width: 15%;
+}
+
+.numeric-value {
     font-variant-numeric: tabular-nums;
 }
 
