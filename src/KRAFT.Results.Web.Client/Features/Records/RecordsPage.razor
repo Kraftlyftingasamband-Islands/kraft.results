@@ -1,0 +1,199 @@
+@page "/records/{Gender}/{AgeCategory}"
+
+@using KRAFT.Results.Contracts.Records
+@using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Met - @GenderLabel - @AgeCategory</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+        <li>
+            <NavLink class="breadcrumb-link" href="records">Met</NavLink>
+        </li>
+        <li>@GenderLabel</li>
+        <li aria-current="page">@AgeCategory</li>
+    </ol>
+</nav>
+
+<h1>@GenderLabel - @AgeCategory</h1>
+
+<div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
+    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
+        Með búnað
+    </button>
+    <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("classic"))">
+        Án búnaðar
+    </button>
+</div>
+
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki met...</span>
+    </div>
+}
+else if (_hasError)
+{
+    <div class="error-state" role="alert">
+        <p>Villa kom upp. Reyndu aftur.</p>
+        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
+    </div>
+}
+else if (_groups is not null && _groups.Count > 0)
+{
+    @foreach (RecordGroup group in _groups)
+    {
+        <section class="record-section">
+            <h2>@group.Category</h2>
+            <div class="table-wrapper">
+                <table aria-label="@group.Category">
+                    <colgroup>
+                        <col class="col-weight-category" />
+                        <col class="col-athlete" />
+                        <col class="col-birthyear" />
+                        <col class="col-club" />
+                        <col class="col-bodyweight" />
+                        <col class="col-mark" />
+                        <col class="col-date" />
+                        <col class="col-meet" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col" aria-label="Flokkur">Fl.</th>
+                            <th scope="col">Nafn</th>
+                            <th scope="col" class="text-center hide-mobile" aria-label="Fæðingarár">F.ár</th>
+                            <th scope="col" class="hide-mobile">Félag</th>
+                            <th scope="col" class="text-end" aria-label="Líkamsþyngd">Líkamsþ.</th>
+                            <th scope="col" class="text-end">Mark</th>
+                            <th scope="col" aria-label="Dagsetning">Dags.</th>
+                            <th scope="col">Mót</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (RecordEntry record in group.Records)
+                        {
+                            <tr class="@(record.IsStandard ? "standard-row" : "")">
+                                <td class="weight-category-cell">@record.WeightCategory</td>
+                                @if (record.IsStandard)
+                                {
+                                    <td colspan="7" class="standard-cell">Íslenski staðallinn</td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        @if (record.AthleteSlug is not null)
+                                        {
+                                            <NavLink class="nav-link" href="@($"athletes/{record.AthleteSlug}")">
+                                                @record.Athlete
+                                            </NavLink>
+                                        }
+                                        else
+                                        {
+                                            @record.Athlete
+                                        }
+                                    </td>
+                                    <td class="text-center hide-mobile numeric-value">@(record.BirthYear?.ToString() ?? "-")</td>
+                                    <td class="hide-mobile">@(record.Club ?? "-")</td>
+                                    <td class="text-end numeric-value">@(record.BodyWeight?.ToString("F1") ?? "-")</td>
+                                    <td class="text-end numeric-value">@record.Weight.ToString("F1")</td>
+                                    <td class="numeric-value">@record.Date.ToString("dd.MM.yyyy")</td>
+                                    <td>
+                                        @if (record.MeetSlug is not null)
+                                        {
+                                            <NavLink class="nav-link" href="@($"meets/{record.MeetSlug}")">
+                                                @record.Meet
+                                            </NavLink>
+                                        }
+                                        else
+                                        {
+                                            @record.Meet
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}
+else
+{
+    <div class="empty-state">
+        Engin met fundust.
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Gender { get; set; } = default!;
+
+    [Parameter]
+    public string AgeCategory { get; set; } = default!;
+
+    [SupplyParameterFromQuery(Name = "equipmentType")]
+    public string? EquipmentType { get; set; }
+
+    private string _equipmentType = "equipped";
+    private bool _isLoading = true;
+    private bool _hasError;
+    private List<RecordGroup>? _groups;
+
+    private string GenderLabel => Gender?.ToLowerInvariant() switch
+    {
+        "m" => "Karlar",
+        "f" => "Konur",
+        _ => Gender ?? "",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _equipmentType = EquipmentType ?? "equipped";
+        await LoadDataAsync();
+    }
+
+    private async Task SetEquipmentTypeAsync(string type)
+    {
+        _equipmentType = type;
+        UpdateUrl();
+        await LoadDataAsync();
+    }
+
+    private void UpdateUrl()
+    {
+        string url = NavigationManager.GetUriWithQueryParameters(
+            $"/records/{Gender}/{AgeCategory}",
+            new Dictionary<string, object?>
+            {
+                ["equipmentType"] = _equipmentType,
+            });
+
+        NavigationManager.NavigateTo(url, replace: true);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _hasError = false;
+
+        try
+        {
+            string url = $"/records?gender={Uri.EscapeDataString(Gender)}&ageCategory={Uri.EscapeDataString(AgeCategory)}&equipmentType={Uri.EscapeDataString(_equipmentType)}";
+
+            _groups = await HttpClient.GetFromJsonAsync<List<RecordGroup>>(url);
+        }
+        catch
+        {
+            _hasError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

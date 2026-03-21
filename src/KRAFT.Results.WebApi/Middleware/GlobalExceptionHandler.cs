@@ -26,9 +26,9 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
 
         ProblemDetails problemDetails = new()
         {
-            Type = exception.GetType().Name,
+            Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1",
             Title = "An unexpected error occurred.",
-            Detail = exception.Message,
+            Detail = "An unexpected error occurred.",
             Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}",
         };
 

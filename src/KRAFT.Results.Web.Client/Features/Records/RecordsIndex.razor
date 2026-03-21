@@ -1,0 +1,84 @@
+@page "/records"
+
+@using KRAFT.Results.Web.Client.Components
+
+<PageTitle>Met</PageTitle>
+
+<h1>Met</h1>
+
+<div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
+    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" @onclick="@(() => SetEquipmentType("equipped"))">
+        Með búnað
+    </button>
+    <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" @onclick="@(() => SetEquipmentType("classic"))">
+        Án búnaðar
+    </button>
+</div>
+
+<section class="gender-section">
+    <h2>Karlar</h2>
+    <div class="category-grid">
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "open")">Open</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "subjunior")">Subjunior (14-18 ára)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "junior")">Junior (19-23 ára)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters1")">Masters 1 (40+)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters2")">Masters 2 (50+)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters3")">Masters 3 (60+)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters4")">Masters 4 (70+)</NavLink>
+        </Card>
+    </div>
+</section>
+
+<section class="gender-section">
+    <h2>Konur</h2>
+    <div class="category-grid">
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "open")">Open</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "subjunior")">Subjunior (14-18 ára)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "junior")">Junior (19-23 ára)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters1")">Masters 1 (40+)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters2")">Masters 2 (50+)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters3")">Masters 3 (60+)</NavLink>
+        </Card>
+        <Card>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters4")">Masters 4 (70+)</NavLink>
+        </Card>
+    </div>
+</section>
+
+@code {
+    private string _equipmentType = "equipped";
+
+    private void SetEquipmentType(string type)
+    {
+        _equipmentType = type;
+    }
+
+    private string GetRecordUrl(string gender, string ageCategory)
+    {
+        return $"records/{gender}/{ageCategory}?equipmentType={_equipmentType}";
+    }
+}
