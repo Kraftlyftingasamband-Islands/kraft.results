@@ -74,13 +74,12 @@ else if (_response is not null && _response.Items.Count > 0)
                 <tr>
                     <th>#</th>
                     <th>Keppandi</th>
-                    <th>Dagsetning</th>
-                    <th>Mót</th>
                     <th class="text-center">Þyngdarfl.</th>
                     <th class="text-end hide-mobile">Líkamsþ.</th>
                     <th class="text-end">@DisciplineLabel</th>
                     <th class="text-end hide-mobile">IPF stig</th>
                     <th class="text-end hide-mobile">Wilks</th>
+                    <th>Mót</th>
                 </tr>
             </thead>
 
@@ -90,17 +89,16 @@ else if (_response is not null && _response.Items.Count > 0)
                     <tr>
                         <RankCell Rank="@entry.Rank" />
                         <AthleteCell Athlete="@entry.Athlete" Slug="@entry.AthleteSlug" />
-                        <td>@entry.MeetDate.ToString("dd.MM.yyyy")</td>
-                        <td>
-                            <NavLink class="nav-link" href="@($"/meets/{entry.MeetSlug}")">
-                                @entry.MeetTitle
-                            </NavLink>
-                        </td>
                         <td class="text-center">@entry.WeightCategory</td>
                         <td class="text-end hide-mobile">@entry.BodyWeight.ToString("F2")</td>
                         <td class="text-end result-value">@entry.Result.ToString("F1")</td>
                         <td class="text-end hide-mobile">@(entry.IpfPoints?.ToString("F2") ?? "-")</td>
                         <td class="text-end hide-mobile">@entry.Wilks.ToString("F2")</td>
+                        <td>
+                            <NavLink class="nav-link" href="@($"/meets/{entry.MeetSlug}")">
+                                @entry.MeetTitle
+                            </NavLink>
+                        </td>
                     </tr>
                 }
             </tbody>
