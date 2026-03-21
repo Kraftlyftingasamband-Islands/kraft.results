@@ -25,7 +25,6 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
             && !string.Equals(ageCategory, "subjunior", StringComparison.OrdinalIgnoreCase);
 
         List<RawRecordData> rawData = await dbContext.Set<Record>()
-            .Where(r => r.IsCurrent)
             .Where(r => r.Era.EndDate.Year > DateTime.UtcNow.Year)
             .Where(r => r.WeightCategory.Gender == Gender.Parse(genderLower))
             .Where(r => r.AgeCategory.Slug == ageCategory)
@@ -40,7 +39,9 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
             .OrderBy(r => r.RecordCategoryId)
             .ThenBy(r => r.WeightCategory.MinWeight)
             .Select(r => new RawRecordData(
+                r.RecordId,
                 r.RecordCategoryId,
+                r.WeightCategoryId,
                 r.WeightCategory.Title,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Slug : null,
@@ -53,6 +54,16 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 r.Attempt != null ? r.Attempt.Participation.Meet.Slug : null,
                 r.IsStandard))
             .ToListAsync(cancellationToken);
+
+        rawData = rawData
+            .GroupBy(r => (r.RecordCategoryId, r.WeightCategoryId))
+            .Select(g => g
+                .OrderByDescending(r => r.Weight)
+                .ThenByDescending(r => r.RecordId)
+                .First())
+            .OrderBy(r => r.RecordCategoryId)
+            .ThenBy(r => r.WeightCategory)
+            .ToList();
 
         List<RecordGroup> groups = rawData
             .GroupBy(r => r.RecordCategoryId)
@@ -87,7 +98,9 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
 #pragma warning restore S3358 // Ternary operators should not be nested
 
     private sealed record RawRecordData(
+        int RecordId,
         RecordCategory RecordCategoryId,
+        int WeightCategoryId,
         string WeightCategory,
         string? Athlete,
         string? AthleteSlug,
