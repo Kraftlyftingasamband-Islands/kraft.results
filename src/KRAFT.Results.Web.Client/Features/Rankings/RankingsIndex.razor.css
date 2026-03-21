@@ -50,6 +50,10 @@ table {
     width: 3rem;
 }
 
+.col-athlete {
+    width: 12rem;
+}
+
 .col-numeric {
     width: 7rem;
 }
