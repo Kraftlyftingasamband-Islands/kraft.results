@@ -7,11 +7,11 @@
 <h1>Met</h1>
 
 <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
-    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" @onclick="@(() => SetEquipmentType("equipped"))">
-        Með búnað
-    </button>
     <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" @onclick="@(() => SetEquipmentType("classic"))">
         Án búnaðar
+    </button>
+    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" @onclick="@(() => SetEquipmentType("equipped"))">
+        Með búnaði
     </button>
 </div>
 
@@ -70,7 +70,7 @@
 </section>
 
 @code {
-    private string _equipmentType = "equipped";
+    private string _equipmentType = "classic";
 
     private void SetEquipmentType(string type)
     {
