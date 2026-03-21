@@ -67,6 +67,76 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
             INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
             VALUES (1, 1, 80.5, 1, 1, 3, 1, 180.0, 120.0, 230.0, 530.0, 360.0, 78.0, 3);
+
+            UPDATE AgeCategories SET Slug = 'open' WHERE AgeCategoryId = 1;
+
+            SET IDENTITY_INSERT AgeCategories ON;
+            INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
+            VALUES (2, 'Junior', 'junior');
+            SET IDENTITY_INSERT AgeCategories OFF;
+
+            SET IDENTITY_INSERT WeightCategories ON;
+            INSERT INTO WeightCategories (WeightCategoryId, Title, MinWeight, MaxWeight, Gender, JuniorsOnly, Slug)
+            VALUES (2, '93', 83.01, 93.00, 'm', 0, '93-m');
+            INSERT INTO WeightCategories (WeightCategoryId, Title, MinWeight, MaxWeight, Gender, JuniorsOnly, Slug)
+            VALUES (3, '63', 57.01, 63.00, 'f', 0, '63-f');
+            SET IDENTITY_INSERT WeightCategories OFF;
+
+            INSERT INTO Eras (Title, StartDate, EndDate, Slug)
+            VALUES ('Current Era', '2019-01-01', '2099-12-31', 'current-era');
+
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 1, 3, 200.0, 1, 'seed', 'seed');
+
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 2, 3, 130.0, 1, 'seed', 'seed');
+
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 3, 3, 250.0, 1, 'seed', 'seed');
+
+            -- Squat record (equipped, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 1, 200.0, '2025-03-15', 0, 1, 1, 0, 'seed');
+
+            -- Bench record (equipped, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 2, 130.0, '2025-03-15', 0, 2, 1, 0, 'seed');
+
+            -- Deadlift record (equipped, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 3, 250.0, '2025-03-15', 0, 3, 1, 0, 'seed');
+
+            -- Total record (equipped, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 4, 580.0, '2025-03-15', 0, 1, 1, 0, 'seed');
+
+            -- Classic squat record (classic, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
+
+            -- Standard record (equipped, open, male, 93kg)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 2, 1, 220.0, '2025-01-01', 1, NULL, 1, 0, 'seed');
+
+            -- TotalWilks record (should be excluded)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 7, 400.0, '2025-03-15', 0, 1, 1, 0, 'seed');
+
+            -- TotalIpfPoints record (should be excluded)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 8, 85.5, '2025-03-15', 0, 1, 1, 0, 'seed');
+
+            -- Record for junior category (equipped, junior, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 2, 1, 1, 180.0, '2025-03-15', 0, 1, 1, 0, 'seed');
+
+            -- Non-current record (should be excluded)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 1, 1, 190.0, '2024-01-01', 0, 1, 0, 0, 'seed');
+
+            -- Female record (equipped, open, female)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (1, 1, 3, 1, 120.0, '2025-03-15', 0, NULL, 1, 0, 'seed');
         """);
     }
 }

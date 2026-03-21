@@ -1,0 +1,81 @@
+.equipment-toggle {
+    display: flex;
+    gap: 0;
+    padding-block-end: 1.5rem;
+}
+
+.toggle-btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--color-border);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: var(--color-white);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) ease,
+                color var(--transition-fast) ease,
+                border-color var(--transition-fast) ease;
+}
+
+.toggle-btn:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    border-inline-end: none;
+}
+
+.toggle-btn:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.toggle-btn.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.toggle-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.toggle-btn.active:focus-visible {
+    outline-color: var(--color-text);
+}
+
+.toggle-btn:hover:not(.active) {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.gender-section {
+    margin-block-end: 2rem;
+}
+
+.gender-section h2 {
+    font-size: 1.25rem;
+    margin-block-end: 1rem;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: 1rem;
+}
+
+::deep .card-link {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text);
+}
+
+@media (max-width: 641px) {
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toggle-btn {
+        transition: none;
+    }
+}
