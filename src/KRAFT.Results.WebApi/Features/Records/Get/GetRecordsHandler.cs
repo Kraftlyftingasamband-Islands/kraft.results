@@ -52,6 +52,7 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 r.Date,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Title + " " + r.Attempt.Participation.Meet.StartDate.Year : null,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Slug : null,
+                r.WeightCategory.MinWeight,
                 r.IsStandard))
             .ToListAsync(cancellationToken);
 
@@ -62,7 +63,7 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 .ThenByDescending(r => r.RecordId)
                 .First())
             .OrderBy(r => r.RecordCategoryId)
-            .ThenBy(r => r.WeightCategory)
+            .ThenBy(r => r.MinWeight)
             .ToList();
 
         List<RecordGroup> groups = rawData
@@ -111,5 +112,6 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
         DateOnly Date,
         string? Meet,
         string? MeetSlug,
+        decimal MinWeight,
         bool IsStandard);
 }
