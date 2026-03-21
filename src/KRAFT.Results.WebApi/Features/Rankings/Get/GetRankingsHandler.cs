@@ -92,7 +92,6 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.StartDate,
                 p.Meet.IsRaw)),
             "bench" => query.Select(p => new RawRankingData(
                 p.AthleteId,
@@ -105,7 +104,6 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.StartDate,
                 p.Meet.IsRaw)),
             "deadlift" => query.Select(p => new RawRankingData(
                 p.AthleteId,
@@ -118,7 +116,6 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.StartDate,
                 p.Meet.IsRaw)),
             _ => query.Select(p => new RawRankingData(
                 p.AthleteId,
@@ -131,7 +128,6 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.StartDate,
                 p.Meet.IsRaw)),
         };
 
@@ -170,7 +166,6 @@ internal sealed class GetRankingsHandler
                 r.Wilks,
                 r.MeetTitle,
                 r.MeetSlug,
-                DateOnly.FromDateTime(r.MeetStartDate),
                 r.IsRaw))
             .ToList();
 
@@ -188,7 +183,6 @@ internal sealed class GetRankingsHandler
         decimal Wilks,
         string MeetTitle,
         string MeetSlug,
-        DateTime MeetStartDate,
         bool IsRaw)
     {
         public decimal CalculatedIpfPoints { get; set; }
