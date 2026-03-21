@@ -8,6 +8,9 @@
 
 # Claude Code
 .claude/
+
+# Git worktrees
+.worktrees/
 CLAUDE.md
 docs/superpowers/
 
