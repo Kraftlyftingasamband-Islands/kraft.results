@@ -21,11 +21,11 @@
 <h1>@GenderLabel - @AgeCategory</h1>
 
 <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
-    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
-        Með búnað
-    </button>
     <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("classic"))">
         Án búnaðar
+    </button>
+    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
+        Með búnaði
     </button>
 </div>
 
@@ -139,7 +139,7 @@ else
     [SupplyParameterFromQuery(Name = "equipmentType")]
     public string? EquipmentType { get; set; }
 
-    private string _equipmentType = "equipped";
+    private string _equipmentType = "classic";
     private bool _isLoading = true;
     private bool _hasError;
     private List<RecordGroup>? _groups;
@@ -153,7 +153,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _equipmentType = EquipmentType ?? "equipped";
+        _equipmentType = EquipmentType ?? "classic";
         await LoadDataAsync();
     }
 

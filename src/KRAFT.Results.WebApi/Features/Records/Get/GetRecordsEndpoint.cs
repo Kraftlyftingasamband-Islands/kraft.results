@@ -36,7 +36,7 @@ internal static class GetRecordsEndpoint
                 return TypedResults.BadRequest("Invalid age category.");
             }
 
-            string resolvedEquipmentType = equipmentType ?? "equipped";
+            string resolvedEquipmentType = equipmentType ?? "classic";
 
             if (!ValidEquipmentTypes.Contains(resolvedEquipmentType, StringComparer.OrdinalIgnoreCase))
             {
