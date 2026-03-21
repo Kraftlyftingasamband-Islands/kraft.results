@@ -1,5 +1,6 @@
 using KRAFT.Results.Contracts.Records;
 using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.Features.EraWeightCategories;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,11 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
 
         string genderLower = gender.ToLowerInvariant();
 
+        DateTime now = DateTime.UtcNow;
+
+        bool excludeJuniorsOnly = !string.Equals(ageCategory, "junior", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(ageCategory, "subjunior", StringComparison.OrdinalIgnoreCase);
+
         List<RawRecordData> rawData = await dbContext.Set<Record>()
             .Where(r => r.IsCurrent)
             .Where(r => r.Era.EndDate.Year > DateTime.UtcNow.Year)
@@ -25,6 +31,12 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
             .Where(r => r.AgeCategory.Slug == ageCategory)
             .Where(r => r.IsRaw == isClassic)
             .Where(r => r.RecordCategoryId != RecordCategory.TotalWilks && r.RecordCategoryId != RecordCategory.TotalIpfPoints)
+            .Where(r => dbContext.Set<EraWeightCategory>()
+                .Any(ewc => ewc.EraId == r.EraId
+                    && ewc.WeightCategoryId == r.WeightCategoryId
+                    && ewc.FromDate < now
+                    && ewc.ToDate > now))
+            .Where(r => !excludeJuniorsOnly || !r.WeightCategory.JuniorsOnly)
             .OrderBy(r => r.RecordCategoryId)
             .ThenBy(r => r.WeightCategory.MinWeight)
             .Select(r => new RawRecordData(
