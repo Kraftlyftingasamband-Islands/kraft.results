@@ -163,4 +163,71 @@ public sealed class GetRecordsTests(IntegrationTestFixture fixture)
         groups.ShouldNotBeNull();
         groups.ShouldNotContain(g => g.Category == string.Empty);
     }
+
+    [Fact]
+    public async Task ExcludesWeightCategoriesNotInCurrentEra()
+    {
+        // Arrange — weight category 5 (105kg) has no EraWeightCategory row
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        List<RecordEntry> allRecords = groups.SelectMany(g => g.Records).ToList();
+        allRecords.ShouldNotContain(r => r.WeightCategory == "105");
+    }
+
+    [Fact]
+    public async Task ExcludesJuniorsOnlyWeightCategories_ForNonJuniorAgeCategory()
+    {
+        // Arrange — weight category 4 (74kg) is JuniorsOnly
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        List<RecordEntry> allRecords = groups.SelectMany(g => g.Records).ToList();
+        allRecords.ShouldNotContain(r => r.WeightCategory == "74");
+    }
+
+    [Fact]
+    public async Task ReturnsHighestWeight_WhenMultipleRecordsExist()
+    {
+        // Arrange — two squat records for (RecordCategoryId=1, WeightCategoryId=1): 200.0 and 190.0
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        RecordGroup squatGroup = groups.First(g => g.Category == "Hn\u00e9beygja");
+        RecordEntry squatRecord83 = squatGroup.Records.First(r => r.WeightCategory == "83");
+        squatRecord83.Weight.ShouldBe(200.0m);
+    }
+
+    [Fact]
+    public async Task SortsWeightCategoriesNumerically()
+    {
+        // Arrange — open equipped male has weight categories 83 and 93
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        RecordGroup squatGroup = groups.First(g => g.Category == "Hn\u00e9beygja");
+        List<string> weightCategories = squatGroup.Records.Select(r => r.WeightCategory).ToList();
+        weightCategories.Count.ShouldBeGreaterThanOrEqualTo(2);
+        weightCategories.ShouldBe(weightCategories.OrderBy(w => decimal.Parse(w, System.Globalization.CultureInfo.InvariantCulture)).ToList());
+    }
 }
