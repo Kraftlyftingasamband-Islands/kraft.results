@@ -47,7 +47,7 @@ table {
 }
 
 .col-rank {
-    width: 3rem;
+    width: 2rem;
 }
 
 .col-athlete {
@@ -59,7 +59,6 @@ table {
 }
 
 .col-meet {
-    width: 15%;
 }
 
 .numeric-value {
