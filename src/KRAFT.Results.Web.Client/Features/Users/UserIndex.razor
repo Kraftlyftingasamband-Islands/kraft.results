@@ -10,6 +10,8 @@
 
 <h3>Notendur</h3>
 
+<a href="/users/create">Stofna notanda</a>
+
 <table>
     <thead>
         <tr>
@@ -20,15 +22,17 @@
         </tr>
     </thead>
 
-    @foreach (UserSummary User in Users)
-    {
-        <tr>
-            <td>@User.Name</td>
-            <td>@User.Email</td>
-            <td>@string.Join(", ", User.Roles)</td>
-            <td>@User.CreatedOn.ToShortDateString()</td>
-        </tr>
-    }
+    <tbody>
+        @foreach (UserSummary User in Users)
+        {
+            <tr>
+                <td>@User.Name</td>
+                <td>@User.Email</td>
+                <td>@string.Join(", ", User.Roles)</td>
+                <td>@User.CreatedOn.ToShortDateString()</td>
+            </tr>
+        }
+    </tbody>
 </table>
 
 @code {
