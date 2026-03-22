@@ -10,37 +10,52 @@
 
 <h3>Notendur</h3>
 
-<a href="/users/create">Stofna notanda</a>
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki notendur...</span>
+    </div>
+}
+else
+{
+    <a href="/users/create">Stofna notanda</a>
 
-<table>
-    <thead>
-        <tr>
-            <th>Nafn</th>
-            <th>Tölvupóstfang</th>
-            <th>Hlutverk</th>
-            <th>Stofnaður</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (UserSummary User in Users)
-        {
+    <table>
+        <thead>
             <tr>
-                <td>@User.Name</td>
-                <td>@User.Email</td>
-                <td>@string.Join(", ", User.Roles)</td>
-                <td>@User.CreatedOn.ToShortDateString()</td>
+                <th>Nafn</th>
+                <th>Tölvupóstfang</th>
+                <th>Hlutverk</th>
+                <th>Stofnaður</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+            @foreach (UserSummary User in Users)
+            {
+                <tr>
+                    <td>@User.Name</td>
+                    <td>@User.Email</td>
+                    <td>@string.Join(", ", User.Roles)</td>
+                    <td>@User.CreatedOn.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
     private IReadOnlyCollection<UserSummary> Users = [];
+    private bool _isLoading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await base.OnInitializedAsync();
-        Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
+        if (firstRender)
+        {
+            Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 }
