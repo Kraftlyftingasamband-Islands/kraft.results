@@ -25,6 +25,7 @@ public class TeamsIndexTests(PlaywrightFixture fixture)
         headingText.ShouldBe("Félög");
 
         ILocator teamNames = page.Locator(".card-grid .team-name");
+        await teamNames.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int teamCount = await teamNames.CountAsync();
         teamCount.ShouldBeGreaterThan(0);
     }
