@@ -18,9 +18,18 @@ Uri apiBaseAddress = builder.Configuration.GetValue<Uri>("API:BaseAddress")
 builder.Services.AddScoped(services =>
 {
     TokenStorageService tokenStorage = services.GetRequiredService<TokenStorageService>();
+
+    HttpClientHandler httpHandler = new();
+    if (!builder.Environment.IsProduction())
+    {
+#pragma warning disable S4830 // Server certificates should be verified during SSL/TLS connections
+        httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#pragma warning restore S4830
+    }
+
     AuthorizationMessageHandler handler = new(tokenStorage, apiBaseAddress)
     {
-        InnerHandler = new HttpClientHandler(),
+        InnerHandler = httpHandler,
     };
 
     return new HttpClient(handler)
