@@ -49,6 +49,7 @@ public class MeetIndexTests(PlaywrightFixture fixture)
         yearText.ShouldBe("2025");
 
         ILocator meetItems = page.Locator("article.meet-item");
+        await meetItems.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int meetCount = await meetItems.CountAsync();
         meetCount.ShouldBeGreaterThan(0);
     }
