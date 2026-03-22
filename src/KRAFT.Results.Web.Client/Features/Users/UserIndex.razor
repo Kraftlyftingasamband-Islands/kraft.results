@@ -1,4 +1,4 @@
-﻿@page "/users"
+@page "/users"
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -49,10 +49,15 @@ else
     private IReadOnlyCollection<UserSummary> Users = [];
     private bool _isLoading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await base.OnInitializedAsync();
+        if (!firstRender)
+        {
+            return;
+        }
+
         Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
         _isLoading = false;
+        StateHasChanged();
     }
 }
