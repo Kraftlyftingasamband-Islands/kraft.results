@@ -25,6 +25,7 @@ public class RankingsTests(PlaywrightFixture fixture)
         headingText.ShouldBe("Stigatöflur");
 
         ILocator filterBar = page.Locator(".filter-bar");
+        await filterBar.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         bool filterVisible = await filterBar.IsVisibleAsync();
         filterVisible.ShouldBeTrue();
     }
