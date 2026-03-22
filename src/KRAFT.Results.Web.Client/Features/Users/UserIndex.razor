@@ -1,6 +1,6 @@
 ﻿@page "/users"
 
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @attribute [Authorize]
 
@@ -49,13 +49,10 @@ else
     private IReadOnlyCollection<UserSummary> Users = [];
     private bool _isLoading = true;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
-            _isLoading = false;
-            StateHasChanged();
-        }
+        await base.OnInitializedAsync();
+        Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
+        _isLoading = false;
     }
 }
