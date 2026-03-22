@@ -22,7 +22,10 @@ public sealed class PlaywrightFixture : IAsyncLifetime
     public async Task<(IBrowserContext Context, IPage Page)> NewPageAsync()
     {
         IBrowser browser = _browser ?? throw new InvalidOperationException("Browser not initialized.");
-        IBrowserContext context = await browser.NewContextAsync();
+        IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            IgnoreHTTPSErrors = true,
+        });
         IPage page = await context.NewPageAsync();
         return (context, page);
     }
