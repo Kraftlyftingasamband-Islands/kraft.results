@@ -8,12 +8,14 @@ IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(ar
 string sqlPassword = builder.Configuration.GetValue<string>("Parameters:sql-password")
     ?? throw new InvalidOperationException("No SQL password found");
 
+string dataVolume = builder.Configuration.GetValue<string>("SqlServer:DataVolume") ?? "kraft-data";
+
 IResourceBuilder<SqlServerServerResource> sql = builder
     .AddSqlServer("sql")
     .WithContainerName("kraft-sql")
     .WithEnvironment("ACCEPT_EULA", "Y")
     .WithEnvironment("MSSQL_SA_PASSWORD", sqlPassword)
-    .WithDataVolume("kraft-data")
+    .WithDataVolume(dataVolume)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithEndpoint("tcp", endpoint =>
     {
@@ -32,7 +34,8 @@ IResourceBuilder<ProjectResource> api = builder.AddProject<Projects.KRAFT_Result
 builder.AddProject<Projects.KRAFT_Results_Web>("web")
     .WithReference(api)
     .WaitFor(api)
-    .WithExternalHttpEndpoints();
+    .WithExternalHttpEndpoints()
+    .WithEnvironment("API__BaseAddress", api.GetEndpoint("http"));
 
 DistributedApplication app = builder.Build();
 
