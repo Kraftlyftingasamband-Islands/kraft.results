@@ -25,14 +25,17 @@ public class LoginTests(PlaywrightFixture fixture)
         headingText.ShouldBe("KRAFT.Results");
 
         ILocator usernameInput = page.Locator("#username");
+        await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         bool usernameVisible = await usernameInput.IsVisibleAsync();
         usernameVisible.ShouldBeTrue();
 
         ILocator passwordInput = page.Locator("#password");
+        await passwordInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         bool passwordVisible = await passwordInput.IsVisibleAsync();
         passwordVisible.ShouldBeTrue();
 
         ILocator submitButton = page.Locator("button[type='submit']");
+        await submitButton.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         bool submitVisible = await submitButton.IsVisibleAsync();
         submitVisible.ShouldBeTrue();
 
