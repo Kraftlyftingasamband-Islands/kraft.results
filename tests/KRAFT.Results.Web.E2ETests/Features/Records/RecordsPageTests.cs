@@ -26,6 +26,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         headingText.ShouldContain("open");
 
         ILocator breadcrumb = page.Locator("nav.breadcrumb");
+        await breadcrumb.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         bool breadcrumbVisible = await breadcrumb.IsVisibleAsync();
         breadcrumbVisible.ShouldBeTrue();
 
