@@ -39,6 +39,9 @@ public class HomePageTests(PlaywrightFixture fixture)
         await nav.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
+        ILocator loginLink = nav.GetByText("Innskrá");
+        await loginLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
         string navText = await nav.InnerTextAsync();
         navText.ShouldContain("Forsíða");
         navText.ShouldContain("Mótaskrá");
