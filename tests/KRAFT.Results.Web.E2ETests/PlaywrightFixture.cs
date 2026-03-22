@@ -33,6 +33,7 @@ public sealed class PlaywrightFixture : IAsyncLifetime
             await DistributedApplicationTestingBuilder.CreateAsync<Projects.KRAFT_Results_AppHost>();
 
         builder.Configuration["SqlServer:DataVolume"] = "kraft-data-e2etest";
+        builder.Configuration["Parameters:sql-password"] = "E2eTest_Password1!";
 
         _app = await builder.BuildAsync();
 
