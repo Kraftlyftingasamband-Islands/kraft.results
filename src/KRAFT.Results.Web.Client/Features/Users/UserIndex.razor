@@ -7,8 +7,20 @@
 @using KRAFT.Results.Contracts.Users
 
 @inject HttpClient HttpClient;
+@inject NavigationManager NavigationManager;
 
-<h3>Notendur</h3>
+<div class="page-header">
+    <h3>Notendur</h3>
+    @if (!_isLoading)
+    {
+        <button class="btn-action" @onclick="NavigateToCreate">
+            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+            </svg>
+            Stofna notanda
+        </button>
+    }
+</div>
 
 @if (_isLoading)
 {
@@ -19,8 +31,6 @@
 }
 else
 {
-    <a href="/users/create">Stofna notanda</a>
-
     <table>
         <thead>
             <tr>
@@ -48,6 +58,11 @@ else
 @code {
     private IReadOnlyCollection<UserSummary> Users = [];
     private bool _isLoading = true;
+
+    private void NavigateToCreate()
+    {
+        NavigationManager.NavigateTo("/users/create");
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

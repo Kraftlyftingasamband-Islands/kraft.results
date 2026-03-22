@@ -46,6 +46,14 @@ internal static class TestDataSeeder
             INSERT INTO Users (Username, Password, Email)
             VALUES ('testuser', 'testuser', 'test@email.com');
 
+            INSERT INTO Roles (RoleId, RoleName)
+            VALUES (1, 'Admin');
+
+            INSERT INTO UserRoles (UserId, RoleId, CreatedOn, CreatedBy, ModifiedOn, ModifiedBy)
+            SELECT u.UserId, 1, GETUTCDATE(), 'seed', GETUTCDATE(), 'seed'
+            FROM Users u
+            WHERE u.Username = 'testuser';
+
             INSERT INTO MeetTypes (MeetTypeId, Title)
             Values (1, 'Powerlifting');
 

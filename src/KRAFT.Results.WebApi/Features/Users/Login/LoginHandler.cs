@@ -27,7 +27,10 @@ internal sealed class LoginHandler
             return UserErrors.InvalidUsernameOrPassword;
         }
 
-        if (await _dbContext.Set<User>().FirstOrDefaultAsync(x => x.Username == command.Username, cancellationToken) is not User user)
+        if (await _dbContext.Set<User>()
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Username == command.Username, cancellationToken) is not User user)
         {
             _logger.LogWarning("Login attempt with invalid username: {Username}", command.Username);
             return UserErrors.InvalidUsernameOrPassword;
