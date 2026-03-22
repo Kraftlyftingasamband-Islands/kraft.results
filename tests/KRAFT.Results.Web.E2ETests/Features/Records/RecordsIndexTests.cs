@@ -25,6 +25,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         headingText.ShouldBe("Met");
 
         ILocator equipmentToggle = page.Locator(".equipment-toggle");
+        await equipmentToggle.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         bool toggleVisible = await equipmentToggle.IsVisibleAsync();
         toggleVisible.ShouldBeTrue();
 
