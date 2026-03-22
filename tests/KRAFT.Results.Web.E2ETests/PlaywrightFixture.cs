@@ -29,11 +29,17 @@ public sealed class PlaywrightFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        IDistributedApplicationTestingBuilder builder =
-            await DistributedApplicationTestingBuilder.CreateAsync<Projects.KRAFT_Results_AppHost>();
+        string[] args =
+        [
+            "--Parameters:sql-password=E2eTest_Password1!",
+            "--SqlServer:DataVolume=kraft-data-e2etest",
+            "--SqlServer:ContainerName=kraft-sql-e2etest",
+            "--SqlServer:Port=11433",
+            "--SqlServer:Persistent=false",
+        ];
 
-        builder.Configuration["SqlServer:DataVolume"] = "kraft-data-e2etest";
-        builder.Configuration["Parameters:sql-password"] = "E2eTest_Password1!";
+        IDistributedApplicationTestingBuilder builder =
+            await DistributedApplicationTestingBuilder.CreateAsync<Projects.KRAFT_Results_AppHost>(args);
 
         _app = await builder.BuildAsync();
 
@@ -44,13 +50,25 @@ public sealed class PlaywrightFixture : IAsyncLifetime
         using CancellationTokenSource cts = new(TimeSpan.FromMinutes(2));
         try
         {
+            await notificationService.WaitForResourceHealthyAsync("api", cts.Token);
             await notificationService.WaitForResourceHealthyAsync("web", cts.Token);
         }
         catch (OperationCanceledException)
         {
             throw new TimeoutException(
-                "The 'web' resource did not become healthy within 2 minutes. " +
+                "The 'api' or 'web' resource did not become healthy within 2 minutes. " +
                 "Verify that Docker is running and the AppHost can start all resources.");
+        }
+
+        string? connectionString = await _app.GetConnectionStringAsync("kraft-db");
+        if (connectionString is not null)
+        {
+            if (!connectionString.Contains("TrustServerCertificate", StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString += ";TrustServerCertificate=True";
+            }
+
+            await TestDataSeeder.SeedAsync(connectionString);
         }
 
         BaseUrl = _app.GetEndpoint("web").ToString().TrimEnd('/');

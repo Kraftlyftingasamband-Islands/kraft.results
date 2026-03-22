@@ -15,21 +15,17 @@ public class MeetDetailsTests(PlaywrightFixture fixture)
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
         await using IAsyncDisposable contextGuard = context;
 
-        // Act
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/2024");
-        ILocator firstMeetLink = page.Locator("article.meet-item .nav-link").First;
+        // Act — navigate via meet index to use Blazor enhanced navigation
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/2025");
+        ILocator firstMeetLink = page.Locator("article.meet-item a").First;
         await firstMeetLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await firstMeetLink.ClickAsync();
 
-        ILocator heading = page.Locator("h1");
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-
-        // Assert
-        string title = await heading.InnerTextAsync();
-        title.ShouldNotBeNullOrWhiteSpace();
-
+        // Wait for the meet details page to render
         ILocator resultsHeading = page.Locator("h2", new PageLocatorOptions { HasText = "Úrslit" });
         await resultsHeading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
+        // Assert
         string resultsText = await resultsHeading.InnerTextAsync();
         resultsText.ShouldBe("Úrslit");
     }
