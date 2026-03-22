@@ -9,18 +9,21 @@ string sqlPassword = builder.Configuration.GetValue<string>("Parameters:sql-pass
     ?? throw new InvalidOperationException("No SQL password found");
 
 string dataVolume = builder.Configuration.GetValue<string>("SqlServer:DataVolume") ?? "kraft-data";
+string containerName = builder.Configuration.GetValue<string>("SqlServer:ContainerName") ?? "kraft-sql";
+int sqlPort = builder.Configuration.GetValue<int?>("SqlServer:Port") ?? 1433;
+bool persistentLifetime = builder.Configuration.GetValue<bool?>("SqlServer:Persistent") ?? true;
 
 IResourceBuilder<SqlServerServerResource> sql = builder
     .AddSqlServer("sql")
-    .WithContainerName("kraft-sql")
+    .WithContainerName(containerName)
     .WithEnvironment("ACCEPT_EULA", "Y")
     .WithEnvironment("MSSQL_SA_PASSWORD", sqlPassword)
     .WithDataVolume(dataVolume)
-    .WithLifetime(ContainerLifetime.Persistent)
+    .WithLifetime(persistentLifetime ? ContainerLifetime.Persistent : ContainerLifetime.Session)
     .WithEndpoint("tcp", endpoint =>
     {
         endpoint.TargetPort = 1433;
-        endpoint.Port = 1433;
+        endpoint.Port = sqlPort;
         endpoint.IsExternal = true;
         endpoint.Protocol = ProtocolType.Tcp;
     });

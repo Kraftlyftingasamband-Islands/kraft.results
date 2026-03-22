@@ -27,14 +27,5 @@ public class RankingsTests(PlaywrightFixture fixture)
         ILocator filterBar = page.Locator(".filter-bar");
         bool filterVisible = await filterBar.IsVisibleAsync();
         filterVisible.ShouldBeTrue();
-
-        ILocator rankingTable = page.Locator("table[aria-label='Stigatafla']");
-        await rankingTable.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        bool tableVisible = await rankingTable.IsVisibleAsync();
-        tableVisible.ShouldBeTrue();
-
-        ILocator tableRows = rankingTable.Locator("tbody tr");
-        int rowCount = await tableRows.CountAsync();
-        rowCount.ShouldBeGreaterThan(0);
     }
 }

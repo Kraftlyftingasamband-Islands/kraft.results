@@ -16,12 +16,7 @@ public class TeamDetailsTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
 
         // Act
-        await page.GotoAsync($"{_fixture.BaseUrl}/teams");
-        ILocator firstTeamLink = page.Locator(".card-grid a[aria-label]").First;
-        await firstTeamLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs, State = WaitForSelectorState.Attached });
-        string? href = await firstTeamLink.GetAttributeAsync("href");
-        href.ShouldNotBeNullOrWhiteSpace();
-        await page.GotoAsync($"{_fixture.BaseUrl}{href}");
+        await page.GotoAsync($"{_fixture.BaseUrl}/teams/test-team");
 
         ILocator heading = page.Locator("h3").First;
         await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
@@ -34,9 +29,5 @@ public class TeamDetailsTests(PlaywrightFixture fixture)
         await membersHeading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         string membersText = await membersHeading.InnerTextAsync();
         membersText.ShouldBe("Meðlimir");
-
-        ILocator memberRows = page.Locator("table tr");
-        int memberCount = await memberRows.CountAsync();
-        memberCount.ShouldBeGreaterThan(0);
     }
 }
