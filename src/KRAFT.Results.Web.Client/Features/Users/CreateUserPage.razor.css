@@ -1,0 +1,105 @@
+.form-card {
+    max-width: 32rem;
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-primary);
+    box-shadow: var(--shadow-md);
+    background: var(--color-white);
+    padding: 2.5rem;
+    margin-block-start: 1.5rem;
+}
+
+.form-field {
+    margin-block-end: 1.25rem;
+}
+
+.form-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-block-end: 0.25rem;
+}
+
+::deep .form-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-text);
+    background: var(--color-white);
+    transition: border-color var(--transition-fast) ease;
+}
+
+::deep .form-input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) ease;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+}
+
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+.btn-cancel:hover {
+    color: var(--color-text);
+}
+
+.error-message {
+    margin-block-start: 1rem;
+    padding: 0.75rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    color: var(--color-danger);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .form-input,
+    .btn-primary,
+    .btn-cancel {
+        transition: none;
+    }
+}

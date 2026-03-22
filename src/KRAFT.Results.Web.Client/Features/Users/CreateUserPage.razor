@@ -1,0 +1,159 @@
+@page "/users/create"
+
+@rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net
+@using KRAFT.Results.Contracts.Users
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<h3>Nýr notandi</h3>
+
+<div class="form-card">
+    <EditForm Model="_model" OnValidSubmit="HandleSubmit" FormName="create-user">
+        <DataAnnotationsValidator />
+
+        <div class="form-field">
+            <label class="form-label" for="username">Notandanafn</label>
+            <InputText id="username"
+                       class="form-input"
+                       autocomplete="username"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.UserName"
+                       disabled="@_isLoading" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="firstname">Fornafn</label>
+            <InputText id="firstname"
+                       class="form-input"
+                       autocomplete="given-name"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.FirstName"
+                       disabled="@_isLoading" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="lastname">Eftirnafn</label>
+            <InputText id="lastname"
+                       class="form-input"
+                       autocomplete="family-name"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.LastName"
+                       disabled="@_isLoading" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="email">Tölvupóstfang</label>
+            <InputText type="email"
+                       id="email"
+                       class="form-input"
+                       autocomplete="email"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.Email"
+                       disabled="@_isLoading" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="password">Lykilorð</label>
+            <InputText type="password"
+                       id="password"
+                       class="form-input"
+                       autocomplete="new-password"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.Password"
+                       disabled="@_isLoading" />
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
+                @if (_isLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>Stofna notanda</span>
+                }
+            </button>
+
+            <a href="/users" class="btn-cancel">Til baka</a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div id="create-error" class="error-message" role="alert">@_errorMessage</div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private readonly CreateUserModel _model = new();
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    private bool HasError => !string.IsNullOrEmpty(_errorMessage);
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            CreateUserCommand command = new(
+                _model.UserName,
+                _model.FirstName,
+                _model.LastName,
+                _model.Email,
+                _model.Password);
+
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/users", command);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                _errorMessage = "Notandanafn e\u00f0a t\u00f6lvup\u00f3stfang er \u00feegar \u00ed notkun.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur s\u00ed\u00f0ar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo("/users");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur s\u00ed\u00f0ar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class CreateUserModel
+    {
+        [Required]
+        public string UserName { get; set; } = string.Empty;
+
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}
