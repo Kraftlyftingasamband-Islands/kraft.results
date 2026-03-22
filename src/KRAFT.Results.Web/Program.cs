@@ -1,5 +1,8 @@
+using KRAFT.Results.Web;
 using KRAFT.Results.Web.Client.Features.Auth;
 using KRAFT.Results.Web.Components;
+
+using Microsoft.AspNetCore.Authorization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -9,8 +12,10 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
+builder.Services.AddAuthentication();
 builder.Services.AddAuthServices();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, BlazorAuthorizationMiddlewareResultHandler>();
 
 Uri apiBaseAddress = builder.Configuration.GetValue<Uri>("API:BaseAddress")
     ?? throw new InvalidOperationException("No API base address");
