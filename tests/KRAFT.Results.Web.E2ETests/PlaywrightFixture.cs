@@ -37,34 +37,37 @@ public sealed class PlaywrightFixture : IAsyncLifetime
         await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         await page.WaitForFunctionAsync(
-            """
-            () => {
-                if (!window.Blazor) return false;
-                if (!window.Blazor._internal) return false;
-                const input = document.querySelector('#username');
-                return input !== null && !input.disabled;
-            }
-            """,
+            "() => window.Blazor !== undefined && window.Blazor !== null",
             null,
             new PageWaitForFunctionOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator passwordInput = page.Locator("#password");
-        await usernameInput.FillAsync("testuser");
-        await passwordInput.FillAsync("testuser");
+        ILocator submitButton = page.Locator("button[type='submit']");
 
-        string filledUsername = await usernameInput.InputValueAsync();
-        if (filledUsername != "testuser")
+        // Blazor Server may re-render after circuit connects, clearing filled values
+        // or not yet have event handlers attached. Retry fill-and-submit if the page
+        // stays on /login.
+        int maxAttempts = 3;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
             await usernameInput.FillAsync("testuser");
             await passwordInput.FillAsync("testuser");
+            await submitButton.ClickAsync();
+
+            try
+            {
+                int timeout = attempt < maxAttempts ? 10_000 : PageConstants.DefaultTimeoutMs;
+                await page.WaitForFunctionAsync(
+                    "() => !window.location.href.toLowerCase().includes('/login')",
+                    null,
+                    new PageWaitForFunctionOptions { Timeout = timeout });
+                return;
+            }
+            catch (TimeoutException) when (attempt < maxAttempts)
+            {
+                // Login didn't navigate — form was likely not interactive yet. Retry.
+            }
         }
-
-        await page.Locator("button[type='submit']").ClickAsync();
-
-        await page.WaitForFunctionAsync(
-            "() => !window.location.href.toLowerCase().includes('/login')",
-            null,
-            new PageWaitForFunctionOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     public async ValueTask InitializeAsync()
