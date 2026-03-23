@@ -25,6 +25,18 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         })
         .CreateClient();
 
+    public HttpClient CreateNonAdminAuthorizedHttpClient() =>
+        Factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddAuthentication(TestNonAdminAuthHandler.SchemeName)
+                    .AddScheme<AuthenticationSchemeOptions, TestNonAdminAuthHandler>(
+                    TestNonAdminAuthHandler.SchemeName, options => { });
+            });
+        })
+        .CreateClient();
+
     public async ValueTask DisposeAsync()
     {
         if (Database is not null)
