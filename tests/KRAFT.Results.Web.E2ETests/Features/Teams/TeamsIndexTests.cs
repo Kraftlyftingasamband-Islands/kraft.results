@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Teams;
 
 public class TeamsIndexTests(PlaywrightFixture fixture)
@@ -25,8 +27,6 @@ public class TeamsIndexTests(PlaywrightFixture fixture)
         headingText.ShouldBe("Félög");
 
         ILocator teamNames = page.Locator(".card-grid .team-name");
-        await teamNames.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        int teamCount = await teamNames.CountAsync();
-        teamCount.ShouldBeGreaterThan(0);
+        await Expect(teamNames).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }
