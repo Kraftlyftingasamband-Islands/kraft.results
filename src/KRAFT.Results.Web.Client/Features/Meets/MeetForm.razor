@@ -38,7 +38,7 @@
                 <option value="0">-- Veldu tegund --</option>
                 @foreach (MeetTypeSummary meetType in MeetTypes)
                 {
-                    <option value="@meetType.Id">@meetType.Title</option>
+                    <option value="@meetType.Id">@TranslateMeetType(meetType.Title)</option>
                 }
             </InputSelect>
             <ValidationMessage For="@(() => _model.MeetTypeId)" />
@@ -88,6 +88,29 @@
     public string BackUrl { get; set; } = string.Empty;
 
     private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    protected override void OnParametersSet()
+    {
+        if (_model.MeetTypeId == 0 && MeetTypes.Count > 0)
+        {
+            MeetTypeSummary? powerlifting = MeetTypes.FirstOrDefault(x => x.Title == "Powerlifting");
+
+            if (powerlifting is not null)
+            {
+                _model.MeetTypeId = powerlifting.Id;
+            }
+        }
+    }
+
+    private static string TranslateMeetType(string title) => title switch
+    {
+        "Powerlifting" => "Kraftlyftingar",
+        "Benchpress" => "Bekkpressa",
+        "Deadlift" => "Réttstöðulyfta",
+        "Squat" => "Hnébeygja",
+        "PushPull" => "Pressa og toga",
+        _ => title,
+    };
 
     private async Task HandleValidSubmit()
     {
