@@ -30,6 +30,27 @@ public sealed class PlaywrightFixture : IAsyncLifetime
         return (context, page);
     }
 
+    public async Task LoginAsync(IPage page)
+    {
+        await page.GotoAsync($"{BaseUrl}/login");
+        ILocator usernameInput = page.Locator("#username");
+        await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
+        await page.WaitForFunctionAsync(
+            "() => window.Blazor !== undefined && window.Blazor !== null",
+            null,
+            new PageWaitForFunctionOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
+        await usernameInput.FillAsync("testuser");
+        await page.Locator("#password").FillAsync("testuser");
+        await page.Locator("button[type='submit']").ClickAsync();
+
+        await page.WaitForFunctionAsync(
+            "() => !window.location.href.toLowerCase().includes('/login')",
+            null,
+            new PageWaitForFunctionOptions { Timeout = PageConstants.DefaultTimeoutMs });
+    }
+
     public async ValueTask InitializeAsync()
     {
         string[] args =

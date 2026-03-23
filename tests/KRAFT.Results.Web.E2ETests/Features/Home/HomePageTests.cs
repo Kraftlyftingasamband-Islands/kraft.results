@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Home;
 
 public class HomePageTests(PlaywrightFixture fixture)
@@ -25,8 +27,9 @@ public class HomePageTests(PlaywrightFixture fixture)
         ILocator nav = page.Locator("nav.nav");
         await nav.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        string title = await page.TitleAsync();
-        title.ShouldContain("KRAFT Results");
+        await Expect(page).ToHaveTitleAsync(
+            new System.Text.RegularExpressions.Regex("KRAFT Results", System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            new PageAssertionsToHaveTitleOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
