@@ -76,6 +76,35 @@ public sealed class PlaywrightFixture : IAsyncLifetime
 
         BaseUrl = _app.GetEndpoint("web").ToString().TrimEnd('/');
 
+        using HttpClientHandler warmupHandler = new()
+        {
+            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+        };
+
+#pragma warning disable CA5400 // Cert revocation check not needed in E2E tests
+        using HttpClient warmupClient = new(warmupHandler, disposeHandler: false);
+#pragma warning restore CA5400
+
+        using CancellationTokenSource warmupCts = new(TimeSpan.FromSeconds(30));
+        while (!warmupCts.Token.IsCancellationRequested)
+        {
+            try
+            {
+                HttpResponseMessage response = await warmupClient.GetAsync(BaseUrl, warmupCts.Token);
+                string body = await response.Content.ReadAsStringAsync(warmupCts.Token);
+                if (response.IsSuccessStatusCode && body.Contains("KRAFT", StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                // App not ready yet
+            }
+
+            await Task.Delay(500, warmupCts.Token);
+        }
+
         _playwright = await Playwright.CreateAsync();
         _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
