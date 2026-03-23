@@ -32,7 +32,7 @@ internal static class CreateMeetEndpoint
         .Produces<int>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
-        .RequireAuthorization();
+        .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         return endpoints;
     }
