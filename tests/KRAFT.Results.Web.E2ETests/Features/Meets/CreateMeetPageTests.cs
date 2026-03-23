@@ -74,7 +74,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         // Act
         await page.Locator("#title").FillAsync($"E2E Test Meet {Guid.NewGuid():N}");
         await page.Locator("#start-date").FillAsync("2026-06-15");
-        await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Powerlifting" });
+        await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Kraftlyftingar" });
         await page.Locator("button[type='submit']").ClickAsync();
 
         // Assert — should navigate back to /meets on success
@@ -101,7 +101,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
 
         await page.Locator("#title").FillAsync(meetTitle);
         await page.Locator("#start-date").FillAsync("2026-07-01");
-        await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Powerlifting" });
+        await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Kraftlyftingar" });
         await page.Locator("button[type='submit']").ClickAsync();
 
         await page.WaitForURLAsync("**/meets", new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
@@ -115,7 +115,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
 
         await page.Locator("#title").FillAsync(meetTitle);
         await page.Locator("#start-date").FillAsync("2026-07-01");
-        await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Powerlifting" });
+        await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Kraftlyftingar" });
         await page.Locator("button[type='submit']").ClickAsync();
 
         // Assert
@@ -139,14 +139,13 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
         await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        // Act — click submit without filling any fields
+        // Act — click submit without filling name or date (meet type is auto-selected)
         await page.Locator("button[type='submit']").ClickAsync();
 
-        // Assert — should stay on the same page and show validation messages
-        string url = page.Url;
-        url.ShouldEndWith("/meets/create");
-
+        // Assert — should show validation messages
         ILocator validationMessages = page.Locator(".validation-message");
+        await validationMessages.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
         int messageCount = await validationMessages.CountAsync();
         messageCount.ShouldBeGreaterThan(0);
     }
