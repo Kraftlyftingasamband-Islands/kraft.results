@@ -23,8 +23,8 @@
 @code {
     private IReadOnlyList<MeetTypeSummary> _meetTypes = [];
     private bool _isLoading;
-    [SuppressMessage("Major Code Smell", "S4487:Unread private fields should be removed", Justification = "Read via Razor parameter binding (ErrorMessage=\"_errorMessage\")")]
-#pragma warning disable CS0414 // Read via Razor parameter binding (ErrorMessage="_errorMessage")
+    [SuppressMessage("Major Code Smell", "S4487:Unread private fields should be removed", Justification = "Read via Razor rendering — analyzer cannot see Blazor-generated code")]
+#pragma warning disable CS0414 // Read via Razor rendering — analyzer cannot see Blazor-generated code
     private string? _errorMessage;
 #pragma warning restore CS0414
 
