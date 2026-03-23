@@ -19,9 +19,16 @@ public class UserIndexTests(PlaywrightFixture fixture)
         ILocator usernameInput = page.Locator("#username");
         await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
+        ILocator submitButton = page.Locator("button[type='submit']");
+        await submitButton.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await page.WaitForFunctionAsync(
+            "() => !document.querySelector('button[type=\"submit\"]').disabled",
+            null,
+            new PageWaitForFunctionOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
         await usernameInput.FillAsync("testuser");
         await page.Locator("#password").FillAsync("testuser");
-        await page.Locator("button[type='submit']").ClickAsync();
+        await submitButton.ClickAsync();
 
         await page.WaitForFunctionAsync(
             "() => !window.location.href.toLowerCase().includes('/login')",
