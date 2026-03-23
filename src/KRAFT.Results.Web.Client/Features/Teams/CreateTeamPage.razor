@@ -1,0 +1,174 @@
+@page "/teams/create"
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net
+@using KRAFT.Results.Contracts.Countries
+@using KRAFT.Results.Contracts.Teams
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<h3>Nýtt félag</h3>
+
+<div class="form-card">
+    <EditForm Model="_model" OnValidSubmit="HandleSubmit" FormName="create-team">
+        <DataAnnotationsValidator />
+
+        <div class="form-field">
+            <label class="form-label" for="title">Nafn</label>
+            <InputText id="title"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.Title"
+                       disabled="@_isLoading" />
+            <ValidationMessage For="@(() => _model.Title)" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="title-short">Skammstöfun</label>
+            <InputText id="title-short"
+                       class="form-input"
+                       maxlength="3"
+                       aria-required="true"
+                       aria-describedby="@(HasError ? "title-short-hint create-error" : "title-short-hint")"
+                       @bind-Value="_model.TitleShort"
+                       disabled="@_isLoading" />
+            <span id="title-short-hint" class="form-hint">Nákvæmlega 3 stafir</span>
+            <ValidationMessage For="@(() => _model.TitleShort)" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="title-full">Fullt nafn</label>
+            <InputText id="title-full"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@(HasError ? "create-error" : null)"
+                       @bind-Value="_model.TitleFull"
+                       disabled="@_isLoading" />
+            <ValidationMessage For="@(() => _model.TitleFull)" />
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="country">Land</label>
+            <InputSelect id="country"
+                         class="form-input form-select"
+                         aria-required="true"
+                         aria-describedby="@(HasError ? "create-error" : null)"
+                         @bind-Value="_model.CountryId"
+                         disabled="@_isLoading">
+                <option value="">-- Veldu land --</option>
+                @foreach (CountrySummary country in _countries)
+                {
+                    <option value="@country.Id">@country.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => _model.CountryId)" />
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
+                @if (_isLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>Stofna félag</span>
+                }
+            </button>
+
+            <a href="/teams" class="btn-cancel">Til baka</a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div id="create-error" class="error-message" role="alert">@_errorMessage</div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private readonly CreateTeamModel _model = new();
+    private IReadOnlyCollection<CountrySummary> _countries = [];
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    private bool HasError => !string.IsNullOrEmpty(_errorMessage);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _countries = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Gat ekki sótt lönd. Reyndu að endurhlaða síðuna.";
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            CreateTeamCommand command = new(
+                _model.Title,
+                _model.TitleShort,
+                _model.TitleFull,
+                _model.CountryId);
+
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/teams", command);
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                string body = await response.Content.ReadAsStringAsync();
+
+                _errorMessage = body.Contains("already exists")
+                    ? "Félag með þessa skammstöfun er þegar til."
+                    : "Villa kom upp. Reyndu aftur síðar.";
+
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo("/teams");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class CreateTeamModel
+    {
+        [Required]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(3, MinimumLength = 3)]
+        public string TitleShort { get; set; } = string.Empty;
+
+        [Required]
+        public string TitleFull { get; set; } = string.Empty;
+
+        [Range(1, int.MaxValue)]
+        public int CountryId { get; set; }
+    }
+}
