@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Athletes;
 
 public class AthletesIndexTests(PlaywrightFixture fixture)
@@ -47,14 +49,11 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
 
         ILocator athleteRows = page.Locator("table tbody tr");
         await athleteRows.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        int initialCount = await athleteRows.CountAsync();
 
         // Act
         await searchInput.FillAsync("zzzznonexistent");
-        await page.WaitForTimeoutAsync(500);
 
         // Assert
-        int filteredCount = await athleteRows.CountAsync();
-        filteredCount.ShouldBeLessThan(initialCount);
+        await Expect(athleteRows).ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }
