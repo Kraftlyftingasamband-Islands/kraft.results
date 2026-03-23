@@ -13,6 +13,7 @@ public sealed class CreateTeamTests(IntegrationTestFixture fixture)
     private const string Path = "/teams";
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
@@ -26,6 +27,19 @@ public sealed class CreateTeamTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task ReturnsForbidden_WhenUserIsNotAdmin()
+    {
+        // Arrange
+        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
+
+        // Act
+        HttpResponseMessage response = await _nonAdminHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
