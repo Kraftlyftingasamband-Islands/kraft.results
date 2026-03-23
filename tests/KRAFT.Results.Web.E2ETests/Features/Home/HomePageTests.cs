@@ -22,6 +22,9 @@ public class HomePageTests(PlaywrightFixture fixture)
         response.ShouldNotBeNull();
         response.Status.ShouldBe(200);
 
+        ILocator nav = page.Locator("nav.nav");
+        await nav.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
         string title = await page.TitleAsync();
         title.ShouldContain("KRAFT Results");
     }

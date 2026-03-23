@@ -33,6 +33,7 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
         searchVisible.ShouldBeTrue();
 
         ILocator athleteRows = page.Locator("table tbody tr");
+        await athleteRows.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int rowCount = await athleteRows.CountAsync();
         rowCount.ShouldBeGreaterThan(0);
     }
