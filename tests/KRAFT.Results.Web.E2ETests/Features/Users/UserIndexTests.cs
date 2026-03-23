@@ -23,9 +23,10 @@ public class UserIndexTests(PlaywrightFixture fixture)
         await page.Locator("#password").FillAsync("testuser");
         await page.Locator("button[type='submit']").ClickAsync();
 
-        await page.WaitForURLAsync(
-            url => !url.Contains("/login", StringComparison.OrdinalIgnoreCase),
-            new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await page.WaitForFunctionAsync(
+            "() => !window.location.href.toLowerCase().includes('/login')",
+            null,
+            new PageWaitForFunctionOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/users");
