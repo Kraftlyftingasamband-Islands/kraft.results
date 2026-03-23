@@ -1,0 +1,75 @@
+@page "/meets/create"
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.Diagnostics.CodeAnalysis
+@using System.Net
+@using KRAFT.Results.Contracts.Meets
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<h3>Nýtt mót</h3>
+
+<MeetForm MeetTypes="_meetTypes"
+          OnSubmit="HandleSubmit"
+          IsLoading="_isLoading"
+          ErrorMessage="_errorMessage"
+          SubmitLabel="Stofna mót"
+          BackUrl="/meets" />
+
+@code {
+    private IReadOnlyList<MeetTypeSummary> _meetTypes = [];
+    private bool _isLoading;
+    [SuppressMessage("Major Code Smell", "S4487:Unread private fields should be removed", Justification = "Read via Razor parameter binding (ErrorMessage=\"_errorMessage\")")]
+#pragma warning disable CS0414 // Read via Razor parameter binding (ErrorMessage="_errorMessage")
+    private string? _errorMessage;
+#pragma warning restore CS0414
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _meetTypes = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetTypeSummary>>("/meets/types") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Gat ekki sótt mótategundir. Reyndu að endurhlaða síðuna.";
+        }
+    }
+
+    private async Task HandleSubmit(CreateMeetCommand command)
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/meets", command);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                _errorMessage = "Mót með þessu nafni og dagsetningu er þegar til.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo("/meets");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
