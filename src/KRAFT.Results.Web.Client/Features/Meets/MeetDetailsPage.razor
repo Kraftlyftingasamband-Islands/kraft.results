@@ -5,6 +5,20 @@
 
 @inject HttpClient HttpClient;
 
+@if (_isLoading)
+{
+    <p>Hleð móti...</p>
+}
+else if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+        <a href="/meets">Til baka í mótslista</a>
+    </div>
+}
+else
+{
+
 <div class="page-header">
     <h1>@Meet?.Title</h1>
     <AuthorizeView Roles="Admin">
@@ -159,6 +173,8 @@
     <br />
 }
 
+} @* end else *@
+
 @code {
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -169,19 +185,38 @@
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
     private bool ShowClubs;
+    private bool _isLoading = true;
+    private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        Meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
-        Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
+        try
+        {
+            Meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
+            Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
 
-        IncludedDisciplines = Participations
-            .SelectMany(participation => participation.Attempts)
-            .GroupBy(attempt => attempt.Discipline[0])
-            .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
+            if (Meet is null)
+            {
+                _errorMessage = "Mót fannst ekki.";
+                return;
+            }
 
-        ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
-        ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
-        ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
+            IncludedDisciplines = Participations
+                .SelectMany(participation => participation.Attempts)
+                .GroupBy(attempt => attempt.Discipline[0])
+                .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
+
+            ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
+            ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
+            ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að sækja mót. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 }

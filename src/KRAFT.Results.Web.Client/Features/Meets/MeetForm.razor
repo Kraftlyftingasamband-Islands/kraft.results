@@ -10,10 +10,12 @@
             <InputText id="title"
                        class="form-input"
                        aria-required="true"
-                       aria-describedby="@(HasError ? "meet-form-error" : null)"
+                       aria-describedby="@GetAriaDescribedBy("title-error")"
                        @bind-Value="_model.Title"
                        disabled="@IsLoading" />
-            <ValidationMessage For="@(() => _model.Title)" />
+            <div id="title-error">
+                <ValidationMessage For="@(() => _model.Title)" />
+            </div>
         </div>
 
         <div class="form-field">
@@ -21,10 +23,12 @@
             <InputDate id="start-date"
                        class="form-input"
                        aria-required="true"
-                       aria-describedby="@(HasError ? "meet-form-error" : null)"
+                       aria-describedby="@GetAriaDescribedBy("start-date-error")"
                        @bind-Value="_model.StartDate"
                        disabled="@IsLoading" />
-            <ValidationMessage For="@(() => _model.StartDate)" />
+            <div id="start-date-error">
+                <ValidationMessage For="@(() => _model.StartDate)" />
+            </div>
         </div>
 
         <div class="form-field">
@@ -32,7 +36,7 @@
             <InputSelect id="meet-type"
                          class="form-input form-select"
                          aria-required="true"
-                         aria-describedby="@(HasError ? "meet-form-error" : null)"
+                         aria-describedby="@GetAriaDescribedBy("meet-type-error")"
                          @bind-Value="_model.MeetTypeId"
                          disabled="@IsLoading">
                 <option value="0">-- Veldu tegund --</option>
@@ -41,7 +45,9 @@
                     <option value="@meetType.Id">@TranslateMeetType(meetType.Title)</option>
                 }
             </InputSelect>
-            <ValidationMessage For="@(() => _model.MeetTypeId)" />
+            <div id="meet-type-error">
+                <ValidationMessage For="@(() => _model.MeetTypeId)" />
+            </div>
         </div>
 
         <div class="form-actions">
@@ -93,6 +99,11 @@
 
     private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+    private string GetAriaDescribedBy(string fieldErrorId)
+    {
+        return HasError ? $"{fieldErrorId} meet-form-error" : fieldErrorId;
+    }
+
     protected override void OnParametersSet()
     {
         if (!_initialized && InitialValues is not null)
@@ -140,6 +151,7 @@
     private sealed class MeetFormModel
     {
         [Required(ErrorMessage = "Nafn er skylda")]
+        [MaxLength(100, ErrorMessage = "Nafn má ekki vera lengra en 100 stafir")]
         public string Title { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Dagsetning er skylda")]

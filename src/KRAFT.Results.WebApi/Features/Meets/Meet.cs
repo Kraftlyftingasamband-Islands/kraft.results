@@ -7,6 +7,7 @@ namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal sealed class Meet
 {
+    internal const int TitleMaxLength = 100;
     internal const int StartDateMinimumYear = 1900;
 
     // For EF core
@@ -69,6 +70,11 @@ internal sealed class Meet
             return MeetErrors.EmptyTitle;
         }
 
+        if (title.Length > TitleMaxLength)
+        {
+            return MeetErrors.TitleTooLong;
+        }
+
         if (startDate.Year < StartDateMinimumYear)
         {
             return MeetErrors.InvalidStartDate(startDate);
@@ -95,6 +101,11 @@ internal sealed class Meet
         if (string.IsNullOrWhiteSpace(title))
         {
             return MeetErrors.EmptyTitle;
+        }
+
+        if (title.Length > TitleMaxLength)
+        {
+            return MeetErrors.TitleTooLong;
         }
 
         if (startDate.Year < StartDateMinimumYear)

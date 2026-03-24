@@ -27,6 +27,13 @@ else if (_initialValues is not null)
               BackUrl="@($"/meets/{Slug}")"
               InitialValues="_initialValues" />
 }
+else if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+        <a href="/meets">Til baka í mótslista</a>
+    </div>
+}
 
 @code {
     [Parameter]
