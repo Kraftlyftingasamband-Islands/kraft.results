@@ -35,7 +35,8 @@
 }
 
 .btn-action:focus-visible {
-    outline-color: var(--color-text);
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
 }
 
 .admin-actions {
