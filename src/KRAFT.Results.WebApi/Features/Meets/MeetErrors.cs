@@ -8,6 +8,8 @@ internal static class MeetErrors
 
     internal const string MeetExistsCode = "Meets.AlreadyExists";
 
+    internal const string MeetHasParticipationsCode = "Meets.HasParticipations";
+
     internal static readonly Error EmptyTitle = new(
         "Meets.TitleIsEmpty",
         "Title cannot be empty.");
@@ -23,6 +25,10 @@ internal static class MeetErrors
     internal static readonly Error TitleTooLong = new(
         "Meets.TitleTooLong",
         $"Title cannot exceed {Meet.TitleMaxLength} characters.");
+
+    internal static readonly Error MeetHasParticipations = new(
+        MeetHasParticipationsCode,
+        "Cannot delete a meet that has participations.");
 
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
