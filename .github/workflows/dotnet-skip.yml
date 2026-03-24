@@ -1,0 +1,20 @@
+name: .NET
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**.md'
+      - 'LICENSE'
+      - 'docs/**'
+      - '.editorconfig'
+      - '.gitignore'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "Skipping CI for docs-only changes"
