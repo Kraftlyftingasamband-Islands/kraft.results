@@ -2,6 +2,10 @@ window.Kraftresults = {
     showDialog: function (id) {
         const dialog = document.getElementById(id);
         if (dialog && !dialog.open) {
+            if (!dialog._cancelHandler) {
+                dialog._cancelHandler = function(e) { e.preventDefault(); };
+                dialog.addEventListener('cancel', dialog._cancelHandler);
+            }
             dialog._triggerElement = document.activeElement;
             dialog.showModal();
         }
