@@ -1,6 +1,6 @@
 @inject IJSRuntime JSRuntime
 
-<dialog id="@Id" role="alertdialog" aria-labelledby="@($"{Id}-title")" aria-describedby="@($"{Id}-message")" @oncancel="HandleCancel" @oncancel:preventDefault>
+<dialog id="@Id" role="alertdialog" aria-labelledby="@($"{Id}-title")" aria-describedby="@($"{Id}-message")" @oncancel="HandleCancel">
     <div class="confirm-dialog-content">
         <h2 id="@($"{Id}-title")" class="confirm-dialog-title">@Title</h2>
         <p id="@($"{Id}-message")" class="confirm-dialog-message">@Message</p>
