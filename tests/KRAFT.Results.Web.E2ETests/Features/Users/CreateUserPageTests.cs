@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-using Shouldly;
+using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Users;
 
@@ -24,7 +24,6 @@ public class CreateUserPageTests(PlaywrightFixture fixture)
         await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        bool headingVisible = await heading.IsVisibleAsync();
-        headingVisible.ShouldBeTrue();
+        await Expect(heading).ToBeVisibleAsync();
     }
 }

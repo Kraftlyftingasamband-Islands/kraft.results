@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Records;
 
 public class RecordsPageTests(PlaywrightFixture fixture)
@@ -27,8 +29,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
 
         ILocator breadcrumb = page.Locator("nav.breadcrumb");
         await breadcrumb.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        bool breadcrumbVisible = await breadcrumb.IsVisibleAsync();
-        breadcrumbVisible.ShouldBeTrue();
+        await Expect(breadcrumb).ToBeVisibleAsync();
 
         ILocator recordTables = page.Locator(".record-section table");
         await recordTables.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });

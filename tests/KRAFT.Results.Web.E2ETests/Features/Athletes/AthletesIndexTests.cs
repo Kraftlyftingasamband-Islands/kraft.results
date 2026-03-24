@@ -29,8 +29,7 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
         string headingText = await heading.InnerTextAsync();
         headingText.ShouldBe("Keppendur");
 
-        bool searchVisible = await searchInput.IsVisibleAsync();
-        searchVisible.ShouldBeTrue();
+        await Expect(searchInput).ToBeVisibleAsync();
 
         ILocator athleteRows = page.Locator("table tbody tr");
         await Expect(athleteRows).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
