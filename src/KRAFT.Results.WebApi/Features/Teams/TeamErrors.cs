@@ -1,20 +1,39 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Abstractions;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
 internal static class TeamErrors
 {
-    internal static Error EmptyTitle => new(
-        "Teams.TitleIsEmpty",
+    internal const string TeamNotFoundCode = "Teams.NotFound";
+    internal const string EmptyTitleCode = "Teams.TitleIsEmpty";
+    internal const string InvalidTitleShortCode = "Teams.InvalidTitleShort";
+    internal const string EmptyTitleFullCode = "Teams.EmptyTitleFull";
+    internal const string TitleTooLongCode = "Teams.TitleTooLong";
+    internal const string TitleFullTooLongCode = "Teams.TitleFullTooLong";
+
+    internal static readonly Error EmptyTitle = new(
+        EmptyTitleCode,
         "Title cannot be empty.");
 
-    internal static Error InvalidTitleShort => new(
-        "Teams.InvalidTitleShort",
+    internal static readonly Error InvalidTitleShort = new(
+        InvalidTitleShortCode,
         "Short title must be exactly 3 alphabetic characters.");
 
-    internal static Error EmptyTitleFull => new(
-        "Teams.EmptyTitleFull",
+    internal static readonly Error EmptyTitleFull = new(
+        EmptyTitleFullCode,
         "Full title cannot be empty.");
+
+    internal static readonly Error TitleTooLong = new(
+        TitleTooLongCode,
+        $"Title cannot exceed {Team.TitleMaxLength} characters.");
+
+    internal static readonly Error TitleFullTooLong = new(
+        TitleFullTooLongCode,
+        $"Full title cannot exceed {Team.TitleFullMaxLength} characters.");
+
+    internal static readonly Error TeamNotFound = new(
+        TeamNotFoundCode,
+        "Team not found.");
 
     internal static Error ShortTitleExists(string titleShort) => new(
         "Athletes.ShortTitleExists",

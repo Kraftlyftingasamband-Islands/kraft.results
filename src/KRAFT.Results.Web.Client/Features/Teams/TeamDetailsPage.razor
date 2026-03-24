@@ -6,26 +6,54 @@
 
 @inject HttpClient HttpClient;
 
-<h3>@Team?.FullTitle (@Team?.ShortTitle)</h3>
+@if (_isLoading)
+{
+    <p>Hleð gögnum...</p>
+}
+else if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+        <a href="/teams">Til baka í félagslista</a>
+    </div>
+}
+else
+{
+    <div class="page-header">
+        <h3>@Team?.FullTitle (@Team?.ShortTitle)</h3>
+        <AuthorizeView Roles="Admin">
+            <a href="/teams/@Slug/edit" class="btn-action" aria-label="Breyta félagi">
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                </svg>
+                Breyta
+            </a>
+        </AuthorizeView>
+    </div>
 
-<br/>
+    <br/>
 
-<h4>Meðlimir</h4>
+    <h4>Meðlimir</h4>
 
-<table>
-    @foreach (var member in Team?.Members ?? [])
-    {
-        <tr>
-            <td>
-                <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
-                    @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
-                </NavLink>
-            </td>
-        </tr>
-    }
-</table>
+    <table>
+        @foreach (var member in Team?.Members ?? [])
+        {
+            <tr>
+                <td>
+                    <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
+                        @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
+                    </NavLink>
+                </td>
+            </tr>
+        }
+    </table>
+}
 
 @code {
+    private bool _isLoading = true;
+    private string? _errorMessage;
+
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
@@ -33,6 +61,22 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+        try
+        {
+            Team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+
+            if (Team is null)
+            {
+                _errorMessage = "Félag fannst ekki.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að sækja félag. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 }

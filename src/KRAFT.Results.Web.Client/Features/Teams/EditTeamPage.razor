@@ -1,0 +1,127 @@
+@page "/teams/{slug}/edit"
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.Net
+@using KRAFT.Results.Contracts.Countries
+@using KRAFT.Results.Contracts.Teams
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Breyta félagi</PageTitle>
+<h3>Breyta félagi</h3>
+
+@if (_isInitializing)
+{
+    <p>Hleð...</p>
+}
+else if (_initialValues is not null)
+{
+    <TeamForm Countries="_countries"
+              OnSubmit="HandleSubmit"
+              IsLoading="_isLoading"
+              ErrorMessage="@_errorMessage"
+              SubmitLabel="Vista breytingar"
+              BackUrl="@($"/teams/{Slug}")"
+              InitialValues="_initialValues" />
+}
+else if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+        <a href="/teams">Til baka í félagalista</a>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private IReadOnlyCollection<CountrySummary> _countries = [];
+    private TeamFormInitialValues? _initialValues;
+    private bool _isInitializing = true;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            TeamDetails? team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+            _countries = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
+
+            if (team is null)
+            {
+                _errorMessage = "Félag fannst ekki.";
+                return;
+            }
+
+            _initialValues = new TeamFormInitialValues(
+                team.Title,
+                team.ShortTitle,
+                team.FullTitle,
+                team.CountryId ?? 0);
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
+    }
+
+    private async Task HandleSubmit(TeamFormValues values)
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            UpdateTeamCommand command = new(
+                values.Title,
+                values.TitleShort,
+                values.TitleFull,
+                values.CountryId);
+
+            HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/teams/{Slug}", command);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _errorMessage = "Félag fannst ekki.";
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                string body = await response.Content.ReadAsStringAsync();
+
+                _errorMessage = body.Contains("already exists")
+                    ? "Félag með þessa skammstöfun er þegar til."
+                    : "Villa kom upp. Reyndu aftur síðar.";
+
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo($"/teams/{Slug}");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
