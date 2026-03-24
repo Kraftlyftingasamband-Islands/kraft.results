@@ -38,7 +38,7 @@ public class DeleteMeetPageTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
 
         // Act — navigate via the index to ensure Blazor enhanced navigation works
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/2025");
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
         ILocator firstMeetLink = page.Locator("article.meet-item a").First;
         await firstMeetLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await firstMeetLink.ClickAsync();
@@ -145,7 +145,7 @@ public class DeleteMeetPageTests(PlaywrightFixture fixture)
 
         await _fixture.LoginAsync(page);
 
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/2025");
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
         ILocator firstMeetLink = page.Locator("article.meet-item a").First;
         await firstMeetLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await firstMeetLink.ClickAsync();

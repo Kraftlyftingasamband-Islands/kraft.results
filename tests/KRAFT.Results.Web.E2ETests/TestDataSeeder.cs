@@ -6,6 +6,8 @@ namespace KRAFT.Results.Web.E2ETests;
 
 internal static class TestDataSeeder
 {
+    public const int SeededMeetYear = 2025;
+
     internal static async Task SeedAsync(string connectionString)
     {
         await RunMigrationsAsync(connectionString);

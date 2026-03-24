@@ -16,7 +16,7 @@ public class MeetDetailsTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
 
         // Act — navigate via meet index to use Blazor enhanced navigation
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/2025");
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
         ILocator firstMeetLink = page.Locator("article.meet-item a").First;
         await firstMeetLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await firstMeetLink.ClickAsync();
