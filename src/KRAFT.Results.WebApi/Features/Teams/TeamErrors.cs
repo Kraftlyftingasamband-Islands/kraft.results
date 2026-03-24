@@ -9,6 +9,7 @@ internal static class TeamErrors
     internal const string InvalidTitleShortCode = "Teams.InvalidTitleShort";
     internal const string EmptyTitleFullCode = "Teams.EmptyTitleFull";
     internal const string TitleTooLongCode = "Teams.TitleTooLong";
+    internal const string TeamHasAthletesCode = "Teams.HasAthletes";
     internal const string TitleFullTooLongCode = "Teams.TitleFullTooLong";
 
     internal static readonly Error EmptyTitle = new(
@@ -34,6 +35,10 @@ internal static class TeamErrors
     internal static readonly Error TeamNotFound = new(
         TeamNotFoundCode,
         "Team not found.");
+
+    internal static readonly Error TeamHasAthletes = new(
+        TeamHasAthletesCode,
+        "Cannot delete a team that has athletes assigned.");
 
     internal static Error ShortTitleExists(string titleShort) => new(
         "Athletes.ShortTitleExists",

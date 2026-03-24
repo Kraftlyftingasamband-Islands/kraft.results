@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Teams.Create;
+using KRAFT.Results.WebApi.Features.Teams.Delete;
 using KRAFT.Results.WebApi.Features.Teams.Get;
 using KRAFT.Results.WebApi.Features.Teams.GetDetails;
 using KRAFT.Results.WebApi.Features.Teams.Update;
@@ -16,6 +17,7 @@ internal static class TeamEndpoints
         group.MapGetTeamsEndpoint();
         group.MapGetTeamDetailsEndpoint();
         group.MapUpdateTeamEndpoint();
+        group.MapDeleteTeamEndpoint();
 
         return group;
     }
