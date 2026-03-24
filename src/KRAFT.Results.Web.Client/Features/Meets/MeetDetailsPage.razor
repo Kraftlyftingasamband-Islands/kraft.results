@@ -5,19 +5,13 @@
 
 @inject HttpClient HttpClient;
 
-@if (_isLoading)
-{
-    <p>Hleð móti...</p>
-}
-else if (_errorMessage is not null)
+@if (_errorMessage is not null)
 {
     <div role="alert" class="error-message">
         <p>@_errorMessage</p>
         <a href="/meets">Til baka í mótslista</a>
     </div>
 }
-else
-{
 
 <div class="page-header">
     <h1>@Meet?.Title</h1>
@@ -173,8 +167,6 @@ else
     <br />
 }
 
-} @* end else *@
-
 @code {
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -185,7 +177,6 @@ else
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
     private bool ShowClubs;
-    private bool _isLoading = true;
     private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -213,10 +204,6 @@ else
         catch (HttpRequestException)
         {
             _errorMessage = "Villa kom upp við að sækja mót. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
         }
     }
 }
