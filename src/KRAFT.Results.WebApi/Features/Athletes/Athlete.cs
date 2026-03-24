@@ -58,6 +58,11 @@ internal sealed class Athlete
             return AthleteErrors.LastNameIsEmpty;
         }
 
+        if (dateOfBirth.HasValue && dateOfBirth.Value > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return AthleteErrors.DateOfBirthInFuture;
+        }
+
         return new Athlete
         {
             Firstname = firstName,
