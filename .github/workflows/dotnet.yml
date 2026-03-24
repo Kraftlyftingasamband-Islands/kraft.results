@@ -6,15 +6,28 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
+    - name: Detect UI changes
+      if: github.event_name == 'pull_request'
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
+      id: ui-changes
+      with:
+        filters: |
+          ui:
+            - 'src/KRAFT.Results.Web/**'
+            - 'src/KRAFT.Results.Web.Client/**'
+            - 'tests/KRAFT.Results.Web.E2ETests/**'
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d  # v5.0.0
       with:
         dotnet-version: 10.0.x
     - name: Restore dependencies
@@ -22,6 +35,14 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Install Playwright browsers
+      if: github.event_name == 'push' || steps.ui-changes.outputs.ui == 'true'
       run: pwsh tests/KRAFT.Results.Web.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: >-
+        dotnet test --no-build --verbosity normal
+        --filter "FullyQualifiedName!~KRAFT.Results.Web.E2ETests"
+    - name: E2E Test
+      if: github.event_name == 'push' || steps.ui-changes.outputs.ui == 'true'
+      run: >-
+        dotnet test --no-build --verbosity normal
+        --filter "FullyQualifiedName~KRAFT.Results.Web.E2ETests"
