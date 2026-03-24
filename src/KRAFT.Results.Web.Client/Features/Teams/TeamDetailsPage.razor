@@ -22,18 +22,18 @@ else if (_errorMessage is not null)
 else
 {
     <div class="page-header">
-        <h3>@Team?.FullTitle (@Team?.ShortTitle)</h3>
+        <h1>@Team?.FullTitle (@Team?.ShortTitle)</h1>
         <AuthorizeView Roles="Admin">
             <div class="admin-actions">
                 <a href="/teams/@Slug/edit" class="btn-action" aria-label="Breyta félagi">
-                    <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                         <path d="m15 5 4 4"/>
                     </svg>
                     Breyta
                 </a>
                 <button class="btn-action btn-danger" aria-label="Eyða félagi" @onclick="ShowDeleteDialog">
-                    <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 6h18"/>
                         <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
                         <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
@@ -48,20 +48,25 @@ else
 
     <br/>
 
-    <h4>Meðlimir</h4>
+    <h2>Meðlimir</h2>
 
-    <table>
-        @foreach (var member in Team?.Members ?? [])
-        {
-            <tr>
-                <td>
+    @if (Team?.Members is { Count: > 0 } members)
+    {
+        <ul class="member-list">
+            @foreach (TeamMember member in members)
+            {
+                <li>
                     <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
                         @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
                     </NavLink>
-                </td>
-            </tr>
-        }
-    </table>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>Engir meðlimir skráðir.</p>
+    }
 
     <ConfirmDialog @ref="_deleteDialog"
                    Id="delete-team-dialog"
