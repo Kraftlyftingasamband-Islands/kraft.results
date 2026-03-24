@@ -132,4 +132,20 @@ public class CreateAthleteTests(IntegrationTestFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenDateOfBirthIsInTheFuture()
+    {
+        // Arrange
+        DateOnly futureDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1));
+        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(futureDate)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }

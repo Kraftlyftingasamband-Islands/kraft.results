@@ -39,6 +39,7 @@
                        class="form-input"
                        aria-required="true"
                        aria-describedby="@GetAriaDescribedBy("date-of-birth-error")"
+                       max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")"
                        @bind-Value="_model.DateOfBirth"
                        disabled="@IsLoading" />
             <div id="date-of-birth-error">
@@ -178,6 +179,7 @@
         public string LastName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Fæðingardagur er skylda")]
+        [NotInFuture(ErrorMessage = "Fæðingardagur má ekki vera í framtíðinni")]
         public DateOnly? DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "Vinsamlegast veldu kyn")]
@@ -187,5 +189,19 @@
         public int CountryId { get; set; }
 
         public int TeamId { get; set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    private sealed class NotInFutureAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        {
+            if (value is DateOnly date && date > DateOnly.FromDateTime(DateTime.Today))
+            {
+                return new ValidationResult(ErrorMessage, [validationContext.MemberName!]);
+            }
+
+            return ValidationResult.Success;
+        }
     }
 }

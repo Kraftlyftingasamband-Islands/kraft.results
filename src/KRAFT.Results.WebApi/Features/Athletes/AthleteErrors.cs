@@ -18,6 +18,10 @@ internal static class AthleteErrors
         "Athletes.InvalidGender",
         "Gender must be 'm' or 'f'.");
 
+    internal static Error DateOfBirthInFuture => new(
+        "Athletes.DateOfBirthInFuture",
+        "Fæðingardagur má ekki vera í framtíðinni.");
+
     internal static Error AlreadyExists(string firstName, string lastName, DateOnly dateOfBirth) => new(
         AlreadyExistsCode,
         $"An athlete with the first name '{firstName}', last name '{lastName}' and date of birth {dateOfBirth:yyyy-MM-dd} already exists");
