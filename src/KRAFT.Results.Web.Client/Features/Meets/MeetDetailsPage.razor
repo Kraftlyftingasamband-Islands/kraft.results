@@ -3,7 +3,8 @@
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
 
-@inject HttpClient HttpClient;
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
 
 @if (_errorMessage is not null)
 {
@@ -16,13 +17,25 @@
 <div class="page-header">
     <h1>@Meet?.Title</h1>
     <AuthorizeView Roles="Admin">
-        <a href="/meets/@Slug/edit" class="btn-action" aria-label="Breyta móti">
-            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                <path d="m15 5 4 4"/>
-            </svg>
-            Breyta
-        </a>
+        <div class="admin-actions">
+            <a href="/meets/@Slug/edit" class="btn-action" aria-label="Breyta móti">
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                </svg>
+                Breyta
+            </a>
+            <button class="btn-action btn-danger" aria-label="Eyða móti" @onclick="ShowDeleteDialog">
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"/>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    <line x1="10" x2="10" y1="11" y2="17"/>
+                    <line x1="14" x2="14" y1="11" y2="17"/>
+                </svg>
+                Eyða
+            </button>
+        </div>
     </AuthorizeView>
 </div>
 <p>
@@ -88,6 +101,7 @@
 <h2>Úrslit</h2>
 
 @foreach (var genderAgeAgeCategory in Participations
+    .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
     .GroupBy(x => new { x.Gender, x.AgeCategory })
     .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategory[0]))
     .ThenBy(x => x.Key.AgeCategory)
@@ -167,7 +181,20 @@
     <br />
 }
 
+<ConfirmDialog @ref="_deleteDialog"
+               Id="delete-meet-dialog"
+               Title="Eyða móti"
+               Message="@($"Ertu viss um að þú viljir eyða mótinu \"{Meet?.Title}\"?")"
+               ConfirmLabel="Eyða móti"
+               OnConfirm="HandleDelete"
+               ErrorMessage="@_deleteErrorMessage"
+               IsLoading="_isDeleting" />
+
 @code {
+    private ConfirmDialog _deleteDialog = null!;
+    private bool _isDeleting;
+    private string? _deleteErrorMessage;
+
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
@@ -178,6 +205,49 @@
     private bool ShowIpfPointLeaders;
     private bool ShowClubs;
     private string? _errorMessage;
+
+    private async Task ShowDeleteDialog()
+    {
+        _deleteErrorMessage = null;
+        await _deleteDialog.ShowAsync();
+    }
+
+    private async Task HandleDelete()
+    {
+        try
+        {
+            _isDeleting = true;
+            _deleteErrorMessage = null;
+
+            HttpResponseMessage response = await HttpClient.DeleteAsync($"/meets/{Slug}");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _deleteErrorMessage = "Ekki er hægt að eyða móti sem hefur keppendur skráða.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _deleteErrorMessage = "Mót fannst ekki.";
+            }
+            else if (!response.IsSuccessStatusCode)
+            {
+                _deleteErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/meets");
+                return;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _deleteErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
