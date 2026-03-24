@@ -1,0 +1,11 @@
+.error-message {
+    max-width: 32rem;
+    padding: 0.75rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    color: var(--color-danger);
+    font-size: 0.875rem;
+    text-align: center;
+    margin-block-start: 1.5rem;
+}

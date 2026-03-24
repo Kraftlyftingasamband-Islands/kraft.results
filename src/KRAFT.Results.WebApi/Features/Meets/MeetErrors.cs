@@ -20,6 +20,10 @@ internal static class MeetErrors
         MeetNotFoundCode,
         "Meet not found.");
 
+    internal static readonly Error TitleTooLong = new(
+        "Meets.TitleTooLong",
+        $"Title cannot exceed {Meet.TitleMaxLength} characters.");
+
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
         $"Start date '{startDate:yyyy-MM-dd}' is invalid. The year must be 1900 or later.");
