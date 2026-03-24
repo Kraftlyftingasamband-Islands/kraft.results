@@ -1,0 +1,107 @@
+@page "/athletes/create"
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.Net
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Contracts.Countries
+@using KRAFT.Results.Contracts.Teams
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Nýr keppandi</PageTitle>
+<h3>Nýr keppandi</h3>
+
+@if (_isInitializing)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki gögn...</span>
+    </div>
+}
+else
+{
+    <AthleteForm Countries="_countries"
+                 Teams="_teams"
+                 OnSubmit="HandleSubmit"
+                 IsLoading="_isLoading"
+                 ErrorMessage="@_errorMessage"
+                 SubmitLabel="Stofna keppanda"
+                 BackUrl="/athletes" />
+}
+
+@code {
+    private IReadOnlyCollection<CountrySummary> _countries = [];
+    private IReadOnlyCollection<TeamOption> _teams = [];
+    private bool _isInitializing = true;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
+                HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
+            Task<IReadOnlyCollection<TeamOption>?> teamsTask =
+                HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamOption>>("/teams/options");
+
+            await Task.WhenAll(countriesTask, teamsTask);
+
+            _countries = await countriesTask ?? [];
+            _teams = await teamsTask ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Gat ekki sótt gögn. Reyndu að endurhlaða síðuna.";
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
+    }
+
+    private async Task HandleSubmit(AthleteFormValues values)
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            CreateAthleteCommand command = new(
+                values.FirstName,
+                values.LastName,
+                values.CountryId,
+                values.TeamId,
+                values.DateOfBirth,
+                values.Gender);
+
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/athletes", command);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                _errorMessage = "Keppandi með þessu nafni og fæðingardegi er þegar til.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo("/athletes");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

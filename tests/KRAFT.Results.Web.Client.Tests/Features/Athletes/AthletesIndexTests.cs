@@ -258,5 +258,6 @@ public sealed class AthletesIndexTests : IDisposable
         MockHttpMessageHandler handler = new(athletes, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        _context.AddAuthorization();
     }
 }

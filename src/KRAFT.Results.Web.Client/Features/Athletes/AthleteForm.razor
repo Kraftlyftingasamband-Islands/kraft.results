@@ -1,0 +1,191 @@
+@using System.ComponentModel.DataAnnotations
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Contracts.Countries
+@using KRAFT.Results.Contracts.Teams
+
+<div class="form-card">
+    <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="athlete-form">
+        <DataAnnotationsValidator />
+
+        <div class="form-field">
+            <label class="form-label" for="first-name">Fornafn</label>
+            <InputText id="first-name"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@GetAriaDescribedBy("first-name-error")"
+                       @bind-Value="_model.FirstName"
+                       disabled="@IsLoading" />
+            <div id="first-name-error">
+                <ValidationMessage For="@(() => _model.FirstName)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="last-name">Eftirnafn</label>
+            <InputText id="last-name"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@GetAriaDescribedBy("last-name-error")"
+                       @bind-Value="_model.LastName"
+                       disabled="@IsLoading" />
+            <div id="last-name-error">
+                <ValidationMessage For="@(() => _model.LastName)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="date-of-birth">Fæðingardagur</label>
+            <InputDate id="date-of-birth"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@GetAriaDescribedBy("date-of-birth-error")"
+                       @bind-Value="_model.DateOfBirth"
+                       disabled="@IsLoading" />
+            <div id="date-of-birth-error">
+                <ValidationMessage For="@(() => _model.DateOfBirth)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="gender">Kyn</label>
+            <InputSelect id="gender"
+                         class="form-input form-select"
+                         aria-required="true"
+                         aria-describedby="@GetAriaDescribedBy("gender-error")"
+                         @bind-Value="_model.Gender"
+                         disabled="@IsLoading">
+                <option value="">-- Veldu kyn --</option>
+                <option value="m">Karl</option>
+                <option value="f">Kona</option>
+            </InputSelect>
+            <div id="gender-error">
+                <ValidationMessage For="@(() => _model.Gender)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="country">Land</label>
+            <InputSelect id="country"
+                         class="form-input form-select"
+                         aria-required="true"
+                         aria-describedby="@GetAriaDescribedBy("country-error")"
+                         @bind-Value="_model.CountryId"
+                         disabled="@IsLoading">
+                <option value="0">-- Veldu land --</option>
+                @foreach (CountrySummary country in Countries)
+                {
+                    <option value="@country.Id">@country.Name</option>
+                }
+            </InputSelect>
+            <div id="country-error">
+                <ValidationMessage For="@(() => _model.CountryId)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="team">Félag</label>
+            <InputSelect id="team"
+                         class="form-input form-select"
+                         aria-describedby="@GetAriaDescribedBy("team-hint")"
+                         @bind-Value="_model.TeamId"
+                         disabled="@IsLoading">
+                <option value="0">-- Valfrjálst --</option>
+                @foreach (TeamOption team in Teams)
+                {
+                    <option value="@team.Id">@team.Title</option>
+                }
+            </InputSelect>
+            <span id="team-hint" class="form-hint">Valfrjálst</span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" disabled="@IsLoading" aria-busy="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>@SubmitLabel</span>
+                }
+            </button>
+
+            <a href="@BackUrl" class="btn-cancel">Til baka</a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div id="athlete-form-error" class="error-message" role="alert">@ErrorMessage</div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private readonly AthleteFormModel _model = new();
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<CountrySummary> Countries { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<TeamOption> Teams { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public EventCallback<AthleteFormValues> OnSubmit { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter, EditorRequired]
+    public string SubmitLabel { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string BackUrl { get; set; } = string.Empty;
+
+    private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    private string GetAriaDescribedBy(string fieldErrorId, string? hintId = null)
+    {
+        string baseIds = hintId is not null ? $"{fieldErrorId} {hintId}" : fieldErrorId;
+        return HasError ? $"{baseIds} athlete-form-error" : baseIds;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        int? teamId = _model.TeamId > 0 ? _model.TeamId : null;
+
+        AthleteFormValues values = new(
+            _model.FirstName,
+            _model.LastName,
+            _model.DateOfBirth!.Value,
+            _model.Gender,
+            _model.CountryId,
+            teamId);
+
+        await OnSubmit.InvokeAsync(values);
+    }
+
+    private sealed class AthleteFormModel
+    {
+        [Required(ErrorMessage = "Fornafn er skylda")]
+        [MaxLength(50, ErrorMessage = "Fornafn má ekki vera lengra en 50 stafir")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Eftirnafn er skylda")]
+        [MaxLength(50, ErrorMessage = "Eftirnafn má ekki vera lengra en 50 stafir")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Fæðingardagur er skylda")]
+        public DateOnly? DateOfBirth { get; set; }
+
+        [Required(ErrorMessage = "Vinsamlegast veldu kyn")]
+        public string Gender { get; set; } = string.Empty;
+
+        [Range(1, int.MaxValue, ErrorMessage = "Vinsamlegast veldu land")]
+        public int CountryId { get; set; }
+
+        public int TeamId { get; set; }
+    }
+}
