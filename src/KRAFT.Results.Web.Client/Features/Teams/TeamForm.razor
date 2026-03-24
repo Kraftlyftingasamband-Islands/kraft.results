@@ -1,0 +1,164 @@
+@using System.ComponentModel.DataAnnotations
+@using KRAFT.Results.Contracts.Countries
+@using KRAFT.Results.Contracts.Teams
+
+<div class="form-card">
+    <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="team-form">
+        <DataAnnotationsValidator />
+
+        <div class="form-field">
+            <label class="form-label" for="title">Nafn</label>
+            <InputText id="title"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@GetAriaDescribedBy("title-error")"
+                       @bind-Value="_model.Title"
+                       disabled="@IsLoading" />
+            <div id="title-error">
+                <ValidationMessage For="@(() => _model.Title)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="title-short">Skammstöfun</label>
+            <InputText id="title-short"
+                       class="form-input"
+                       maxlength="3"
+                       aria-required="true"
+                       aria-describedby="@GetAriaDescribedBy("title-short-error", "title-short-hint")"
+                       @bind-Value="_model.TitleShort"
+                       disabled="@IsLoading" />
+            <span id="title-short-hint" class="form-hint">Nákvæmlega 3 stafir</span>
+            <div id="title-short-error">
+                <ValidationMessage For="@(() => _model.TitleShort)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="title-full">Fullt nafn</label>
+            <InputText id="title-full"
+                       class="form-input"
+                       aria-required="true"
+                       aria-describedby="@GetAriaDescribedBy("title-full-error")"
+                       @bind-Value="_model.TitleFull"
+                       disabled="@IsLoading" />
+            <div id="title-full-error">
+                <ValidationMessage For="@(() => _model.TitleFull)" />
+            </div>
+        </div>
+
+        <div class="form-field">
+            <label class="form-label" for="country">Land</label>
+            <InputSelect id="country"
+                         class="form-input form-select"
+                         aria-required="true"
+                         aria-describedby="@GetAriaDescribedBy("country-error")"
+                         @bind-Value="_model.CountryId"
+                         disabled="@IsLoading">
+                <option value="0">-- Veldu land --</option>
+                @foreach (CountrySummary country in Countries)
+                {
+                    <option value="@country.Id">@country.Name</option>
+                }
+            </InputSelect>
+            <div id="country-error">
+                <ValidationMessage For="@(() => _model.CountryId)" />
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" disabled="@IsLoading" aria-busy="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>@SubmitLabel</span>
+                }
+            </button>
+
+            <a href="@BackUrl" class="btn-cancel">Til baka</a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div id="team-form-error" class="error-message" role="alert">@ErrorMessage</div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private readonly TeamFormModel _model = new();
+    private bool _initialized;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<CountrySummary> Countries { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public EventCallback<TeamFormValues> OnSubmit { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter, EditorRequired]
+    public string SubmitLabel { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string BackUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public TeamFormInitialValues? InitialValues { get; set; }
+
+    private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    private string GetAriaDescribedBy(string fieldErrorId, string? hintId = null)
+    {
+        string baseIds = hintId is not null ? $"{fieldErrorId} {hintId}" : fieldErrorId;
+        return HasError ? $"{baseIds} team-form-error" : baseIds;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized && InitialValues is not null)
+        {
+            _model.Title = InitialValues.Title;
+            _model.TitleShort = InitialValues.TitleShort;
+            _model.TitleFull = InitialValues.TitleFull;
+            _model.CountryId = InitialValues.CountryId;
+            _initialized = true;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        TeamFormValues values = new(
+            _model.Title,
+            _model.TitleShort,
+            _model.TitleFull,
+            _model.CountryId);
+
+        await OnSubmit.InvokeAsync(values);
+    }
+
+    private sealed class TeamFormModel
+    {
+        [Required(ErrorMessage = "Nafn er skylda")]
+        [MaxLength(50, ErrorMessage = "Nafn má ekki vera lengra en 50 stafir")]
+        public string Title { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Skammstöfun er skylda")]
+        [StringLength(3, MinimumLength = 3, ErrorMessage = "Skammstöfun verður að vera nákvæmlega 3 stafir")]
+        public string TitleShort { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Fullt nafn er skylda")]
+        [MaxLength(100, ErrorMessage = "Fullt nafn má ekki vera lengra en 100 stafir")]
+        public string TitleFull { get; set; } = string.Empty;
+
+        [Range(1, int.MaxValue, ErrorMessage = "Vinsamlegast veldu land")]
+        public int CountryId { get; set; }
+    }
+}

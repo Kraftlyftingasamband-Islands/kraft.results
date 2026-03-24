@@ -8,6 +8,8 @@ namespace KRAFT.Results.WebApi.Features.Teams;
 
 internal sealed class Team
 {
+    internal const int TitleMaxLength = 50;
+    internal const int TitleFullMaxLength = 100;
     private const int ShortTitleLength = 3;
 
     // For EF core
@@ -50,6 +52,11 @@ internal sealed class Team
             return TeamErrors.EmptyTitle;
         }
 
+        if (title.Length > TitleMaxLength)
+        {
+            return TeamErrors.TitleTooLong;
+        }
+
         if (string.IsNullOrWhiteSpace(titleShort) || titleShort.Length != ShortTitleLength)
         {
             return TeamErrors.InvalidTitleShort;
@@ -58,6 +65,11 @@ internal sealed class Team
         if (string.IsNullOrWhiteSpace(titleFull))
         {
             return TeamErrors.EmptyTitleFull;
+        }
+
+        if (titleFull.Length > TitleFullMaxLength)
+        {
+            return TeamErrors.TitleFullTooLong;
         }
 
         Team team = new()
@@ -72,5 +84,42 @@ internal sealed class Team
         };
 
         return team;
+    }
+
+    internal Result Update(User modifier, string title, string titleShort, string titleFull, Country country)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return TeamErrors.EmptyTitle;
+        }
+
+        if (title.Length > TitleMaxLength)
+        {
+            return TeamErrors.TitleTooLong;
+        }
+
+        if (string.IsNullOrWhiteSpace(titleShort) || titleShort.Length != ShortTitleLength)
+        {
+            return TeamErrors.InvalidTitleShort;
+        }
+
+        if (string.IsNullOrWhiteSpace(titleFull))
+        {
+            return TeamErrors.EmptyTitleFull;
+        }
+
+        if (titleFull.Length > TitleFullMaxLength)
+        {
+            return TeamErrors.TitleFullTooLong;
+        }
+
+        Title = title;
+        TitleShort = titleShort;
+        TitleFull = titleFull;
+        Country = country;
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = modifier.Username;
+
+        return Result.Success();
     }
 }
