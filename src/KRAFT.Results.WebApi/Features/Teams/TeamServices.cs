@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Teams.Create;
+using KRAFT.Results.WebApi.Features.Teams.Delete;
 using KRAFT.Results.WebApi.Features.Teams.Get;
 using KRAFT.Results.WebApi.Features.Teams.GetDetails;
 using KRAFT.Results.WebApi.Features.Teams.Update;
@@ -13,6 +14,7 @@ internal static class TeamServices
         services.AddScoped<GetTeamsHandler>();
         services.AddScoped<GetTeamDetailsHandler>();
         services.AddScoped<UpdateTeamHandler>();
+        services.AddScoped<DeleteTeamHandler>();
 
         return services;
     }

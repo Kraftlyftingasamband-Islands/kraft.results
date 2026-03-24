@@ -38,6 +38,20 @@
     outline-color: var(--color-text);
 }
 
+.admin-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-danger {
+    background: var(--color-danger);
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .btn-action {
         transition: none;
