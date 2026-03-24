@@ -68,12 +68,13 @@
 
 @code {
     private readonly MeetFormModel _model = new();
+    private bool _initialized;
 
     [Parameter, EditorRequired]
     public IReadOnlyList<MeetTypeSummary> MeetTypes { get; set; } = [];
 
     [Parameter, EditorRequired]
-    public EventCallback<CreateMeetCommand> OnSubmit { get; set; }
+    public EventCallback<MeetFormValues> OnSubmit { get; set; }
 
     [Parameter, EditorRequired]
     public bool IsLoading { get; set; }
@@ -87,11 +88,23 @@
     [Parameter, EditorRequired]
     public string BackUrl { get; set; } = string.Empty;
 
+    [Parameter]
+    public MeetFormInitialValues? InitialValues { get; set; }
+
     private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     protected override void OnParametersSet()
     {
-        if (_model.MeetTypeId == 0 && MeetTypes.Count > 0)
+        if (!_initialized && InitialValues is not null)
+        {
+            _model.Title = InitialValues.Title;
+            _model.StartDate = InitialValues.StartDate;
+            _model.MeetTypeId = InitialValues.MeetTypeId;
+            _initialized = true;
+            return;
+        }
+
+        if (!_initialized && _model.MeetTypeId == 0 && MeetTypes.Count > 0)
         {
             MeetTypeSummary? powerlifting = MeetTypes.FirstOrDefault(x => x.Title == "Powerlifting");
 
@@ -99,6 +112,8 @@
             {
                 _model.MeetTypeId = powerlifting.Id;
             }
+
+            _initialized = true;
         }
     }
 
@@ -114,12 +129,12 @@
 
     private async Task HandleValidSubmit()
     {
-        CreateMeetCommand command = new(
+        MeetFormValues values = new(
             _model.Title,
             _model.StartDate!.Value,
             _model.MeetTypeId);
 
-        await OnSubmit.InvokeAsync(command);
+        await OnSubmit.InvokeAsync(values);
     }
 
     private sealed class MeetFormModel

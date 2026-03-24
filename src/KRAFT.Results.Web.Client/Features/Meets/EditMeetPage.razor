@@ -1,0 +1,105 @@
+@page "/meets/{slug}/edit"
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.Net
+@using KRAFT.Results.Contracts.Meets
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Breyta móti</PageTitle>
+<h3>Breyta móti</h3>
+
+@if (_isInitializing)
+{
+    <p>Hleð...</p>
+}
+else if (_initialValues is not null)
+{
+    <MeetForm MeetTypes="_meetTypes"
+              OnSubmit="HandleSubmit"
+              IsLoading="_isLoading"
+              ErrorMessage="@_errorMessage"
+              SubmitLabel="Vista breytingar"
+              BackUrl="@($"/meets/{Slug}")"
+              InitialValues="_initialValues" />
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private IReadOnlyList<MeetTypeSummary> _meetTypes = [];
+    private MeetFormInitialValues? _initialValues;
+    private bool _isInitializing = true;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            MeetDetails? meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
+            _meetTypes = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetTypeSummary>>("/meets/types") ?? [];
+
+            if (meet is null)
+            {
+                _errorMessage = "Mót fannst ekki.";
+                return;
+            }
+
+            _initialValues = new MeetFormInitialValues(meet.Title, meet.StartDate, meet.MeetTypeId);
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
+    }
+
+    private async Task HandleSubmit(MeetFormValues values)
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            UpdateMeetCommand command = new(values.Title, values.StartDate, values.MeetTypeId);
+            HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/meets/{Slug}", command);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _errorMessage = "Mót fannst ekki.";
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                _errorMessage = "Mót með þessu nafni og dagsetningu er þegar til.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo($"/meets/{Slug}");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

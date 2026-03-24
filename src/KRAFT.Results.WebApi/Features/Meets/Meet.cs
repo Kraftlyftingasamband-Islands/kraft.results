@@ -89,4 +89,28 @@ internal sealed class Meet
 
         return meet;
     }
+
+    internal Result Update(User modifier, MeetType type, string title, DateOnly startDate)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return MeetErrors.EmptyTitle;
+        }
+
+        if (startDate.Year < StartDateMinimumYear)
+        {
+            return MeetErrors.InvalidStartDate(startDate);
+        }
+
+        DateTime date = startDate.ToDateTime(TimeOnly.MinValue);
+
+        Title = title;
+        StartDate = date;
+        EndDate = date;
+        MeetType = type;
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = modifier.Username;
+
+        return Result.Success();
+    }
 }
