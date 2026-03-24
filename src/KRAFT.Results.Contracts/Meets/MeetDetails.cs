@@ -8,6 +8,7 @@ public sealed record class MeetDetails(
     DateOnly StartDate,
     DateOnly? EndDate,
     string Type,
+    int MeetTypeId,
     string ResultMode,
     bool CalculatePlaces,
     bool IsInTeamCompetition,

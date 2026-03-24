@@ -18,6 +18,7 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
                 DateOnly.FromDateTime(x.StartDate),
                 DateOnly.FromDateTime(x.EndDate),
                 x.MeetType.Title,
+                x.MeetType.MeetTypeId,
                 ((ResultMode)x.ResultModeId).ToString(),
                 x.CalcPlaces,
                 x.IsInTeamCompetition,

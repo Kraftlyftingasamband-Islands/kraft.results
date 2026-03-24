@@ -37,13 +37,14 @@
         }
     }
 
-    private async Task HandleSubmit(CreateMeetCommand command)
+    private async Task HandleSubmit(MeetFormValues values)
     {
         _isLoading = true;
         _errorMessage = null;
 
         try
         {
+            CreateMeetCommand command = new(values.Title, values.StartDate, values.MeetTypeId);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/meets", command);
 
             if (response.StatusCode == HttpStatusCode.Conflict)

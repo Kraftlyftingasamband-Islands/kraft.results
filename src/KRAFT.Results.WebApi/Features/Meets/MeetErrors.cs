@@ -4,6 +4,8 @@ namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal static class MeetErrors
 {
+    internal const string MeetNotFoundCode = "Meets.NotFound";
+
     internal const string MeetExistsCode = "Meets.AlreadyExists";
 
     internal static readonly Error EmptyTitle = new(
@@ -13,6 +15,10 @@ internal static class MeetErrors
     internal static readonly Error MeetTypeNotFound = new(
         "Meets.MeetTypeNotFound",
         "Meet type not found in database");
+
+    internal static readonly Error MeetNotFound = new(
+        MeetNotFoundCode,
+        "Meet not found.");
 
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
