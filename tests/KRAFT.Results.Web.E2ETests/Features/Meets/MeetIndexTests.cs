@@ -40,13 +40,13 @@ public class MeetIndexTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
 
         // Act
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/2025");
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
         ILocator yearValue = page.Locator(".year-value");
         await yearValue.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         string yearText = await yearValue.InnerTextAsync();
-        yearText.ShouldBe("2025");
+        yearText.ShouldBe(TestDataSeeder.SeededMeetYear.ToString(CultureInfo.InvariantCulture));
 
         ILocator meetItems = page.Locator("article.meet-item");
         await meetItems.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
