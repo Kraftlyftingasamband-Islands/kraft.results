@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Meets;
 
 public class CreateMeetPageTests(PlaywrightFixture fixture)
@@ -24,8 +26,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        bool headingVisible = await heading.IsVisibleAsync();
-        headingVisible.ShouldBeTrue();
+        await Expect(heading).ToBeVisibleAsync();
     }
 
     [Fact]
@@ -45,16 +46,13 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
 
         // Assert
         ILocator nafnLabel = page.GetByText("Nafn", new PageGetByTextOptions { Exact = true });
-        bool nafnVisible = await nafnLabel.IsVisibleAsync();
-        nafnVisible.ShouldBeTrue();
+        await Expect(nafnLabel).ToBeVisibleAsync();
 
         ILocator dagsetningLabel = page.GetByText("Dagsetning", new PageGetByTextOptions { Exact = true });
-        bool dagsetningVisible = await dagsetningLabel.IsVisibleAsync();
-        dagsetningVisible.ShouldBeTrue();
+        await Expect(dagsetningLabel).ToBeVisibleAsync();
 
         ILocator tegundLabel = page.GetByText("Tegund móts", new PageGetByTextOptions { Exact = true });
-        bool tegundVisible = await tegundLabel.IsVisibleAsync();
-        tegundVisible.ShouldBeTrue();
+        await Expect(tegundLabel).ToBeVisibleAsync();
     }
 
     [Fact]

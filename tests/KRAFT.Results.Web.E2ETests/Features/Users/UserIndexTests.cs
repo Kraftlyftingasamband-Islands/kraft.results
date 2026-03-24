@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Users;
 
 public class UserIndexTests(PlaywrightFixture fixture)
@@ -24,8 +26,7 @@ public class UserIndexTests(PlaywrightFixture fixture)
         await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        bool headingVisible = await heading.IsVisibleAsync();
-        headingVisible.ShouldBeTrue();
+        await Expect(heading).ToBeVisibleAsync();
 
         ILocator tableRows = page.Locator("table tbody tr");
         await tableRows.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });

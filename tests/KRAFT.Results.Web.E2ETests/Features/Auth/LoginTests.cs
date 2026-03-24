@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Auth;
 
 public class LoginTests(PlaywrightFixture fixture)
@@ -26,18 +28,15 @@ public class LoginTests(PlaywrightFixture fixture)
 
         ILocator usernameInput = page.Locator("#username");
         await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        bool usernameVisible = await usernameInput.IsVisibleAsync();
-        usernameVisible.ShouldBeTrue();
+        await Expect(usernameInput).ToBeVisibleAsync();
 
         ILocator passwordInput = page.Locator("#password");
         await passwordInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        bool passwordVisible = await passwordInput.IsVisibleAsync();
-        passwordVisible.ShouldBeTrue();
+        await Expect(passwordInput).ToBeVisibleAsync();
 
         ILocator submitButton = page.Locator("button[type='submit']");
         await submitButton.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        bool submitVisible = await submitButton.IsVisibleAsync();
-        submitVisible.ShouldBeTrue();
+        await Expect(submitButton).ToBeVisibleAsync();
 
         string submitText = await submitButton.InnerTextAsync();
         submitText.ShouldContain("Innskrá");

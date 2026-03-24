@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
+
 using Microsoft.Playwright;
 
-using Shouldly;
+using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Athletes;
 
@@ -21,15 +23,16 @@ public class AthleteDetailsTests(PlaywrightFixture fixture)
         await firstAthleteLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await firstAthleteLink.ClickAsync();
 
-        ILocator heading = page.Locator("h1");
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-
-        // Assert
-        string name = await heading.InnerTextAsync();
-        name.ShouldNotBeNullOrWhiteSpace();
+        await page.WaitForURLAsync(new Regex(@"/athletes/[a-z0-9-]+$"), new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator athleteMeta = page.Locator(".athlete-meta");
-        string meta = await athleteMeta.InnerTextAsync();
-        meta.ShouldContain("Fæðingarár:");
+        await athleteMeta.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
+        // Assert
+        ILocator heading = page.Locator("h1");
+        await Expect(heading).ToBeVisibleAsync();
+        await Expect(heading).Not.ToBeEmptyAsync();
+
+        await Expect(athleteMeta).ToContainTextAsync("Fæðingarár:");
     }
 }

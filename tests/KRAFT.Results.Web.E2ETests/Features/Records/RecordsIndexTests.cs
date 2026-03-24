@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Records;
 
 public class RecordsIndexTests(PlaywrightFixture fixture)
@@ -26,8 +28,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
 
         ILocator equipmentToggle = page.Locator(".equipment-toggle");
         await equipmentToggle.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        bool toggleVisible = await equipmentToggle.IsVisibleAsync();
-        toggleVisible.ShouldBeTrue();
+        await Expect(equipmentToggle).ToBeVisibleAsync();
 
         ILocator maleSection = page.Locator("h2", new PageLocatorOptions { HasText = "Karlar" });
         string maleText = await maleSection.InnerTextAsync();

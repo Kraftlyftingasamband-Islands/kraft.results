@@ -2,6 +2,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Teams;
 
 public class CreateTeamPageTests(PlaywrightFixture fixture)
@@ -24,8 +26,7 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
         await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        bool headingVisible = await heading.IsVisibleAsync();
-        headingVisible.ShouldBeTrue();
+        await Expect(heading).ToBeVisibleAsync();
     }
 
     [Fact]
@@ -45,20 +46,16 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
 
         // Assert
         ILocator nafnLabel = page.GetByText("Nafn", new PageGetByTextOptions { Exact = true });
-        bool nafnVisible = await nafnLabel.IsVisibleAsync();
-        nafnVisible.ShouldBeTrue();
+        await Expect(nafnLabel).ToBeVisibleAsync();
 
         ILocator skammstofunLabel = page.GetByText("Skammstöfun", new PageGetByTextOptions { Exact = true });
-        bool skammstofunVisible = await skammstofunLabel.IsVisibleAsync();
-        skammstofunVisible.ShouldBeTrue();
+        await Expect(skammstofunLabel).ToBeVisibleAsync();
 
         ILocator fulltNafnLabel = page.GetByText("Fullt nafn", new PageGetByTextOptions { Exact = true });
-        bool fulltNafnVisible = await fulltNafnLabel.IsVisibleAsync();
-        fulltNafnVisible.ShouldBeTrue();
+        await Expect(fulltNafnLabel).ToBeVisibleAsync();
 
         ILocator landLabel = page.GetByText("Land", new PageGetByTextOptions { Exact = true });
-        bool landVisible = await landLabel.IsVisibleAsync();
-        landVisible.ShouldBeTrue();
+        await Expect(landLabel).ToBeVisibleAsync();
     }
 
     [Fact]
@@ -77,8 +74,7 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
         await createTeamLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        bool linkVisible = await createTeamLink.IsVisibleAsync();
-        linkVisible.ShouldBeTrue();
+        await Expect(createTeamLink).ToBeVisibleAsync();
     }
 
     [Fact]
