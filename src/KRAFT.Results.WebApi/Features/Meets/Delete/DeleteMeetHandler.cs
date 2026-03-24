@@ -1,9 +1,11 @@
+using System.Data;
 using System.Text.RegularExpressions;
 
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KRAFT.Results.WebApi.Features.Meets.Delete;
 
@@ -27,30 +29,39 @@ internal sealed partial class DeleteMeetHandler
             return Result.Failure(MeetErrors.MeetNotFound);
         }
 
-        Meet? meet = await _dbContext.Set<Meet>()
-            .Where(m => m.Slug == slug)
-            .FirstOrDefaultAsync(cancellationToken);
+        IExecutionStrategy strategy = _dbContext.Database.CreateExecutionStrategy();
 
-        if (meet is null)
+        return await strategy.ExecuteAsync(async () =>
         {
-            _logger.LogWarning("Meet with slug '{Slug}' was not found", slug);
-            return Result.Failure(MeetErrors.MeetNotFound);
-        }
+            await using IDbContextTransaction transaction =
+                await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
-        int meetId = _dbContext.Entry(meet).Property<int>("MeetId").CurrentValue;
-        bool hasParticipations = await _dbContext.Set<Participation>()
-            .AnyAsync(p => p.MeetId == meetId, cancellationToken);
+            Meet? meet = await _dbContext.Set<Meet>()
+                .Where(m => m.Slug == slug)
+                .FirstOrDefaultAsync(cancellationToken);
 
-        if (hasParticipations)
-        {
-            _logger.LogWarning("Cannot delete meet '{Slug}' because it has participations", slug);
-            return Result.Failure(MeetErrors.MeetHasParticipations);
-        }
+            if (meet is null)
+            {
+                _logger.LogWarning("Meet with slug '{Slug}' was not found", slug);
+                return Result.Failure(MeetErrors.MeetNotFound);
+            }
 
-        _dbContext.Set<Meet>().Remove(meet);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            int meetId = _dbContext.Entry(meet).Property<int>("MeetId").CurrentValue;
+            bool hasParticipations = await _dbContext.Set<Participation>()
+                .AnyAsync(p => p.MeetId == meetId, cancellationToken);
 
-        return Result.Success();
+            if (hasParticipations)
+            {
+                _logger.LogWarning("Cannot delete meet '{Slug}' because it has participations", slug);
+                return Result.Failure(MeetErrors.MeetHasParticipations);
+            }
+
+            _dbContext.Set<Meet>().Remove(meet);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return Result.Success();
+        });
     }
 
     [GeneratedRegex(@"^[a-z0-9-]+$")]
