@@ -123,6 +123,7 @@
 
 @code {
     private readonly AthleteFormModel _model = new();
+    private bool _initialized;
 
     [Parameter, EditorRequired]
     public IReadOnlyCollection<CountrySummary> Countries { get; set; } = [];
@@ -145,12 +146,29 @@
     [Parameter, EditorRequired]
     public string BackUrl { get; set; } = string.Empty;
 
+    [Parameter]
+    public AthleteFormInitialValues? InitialValues { get; set; }
+
     private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     private string GetAriaDescribedBy(string fieldErrorId, string? hintId = null)
     {
         string baseIds = hintId is not null ? $"{fieldErrorId} {hintId}" : fieldErrorId;
         return HasError ? $"{baseIds} athlete-form-error" : baseIds;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized && InitialValues is not null)
+        {
+            _model.FirstName = InitialValues.FirstName;
+            _model.LastName = InitialValues.LastName;
+            _model.DateOfBirth = InitialValues.DateOfBirth;
+            _model.Gender = InitialValues.Gender;
+            _model.CountryId = InitialValues.CountryId;
+            _model.TeamId = InitialValues.TeamId;
+            _initialized = true;
+        }
     }
 
     private async Task HandleValidSubmit()

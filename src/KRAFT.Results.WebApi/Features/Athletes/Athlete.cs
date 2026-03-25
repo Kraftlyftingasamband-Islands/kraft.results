@@ -76,4 +76,33 @@ internal sealed class Athlete
             CreatedBy = creator.Username,
         };
     }
+
+    internal Result Update(User modifier, string firstName, string lastName, Gender gender, Country country, DateOnly? dateOfBirth, Team? team)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            return AthleteErrors.FirstNameIsEmpty;
+        }
+
+        if (string.IsNullOrWhiteSpace(lastName))
+        {
+            return AthleteErrors.LastNameIsEmpty;
+        }
+
+        if (dateOfBirth.HasValue && dateOfBirth.Value > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return AthleteErrors.DateOfBirthInFuture;
+        }
+
+        Firstname = firstName;
+        Lastname = lastName;
+        Gender = gender;
+        DateOfBirth = dateOfBirth;
+        Country = country;
+        Team = team;
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = modifier.Username;
+
+        return Result.Success();
+    }
 }
