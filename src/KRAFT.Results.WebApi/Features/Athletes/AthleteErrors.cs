@@ -6,6 +6,7 @@ internal static class AthleteErrors
 {
     internal const string AlreadyExistsCode = "Athletes.AlreadyExists";
     internal const string AthleteNotFoundCode = "Athletes.NotFound";
+    internal const string AthleteHasParticipationsCode = "Athletes.HasParticipations";
 
     internal static Error FirstNameIsEmpty => new(
         "Athletes.FirstNameIsEmpty",
@@ -26,6 +27,10 @@ internal static class AthleteErrors
     internal static Error AthleteNotFound => new(
         AthleteNotFoundCode,
         "Athlete not found.");
+
+    internal static Error AthleteHasParticipations => new(
+        AthleteHasParticipationsCode,
+        "Cannot delete an athlete that has participations.");
 
     internal static Error AlreadyExists(string firstName, string lastName, DateOnly dateOfBirth) => new(
         AlreadyExistsCode,
