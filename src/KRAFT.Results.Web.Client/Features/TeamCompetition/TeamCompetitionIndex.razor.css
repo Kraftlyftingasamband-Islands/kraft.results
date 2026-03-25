@@ -54,7 +54,8 @@
     overflow: hidden;
 }
 
-.section-header {
+h2.section-header {
+    margin: 0;
     padding: 0.875rem 1.25rem;
     background-color: var(--color-text);
     color: var(--color-white);

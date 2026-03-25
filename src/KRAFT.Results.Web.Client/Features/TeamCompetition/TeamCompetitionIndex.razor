@@ -43,7 +43,7 @@ else if (_response is not null)
     {
         <div class="standings-grid">
             <div class="gender-section">
-                <div class="section-header">Konur</div>
+                <h2 class="section-header">Konur</h2>
                 @if (_response.Women.Count > 0)
                 {
                     <StandingsTable Standings="_response.Women" AriaLabel="Stigatafla kvenna" />
@@ -55,7 +55,7 @@ else if (_response is not null)
             </div>
 
             <div class="gender-section">
-                <div class="section-header">Karlar</div>
+                <h2 class="section-header">Karlar</h2>
                 @if (_response.Men.Count > 0)
                 {
                     <StandingsTable Standings="_response.Men" AriaLabel="Stigatafla karla" />
