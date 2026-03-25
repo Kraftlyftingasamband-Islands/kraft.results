@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.RegularExpressions;
 
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
@@ -8,8 +9,10 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KRAFT.Results.WebApi.Features.Athletes.Delete;
 
-internal sealed class DeleteAthleteHandler
+internal sealed partial class DeleteAthleteHandler
 {
+    private const int SlugMaxLength = 200;
+
     private readonly ILogger<DeleteAthleteHandler> _logger;
     private readonly ResultsDbContext _dbContext;
 
@@ -19,9 +22,9 @@ internal sealed class DeleteAthleteHandler
         _dbContext = dbContext;
     }
 
-    public async Task<Result> Handle(int id, CancellationToken cancellationToken)
+    public async Task<Result> Handle(string slug, CancellationToken cancellationToken)
     {
-        if (id <= 0)
+        if (string.IsNullOrEmpty(slug) || slug.Length > SlugMaxLength || !ValidSlugPattern().IsMatch(slug))
         {
             return Result.Failure(AthleteErrors.AthleteNotFound);
         }
@@ -34,21 +37,21 @@ internal sealed class DeleteAthleteHandler
                 await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
             Athlete? athlete = await _dbContext.Set<Athlete>()
-                .Where(a => a.AthleteId == id)
+                .Where(a => a.Slug == slug)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (athlete is null)
             {
-                _logger.LogWarning("Athlete with id '{AthleteId}' was not found", id);
+                _logger.LogWarning("Athlete with slug '{Slug}' was not found", slug);
                 return Result.Failure(AthleteErrors.AthleteNotFound);
             }
 
             bool hasParticipations = await _dbContext.Set<Participation>()
-                .AnyAsync(p => p.AthleteId == id, cancellationToken);
+                .AnyAsync(p => p.AthleteId == athlete.AthleteId, cancellationToken);
 
             if (hasParticipations)
             {
-                _logger.LogWarning("Cannot delete athlete with id '{AthleteId}' because they have participations", id);
+                _logger.LogWarning("Cannot delete athlete with slug '{Slug}' because they have participations", slug);
                 return Result.Failure(AthleteErrors.AthleteHasParticipations);
             }
 
@@ -59,4 +62,7 @@ internal sealed class DeleteAthleteHandler
             return Result.Success();
         });
     }
+
+    [GeneratedRegex(@"^[a-z0-9-]+$")]
+    private static partial Regex ValidSlugPattern();
 }
