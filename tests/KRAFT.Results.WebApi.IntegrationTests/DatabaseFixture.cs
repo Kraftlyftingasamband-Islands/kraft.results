@@ -223,6 +223,51 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- Participation with zero team points (should be excluded)
             INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
             VALUES (3, 2, 82.0, 1, 2, 1, 6, 0, 150.0, 90.0, 200.0, 440.0, 300.0, 60.0, 8, 0);
+
+            -- BestN per-meet test data (year 2026)
+            -- Additional male athletes for bestN testing
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('TC1', 'Test', '1990-01-01', 'm', 2, 'tc1-test');
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('TC2', 'Test', '1990-01-01', 'm', 2, 'tc2-test');
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('TC3', 'Test', '1990-01-01', 'm', 2, 'tc3-test');
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('TC4', 'Test', '1990-01-01', 'm', 2, 'tc4-test');
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('TC5', 'Test', '1990-01-01', 'm', 2, 'tc5-test');
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('TC6', 'Test', '1990-01-01', 'm', 2, 'tc6-test');
+
+            -- Two TC meets in 2026
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('TC Meet 1 2026', 'tc-meet-1-2026', '2026-06-01', '2026-06-01', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1);
+
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('TC Meet 2 2026', 'tc-meet-2-2026', '2026-09-01', '2026-09-01', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1);
+
+            -- Alpha Team: 6 male athletes in meet1 2026, all scoring 12 (MeetId=4, TeamId=2)
+            -- Athletes 4-9 are TC1-TC6
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (4, 4, 82.0, 1, 2, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.0, 1, 12);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (5, 4, 82.0, 1, 2, 1, 2, 0, 195.0, 125.0, 245.0, 565.0, 390.0, 83.0, 2, 12);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (6, 4, 82.0, 1, 2, 1, 3, 0, 190.0, 120.0, 240.0, 550.0, 380.0, 81.0, 3, 12);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (7, 4, 82.0, 1, 2, 1, 4, 0, 185.0, 115.0, 235.0, 535.0, 370.0, 79.0, 4, 12);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (8, 4, 82.0, 1, 2, 1, 5, 0, 180.0, 110.0, 230.0, 520.0, 360.0, 77.0, 5, 12);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (9, 4, 82.0, 1, 2, 1, 6, 0, 175.0, 105.0, 225.0, 505.0, 350.0, 75.0, 6, 12);
+
+            -- Alpha Team: 3 male athletes in meet2 2026 scoring 12, 9, 8 (MeetId=5, TeamId=2)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (4, 5, 82.0, 1, 2, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.0, 1, 12);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (5, 5, 82.0, 1, 2, 1, 2, 0, 190.0, 120.0, 240.0, 550.0, 380.0, 81.0, 2, 9);
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (6, 5, 82.0, 1, 2, 1, 3, 0, 185.0, 115.0, 235.0, 535.0, 370.0, 79.0, 3, 8);
         """);
     }
 }
