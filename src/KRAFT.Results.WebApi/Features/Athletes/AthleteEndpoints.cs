@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Athletes.Create;
+using KRAFT.Results.WebApi.Features.Athletes.Delete;
 using KRAFT.Results.WebApi.Features.Athletes.Get;
 using KRAFT.Results.WebApi.Features.Athletes.GetDetails;
 using KRAFT.Results.WebApi.Features.Athletes.GetEditDetails;
@@ -17,6 +18,7 @@ internal static class AthleteEndpoints
             .WithTags("Athletes");
 
         group.MapCreateAthleteEndpoint();
+        group.MapDeleteAthleteEndpoint();
         group.MapGetAthletesEndpoint();
         group.MapGetAthleteDetailsEndpoint();
         group.MapGetAthleteEditDetailsEndpoint();
