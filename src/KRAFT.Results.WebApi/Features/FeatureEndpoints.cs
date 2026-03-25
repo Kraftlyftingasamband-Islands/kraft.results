@@ -3,6 +3,7 @@ using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Rankings;
 using KRAFT.Results.WebApi.Features.Records;
+using KRAFT.Results.WebApi.Features.TeamCompetition;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 
@@ -17,6 +18,7 @@ internal static class FeatureEndpoints
         builder.MapMeetEndpoints();
         builder.MapRankingEndpoints();
         builder.MapRecordEndpoints();
+        builder.MapTeamCompetitionEndpoints();
         builder.MapTeamEndpoints();
         builder.MapUserEndpoints();
 

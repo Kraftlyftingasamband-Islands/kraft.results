@@ -162,6 +162,67 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- Record for weight category with no EraWeightCategory row (should be excluded)
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (1, 1, 5, 1, 230.0, '2025-03-15', 0, 1, 1, 0, 'seed');
+
+            -- Team Competition seed data
+            INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
+            VALUES (2, 'NO', 'NOR', 'Norway');
+
+            INSERT INTO Teams (Title, TitleShort, TitleFull, CountryId, Slug)
+            VALUES ('Alpha Team', 'ALP', 'Alpha Team', 2, {Constants.TeamCompetition.AlphaTeamSlug});
+
+            INSERT INTO Teams (Title, TitleShort, TitleFull, CountryId, Slug)
+            VALUES ('Beta Team', 'BET', 'Beta Team', 2, {Constants.TeamCompetition.BetaTeamSlug});
+
+            -- Female athlete for gender-split testing (non-IS country to avoid ranking interference)
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('Anna', 'Test', '1990-01-01', 'f', 2, 'anna-test');
+
+            -- Male athlete 2 (non-IS country to avoid ranking interference)
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('Bob', 'Test', '1988-05-10', 'm', 2, 'bob-test');
+
+            -- Team competition meet (year 2025, gender split applies)
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('TC Meet 1 2025', 'tc-meet-1-2025', '2025-06-01', '2025-06-01', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1);
+
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('TC Meet 2 2025', 'tc-meet-2-2025', '2025-09-01', '2025-09-01', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1);
+
+            -- Alpha Team male participations (5 entries across two meets, best 5 used)
+            -- Meet 2 (MeetId will be the tc-meet-1 id), Alpha = TeamId 2, male athlete (AthleteId 1 from seed is male)
+            -- Using athlete 3 (Bob, male) for team competition
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 2, 82.0, 1, 2, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.5, 1, 12);
+
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 3, 82.0, 1, 2, 1, 2, 0, 190.0, 120.0, 240.0, 550.0, 380.0, 80.0, 2, 9);
+
+            -- Beta Team male participations
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 2, 82.0, 1, 3, 1, 3, 0, 180.0, 110.0, 230.0, 520.0, 360.0, 75.0, 3, 8);
+
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 3, 82.0, 1, 3, 1, 1, 0, 210.0, 135.0, 260.0, 605.0, 420.0, 90.0, 1, 12);
+
+            -- Alpha Team female participations
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (2, 2, 60.0, 3, 2, 1, 1, 0, 100.0, 60.0, 120.0, 280.0, 300.0, 65.0, 4, 12);
+
+            -- Beta Team female participations
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (2, 2, 60.0, 3, 3, 1, 2, 0, 90.0, 55.0, 110.0, 255.0, 280.0, 60.0, 5, 9);
+
+            -- Disqualified participation (should be excluded)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 2, 82.0, 1, 2, 1, 4, 1, 170.0, 100.0, 220.0, 490.0, 340.0, 70.0, 6, 7);
+
+            -- Participation with no team (should be excluded)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 2, 82.0, 1, 1, 5, 0, 160.0, 95.0, 210.0, 465.0, 320.0, 65.0, 7, 6);
+
+            -- Participation with zero team points (should be excluded)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
+            VALUES (3, 2, 82.0, 1, 2, 1, 6, 0, 150.0, 90.0, 200.0, 440.0, 300.0, 60.0, 8, 0);
         """);
     }
 }
