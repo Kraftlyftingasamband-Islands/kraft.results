@@ -45,6 +45,14 @@
     align-items: center;
 }
 
+.btn-danger {
+    background: var(--color-danger);
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .btn-action {
         transition: none;

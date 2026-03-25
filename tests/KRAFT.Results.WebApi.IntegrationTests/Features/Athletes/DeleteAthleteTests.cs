@@ -20,10 +20,10 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsNoContent_WhenSuccessful()
     {
         // Arrange
-        int athleteId = await CreateAthleteAsync();
+        string slug = await CreateAthleteAsync();
 
         // Act
-        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{athleteId}", CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{slug}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -33,7 +33,7 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsNotFound_WhenAthleteDoesNotExist()
     {
         // Act
-        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{int.MaxValue}", CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/non-existent-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -43,10 +43,10 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsConflict_WhenAthleteHasParticipations()
     {
         // Arrange — the seeded athlete has participations
-        int seededAthleteId = 1;
+        string seededAthleteSlug = Constants.TestAthleteSlug;
 
         // Act
-        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{seededAthleteId}", CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{seededAthleteSlug}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -56,10 +56,10 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
-        int athleteId = await CreateAthleteAsync();
+        string slug = await CreateAthleteAsync();
 
         // Act
-        HttpResponseMessage response = await _nonAdminHttpClient.DeleteAsync($"{BasePath}/{athleteId}", CancellationToken.None);
+        HttpResponseMessage response = await _nonAdminHttpClient.DeleteAsync($"{BasePath}/{slug}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
@@ -69,21 +69,21 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsUnauthorized_WhenNotAuthenticated()
     {
         // Act
-        HttpResponseMessage response = await _unauthorizedHttpClient.DeleteAsync($"{BasePath}/1", CancellationToken.None);
+        HttpResponseMessage response = await _unauthorizedHttpClient.DeleteAsync($"{BasePath}/some-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    private async Task<int> CreateAthleteAsync()
+    private async Task<string> CreateAthleteAsync()
     {
-        CreateAthleteCommand command = new CreateAthleteCommandBuilder().Build();
-        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(BasePath, command, CancellationToken.None);
-        response.EnsureSuccessStatusCode();
+        CreateAthleteCommand createCommand = new CreateAthleteCommandBuilder().Build();
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
 
-        string? location = response.Headers.Location?.ToString();
-        location.ShouldNotBeNull();
+        List<AthleteSummary>? athletes = await _authorizedHttpClient.GetFromJsonAsync<List<AthleteSummary>>(BasePath, CancellationToken.None);
+        AthleteSummary athlete = athletes!.First(a => a.Name == $"{createCommand.FirstName} {createCommand.LastName}");
 
-        return int.Parse(location.TrimStart('/'), System.Globalization.CultureInfo.InvariantCulture);
+        return athlete.Slug!;
     }
 }

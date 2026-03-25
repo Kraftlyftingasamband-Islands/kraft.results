@@ -10,12 +10,12 @@ internal static class DeleteAthleteEndpoint
 
     internal static RouteGroupBuilder MapDeleteAthleteEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapDelete("/{id:int}", static async (
-            [FromRoute] int id,
+        endpoints.MapDelete("/{slug}", static async (
+            [FromRoute] string slug,
             [FromServices] DeleteAthleteHandler handler,
             CancellationToken cancellationToken) =>
         {
-            Result result = await handler.Handle(id, cancellationToken);
+            Result result = await handler.Handle(slug, cancellationToken);
 
             return result.Match<IResult>(
                 success: () => TypedResults.NoContent(),
