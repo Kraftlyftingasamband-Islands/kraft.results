@@ -3,10 +3,12 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Client.Components
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 
 @inject HttpClient HttpClient;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
 
 <h1>@Athlete?.Name</h1>
 <div class="athlete-meta">
@@ -16,6 +18,13 @@
         <span class="meta-separator">&middot;</span>
         <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
             @Athlete?.Club
+        </NavLink>
+    }
+    @if (_isAdmin)
+    {
+        <span class="meta-separator">&middot;</span>
+        <NavLink class="nav-link" href="@($"/athletes/{Slug}/edit")">
+            Breyta
         </NavLink>
     }
 </div>
@@ -189,6 +198,7 @@
 
     private AthleteDetails? Athlete;
     private bool ShowClubs;
+    private bool _isAdmin;
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
     private IReadOnlyList<AthleteRecord> Records = [];
     private IReadOnlyList<AthleteParticipation> Participations = [];
@@ -200,5 +210,8 @@
         Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
         Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
         ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
+
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _isAdmin = authState.User.IsInRole("Admin");
     }
 }
