@@ -20,6 +20,7 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsOk_WhenSuccessful()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithFirstName("Updated First")
             .WithLastName("Updated Last")
@@ -27,7 +28,7 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -51,11 +52,12 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder().Build();
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
@@ -69,7 +71,7 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/some-slug", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -79,13 +81,14 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsBadRequest_WhenFirstNameIsEmpty()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithFirstName(string.Empty)
             .Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -95,13 +98,14 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsBadRequest_WhenLastNameIsEmpty()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithLastName(string.Empty)
             .Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -111,13 +115,14 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsBadRequest_WhenGenderIsInvalid()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithGender("X")
             .Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -127,13 +132,14 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsBadRequest_WhenCountryDoesNotExist()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithCountryId(int.MaxValue)
             .Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -143,13 +149,14 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsBadRequest_WhenTeamDoesNotExist()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithTeamId(int.MaxValue)
             .Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -159,6 +166,7 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     public async Task ReturnsBadRequest_WhenDateOfBirthIsInTheFuture()
     {
         // Arrange
+        string slug = await CreateAthleteAsync();
         DateOnly futureDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1));
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
             .WithDateOfBirth(futureDate)
@@ -166,9 +174,21 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"{BasePath}/{Constants.TestAthleteSlug}", command, CancellationToken.None);
+            $"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private async Task<string> CreateAthleteAsync()
+    {
+        CreateAthleteCommand createCommand = new CreateAthleteCommandBuilder().Build();
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+
+        List<AthleteSummary>? athletes = await _authorizedHttpClient.GetFromJsonAsync<List<AthleteSummary>>(BasePath, CancellationToken.None);
+        AthleteSummary athlete = athletes!.First(a => a.Name == $"{createCommand.FirstName} {createCommand.LastName}");
+
+        return athlete.Slug!;
     }
 }

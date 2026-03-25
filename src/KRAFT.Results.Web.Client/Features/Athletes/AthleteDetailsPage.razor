@@ -3,14 +3,25 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Client.Components
-@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 
-@inject HttpClient HttpClient;
-@inject AuthenticationStateProvider AuthenticationStateProvider;
+@inject HttpClient HttpClient
 
-<h1>@Athlete?.Name</h1>
+<div class="page-header">
+    <h1>@Athlete?.Name</h1>
+    <AuthorizeView Roles="Admin">
+        <div class="admin-actions">
+            <a href="/athletes/@Slug/edit" class="btn-action" aria-label="Breyta keppanda">
+                <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                </svg>
+                Breyta
+            </a>
+        </div>
+    </AuthorizeView>
+</div>
 <div class="athlete-meta">
     <span>Fæðingarár: @Athlete?.YearOfBirth</span>
     @if (ShowClubs)
@@ -18,13 +29,6 @@
         <span class="meta-separator">&middot;</span>
         <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
             @Athlete?.Club
-        </NavLink>
-    }
-    @if (_isAdmin)
-    {
-        <span class="meta-separator">&middot;</span>
-        <NavLink class="nav-link" href="@($"/athletes/{Slug}/edit")">
-            Breyta
         </NavLink>
     }
 </div>
@@ -198,7 +202,6 @@
 
     private AthleteDetails? Athlete;
     private bool ShowClubs;
-    private bool _isAdmin;
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
     private IReadOnlyList<AthleteRecord> Records = [];
     private IReadOnlyList<AthleteParticipation> Participations = [];
@@ -210,8 +213,5 @@
         Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
         Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
         ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
-
-        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        _isAdmin = authState.User.IsInRole("Admin");
     }
 }
