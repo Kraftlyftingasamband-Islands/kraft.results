@@ -1,0 +1,132 @@
+@page "/team-competition"
+@page "/team-competition/{year:int}"
+
+@using KRAFT.Results.Contracts.TeamCompetition
+@using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Lidakeppni @Year</PageTitle>
+
+<h1>Lidakeppni @Year</h1>
+
+<nav class="year-nav" aria-label="Velja ar">
+    @for (int y = DateTime.Now.Year; y >= MinYear; y--)
+    {
+        int yearValue = y;
+        <button class="year-btn @(yearValue == Year ? "active" : "")"
+                aria-pressed="@(yearValue == Year ? "true" : "false")"
+                @onclick="() => OnYearSelectedAsync(yearValue)">
+            @yearValue
+        </button>
+    }
+</nav>
+
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Seki gögn...</span>
+    </div>
+}
+else if (_hasError)
+{
+    <div class="error-state" role="alert">
+        <p>Villa kom upp. Reyndu aftur.</p>
+        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
+    </div>
+}
+else if (_response is not null)
+{
+    @if (_response.IsGenderSplit)
+    {
+        <div class="standings-grid">
+            <div class="gender-section">
+                <div class="section-header">Konur</div>
+                @if (_response.Women.Count > 0)
+                {
+                    <StandingsTable Standings="_response.Women" AriaLabel="Stigatafla kvenna" />
+                }
+                else
+                {
+                    <div class="empty-section">Engar nidurstödur.</div>
+                }
+            </div>
+
+            <div class="gender-section">
+                <div class="section-header">Karlar</div>
+                @if (_response.Men.Count > 0)
+                {
+                    <StandingsTable Standings="_response.Men" AriaLabel="Stigatafla karla" />
+                }
+                else
+                {
+                    <div class="empty-section">Engar nidurstödur.</div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (_response.Combined.Count > 0)
+        {
+            <div class="standings-grid standings-grid-single">
+                <div class="gender-section">
+                    <StandingsTable Standings="_response.Combined" AriaLabel="Stigatafla lidakeppni" />
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">Engin gögn fundust fyrir þetta ar.</div>
+        }
+    }
+}
+
+@code {
+    private const int MinYear = 2010;
+
+    [Parameter]
+    public int Year { get; set; }
+
+    private bool _isLoading = true;
+    private bool _hasError;
+    private TeamCompetitionResponse? _response;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Year == 0)
+        {
+            Year = DateTime.Now.Year;
+        }
+
+        await LoadDataAsync();
+    }
+
+    private async Task OnYearSelectedAsync(int year)
+    {
+        Year = year;
+        NavigationManager.NavigateTo($"/team-competition/{year}", replace: true);
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _hasError = false;
+
+        try
+        {
+            _response = await HttpClient.GetFromJsonAsync<TeamCompetitionResponse>($"/team-competition/{Year}");
+        }
+        catch
+        {
+            _hasError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

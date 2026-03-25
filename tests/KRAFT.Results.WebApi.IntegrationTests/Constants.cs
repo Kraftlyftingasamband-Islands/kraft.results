@@ -13,6 +13,12 @@ internal static class Constants
 
     internal static readonly DateOnly TestAthleteDateOfBirth = new(1985, 7, 2);
 
+    internal static class TeamCompetition
+    {
+        internal const string AlphaTeamSlug = "alpha-team";
+        internal const string BetaTeamSlug = "beta-team";
+    }
+
     internal static class TestUser
     {
         internal const string Username = "testuser";

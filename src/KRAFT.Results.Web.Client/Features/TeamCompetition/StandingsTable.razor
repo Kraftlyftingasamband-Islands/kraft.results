@@ -1,0 +1,67 @@
+@using KRAFT.Results.Contracts.TeamCompetition
+@using KRAFT.Results.Web.Client.Components
+
+<div class="table-wrapper">
+    <table aria-label="@AriaLabel">
+        <colgroup>
+            <col class="col-rank" />
+            <col class="col-team" />
+            <col class="col-points" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Lid</th>
+                <th class="text-end">Stig</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (TeamCompetitionStanding standing in Standings)
+            {
+                <tr class="@(standing.Rank == 1 ? "row-first" : "")">
+                    <RankCell Rank="@standing.Rank" />
+                    <td>
+                        <div class="team-cell">
+                            @if (!string.IsNullOrEmpty(standing.LogoImageFilename))
+                            {
+                                <img class="team-logo"
+                                     src="/images/teams/@standing.LogoImageFilename"
+                                     alt=""
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="team-logo-placeholder" aria-hidden="true">
+                                    @(standing.TeamName.Length > 0 ? standing.TeamName[0].ToString() : "?")
+                                </span>
+                            }
+                            @if (!string.IsNullOrEmpty(standing.TeamSlug))
+                            {
+                                <NavLink class="team-name-link" href="@($"/teams/{standing.TeamSlug}")">
+                                    @standing.TeamName
+                                </NavLink>
+                            }
+                            else
+                            {
+                                <span>@standing.TeamName</span>
+                            }
+                        </div>
+                    </td>
+                    <td class="text-end numeric-value @(standing.Rank == 1 ? "points-first" : "")">
+                        @standing.TotalPoints
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyList<TeamCompetitionStanding> Standings { get; set; } = [];
+
+    [Parameter]
+    [EditorRequired]
+    public string AriaLabel { get; set; } = string.Empty;
+}
