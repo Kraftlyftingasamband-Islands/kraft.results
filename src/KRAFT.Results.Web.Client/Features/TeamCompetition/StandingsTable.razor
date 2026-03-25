@@ -10,9 +10,9 @@
         </colgroup>
         <thead>
             <tr>
-                <th>#</th>
-                <th>Lid</th>
-                <th class="text-end">Stig</th>
+                <th scope="col">#</th>
+                <th scope="col">Lid</th>
+                <th scope="col" class="text-end">Stig</th>
             </tr>
         </thead>
         <tbody>
@@ -26,7 +26,7 @@
                             {
                                 <img class="team-logo"
                                      src="/images/teams/@standing.LogoImageFilename"
-                                     alt=""
+                                     alt="@($"{standing.TeamName} merki")"
                                      loading="lazy" />
                             }
                             else
