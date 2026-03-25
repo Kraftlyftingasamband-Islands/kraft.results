@@ -165,4 +165,22 @@ public sealed class GetTeamCompetitionTests(IntegrationTestFixture fixture)
         // Assert
         response!.Men[0].TeamSlug.ShouldBe(Constants.TeamCompetition.AlphaTeamSlug);
     }
+
+    [Fact]
+    public async Task AppliesBestNLimit_PerMeet()
+    {
+        // Arrange — Alpha Team 2026 men:
+        // Meet 1: 6 athletes all scoring 12 → best 5 → 5*12 = 60
+        // Meet 2: 3 athletes scoring 12, 9, 8 → all 3 count → 29
+        // Per-meet total: 60 + 29 = 89
+        // (Global cap would incorrectly give top 5 of [12x7, 9, 8] = 5*12 = 60)
+
+        // Act
+        TeamCompetitionResponse? response = await _httpClient.GetFromJsonAsync<TeamCompetitionResponse>($"{BasePath}/2026", CancellationToken.None);
+
+        // Assert
+        response!.Men.ShouldNotBeEmpty();
+        TeamCompetitionStanding alpha = response.Men.First(s => s.TeamName == "Alpha Team");
+        alpha.TotalPoints.ShouldBe(89);
+    }
 }

@@ -39,6 +39,7 @@ internal sealed class GetTeamCompetitionHandler
                 p.Team.Slug,
                 p.Team.LogoImageFilename,
                 p.Athlete.Gender.Value,
+                p.MeetId,
                 p.TeamPoints!.Value))
             .ToListAsync(cancellationToken);
 
@@ -64,18 +65,25 @@ internal sealed class GetTeamCompetitionHandler
             .GroupBy(r => r.TeamId)
             .Select(g =>
             {
-                List<int> allPoints = g
-                    .Select(r => r.Points)
-                    .OrderByDescending(p => p)
+                List<List<int>> perMeetBestPoints = g
+                    .GroupBy(r => r.MeetId)
+                    .Select(mg => mg
+                        .Select(r => r.Points)
+                        .OrderByDescending(p => p)
+                        .Take(bestN)
+                        .ToList())
                     .ToList();
 
-                List<int> bestPoints = allPoints.Take(bestN).ToList();
-                int totalPoints = bestPoints.Sum();
+                List<int> allBestPoints = perMeetBestPoints
+                    .SelectMany(p => p)
+                    .ToList();
+
+                int totalPoints = allBestPoints.Sum();
 
                 Dictionary<int, int> tiebreakerCounts = new();
                 foreach (int pointValue in TiebreakerPointValues)
                 {
-                    tiebreakerCounts[pointValue] = bestPoints.Count(p => p == pointValue);
+                    tiebreakerCounts[pointValue] = allBestPoints.Count(p => p == pointValue);
                 }
 
                 TeamPointRow first = g.First();
@@ -141,6 +149,7 @@ internal sealed class GetTeamCompetitionHandler
         string TeamSlug,
         string? LogoImageFilename,
         string Gender,
+        int MeetId,
         int Points);
 
     private sealed record TeamAggregate(
