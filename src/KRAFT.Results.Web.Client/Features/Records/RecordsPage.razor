@@ -139,16 +139,24 @@ else
 
 @if (_eras is not null && _eras.Count > 1)
 {
-    <div class="era-toggle" role="group" aria-label="Tímabil">
-        @foreach (EraSummary era in _eras)
-        {
-            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
-                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
-                    disabled="@_isLoading"
-                    @onclick="@(() => SetEraAsync(era.Slug))">
-                @era.Title
-            </button>
-        }
+    <div class="era-section">
+        <span class="era-section-label">Tímabil</span>
+        <div class="era-timeline" role="group" aria-label="Tímabil">
+            @foreach (EraSummary era in _eras)
+            {
+                <button class="era-segment @(era.Slug == _eraSlug ? "active" : "")"
+                        aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
+                        disabled="@_isLoading"
+                        @onclick="@(() => SetEraAsync(era.Slug))">
+                    <span class="era-years">@GetEraYearRange(era)</span>
+                    <div class="era-node-row">
+                        <span class="era-dot"></span>
+                        <span class="era-line"></span>
+                    </div>
+                    <span class="era-title">@era.Title</span>
+                </button>
+            }
+        </div>
     </div>
 }
 
@@ -220,6 +228,14 @@ else
         _equipmentType = type;
         UpdateUrl(replace: true);
         await LoadDataAsync();
+    }
+
+    private static string GetEraYearRange(EraSummary era)
+    {
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        string start = era.StartDate > today ? "" : era.StartDate.Year.ToString();
+        string end = era.EndDate > today ? "" : era.EndDate.Year.ToString();
+        return end.Length > 0 ? $"{start}–{end}" : $"{start}–";
     }
 
     private void ApplyEquipmentTypeForEra(string slug)
