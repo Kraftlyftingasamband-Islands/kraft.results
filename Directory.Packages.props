@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.1.3" />
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.2.0" />
     <PackageVersion Include="Aspire.Hosting.Testing" Version="13.1.3" />
     <PackageVersion Include="coverlet.collector" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
