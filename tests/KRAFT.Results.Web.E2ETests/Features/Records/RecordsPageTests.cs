@@ -64,11 +64,11 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
 
         await page.GotoAsync($"{_fixture.BaseUrl}/records/m/open?equipmentType=equipped&era=historical-era");
-        ILocator eraToggle = page.Locator(".era-toggle");
-        await eraToggle.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator eraSelector = page.Locator(".era-selector");
+        await eraSelector.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act
-        ILocator currentEraButton = eraToggle.Locator("button", new LocatorLocatorOptions { HasText = "Current Era" });
+        ILocator currentEraButton = eraSelector.Locator("button", new LocatorLocatorOptions { HasText = "Current Era" });
         await currentEraButton.ClickAsync();
 
         // Assert
@@ -98,7 +98,6 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await breadcrumb.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string breadcrumbText = await breadcrumb.InnerTextAsync();
-        breadcrumbText.ShouldContain("Historical Era");
+        await Expect(breadcrumb).ToContainTextAsync("Historical Era", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }
