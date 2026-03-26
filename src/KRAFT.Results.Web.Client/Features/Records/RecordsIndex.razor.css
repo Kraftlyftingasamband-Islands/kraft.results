@@ -1,3 +1,13 @@
+.era-toggle {
+    display: flex;
+    gap: 0;
+    padding-block-end: 0.75rem;
+}
+
+.era-toggle .toggle-btn:not(:last-child) {
+    border-inline-end: none;
+}
+
 .equipment-toggle {
     display: flex;
     gap: 0;
