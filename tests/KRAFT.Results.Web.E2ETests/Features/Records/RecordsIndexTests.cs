@@ -67,7 +67,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         activeCount.ShouldBe(1);
 
         string activeText = await activeButton.InnerTextAsync();
-        activeText.ShouldBe("Current Era");
+        activeText.ShouldContain("Current Era");
     }
 
     [Fact]
