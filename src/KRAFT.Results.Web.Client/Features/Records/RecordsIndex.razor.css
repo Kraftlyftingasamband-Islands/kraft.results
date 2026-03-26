@@ -19,6 +19,12 @@
     color: var(--color-text);
 }
 
+.era-load-error {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin-block-end: 1rem;
+}
+
 @media (max-width: 641px) {
     .category-grid {
         grid-template-columns: 1fr;

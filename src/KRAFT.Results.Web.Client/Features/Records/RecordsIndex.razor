@@ -14,6 +14,11 @@
                 OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
                 OnEraChanged="HandleEraChanged" />
 
+@if (_erasLoadFailed)
+{
+    <p class="era-load-error">Ekki tókst að sækja tímabilsgögn.</p>
+}
+
 <section class="gender-section">
     <h2>Karlar</h2>
     <div class="category-grid">
@@ -73,12 +78,14 @@
     private List<EraSummary>? _eras;
     private string _eraSlug = "";
     private string _currentEraSlug = "";
+    private bool _erasLoadFailed;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _eras = await HttpClient.GetFromJsonAsync<List<EraSummary>>("/eras");
+            _erasLoadFailed = false;
 
             if (_eras is not null && _eras.Count > 0)
             {
@@ -102,6 +109,7 @@
         catch
         {
             _eras = null;
+            _erasLoadFailed = true;
         }
     }
 
