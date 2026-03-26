@@ -36,6 +36,7 @@ internal sealed class GetTeamCompetitionHandler
             .Select(p => new TeamPointRow(
                 p.TeamId!.Value,
                 p.Team!.Title,
+                p.Team!.TitleShort,
                 p.Team.Slug,
                 p.Team.LogoImageFilename,
                 p.Athlete.Gender.Value,
@@ -90,6 +91,7 @@ internal sealed class GetTeamCompetitionHandler
 
                 return new TeamAggregate(
                     first.TeamName,
+                    first.TeamTitleShort,
                     first.TeamSlug,
                     first.LogoImageFilename,
                     totalPoints,
@@ -123,6 +125,7 @@ internal sealed class GetTeamCompetitionHandler
             standings.Add(new TeamCompetitionStanding(
                 currentRank,
                 team.TeamName,
+                team.TeamTitleShort,
                 team.TeamSlug,
                 team.LogoImageFilename,
                 team.TotalPoints));
@@ -146,6 +149,7 @@ internal sealed class GetTeamCompetitionHandler
     private sealed record TeamPointRow(
         int TeamId,
         string TeamName,
+        string TeamTitleShort,
         string TeamSlug,
         string? LogoImageFilename,
         string Gender,
@@ -154,6 +158,7 @@ internal sealed class GetTeamCompetitionHandler
 
     private sealed record TeamAggregate(
         string TeamName,
+        string TeamTitleShort,
         string TeamSlug,
         string? LogoImageFilename,
         int TotalPoints,

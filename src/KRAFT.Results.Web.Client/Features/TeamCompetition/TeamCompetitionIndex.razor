@@ -5,23 +5,10 @@
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
-@inject NavigationManager NavigationManager
 
-<PageTitle>Lidakeppni @Year</PageTitle>
+<PageTitle>Liðakeppni @Year</PageTitle>
 
-<h1>Lidakeppni @Year</h1>
-
-<nav class="year-nav" aria-label="Velja ar">
-    @for (int y = DateTime.Now.Year; y >= MinYear; y--)
-    {
-        int yearValue = y;
-        <button class="year-btn @(yearValue == Year ? "active" : "")"
-                aria-pressed="@(yearValue == Year ? "true" : "false")"
-                @onclick="() => OnYearSelectedAsync(yearValue)">
-            @yearValue
-        </button>
-    }
-</nav>
+<YearNav Label="Liðakeppni" Year="@Year" BaseUrl="/team-competition" MinYear="2010" MaxYear="@DateTime.Now.Year" />
 
 @if (_isLoading)
 {
@@ -85,30 +72,26 @@ else if (_response is not null)
 }
 
 @code {
-    private const int MinYear = 2010;
-
     [Parameter]
     public int Year { get; set; }
 
+    private int _loadedYear;
     private bool _isLoading = true;
     private bool _hasError;
     private TeamCompetitionResponse? _response;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (Year == 0)
         {
             Year = DateTime.Now.Year;
         }
 
-        await LoadDataAsync();
-    }
-
-    private async Task OnYearSelectedAsync(int year)
-    {
-        Year = year;
-        NavigationManager.NavigateTo($"/team-competition/{year}", replace: true);
-        await LoadDataAsync();
+        if (Year != _loadedYear)
+        {
+            _loadedYear = Year;
+            await LoadDataAsync();
+        }
     }
 
     private async Task LoadDataAsync()
