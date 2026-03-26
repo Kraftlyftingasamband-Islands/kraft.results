@@ -1,4 +1,5 @@
 using KRAFT.Results.Contracts.Eras;
+using KRAFT.Results.WebApi.Features.Records;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ internal sealed class GetErasHandler(ResultsDbContext dbContext)
     {
         List<EraSummary> eras = await dbContext.Set<Era>()
             .Where(e => e.Slug != null)
+            .Where(e => dbContext.Set<Record>().Any(r => r.EraId == e.EraId && r.IsCurrent))
             .OrderBy(e => e.StartDate)
             .Select(e => new EraSummary(
                 e.EraId,
