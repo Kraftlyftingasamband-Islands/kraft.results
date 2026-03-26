@@ -52,17 +52,17 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
 
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/records");
-        ILocator eraToggle = page.Locator(".era-toggle");
-        await eraToggle.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator eraSelector = page.Locator(".era-selector");
+        await eraSelector.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        await Expect(eraToggle).ToBeVisibleAsync();
+        await Expect(eraSelector).ToBeVisibleAsync();
 
-        ILocator buttons = eraToggle.Locator("button");
+        ILocator buttons = eraSelector.Locator("button");
         int buttonCount = await buttons.CountAsync();
         buttonCount.ShouldBe(2);
 
-        ILocator activeButton = eraToggle.Locator("button.active");
+        ILocator activeButton = eraSelector.Locator("button.active");
         int activeCount = await activeButton.CountAsync();
         activeCount.ShouldBe(1);
 
@@ -78,11 +78,11 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
 
         await page.GotoAsync($"{_fixture.BaseUrl}/records");
-        ILocator eraToggle = page.Locator(".era-toggle");
-        await eraToggle.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator eraSelector = page.Locator(".era-selector");
+        await eraSelector.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act
-        ILocator historicalButton = eraToggle.Locator("button", new LocatorLocatorOptions { HasText = "Historical Era" });
+        ILocator historicalButton = eraSelector.Locator("button", new LocatorLocatorOptions { HasText = "Historical Era" });
         await historicalButton.ClickAsync();
 
         // Assert
