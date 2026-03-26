@@ -23,41 +23,119 @@
     color: var(--color-primary);
 }
 
-.era-toggle {
-    display: flex;
-    gap: 0;
-    padding-block-start: 2rem;
-    font-size: 0.75rem;
-    opacity: 0.6;
+.era-section {
+    padding-block-start: 2.5rem;
+    opacity: 0.65;
 }
 
-.era-toggle .toggle-btn {
-    background: none;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-}
-
-.era-toggle .toggle-btn:hover:not(.active) {
-    background: none;
-    text-decoration: underline;
-    color: var(--color-text-muted);
-}
-
-.era-toggle .toggle-btn.active {
-    background: none;
-    border: none;
-    color: var(--color-text);
+.era-section-label {
+    display: block;
+    font-size: 0.6rem;
     font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-block-end: 0.5rem;
 }
 
-.era-toggle .toggle-btn:first-child {
-    border-radius: 0;
+.era-timeline {
+    display: flex;
+    align-items: stretch;
 }
 
-.era-toggle .toggle-btn:last-child {
-    border-radius: 0;
+.era-segment {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    gap: 0;
+}
+
+.era-segment:last-child {
+    flex: 0 0 auto;
+}
+
+.era-segment:disabled {
+    cursor: default;
+}
+
+.era-years {
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    padding-block-end: 0.3rem;
+    min-height: 1.2rem;
+}
+
+.era-node-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-block: 0.2rem;
+}
+
+.era-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-white);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.era-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+    flex-shrink: 0;
+}
+
+.era-segment:last-child .era-line {
+    display: none;
+}
+
+.era-title {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    padding-block-start: 0.3rem;
+    line-height: 1.3;
+    font-weight: 400;
+}
+
+.era-segment.active .era-dot {
+    background: var(--color-text);
+    border-color: var(--color-text);
+}
+
+.era-segment.active .era-title {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.era-segment.active .era-years {
+    color: var(--color-text-muted);
+}
+
+.era-segment:hover:not(.active):not(:disabled) .era-dot {
+    border-color: var(--color-text-muted);
+}
+
+.era-segment:hover:not(.active):not(:disabled) .era-title {
+    color: var(--color-text);
+}
+
+.era-segment:focus-visible .era-dot {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 .equipment-toggle {
