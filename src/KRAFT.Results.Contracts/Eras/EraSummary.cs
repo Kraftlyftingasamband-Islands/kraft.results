@@ -5,4 +5,6 @@ public sealed record class EraSummary(
     string Title,
     string Slug,
     DateOnly StartDate,
-    DateOnly EndDate);
+    DateOnly EndDate,
+    bool HasClassicRecords,
+    bool HasEquippedRecords);
