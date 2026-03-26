@@ -208,6 +208,11 @@ else
 
     private async Task HandleEquipmentTypeChanged(string type)
     {
+        if (_equipmentType == type)
+        {
+            return;
+        }
+
         _equipmentType = type;
         UpdateUrl(replace: true);
         await LoadDataAsync();
