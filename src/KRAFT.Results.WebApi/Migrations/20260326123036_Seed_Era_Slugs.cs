@@ -10,10 +10,10 @@ namespace KRAFT.Results.WebApi.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'pre-isi' WHERE Title = 'Pre-ISI' AND Slug IS NULL;");
-            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'isi-old-weightcategories' WHERE Title = 'ISI Old Weightcategories' AND Slug IS NULL;");
-            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'isi-new-weightcategories' WHERE Title = 'ISI New WeightCategories' AND Slug IS NULL;");
-            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'pre-isi-old-weightcategories' WHERE Title = 'PRE-ISI Old WeightCategories' AND Slug IS NULL;");
+            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'fyrir-isi', Title = 'Fyrir ÍSÍ' WHERE Title = 'Pre-ISI';");
+            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'isi-gamalt', Title = 'ÍSÍ (gamalt)' WHERE Title = 'ISI Old Weightcategories';");
+            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'isi-nuverandi', Title = 'ÍSÍ (núverandi)' WHERE Title = 'ISI New WeightCategories';");
+            migrationBuilder.Sql("UPDATE dbo.Eras SET Slug = 'fyrir-isi-gamalt', Title = 'Fyrir ÍSÍ (gamalt)' WHERE Title = 'PRE-ISI Old WeightCategories';");
         }
 
         /// <inheritdoc />
