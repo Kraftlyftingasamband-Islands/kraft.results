@@ -1,10 +1,27 @@
 @page "/records"
 
+@using KRAFT.Results.Contracts.Eras
 @using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
 
 <PageTitle>Met</PageTitle>
 
 <h1>Met</h1>
+
+@if (_eras is not null && _eras.Count > 1)
+{
+    <div class="era-toggle" role="group" aria-label="Tímabil">
+        @foreach (EraSummary era in _eras)
+        {
+            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
+                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
+                    @onclick="@(() => SelectEra(era.Slug))">
+                @era.Title
+            </button>
+        }
+    </div>
+}
 
 <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
     <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" @onclick="@(() => SetEquipmentType("classic"))">
@@ -71,6 +88,32 @@
 
 @code {
     private string _equipmentType = "classic";
+    private List<EraSummary>? _eras;
+    private string _eraSlug = "";
+    private string _currentEraSlug = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _eras = await HttpClient.GetFromJsonAsync<List<EraSummary>>("/eras");
+
+            if (_eras is not null && _eras.Count > 0)
+            {
+                _currentEraSlug = _eras[^1].Slug;
+                _eraSlug = _currentEraSlug;
+            }
+        }
+        catch
+        {
+            _eras = null;
+        }
+    }
+
+    private void SelectEra(string slug)
+    {
+        _eraSlug = slug;
+    }
 
     private void SetEquipmentType(string type)
     {
@@ -79,6 +122,13 @@
 
     private string GetRecordUrl(string gender, string ageCategory)
     {
-        return $"records/{gender}/{ageCategory}?equipmentType={_equipmentType}";
+        string url = $"records/{gender}/{ageCategory}?equipmentType={_equipmentType}";
+
+        if (_eraSlug != _currentEraSlug)
+        {
+            url += $"&era={_eraSlug}";
+        }
+
+        return url;
     }
 }
