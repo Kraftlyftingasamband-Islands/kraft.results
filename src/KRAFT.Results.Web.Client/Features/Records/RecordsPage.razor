@@ -25,21 +25,6 @@
 
 <h1>@GenderLabel - @AgeCategory</h1>
 
-@if (_eras is not null && _eras.Count > 1)
-{
-    <div class="era-toggle" role="group" aria-label="Tímabil">
-        @foreach (EraSummary era in _eras)
-        {
-            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
-                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
-                    disabled="@_isLoading"
-                    @onclick="@(() => SetEraAsync(era.Slug))">
-                @era.Title
-            </button>
-        }
-    </div>
-}
-
 <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
     <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("classic"))">
         Án búnaðar
@@ -146,6 +131,21 @@ else
 {
     <div class="empty-state">
         Engin met fundust.
+    </div>
+}
+
+@if (_eras is not null && _eras.Count > 1)
+{
+    <div class="era-toggle" role="group" aria-label="Tímabil">
+        @foreach (EraSummary era in _eras)
+        {
+            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
+                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
+                    disabled="@_isLoading"
+                    @onclick="@(() => SetEraAsync(era.Slug))">
+                @era.Title
+            </button>
+        }
     </div>
 }
 
