@@ -12,14 +12,6 @@
     gap: 0;
 }
 
-.equipment-toggle.single-mode {
-    opacity: 0.35;
-}
-
-.equipment-toggle.single-mode .toggle-btn {
-    cursor: default;
-}
-
 .toggle-btn {
     padding: 0.75rem 1.5rem;
     border: 1px solid var(--color-border);
@@ -76,14 +68,12 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--color-text-muted);
-    opacity: 0.7;
 }
 
 .era-tabs {
     display: flex;
     gap: 0;
     border-bottom: 1.5px solid var(--color-border);
-    opacity: 0.7;
 }
 
 .era-tab {
@@ -114,7 +104,6 @@
 .era-tab-years {
     font-size: 0.6rem;
     color: var(--color-text-muted);
-    opacity: 0.6;
     font-variant-numeric: tabular-nums;
 }
 

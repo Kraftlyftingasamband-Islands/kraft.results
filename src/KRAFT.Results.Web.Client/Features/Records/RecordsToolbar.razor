@@ -1,20 +1,23 @@
 @using KRAFT.Results.Contracts.Eras
 
 <div class="records-toolbar">
-    <div class="equipment-toggle @(!_showEquipmentToggle ? "single-mode" : "")" role="group" aria-label="Tegund búnaðar">
-        <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")"
-                aria-pressed="@(_equipmentType == "classic" ? "true" : "false")"
-                disabled="@(!_showEquipmentToggle || Disabled)"
-                @onclick="@(() => SetEquipmentTypeAsync("classic"))">
-            Án búnaðar
-        </button>
-        <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")"
-                aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")"
-                disabled="@(!_showEquipmentToggle || Disabled)"
-                @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
-            Með búnaði
-        </button>
-    </div>
+    @if (_showEquipmentToggle)
+    {
+        <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
+            <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")"
+                    aria-pressed="@(_equipmentType == "classic" ? "true" : "false")"
+                    disabled="@Disabled"
+                    @onclick="@(() => SetEquipmentTypeAsync("classic"))">
+                Án búnaðar
+            </button>
+            <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")"
+                    aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")"
+                    disabled="@Disabled"
+                    @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
+                Með búnaði
+            </button>
+        </div>
+    }
     @if (Eras.Count > 1)
     {
         <div class="era-selector">

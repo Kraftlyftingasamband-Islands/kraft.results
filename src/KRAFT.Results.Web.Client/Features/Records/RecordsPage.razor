@@ -198,11 +198,12 @@ else
         await LoadDataAsync();
     }
 
-    private Task HandleEraChanged(string slug)
+    private async Task HandleEraChanged(string slug)
     {
         _eraSlug = slug;
         _selectedEra = _eras?.FirstOrDefault(e => e.Slug == _eraSlug);
-        return Task.CompletedTask;
+        UpdateUrl(replace: true);
+        await LoadDataAsync();
     }
 
     private async Task HandleEquipmentTypeChanged(string type)
