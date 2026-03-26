@@ -9,24 +9,6 @@
 
 <h1>Met</h1>
 
-@if (_erasLoading)
-{
-    <div class="era-toggle-loading" aria-busy="true" aria-label="Sæki tímabil..."></div>
-}
-else if (_eras is not null && _eras.Count > 1)
-{
-    <div class="era-toggle" role="group" aria-label="Tímabil">
-        @foreach (EraSummary era in _eras)
-        {
-            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
-                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
-                    @onclick="@(() => SelectEra(era.Slug))">
-                @era.Title
-            </button>
-        }
-    </div>
-}
-
 <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
     <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" @onclick="@(() => SetEquipmentType("classic"))">
         Án búnaðar
@@ -90,12 +72,25 @@ else if (_eras is not null && _eras.Count > 1)
     </div>
 </section>
 
+@if (_eras is not null && _eras.Count > 1)
+{
+    <div class="era-toggle" role="group" aria-label="Tímabil">
+        @foreach (EraSummary era in _eras)
+        {
+            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
+                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
+                    @onclick="@(() => SelectEra(era.Slug))">
+                @era.Title
+            </button>
+        }
+    </div>
+}
+
 @code {
     private string _equipmentType = "classic";
     private List<EraSummary>? _eras;
     private string _eraSlug = "";
     private string _currentEraSlug = "";
-    private bool _erasLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,10 +107,6 @@ else if (_eras is not null && _eras.Count > 1)
         catch
         {
             _eras = null;
-        }
-        finally
-        {
-            _erasLoading = false;
         }
     }
 
