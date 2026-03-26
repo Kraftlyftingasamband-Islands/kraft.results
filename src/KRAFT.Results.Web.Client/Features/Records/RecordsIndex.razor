@@ -9,7 +9,11 @@
 
 <h1>Met</h1>
 
-@if (_eras is not null && _eras.Count > 1)
+@if (_erasLoading)
+{
+    <div class="era-toggle-loading" aria-busy="true" aria-label="Sæki tímabil..."></div>
+}
+else if (_eras is not null && _eras.Count > 1)
 {
     <div class="era-toggle" role="group" aria-label="Tímabil">
         @foreach (EraSummary era in _eras)
@@ -91,6 +95,7 @@
     private List<EraSummary>? _eras;
     private string _eraSlug = "";
     private string _currentEraSlug = "";
+    private bool _erasLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,6 +112,10 @@
         catch
         {
             _eras = null;
+        }
+        finally
+        {
+            _erasLoading = false;
         }
     }
 
