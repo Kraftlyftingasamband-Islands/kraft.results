@@ -9,14 +9,10 @@
 
 <h1>Met</h1>
 
-<div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
-    <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" @onclick="@(() => SetEquipmentType("classic"))">
-        Án búnaðar
-    </button>
-    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" @onclick="@(() => SetEquipmentType("equipped"))">
-        Með búnaði
-    </button>
-</div>
+<RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
+                CurrentEraSlug="@_currentEraSlug"
+                OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
+                OnEraChanged="HandleEraChanged" />
 
 <section class="gender-section">
     <h2>Karlar</h2>
@@ -72,20 +68,6 @@
     </div>
 </section>
 
-@if (_eras is not null && _eras.Count > 1)
-{
-    <div class="era-toggle" role="group" aria-label="Tímabil">
-        @foreach (EraSummary era in _eras)
-        {
-            <button class="toggle-btn @(era.Slug == _eraSlug ? "active" : "")"
-                    aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
-                    @onclick="@(() => SelectEra(era.Slug))">
-                @era.Title
-            </button>
-        }
-    </div>
-}
-
 @code {
     private string _equipmentType = "classic";
     private List<EraSummary>? _eras;
@@ -102,6 +84,19 @@
             {
                 _currentEraSlug = _eras[^1].Slug;
                 _eraSlug = _currentEraSlug;
+
+                EraSummary? initialEra = _eras.Find(e => e.Slug == _eraSlug);
+                if (initialEra is not null)
+                {
+                    if (initialEra.HasClassicRecords && !initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "classic";
+                    }
+                    else if (!initialEra.HasClassicRecords && initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "equipped";
+                    }
+                }
             }
         }
         catch
@@ -110,14 +105,16 @@
         }
     }
 
-    private void SelectEra(string slug)
-    {
-        _eraSlug = slug;
-    }
-
-    private void SetEquipmentType(string type)
+    private Task HandleEquipmentTypeChanged(string type)
     {
         _equipmentType = type;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleEraChanged(string slug)
+    {
+        _eraSlug = slug;
+        return Task.CompletedTask;
     }
 
     private string GetRecordUrl(string gender, string ageCategory)
