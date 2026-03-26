@@ -9,6 +9,9 @@ internal sealed class EraWeightCategoryConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("EraWeightCategories", "dbo");
 
+        builder.HasIndex(e => new { e.EraId, e.WeightCategoryId })
+            .HasDatabaseName("IX_EraWeightCategories_EraId_WeightCategoryId");
+
         builder.Property(e => e.CreatedOn)
             .HasDefaultValueSql("(getdate())", "DF_EraWeightCategories_CreatedOn")
             .HasColumnType("datetime");

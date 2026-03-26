@@ -13,19 +13,20 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
         string gender,
         string ageCategory,
         string equipmentType,
+        int eraId,
+        DateTime referenceDate,
         CancellationToken cancellationToken)
     {
         bool isClassic = string.Equals(equipmentType, "classic", StringComparison.OrdinalIgnoreCase);
 
         string genderLower = gender.ToLowerInvariant();
 
-        DateTime now = DateTime.UtcNow;
-
         bool excludeJuniorsOnly = !string.Equals(ageCategory, "junior", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(ageCategory, "subjunior", StringComparison.OrdinalIgnoreCase);
 
         List<RawRecordData> rawData = await dbContext.Set<Record>()
-            .Where(r => r.Era.EndDate.Year > DateTime.UtcNow.Year)
+            .Where(r => r.IsCurrent)
+            .Where(r => r.EraId == eraId)
             .Where(r => r.WeightCategory.Gender == Gender.Parse(genderLower))
             .Where(r => r.AgeCategory.Slug == ageCategory)
             .Where(r => r.IsRaw == isClassic)
@@ -33,8 +34,8 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
             .Where(r => dbContext.Set<EraWeightCategory>()
                 .Any(ewc => ewc.EraId == r.EraId
                     && ewc.WeightCategoryId == r.WeightCategoryId
-                    && ewc.FromDate < now
-                    && ewc.ToDate > now))
+                    && ewc.FromDate <= referenceDate
+                    && ewc.ToDate >= referenceDate))
             .Where(r => !excludeJuniorsOnly || !r.WeightCategory.JuniorsOnly)
             .OrderBy(r => r.RecordCategoryId)
             .ThenBy(r => r.WeightCategory.MinWeight)
@@ -55,16 +56,6 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 r.WeightCategory.MinWeight,
                 r.IsStandard))
             .ToListAsync(cancellationToken);
-
-        rawData = rawData
-            .GroupBy(r => (r.RecordCategoryId, r.WeightCategoryId))
-            .Select(g => g
-                .OrderByDescending(r => r.Weight)
-                .ThenByDescending(r => r.RecordId)
-                .First())
-            .OrderBy(r => r.RecordCategoryId)
-            .ThenBy(r => r.MinWeight)
-            .ToList();
 
         List<RecordGroup> groups = rawData
             .GroupBy(r => r.RecordCategoryId)

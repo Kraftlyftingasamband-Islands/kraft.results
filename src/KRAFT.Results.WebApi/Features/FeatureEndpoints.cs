@@ -1,5 +1,6 @@
 ﻿using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
+using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Rankings;
 using KRAFT.Results.WebApi.Features.Records;
@@ -15,6 +16,7 @@ internal static class FeatureEndpoints
     {
         builder.MapAthleteEndpoints();
         builder.MapCountryEndpoints();
+        builder.MapEraEndpoints();
         builder.MapMeetEndpoints();
         builder.MapRankingEndpoints();
         builder.MapRecordEndpoints();
