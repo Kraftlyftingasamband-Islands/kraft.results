@@ -18,7 +18,9 @@ internal sealed class GetErasHandler(ResultsDbContext dbContext)
                 e.Title,
                 e.Slug!,
                 e.StartDate,
-                e.EndDate))
+                e.EndDate,
+                dbContext.Set<Record>().Any(r => r.EraId == e.EraId && r.IsCurrent && r.IsRaw),
+                dbContext.Set<Record>().Any(r => r.EraId == e.EraId && r.IsCurrent && !r.IsRaw)))
             .ToListAsync(cancellationToken);
 
         return eras;

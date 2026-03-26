@@ -1,0 +1,114 @@
+@using KRAFT.Results.Contracts.Eras
+
+<div class="records-toolbar">
+    <div class="equipment-toggle @(!_showEquipmentToggle ? "single-mode" : "")" role="group" aria-label="Tegund búnaðar">
+        <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")"
+                aria-pressed="@(_equipmentType == "classic" ? "true" : "false")"
+                disabled="@(!_showEquipmentToggle || Disabled)"
+                @onclick="@(() => SetEquipmentTypeAsync("classic"))">
+            Án búnaðar
+        </button>
+        <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")"
+                aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")"
+                disabled="@(!_showEquipmentToggle || Disabled)"
+                @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
+            Með búnaði
+        </button>
+    </div>
+    @if (Eras.Count > 1)
+    {
+        <div class="era-selector">
+            <span class="era-selector-label">Tímabil</span>
+            <div class="era-tabs" role="group" aria-label="Tímabil">
+                @foreach (EraSummary era in Eras)
+                {
+                    <button class="era-tab @(era.Slug == _eraSlug ? "active" : "")"
+                            aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
+                            disabled="@Disabled"
+                            @onclick="@(() => SelectEraAsync(era.Slug))">
+                        <span class="era-tab-title">@era.Title</span>
+                        <span class="era-tab-years">@GetEraYearRange(era)</span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<EraSummary> Eras { get; set; } = default!;
+    [Parameter, EditorRequired] public string CurrentEraSlug { get; set; } = default!;
+    [Parameter] public string InitialEquipmentType { get; set; } = "classic";
+    [Parameter] public string InitialEraSlug { get; set; } = "";
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<string> OnEquipmentTypeChanged { get; set; }
+    [Parameter] public EventCallback<string> OnEraChanged { get; set; }
+
+    private string _equipmentType = "classic";
+    private string _eraSlug = "";
+    private bool _showEquipmentToggle = true;
+    private bool _equipmentInitialized;
+    private bool _eraInitialized;
+
+    protected override void OnParametersSet()
+    {
+        if (!_equipmentInitialized)
+        {
+            _equipmentType = InitialEquipmentType;
+            _equipmentInitialized = true;
+        }
+
+        if (!_eraInitialized && !string.IsNullOrEmpty(CurrentEraSlug))
+        {
+            _eraSlug = string.IsNullOrEmpty(InitialEraSlug) ? CurrentEraSlug : InitialEraSlug;
+            ApplyEquipmentTypeForEra(_eraSlug);
+            _eraInitialized = true;
+        }
+    }
+
+    private async Task SelectEraAsync(string slug)
+    {
+        _eraSlug = slug;
+        ApplyEquipmentTypeForEra(slug);
+        await OnEraChanged.InvokeAsync(slug);
+        await OnEquipmentTypeChanged.InvokeAsync(_equipmentType);
+    }
+
+    private async Task SetEquipmentTypeAsync(string type)
+    {
+        _equipmentType = type;
+        await OnEquipmentTypeChanged.InvokeAsync(_equipmentType);
+    }
+
+    private void ApplyEquipmentTypeForEra(string slug)
+    {
+        EraSummary? era = Eras.Find(e => e.Slug == slug);
+        if (era is null)
+        {
+            return;
+        }
+
+        if (era.HasClassicRecords && !era.HasEquippedRecords)
+        {
+            _equipmentType = "classic";
+            _showEquipmentToggle = false;
+        }
+        else if (!era.HasClassicRecords && era.HasEquippedRecords)
+        {
+            _equipmentType = "equipped";
+            _showEquipmentToggle = false;
+        }
+        else
+        {
+            _showEquipmentToggle = true;
+        }
+    }
+
+    private static string GetEraYearRange(EraSummary era)
+    {
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        string start = era.StartDate > today ? "" : era.StartDate.Year.ToString();
+        string end = era.EndDate > today ? "" : era.EndDate.Year.ToString();
+        return end.Length > 0 ? $"{start}–{end}" : $"{start}–";
+    }
+}

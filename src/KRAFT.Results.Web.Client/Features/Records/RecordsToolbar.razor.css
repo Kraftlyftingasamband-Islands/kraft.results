@@ -1,0 +1,151 @@
+.records-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block-end: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.equipment-toggle {
+    display: flex;
+    gap: 0;
+}
+
+.equipment-toggle.single-mode {
+    opacity: 0.35;
+}
+
+.equipment-toggle.single-mode .toggle-btn {
+    cursor: default;
+}
+
+.toggle-btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--color-border);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: var(--color-white);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) ease,
+                color var(--transition-fast) ease,
+                border-color var(--transition-fast) ease;
+}
+
+.toggle-btn:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    border-inline-end: none;
+}
+
+.toggle-btn:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.toggle-btn.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.toggle-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.toggle-btn.active:focus-visible {
+    outline-color: var(--color-text);
+}
+
+.toggle-btn:hover:not(.active) {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.era-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+}
+
+.era-selector-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+}
+
+.era-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1.5px solid var(--color-border);
+    opacity: 0.7;
+}
+
+.era-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+    padding: 0.4rem 1rem 0.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    cursor: pointer;
+    font-family: var(--font-body);
+}
+
+.era-tab:first-child {
+    padding-inline-start: 0;
+}
+
+.era-tab-title {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+    transition: color 0.15s ease;
+}
+
+.era-tab-years {
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+}
+
+.era-tab.active {
+    border-bottom-color: var(--color-text);
+}
+
+.era-tab.active .era-tab-title {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.era-tab.active .era-tab-years {
+    opacity: 1;
+}
+
+.era-tab:hover:not(.active):not(:disabled) .era-tab-title {
+    color: var(--color-text);
+}
+
+.era-tab:disabled {
+    cursor: default;
+}
+
+.era-tab:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toggle-btn {
+        transition: none;
+    }
+}
