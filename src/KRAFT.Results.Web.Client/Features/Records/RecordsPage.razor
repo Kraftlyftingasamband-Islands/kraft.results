@@ -25,17 +25,13 @@
 
 <h1>@GenderLabel - @AgeCategory</h1>
 
-@if (_showEquipmentToggle)
-{
-    <div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
-        <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("classic"))">
-            Án búnaðar
-        </button>
-        <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
-            Með búnaði
-        </button>
-    </div>
-}
+<RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
+                CurrentEraSlug="@_currentEraSlug"
+                InitialEquipmentType="@_equipmentType"
+                InitialEraSlug="@_eraSlug"
+                Disabled="_isLoading"
+                OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
+                OnEraChanged="HandleEraChanged" />
 
 @if (_isLoading)
 {
@@ -137,29 +133,6 @@ else
     </div>
 }
 
-@if (_eras is not null && _eras.Count > 1)
-{
-    <div class="era-section">
-        <span class="era-section-label">Tímabil</span>
-        <div class="era-timeline" role="group" aria-label="Tímabil">
-            @foreach (EraSummary era in _eras)
-            {
-                <button class="era-segment @(era.Slug == _eraSlug ? "active" : "")"
-                        aria-pressed="@(era.Slug == _eraSlug ? "true" : "false")"
-                        disabled="@_isLoading"
-                        @onclick="@(() => SetEraAsync(era.Slug))">
-                    <span class="era-years">@GetEraYearRange(era)</span>
-                    <div class="era-node-row">
-                        <span class="era-dot"></span>
-                        <span class="era-line"></span>
-                    </div>
-                    <span class="era-title">@era.Title</span>
-                </button>
-            }
-        </div>
-    </div>
-}
-
 @code {
     [Parameter]
     public string Gender { get; set; } = default!;
@@ -180,7 +153,6 @@ else
     private EraSummary? _selectedEra;
     private bool _isLoading = true;
     private bool _hasError;
-    private bool _showEquipmentToggle = true;
     private List<RecordGroup>? _groups;
 
     private string GenderLabel => Gender?.ToLowerInvariant() switch
@@ -203,7 +175,19 @@ else
                 _currentEraSlug = _eras[^1].Slug;
                 _eraSlug = Era ?? _currentEraSlug;
                 _selectedEra = _eras.FirstOrDefault(e => e.Slug == _eraSlug);
-                ApplyEquipmentTypeForEra(_eraSlug);
+
+                EraSummary? initialEra = _eras?.Find(e => e.Slug == _eraSlug);
+                if (initialEra is not null)
+                {
+                    if (initialEra.HasClassicRecords && !initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "classic";
+                    }
+                    else if (!initialEra.HasClassicRecords && initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "equipped";
+                    }
+                }
             }
         }
         catch
@@ -214,57 +198,18 @@ else
         await LoadDataAsync();
     }
 
-    private async Task SetEraAsync(string slug)
+    private Task HandleEraChanged(string slug)
     {
         _eraSlug = slug;
         _selectedEra = _eras?.FirstOrDefault(e => e.Slug == _eraSlug);
-        ApplyEquipmentTypeForEra(_eraSlug);
-        UpdateUrl(replace: true);
-        await LoadDataAsync();
+        return Task.CompletedTask;
     }
 
-    private async Task SetEquipmentTypeAsync(string type)
+    private async Task HandleEquipmentTypeChanged(string type)
     {
         _equipmentType = type;
         UpdateUrl(replace: true);
         await LoadDataAsync();
-    }
-
-    private static string GetEraYearRange(EraSummary era)
-    {
-        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-        string start = era.StartDate > today ? "" : era.StartDate.Year.ToString();
-        string end = era.EndDate > today ? "" : era.EndDate.Year.ToString();
-        return end.Length > 0 ? $"{start}–{end}" : $"{start}–";
-    }
-
-    private void ApplyEquipmentTypeForEra(string slug)
-    {
-        if (_eras is null)
-        {
-            return;
-        }
-
-        EraSummary? era = _eras.Find(e => e.Slug == slug);
-        if (era is null)
-        {
-            return;
-        }
-
-        if (era.HasClassicRecords && !era.HasEquippedRecords)
-        {
-            _equipmentType = "classic";
-            _showEquipmentToggle = false;
-        }
-        else if (!era.HasClassicRecords && era.HasEquippedRecords)
-        {
-            _equipmentType = "equipped";
-            _showEquipmentToggle = false;
-        }
-        else
-        {
-            _showEquipmentToggle = true;
-        }
     }
 
     private void UpdateUrl(bool replace)
