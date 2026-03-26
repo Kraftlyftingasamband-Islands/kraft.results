@@ -5,13 +5,15 @@
     <table aria-label="@AriaLabel">
         <colgroup>
             <col class="col-rank" />
-            <col class="col-team" />
+            <col class="col-abbr" />
+            <col class="col-name" />
             <col class="col-points" />
         </colgroup>
         <thead>
             <tr>
                 <th scope="col">#</th>
-                <th scope="col">Lid</th>
+                <th scope="col">Lið</th>
+                <th scope="col"></th>
                 <th scope="col" class="text-end">Stig</th>
             </tr>
         </thead>
@@ -21,32 +23,18 @@
                 <tr class="@(standing.Rank == 1 ? "row-first" : "")">
                     <RankCell Rank="@standing.Rank" />
                     <td>
-                        <div class="team-cell">
-                            @if (!string.IsNullOrEmpty(standing.LogoImageFilename))
-                            {
-                                <img class="team-logo"
-                                     src="/images/teams/@standing.LogoImageFilename"
-                                     alt="@($"{standing.TeamName} merki")"
-                                     loading="lazy" />
-                            }
-                            else
-                            {
-                                <span class="team-logo-placeholder" aria-hidden="true">
-                                    @(standing.TeamName.Length > 0 ? standing.TeamName[0].ToString() : "?")
-                                </span>
-                            }
-                            @if (!string.IsNullOrEmpty(standing.TeamSlug))
-                            {
-                                <NavLink class="team-name-link" href="@($"/teams/{standing.TeamSlug}")">
-                                    @standing.TeamName
-                                </NavLink>
-                            }
-                            else
-                            {
-                                <span>@standing.TeamName</span>
-                            }
-                        </div>
+                        @if (!string.IsNullOrEmpty(standing.TeamSlug))
+                        {
+                            <NavLink class="team-name-link abbr-link" href="@($"/teams/{standing.TeamSlug}")">
+                                @standing.TeamTitleShort
+                            </NavLink>
+                        }
+                        else
+                        {
+                            <span>@standing.TeamTitleShort</span>
+                        }
                     </td>
+                    <td class="team-name">@standing.TeamName</td>
                     <td class="text-end numeric-value @(standing.Rank == 1 ? "points-first" : "")">
                         @standing.TotalPoints
                     </td>
