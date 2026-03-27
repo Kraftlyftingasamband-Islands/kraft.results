@@ -15,7 +15,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 p.Place,
                 $"{p.Athlete.Firstname} {p.Athlete.Lastname}",
                 p.Athlete.Slug,
-                p.Athlete.Gender == "f" ? "Konur" : "Karlar",
+                p.Athlete.Gender == "f" ? "Konur" : "Karlar", // Inline: EF translates to SQL; see DisplayNames.ToGenderGroupLabel
                 p.Athlete.DateOfBirth != null ? p.Athlete.DateOfBirth.Value.Year : 0,
                 p.AgeCategory != null && p.AgeCategory.TitleShort != null ? p.AgeCategory.Title : string.Empty,
                 p.WeightCategory != null ? p.WeightCategory.Title : string.Empty,

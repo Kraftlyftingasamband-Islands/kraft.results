@@ -95,7 +95,7 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
         // Cross-product: For each record category × each weight category, emit the best record or a placeholder
         List<RecordGroup> groups = DisplayCategories
             .Select(category => new RecordGroup(
-                MapCategoryName(category),
+                category.ToDisplayName(),
                 activeWeightCategories
                     .Select(wc =>
                     {
@@ -137,17 +137,6 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
 
         return groups;
     }
-
-#pragma warning disable S3358 // Ternary operators should not be nested
-    private static string MapCategoryName(RecordCategory category) =>
-        category == RecordCategory.Squat ? "Hn\u00e9beygja"
-        : category == RecordCategory.Bench ? "Bekkpressa"
-        : category == RecordCategory.Deadlift ? "R\u00e9ttst\u00f6\u00f0ulyfta"
-        : category == RecordCategory.Total ? "Samtala"
-        : category == RecordCategory.BenchSingle ? "Bekkpressa (st\u00f6k grein)"
-        : category == RecordCategory.DeadliftSingle ? "R\u00e9ttst\u00f6\u00f0ulyfta (st\u00f6k grein)"
-        : string.Empty;
-#pragma warning restore S3358 // Ternary operators should not be nested
 
     private sealed record ActiveWeightCategory(
         int WeightCategoryId,

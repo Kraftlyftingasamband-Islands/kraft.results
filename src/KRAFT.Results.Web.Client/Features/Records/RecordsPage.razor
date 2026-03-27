@@ -1,5 +1,6 @@
 @page "/records/{Gender}/{AgeCategory}"
 
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Eras
 @using KRAFT.Results.Contracts.Records
 @using KRAFT.Results.Web.Client.Components
@@ -166,12 +167,7 @@ else
     private bool _hasError;
     private List<RecordGroup>? _groups;
 
-    private string GenderLabel => Gender?.ToLowerInvariant() switch
-    {
-        "m" => "Karlar",
-        "f" => "Konur",
-        _ => Gender ?? "",
-    };
+    private string GenderLabel => Gender is not null ? Gender.ToGenderGroupLabel() : "";
 
     protected override async Task OnInitializedAsync()
     {

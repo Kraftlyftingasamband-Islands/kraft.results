@@ -15,10 +15,10 @@
     <div class="filter-group">
         <label class="filter-label" for="discipline">Grein</label>
         <select id="discipline" class="filter-select" @bind="Discipline" @bind:after="OnFilterChangedAsync">
-            <option value="total">Samtala</option>
-            <option value="squat">Hnébeygja</option>
-            <option value="bench">Bekkpessa</option>
-            <option value="deadlift">Réttstöðulyfta</option>
+            <option value="total">@Constants.Total</option>
+            <option value="squat">@Constants.Squat</option>
+            <option value="bench">@Constants.Bench</option>
+            <option value="deadlift">@Constants.Deadlift</option>
         </select>
     </div>
 
@@ -37,8 +37,8 @@
         <label class="filter-label" for="equipmentType">Flokkur</label>
         <select id="equipmentType" class="filter-select" @bind="EquipmentType" @bind:after="OnFilterChangedAsync">
             <option value="">Allir</option>
-            <option value="classic">Án búnaðar</option>
-            <option value="equipped">Með búnaði</option>
+            <option value="classic">@DisplayNames.EquipmentType(true)</option>
+            <option value="equipped">@DisplayNames.EquipmentType(false)</option>
         </select>
     </div>
 
@@ -46,8 +46,8 @@
         <label class="filter-label" for="gender">Kyn</label>
         <select id="gender" class="filter-select" @bind="Gender" @bind:after="OnFilterChangedAsync">
             <option value="">Allir</option>
-            <option value="m">Karlar</option>
-            <option value="f">Konur</option>
+            <option value="m">@("m".ToGenderGroupLabel())</option>
+            <option value="f">@("f".ToGenderGroupLabel())</option>
         </select>
     </div>
 </div>
@@ -170,10 +170,10 @@ else
 
     private string DisciplineLabel => Discipline?.ToLowerInvariant() switch
     {
-        "squat" => "Hnébeygja",
-        "bench" => "Bekkpessa",
-        "deadlift" => "Réttstöðulyfta",
-        _ => "Samtala",
+        "squat" => Constants.Squat,
+        "bench" => Constants.Bench,
+        "deadlift" => Constants.Deadlift,
+        _ => Constants.Total,
     };
 
     protected override async Task OnInitializedAsync()

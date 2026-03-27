@@ -1,4 +1,5 @@
 @using System.ComponentModel.DataAnnotations
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
 
 <div class="form-card">
@@ -130,10 +131,10 @@
 
     private static string TranslateMeetType(string title) => title switch
     {
-        "Powerlifting" => "Kraftlyftingar",
-        "Benchpress" => "Bekkpressa",
-        "Deadlift" => "Réttstöðulyfta",
-        "Squat" => "Hnébeygja",
+        "Powerlifting" => Constants.Powerlifting,
+        "Benchpress" => Constants.Bench,
+        "Deadlift" => Constants.Deadlift,
+        "Squat" => Constants.Squat,
         "PushPull" => "Pressa og toga",
         _ => title,
     };
