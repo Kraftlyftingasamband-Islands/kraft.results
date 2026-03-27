@@ -8,6 +8,8 @@ BACKUP_DEST="/var/opt/mssql/data/backup.bak"
 APPHOST_PROJECT="src/KRAFT.Results.AppHost"
 LOGICAL_DATA="resultskraftisdev"
 LOGICAL_LOG="resultskraftisdev_log"
+WEBAPI_PROJECT="src/KRAFT.Results.WebApi"
+WEBAPI_DLL="$WEBAPI_PROJECT/bin/Debug/net10.0/KRAFT.Results.WebApi.dll"
 
 if [[ $# -eq 0 ]]; then
     DOWNLOADS="$USERPROFILE/Downloads"
@@ -41,11 +43,6 @@ if [[ "$BACKUP_FILE" == *.zip ]]; then
     fi
 fi
 
-if [[ "$(docker inspect --format='{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null)" != "true" ]]; then
-    echo "Error: Container '$CONTAINER_NAME' is not running. Start it with: dotnet run --project $APPHOST_PROJECT" >&2
-    exit 1
-fi
-
 SA_PASSWORD=$(dotnet user-secrets list --project "$APPHOST_PROJECT" 2>/dev/null \
     | grep 'Parameters:sql-password' \
     | sed 's/^.*= //')
@@ -54,6 +51,35 @@ if [[ -z "$SA_PASSWORD" ]]; then
     echo "Error: Could not find SA password in user-secrets for $APPHOST_PROJECT." >&2
     exit 1
 fi
+
+CONTAINER_STATE=$(docker inspect --format='{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null || echo "missing")
+
+if [[ "$CONTAINER_STATE" == "true" ]]; then
+    echo "Container '$CONTAINER_NAME' is already running."
+elif [[ "$CONTAINER_STATE" == "false" ]]; then
+    echo "Container '$CONTAINER_NAME' exists but is stopped. Starting..."
+    docker start "$CONTAINER_NAME"
+else
+    echo "Container '$CONTAINER_NAME' does not exist. Starting Aspire..."
+    dotnet run --project "$APPHOST_PROJECT" &
+fi
+
+echo "Waiting for SQL Server to be ready..."
+for i in $(seq 1 60); do
+    RUNNING=$(docker inspect --format='{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null || echo "false")
+    if [[ "$RUNNING" == "true" ]]; then
+        if MSYS_NO_PATHCONV=1 docker exec -e SQLCMDPASSWORD="$SA_PASSWORD" "$CONTAINER_NAME" "$SQLCMD" \
+            -S localhost -U sa -C -Q "SELECT 1" &>/dev/null; then
+            echo "SQL Server is ready."
+            break
+        fi
+    fi
+    if [[ $i -eq 60 ]]; then
+        echo "Error: SQL Server did not become ready within 120 seconds." >&2
+        exit 1
+    fi
+    sleep 2
+done
 
 echo "Copying backup into container..."
 docker cp "$BACKUP_FILE" "$CONTAINER_NAME:$BACKUP_DEST"
@@ -73,7 +99,7 @@ MSYS_NO_PATHCONV=1 docker exec -e SQLCMDPASSWORD="$SA_PASSWORD" "$CONTAINER_NAME
     "
 
 echo "Seeding migration history..."
-MIGRATIONS=$(ls src/KRAFT.Results.WebApi/Migrations/*.cs \
+MIGRATIONS=$(ls $WEBAPI_PROJECT/Migrations/*.cs \
     | grep -v Designer | grep -v Snapshot \
     | sed 's|.*/||; s|\.cs$||')
 
@@ -95,9 +121,14 @@ done <<< "$MIGRATIONS"
 MSYS_NO_PATHCONV=1 docker exec -e SQLCMDPASSWORD="$SA_PASSWORD" "$CONTAINER_NAME" "$SQLCMD" \
     -S localhost -U sa -C -d "$DB_NAME" -Q "$SEED_SQL"
 
+if [[ ! -f "$WEBAPI_DLL" ]]; then
+    echo "WebApi not built yet. Building..."
+    dotnet build "$WEBAPI_PROJECT"
+fi
+
 echo "Applying migrations..."
 DB_PORT=$(docker port "$CONTAINER_NAME" 1433 | head -n 1 | cut -d: -f2)
 CONNECTION_STRING="Server=127.0.0.1,$DB_PORT;Database=$DB_NAME;User Id=sa;Password=$SA_PASSWORD;TrustServerCertificate=True"
-dotnet ef database update --project src/KRAFT.Results.WebApi --connection "$CONNECTION_STRING" --no-build
+dotnet ef database update --project "$WEBAPI_PROJECT" --connection "$CONNECTION_STRING" --no-build
 
 echo "Database '$DB_NAME' restored and migrations applied successfully."
