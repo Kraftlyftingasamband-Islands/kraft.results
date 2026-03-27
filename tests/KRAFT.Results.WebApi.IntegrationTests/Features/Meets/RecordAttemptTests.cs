@@ -257,7 +257,7 @@ public sealed class RecordAttemptTests
 
     private async Task<int> AddParticipantToSeedMeet()
     {
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().Build();
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes",
             athleteCommand,
