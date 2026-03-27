@@ -131,9 +131,14 @@
 
                             <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
-                            @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline)))
+                            @foreach (var disciplineGroup in weightCategory.First().Attempts
+                                .Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline))
+                                .GroupBy(a => a.Discipline)
+                                .OrderBy(g => (byte)g.Key))
                             {
-                                <th class="@(round.Round == 1 ? "first-attempt" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
+                                int roundCount = disciplineGroup.Count();
+                                string disciplineLabel = disciplineGroup.Key switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total };
+                                <th colspan="@roundCount" class="first-attempt" style="text-align: center; width: @(80 * roundCount)px">@disciplineLabel</th>
                             }
 
                             <th class="first-attempt" style="text-align: right; width: 80px;">Samtala</th>
