@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Meets.Create;
+﻿using KRAFT.Results.WebApi.Features.Meets.AddParticipant;
+using KRAFT.Results.WebApi.Features.Meets.Create;
 using KRAFT.Results.WebApi.Features.Meets.Delete;
 using KRAFT.Results.WebApi.Features.Meets.Get;
 using KRAFT.Results.WebApi.Features.Meets.GetDetails;
@@ -15,6 +16,7 @@ internal static class MeetEndpoints
         RouteGroupBuilder group = endpoints.MapGroup("/meets")
             .WithTags("Meets");
 
+        group.MapAddParticipantEndpoint();
         group.MapCreateMeetEndpoint();
         group.MapGetMeetTypesEndpoint();
         group.MapGetMeetsEndpoint();

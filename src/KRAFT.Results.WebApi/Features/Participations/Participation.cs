@@ -3,12 +3,18 @@ using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Teams;
+using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
 
 namespace KRAFT.Results.WebApi.Features.Participations;
 
 internal sealed class Participation
 {
+    // For EF Core
+    private Participation()
+    {
+    }
+
     public int ParticipationId { get; private set; }
 
     public int AthleteId { get; private set; }
@@ -62,4 +68,17 @@ internal sealed class Participation
     public Team? Team { get; private set; }
 
     public WeightCategory WeightCategory { get; private set; } = null!;
+
+    internal static Participation Create(User creator, int athleteId, int meetId, int weightCategoryId, decimal bodyWeight)
+    {
+        return new Participation
+        {
+            AthleteId = athleteId,
+            MeetId = meetId,
+            WeightCategoryId = weightCategoryId,
+            Weight = bodyWeight,
+            CreatedOn = DateTime.UtcNow,
+            CreatedBy = creator.Username,
+        };
+    }
 }

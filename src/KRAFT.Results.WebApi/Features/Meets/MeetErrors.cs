@@ -1,4 +1,4 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Abstractions;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -9,6 +9,8 @@ internal static class MeetErrors
     internal const string MeetExistsCode = "Meets.AlreadyExists";
 
     internal const string MeetHasParticipationsCode = "Meets.HasParticipations";
+
+    internal const string AthleteAlreadyRegisteredCode = "Meets.AthleteAlreadyRegistered";
 
     internal static readonly Error EmptyTitle = new(
         "Meets.TitleIsEmpty",
@@ -29,6 +31,14 @@ internal static class MeetErrors
     internal static readonly Error MeetHasParticipations = new(
         MeetHasParticipationsCode,
         "Cannot delete a meet that has participations.");
+
+    internal static readonly Error WeightCategoryNotFound = new(
+        "Meets.WeightCategoryNotFound",
+        "Weight category not found.");
+
+    internal static readonly Error AthleteAlreadyRegistered = new(
+        AthleteAlreadyRegisteredCode,
+        "Athlete is already registered in this meet.");
 
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",

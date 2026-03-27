@@ -1,0 +1,143 @@
+using System.Net;
+using System.Net.Http.Json;
+
+using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
+
+using Shouldly;
+
+namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
+
+public sealed class AddParticipantTests(IntegrationTestFixture fixture)
+{
+    private const int ExistingMeetId = 2;
+    private const int ExistingAthleteId = 1;
+    private const int ExistingWeightCategoryId = 1;
+    private const int MeetWithExistingParticipationId = 1;
+    private const int NonExistentMeetId = 99999;
+    private const int NonExistentAthleteId = 99999;
+    private const int NonExistentWeightCategoryId = 99999;
+
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+
+    [Fact]
+    public async Task ReturnsCreated_WhenSuccessful()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithBodyWeight(82.5m)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        response.Headers.Location.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task ReturnsCreatedWithResponse_WhenSuccessful()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithBodyWeight(null)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/3/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        AddParticipantResponse? body = await response.Content.ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+        body.ShouldNotBeNull();
+        body.ParticipationId.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder().Build();
+
+        // Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task ReturnsNotFound_WhenMeetDoesNotExist()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{NonExistentMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task ReturnsNotFound_WhenAthleteDoesNotExist()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(NonExistentAthleteId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task ReturnsConflict_WhenAthleteAlreadyRegistered()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{MeetWithExistingParticipationId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenWeightCategoryDoesNotExist()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(NonExistentWeightCategoryId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+}
