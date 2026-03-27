@@ -46,6 +46,31 @@ public static class DisplayNames
         };
     }
 
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "Age category slugs are lowercase by convention")]
+    public static string ToAgeCategoryLabel(this string slug, string? gender = null)
+    {
+        ArgumentNullException.ThrowIfNull(slug);
+
+        string normalized = slug.ToLowerInvariant();
+
+        if (normalized.StartsWith("masters", StringComparison.Ordinal) && normalized.Length == 8)
+        {
+            char suffix = normalized[7];
+            if (suffix >= '1' && suffix <= '4')
+            {
+                return $"Öldungaflokkur {suffix}";
+            }
+        }
+
+        return normalized switch
+        {
+            "open" => "Opinn flokkur",
+            "subjunior" => gender?.ToLowerInvariant() == "m" ? "Drengjaflokkur" : "Stúlknaflokkur",
+            "junior" => "Unglingaflokkur",
+            _ => string.Empty,
+        };
+    }
+
     public static string EquipmentType(bool isClassic) => isClassic
         ? "Án búnaðar"
         : "Með búnaði";

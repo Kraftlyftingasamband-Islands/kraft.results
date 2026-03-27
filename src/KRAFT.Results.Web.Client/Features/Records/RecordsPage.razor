@@ -8,7 +8,7 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-<PageTitle>Met - @(_selectedEra is not null && _selectedEra.Slug != _currentEraSlug ? $"{_selectedEra.Title} - " : "")@GenderLabel - @AgeCategory</PageTitle>
+<PageTitle>Met - @(_selectedEra is not null && _selectedEra.Slug != _currentEraSlug ? $"{_selectedEra.Title} - " : "")@GenderLabel - @AgeCategoryLabel</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol>
@@ -20,11 +20,11 @@
             <li>@_selectedEra.Title</li>
         }
         <li>@GenderLabel</li>
-        <li aria-current="page">@AgeCategory</li>
+        <li aria-current="page">@AgeCategoryLabel</li>
     </ol>
 </nav>
 
-<h1>@GenderLabel - @AgeCategory</h1>
+<h1>@GenderLabel - @AgeCategoryLabel</h1>
 
 <RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
                 CurrentEraSlug="@_currentEraSlug"
@@ -168,6 +168,7 @@ else
     private List<RecordGroup>? _groups;
 
     private string GenderLabel => Gender is not null ? Gender.ToGenderGroupLabel() : "";
+    private string AgeCategoryLabel => AgeCategory is not null ? AgeCategory.ToAgeCategoryLabel(Gender) : "";
 
     protected override async Task OnInitializedAsync()
     {
