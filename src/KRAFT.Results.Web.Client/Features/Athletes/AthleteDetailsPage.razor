@@ -54,12 +54,12 @@
             @foreach (var best in group)
             {
                 <Card>
-                    <a href="@($"/meets/{best.MeetSlug}")" aria-label="@best.Discipline"></a>
+                    <a href="@($"/meets/{best.MeetSlug}")" aria-label="@(best.Discipline switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total })"></a>
                     @if (best.IsSingleLift)
                     {
                         <div class="card-badge">@Constants.SingeLift</div>
                     }
-                    <div class="card-label">@best.Discipline</div>
+                    <div class="card-label">@(best.Discipline switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total })</div>
                     <div class="card-weight">@($"{best.Weight:F1}") <span class="card-unit">kg</span></div>
                     <div class="card-meta">
                         @($"{best.Date:dd-MM-yyyy}") &middot; @best.BodyWeight kg
