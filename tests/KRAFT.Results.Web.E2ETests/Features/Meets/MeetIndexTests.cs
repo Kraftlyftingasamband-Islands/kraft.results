@@ -4,6 +4,8 @@ using Microsoft.Playwright;
 
 using Shouldly;
 
+using static Microsoft.Playwright.Assertions;
+
 namespace KRAFT.Results.Web.E2ETests.Features.Meets;
 
 public class MeetIndexTests(PlaywrightFixture fixture)
@@ -49,7 +51,7 @@ public class MeetIndexTests(PlaywrightFixture fixture)
         yearText.ShouldBe(TestDataSeeder.SeededMeetYear.ToString(CultureInfo.InvariantCulture));
 
         ILocator meetItems = page.Locator("article.meet-item");
-        await meetItems.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(meetItems.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int meetCount = await meetItems.CountAsync();
         meetCount.ShouldBeGreaterThan(0);
     }

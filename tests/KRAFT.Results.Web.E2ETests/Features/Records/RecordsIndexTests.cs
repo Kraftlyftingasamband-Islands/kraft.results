@@ -39,6 +39,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         femaleText.ShouldBe("Konur");
 
         ILocator categoryCards = page.Locator(".category-grid .card-link");
+        await Expect(categoryCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int cardCount = await categoryCards.CountAsync();
         cardCount.ShouldBeGreaterThan(0);
     }
@@ -59,8 +60,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         await Expect(eraSelector).ToBeVisibleAsync();
 
         ILocator buttons = eraSelector.Locator("button");
-        int buttonCount = await buttons.CountAsync();
-        buttonCount.ShouldBe(2);
+        await Expect(buttons).ToHaveCountAsync(2, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator activeButton = eraSelector.Locator("button.active");
         await Expect(activeButton).ToHaveCountAsync(1, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });

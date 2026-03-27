@@ -29,7 +29,7 @@ public class UserIndexTests(PlaywrightFixture fixture)
         await Expect(heading).ToBeVisibleAsync();
 
         ILocator tableRows = page.Locator("table tbody tr");
-        await tableRows.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(tableRows.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         int rowCount = await tableRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);

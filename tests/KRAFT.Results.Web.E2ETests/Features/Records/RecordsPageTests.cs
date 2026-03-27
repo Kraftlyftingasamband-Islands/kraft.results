@@ -32,7 +32,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await Expect(breadcrumb).ToBeVisibleAsync();
 
         ILocator recordTables = page.Locator(".record-section table");
-        await recordTables.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(recordTables.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int tableCount = await recordTables.CountAsync();
         tableCount.ShouldBeGreaterThan(0);
     }
@@ -51,7 +51,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
 
         // Assert
         ILocator recordTables = page.Locator(".record-section table");
-        await recordTables.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(recordTables.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int tableCount = await recordTables.CountAsync();
         tableCount.ShouldBeGreaterThan(0);
     }
@@ -80,7 +80,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         url.ShouldContain("era=current-era");
 
         ILocator recordTables = page.Locator(".record-section table");
-        await recordTables.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(recordTables.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int tableCount = await recordTables.CountAsync();
         tableCount.ShouldBeGreaterThan(0);
     }
