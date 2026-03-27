@@ -285,6 +285,32 @@ public sealed class DatabaseFixture : IAsyncLifetime
             VALUES (5, 5, 82.0, 1, 2, 1, 2, 0, 190.0, 120.0, 240.0, 550.0, 380.0, 81.0, 2, 9);
             INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, TeamId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo, TeamPoints)
             VALUES (6, 5, 82.0, 1, 2, 1, 3, 0, 185.0, 115.0, 235.0, 535.0, 370.0, 79.0, 3, 8);
+
+            -- Ordering test: athletes with controlled names for alphabetical sorting
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('Delta', 'Test', '1992-01-01', 'm', 2, 'delta-test');
+            INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ('Charlie', 'Test', '1993-01-01', 'm', 2, 'charlie-test');
+
+            -- Ordering test meet (MeetId=6)
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('Ordering Meet 2025', {Constants.OrderingMeet.Slug}, '2025-10-01', '2025-10-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
+
+            -- Participation: Place=1, not DQ (Delta Test, AthleteId=10)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES (10, 6, 82.0, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.0, 1);
+
+            -- Participation: Place=1 (tied), not DQ (Charlie Test, AthleteId=11)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES (11, 6, 82.0, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.0, 2);
+
+            -- Participation: Place=3, not DQ (Bob Test, AthleteId=3)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES (3, 6, 82.0, 1, 1, 3, 0, 180.0, 120.0, 230.0, 530.0, 370.0, 78.0, 3);
+
+            -- Participation: Place=-1, DQ (Anna Test, AthleteId=2)
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES (2, 6, 82.0, 1, 1, -1, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4);
         """);
     }
 }

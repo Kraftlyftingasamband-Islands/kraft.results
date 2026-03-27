@@ -13,4 +13,5 @@ public sealed record class MeetParticipation(
     decimal BodyWeight,
     decimal Total,
     decimal IpfPoints,
+    bool Disqualified,
     IEnumerable<MeetAttempt> Attempts);

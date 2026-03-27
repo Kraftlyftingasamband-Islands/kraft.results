@@ -25,4 +25,9 @@ internal static class Constants
         internal const string Password = "testuser";
         internal const string Email = "test@email.com";
     }
+
+    internal static class OrderingMeet
+    {
+        internal const string Slug = "ordering-meet-2025";
+    }
 }
