@@ -35,6 +35,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
             .Where(r => r.WeightCategoryId == key.WeightCategoryId)
             .Where(r => r.RecordCategoryId == key.RecordCategoryId)
             .Where(r => r.IsRaw == key.IsRaw)
+            .Where(r => r.Weight > 0)
             .OrderBy(r => r.Date)
             .Select(r => new RecordHistoryEntry(
                 r.Date,
