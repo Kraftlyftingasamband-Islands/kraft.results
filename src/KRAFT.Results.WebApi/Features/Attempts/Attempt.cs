@@ -55,4 +55,12 @@ internal sealed class Attempt
             ModifiedOn = DateTime.UtcNow,
         };
     }
+
+    internal void Update(decimal weight, bool good, string modifiedBy)
+    {
+        Weight = weight;
+        Good = good;
+        ModifiedBy = modifiedBy;
+        ModifiedOn = DateTime.UtcNow;
+    }
 }

@@ -5,8 +5,8 @@ using KRAFT.Results.WebApi.Features.Meets.Get;
 using KRAFT.Results.WebApi.Features.Meets.GetDetails;
 using KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
 using KRAFT.Results.WebApi.Features.Meets.GetParticipations;
+using KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
 using KRAFT.Results.WebApi.Features.Meets.Update;
-using KRAFT.Results.WebApi.Features.Meets.UpdateAttempts;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -21,7 +21,7 @@ internal static class MeetServices
         services.AddScoped<GetMeetDetailsHandler>();
         services.AddScoped<GetMeetParticipationsHandler>();
         services.AddScoped<UpdateMeetHandler>();
-        services.AddScoped<UpdateAttemptsHandler>();
+        services.AddScoped<RecordAttemptHandler>();
         services.AddScoped<DeleteMeetHandler>();
 
         return services;

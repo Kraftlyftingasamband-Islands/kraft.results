@@ -1,24 +1,29 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Meets.UpdateAttempts;
+namespace KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
 
-internal static class UpdateAttemptsEndpoint
+internal static class RecordAttemptEndpoint
 {
-    internal const string Name = "UpdateAttempts";
+    internal const string Name = "RecordAttempt";
 
-    internal static RouteGroupBuilder MapUpdateAttemptsEndpoint(this RouteGroupBuilder endpoints)
+    internal static RouteGroupBuilder MapRecordAttemptEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapPut("/{meetId:int}/participants/{participationId:int}/attempts", static async (
+        endpoints.MapPut("/{meetId:int}/participants/{participationId:int}/attempts/{discipline:int}/{round:int}", static async (
             [FromRoute] int meetId,
             [FromRoute] int participationId,
-            [FromBody] UpdateAttemptsCommand command,
-            [FromServices] UpdateAttemptsHandler handler,
+            [FromRoute] int discipline,
+            [FromRoute] short round,
+            [FromBody] RecordAttemptCommand command,
+            [FromServices] RecordAttemptHandler handler,
             CancellationToken cancellationToken) =>
         {
-            Result result = await handler.Handle(meetId, participationId, command, cancellationToken);
+            Discipline parsedDiscipline = (Discipline)discipline;
+
+            Result result = await handler.Handle(meetId, participationId, parsedDiscipline, round, command, cancellationToken);
 
             return result.Match<IResult>(
                 success: () => TypedResults.NoContent(),
@@ -29,8 +34,8 @@ internal static class UpdateAttemptsEndpoint
                 });
         })
         .WithName(Name)
-        .WithSummary("Updates attempts for a participation.")
-        .WithDescription("Replaces all attempts for a participation and recalculates totals.")
+        .WithSummary("Records or updates an attempt for a participation.")
+        .WithDescription("Creates or updates a single attempt for a given discipline and round, then recalculates totals.")
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
