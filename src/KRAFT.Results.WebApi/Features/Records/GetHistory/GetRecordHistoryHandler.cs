@@ -21,7 +21,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.Era.Title,
                 r.AgeCategory.Title ?? string.Empty,
                 r.WeightCategory.Title,
-                r.WeightCategory.Gender))
+                r.WeightCategory.Gender == Gender.Male ? "Karlar" : "Konur"))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (key is null)
@@ -50,14 +50,13 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.IsStandard))
             .ToListAsync(cancellationToken);
 
-        string genderLabel = key.Gender.Value == "f" ? "Konur" : "Karlar";
         string equipmentType = key.IsRaw ? "Án búnaðar" : "Með búnaði";
 
         return new RecordHistoryResponse(
             MapCategoryName(key.RecordCategoryId),
             key.WeightCategoryTitle,
             key.AgeCategoryTitle,
-            genderLabel,
+            key.GenderLabel,
             equipmentType,
             key.EraTitle,
             entries);
@@ -83,5 +82,5 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
         string EraTitle,
         string AgeCategoryTitle,
         string WeightCategoryTitle,
-        Gender Gender);
+        string GenderLabel);
 }
