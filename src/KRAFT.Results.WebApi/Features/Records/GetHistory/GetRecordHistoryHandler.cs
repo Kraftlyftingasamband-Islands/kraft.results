@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Records;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -19,9 +20,10 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.RecordCategoryId,
                 r.IsRaw,
                 r.Era.Title,
-                r.AgeCategory.Title ?? string.Empty,
+                r.AgeCategory.Slug ?? string.Empty,
                 r.WeightCategory.Title,
-                r.WeightCategory.Gender == Gender.Male ? "Karlar" : "Konur")) // Inline: EF translates to SQL; see DisplayNames.ToGenderGroupLabel
+                r.WeightCategory.Gender == Gender.Male ? "Karlar" : "Konur",
+                r.WeightCategory.Gender == Gender.Male ? "m" : "f")) // Inline: EF translates to SQL
             .FirstOrDefaultAsync(cancellationToken);
 
         if (key is null)
@@ -56,7 +58,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
         return new RecordHistoryResponse(
             key.RecordCategoryId.ToDisplayName(),
             key.WeightCategoryTitle,
-            key.AgeCategoryTitle,
+            key.AgeCategorySlug.ToAgeCategoryLabel(key.GenderCode),
             key.GenderLabel,
             equipmentType,
             key.EraTitle,
@@ -70,7 +72,8 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
         RecordCategory RecordCategoryId,
         bool IsRaw,
         string EraTitle,
-        string AgeCategoryTitle,
+        string AgeCategorySlug,
         string WeightCategoryTitle,
-        string GenderLabel);
+        string GenderLabel,
+        string GenderCode);
 }
