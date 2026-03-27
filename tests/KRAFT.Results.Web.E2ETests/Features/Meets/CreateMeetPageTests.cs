@@ -142,7 +142,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
 
         // Assert — should show validation messages
         ILocator validationMessages = page.Locator(".validation-message");
-        await validationMessages.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(validationMessages.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         int messageCount = await validationMessages.CountAsync();
         messageCount.ShouldBeGreaterThan(0);
