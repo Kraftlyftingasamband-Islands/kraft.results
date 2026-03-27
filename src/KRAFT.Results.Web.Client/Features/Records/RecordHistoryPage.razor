@@ -96,7 +96,18 @@ else if (_response is not null && _response.Entries.Count > 0)
                                 }
 
                             </td>
-                            <td class="hide-mobile">@(entry.Club ?? "-")</td>
+                            <td class="hide-mobile">
+                                @if (entry.ClubSlug is not null)
+                                {
+                                    <NavLink class="nav-link" href="@($"teams/{entry.ClubSlug}")">
+                                        @entry.Club
+                                    </NavLink>
+                                }
+                                else
+                                {
+                                    @(entry.Club ?? "-")
+                                }
+                            </td>
                             <td class="text-end numeric-value">@entry.Weight.ToString("F1")</td>
                             <td class="text-end numeric-value hide-mobile">@(entry.BodyWeight?.ToString("F1") ?? "-")</td>
                             <td>
