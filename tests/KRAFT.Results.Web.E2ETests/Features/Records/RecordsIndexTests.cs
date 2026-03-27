@@ -63,8 +63,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         buttonCount.ShouldBe(2);
 
         ILocator activeButton = eraSelector.Locator("button.active");
-        int activeCount = await activeButton.CountAsync();
-        activeCount.ShouldBe(1);
+        await Expect(activeButton).ToHaveCountAsync(1, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         string activeText = await activeButton.InnerTextAsync();
         activeText.ShouldContain("Current Era");
@@ -87,7 +86,10 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
 
         // Assert
         ILocator categoryLinks = page.Locator(".category-grid .card-link");
-        await categoryLinks.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(categoryLinks.First).ToHaveAttributeAsync(
+            "href",
+            new System.Text.RegularExpressions.Regex("era=historical-era"),
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int linkCount = await categoryLinks.CountAsync();
         linkCount.ShouldBeGreaterThan(0);
 
