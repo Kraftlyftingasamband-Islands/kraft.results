@@ -88,6 +88,31 @@ public sealed class DisplayNameTests
     }
 
     [Theory]
+    [InlineData("open", null, "Opinn flokkur")]
+    [InlineData("subjunior", "m", "Drengjaflokkur")]
+    [InlineData("subjunior", "f", "Stúlknaflokkur")]
+    [InlineData("junior", null, "Unglingaflokkur")]
+    [InlineData("masters1", null, "Öldungaflokkur 1")]
+    [InlineData("masters2", null, "Öldungaflokkur 2")]
+    [InlineData("masters3", null, "Öldungaflokkur 3")]
+    [InlineData("masters4", null, "Öldungaflokkur 4")]
+    [InlineData("unknown", null, "")]
+    [InlineData("OPEN", null, "Opinn flokkur")]
+    [InlineData("Junior", null, "Unglingaflokkur")]
+    [InlineData("Masters2", null, "Öldungaflokkur 2")]
+    [InlineData("SUBJUNIOR", "M", "Drengjaflokkur")]
+    public void ToAgeCategoryLabel_ReturnsIcelandicLabel(string slug, string? gender, string expected)
+    {
+        // Arrange
+
+        // Act
+        string result = slug.ToAgeCategoryLabel(gender);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData(1, "Hnébeygja")]
     [InlineData(2, "Bekkpressa")]
     [InlineData(3, "Réttstöðulyfta")]
