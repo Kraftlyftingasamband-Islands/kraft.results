@@ -78,14 +78,14 @@ public sealed class RecordAttemptTests
         // Arrange
         int participationId = await AddParticipantToSeedMeet();
 
-        await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m);
-        await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m);
-        await RecordAttempt(participationId, Discipline.Bench, 1, 60.0m);
-        await RecordAttempt(participationId, Discipline.Bench, 2, 70.0m);
-        await RecordAttempt(participationId, Discipline.Deadlift, 1, 150.0m);
+        await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m, true);
+        await RecordAttempt(participationId, Discipline.Bench, 1, 60.0m, true);
+        await RecordAttempt(participationId, Discipline.Bench, 2, 70.0m, true);
+        await RecordAttempt(participationId, Discipline.Deadlift, 1, 150.0m, true);
 
         // Act
-        await RecordAttempt(participationId, Discipline.Deadlift, 2, 160.0m);
+        await RecordAttempt(participationId, Discipline.Deadlift, 2, 160.0m, true);
 
         // Assert - best good lifts: Squat=110, Bench=70, Deadlift=160, Total=340
         IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
@@ -194,7 +194,7 @@ public sealed class RecordAttemptTests
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenWeightIsZero()
+    public async Task ReturnsBadRequest_WhenWeightIsZeroOrNegative()
     {
         // Arrange
         RecordAttemptCommand command = new RecordAttemptCommandBuilder()
@@ -212,35 +212,16 @@ public sealed class RecordAttemptTests
     }
 
     [Fact]
-    public async Task ReturnsNoContent_WhenWeightIsNegative()
-    {
-        // Arrange
-        int participationId = await AddParticipantToSeedMeet();
-        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
-            .WithWeight(-100.0m)
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, participationId, Discipline.Squat, 1),
-            command,
-            CancellationToken.None);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-    }
-
-    [Fact]
     public async Task BombedOut_WhenNoBenchGoodLifts()
     {
         // Arrange - all bench attempts are no-good
         int participationId = await AddParticipantToSeedMeet();
 
-        await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m);
-        await RecordAttempt(participationId, Discipline.Bench, 1, -60.0m);
-        await RecordAttempt(participationId, Discipline.Bench, 2, -60.0m);
-        await RecordAttempt(participationId, Discipline.Bench, 3, -60.0m);
-        await RecordAttempt(participationId, Discipline.Deadlift, 1, 150.0m);
+        await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttempt(participationId, Discipline.Bench, 1, 60.0m, false);
+        await RecordAttempt(participationId, Discipline.Bench, 2, 60.0m, false);
+        await RecordAttempt(participationId, Discipline.Bench, 3, 60.0m, false);
+        await RecordAttempt(participationId, Discipline.Deadlift, 1, 150.0m, true);
 
         // Act
         IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
@@ -259,10 +240,11 @@ public sealed class RecordAttemptTests
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>
         $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}";
 
-    private async Task RecordAttempt(int participationId, Discipline discipline, int round, decimal weight)
+    private async Task RecordAttempt(int participationId, Discipline discipline, int round, decimal weight, bool good)
     {
         RecordAttemptCommand command = new RecordAttemptCommandBuilder()
             .WithWeight(weight)
+            .WithGood(good)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
