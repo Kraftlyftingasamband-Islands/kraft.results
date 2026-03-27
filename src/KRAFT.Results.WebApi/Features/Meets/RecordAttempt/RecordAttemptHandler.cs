@@ -60,13 +60,16 @@ internal sealed class RecordAttemptHandler
 
         User user = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
+        bool good = command.Weight > 0;
+        decimal weight = Math.Abs(command.Weight);
+
         byte disciplineId = (byte)discipline;
         Attempt? existing = participation.Attempts
             .FirstOrDefault(a => a.DisciplineId == disciplineId && a.Round == round);
 
         if (existing is not null)
         {
-            existing.Update(command.Weight, command.Good, user.Username);
+            existing.Update(weight, good, user.Username);
         }
         else
         {
@@ -74,8 +77,8 @@ internal sealed class RecordAttemptHandler
                 participationId,
                 disciplineId,
                 round,
-                command.Weight,
-                command.Good,
+                weight,
+                good,
                 user.Username);
 
             _dbContext.Set<Attempt>().Add(attempt);
@@ -112,11 +115,11 @@ internal sealed class RecordAttemptHandler
                 $"Round {round} is not valid. Must be 1, 2, or 3.");
         }
 
-        if (command.Weight <= 0)
+        if (command.Weight == 0)
         {
             return new Error(
                 "Meets.InvalidWeight",
-                "Weight must be greater than 0.");
+                "Weight must not be zero.");
         }
 
         return Result.Success();

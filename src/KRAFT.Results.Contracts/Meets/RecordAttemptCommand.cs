@@ -1,3 +1,3 @@
 namespace KRAFT.Results.Contracts.Meets;
 
-public sealed record class RecordAttemptCommand(decimal Weight, bool Good);
+public sealed record class RecordAttemptCommand(decimal Weight);

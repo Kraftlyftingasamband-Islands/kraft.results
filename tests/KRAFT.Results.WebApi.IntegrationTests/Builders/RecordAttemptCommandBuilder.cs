@@ -5,7 +5,6 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 internal sealed class RecordAttemptCommandBuilder
 {
     private decimal _weight = 100.0m;
-    private bool _good = true;
 
     public RecordAttemptCommandBuilder WithWeight(decimal weight)
     {
@@ -13,11 +12,5 @@ internal sealed class RecordAttemptCommandBuilder
         return this;
     }
 
-    public RecordAttemptCommandBuilder WithGood(bool good)
-    {
-        _good = good;
-        return this;
-    }
-
-    public RecordAttemptCommand Build() => new(_weight, _good);
+    public RecordAttemptCommand Build() => new(_weight);
 }
