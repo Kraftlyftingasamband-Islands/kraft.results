@@ -5,6 +5,7 @@ public sealed record class RecordHistoryEntry(
     string? Athlete,
     string? AthleteSlug,
     string? Club,
+    string? ClubSlug,
     decimal Weight,
     decimal? BodyWeight,
     string? Meet,
