@@ -1,4 +1,4 @@
-﻿using KRAFT.Results.WebApi.Enums;
+﻿using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;

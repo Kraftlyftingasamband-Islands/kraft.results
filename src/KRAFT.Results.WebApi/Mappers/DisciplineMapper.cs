@@ -1,5 +1,4 @@
 ﻿using KRAFT.Results.Contracts;
-using KRAFT.Results.WebApi.Enums;
 
 namespace KRAFT.Results.WebApi.Mappers;
 

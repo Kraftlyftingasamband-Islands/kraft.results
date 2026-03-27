@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
@@ -129,7 +130,7 @@ public sealed class UpdateAttemptsTests
     {
         // Arrange
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
-            .WithAttempts([new("Invalid", 1, 100.0m, true)])
+            .WithAttempts([new(Discipline.None, 1, 100.0m, true)])
             .Build();
 
         // Act
@@ -147,7 +148,7 @@ public sealed class UpdateAttemptsTests
     {
         // Arrange
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
-            .WithAttempts([new("Squat", 4, 100.0m, true)])
+            .WithAttempts([new(Discipline.Squat, 4, 100.0m, true)])
             .Build();
 
         // Act
@@ -165,7 +166,7 @@ public sealed class UpdateAttemptsTests
     {
         // Arrange
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
-            .WithAttempts([new("Squat", 0, 100.0m, true)])
+            .WithAttempts([new(Discipline.Squat, 0, 100.0m, true)])
             .Build();
 
         // Act
@@ -183,7 +184,7 @@ public sealed class UpdateAttemptsTests
     {
         // Arrange
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
-            .WithAttempts([new("Squat", 1, 0m, true)])
+            .WithAttempts([new(Discipline.Squat, 1, 0m, true)])
             .Build();
 
         // Act
@@ -201,7 +202,7 @@ public sealed class UpdateAttemptsTests
     {
         // Arrange
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
-            .WithAttempts([new("Squat", 1, -10.0m, true)])
+            .WithAttempts([new(Discipline.Squat, 1, -10.0m, true)])
             .Build();
 
         // Act
@@ -221,8 +222,8 @@ public sealed class UpdateAttemptsTests
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
             .WithAttempts(
             [
-                new("Squat", 1, 100.0m, true),
-                new("Squat", 1, 110.0m, false),
+                new(Discipline.Squat, 1, 100.0m, true),
+                new(Discipline.Squat, 1, 110.0m, false),
             ])
             .Build();
 
@@ -243,16 +244,16 @@ public sealed class UpdateAttemptsTests
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
             .WithAttempts(
             [
-                new("Squat", 1, 100.0m, true),
-                new("Squat", 2, 110.0m, true),
-                new("Squat", 3, 120.0m, true),
-                new("Bench", 1, 60.0m, true),
-                new("Bench", 2, 65.0m, true),
-                new("Bench", 3, 70.0m, true),
-                new("Deadlift", 1, 140.0m, true),
-                new("Deadlift", 2, 150.0m, true),
-                new("Deadlift", 3, 160.0m, true),
-                new("Squat", 1, 100.0m, true),
+                new(Discipline.Squat, 1, 100.0m, true),
+                new(Discipline.Squat, 2, 110.0m, true),
+                new(Discipline.Squat, 3, 120.0m, true),
+                new(Discipline.Bench, 1, 60.0m, true),
+                new(Discipline.Bench, 2, 65.0m, true),
+                new(Discipline.Bench, 3, 70.0m, true),
+                new(Discipline.Deadlift, 1, 140.0m, true),
+                new(Discipline.Deadlift, 2, 150.0m, true),
+                new(Discipline.Deadlift, 3, 160.0m, true),
+                new(Discipline.Squat, 1, 100.0m, true),
             ])
             .Build();
 
@@ -275,13 +276,13 @@ public sealed class UpdateAttemptsTests
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
             .WithAttempts(
             [
-                new("Squat", 1, 100.0m, true),
-                new("Squat", 2, 110.0m, true),
-                new("Squat", 3, 120.0m, false),
-                new("Bench", 1, 60.0m, true),
-                new("Bench", 2, 70.0m, true),
-                new("Deadlift", 1, 150.0m, true),
-                new("Deadlift", 2, 160.0m, true),
+                new(Discipline.Squat, 1, 100.0m, true),
+                new(Discipline.Squat, 2, 110.0m, true),
+                new(Discipline.Squat, 3, 120.0m, false),
+                new(Discipline.Bench, 1, 60.0m, true),
+                new(Discipline.Bench, 2, 70.0m, true),
+                new(Discipline.Deadlift, 1, 150.0m, true),
+                new(Discipline.Deadlift, 2, 160.0m, true),
             ])
             .Build();
 
@@ -310,11 +311,11 @@ public sealed class UpdateAttemptsTests
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
             .WithAttempts(
             [
-                new("Squat", 1, 100.0m, true),
-                new("Bench", 1, 60.0m, false),
-                new("Bench", 2, 60.0m, false),
-                new("Bench", 3, 60.0m, false),
-                new("Deadlift", 1, 150.0m, true),
+                new(Discipline.Squat, 1, 100.0m, true),
+                new(Discipline.Bench, 1, 60.0m, false),
+                new(Discipline.Bench, 2, 60.0m, false),
+                new(Discipline.Bench, 3, 60.0m, false),
+                new(Discipline.Deadlift, 1, 150.0m, true),
             ])
             .Build();
 
@@ -367,9 +368,9 @@ public sealed class UpdateAttemptsTests
         UpdateAttemptsCommand command = new UpdateAttemptsCommandBuilder()
             .WithAttempts(
             [
-                new("Squat", 1, 100.0m, true),
-                new("Bench", 1, 60.0m, true),
-                new("Deadlift", 1, 140.0m, true),
+                new(Discipline.Squat, 1, 100.0m, true),
+                new(Discipline.Bench, 1, 60.0m, true),
+                new(Discipline.Deadlift, 1, 140.0m, true),
             ])
             .Build();
 

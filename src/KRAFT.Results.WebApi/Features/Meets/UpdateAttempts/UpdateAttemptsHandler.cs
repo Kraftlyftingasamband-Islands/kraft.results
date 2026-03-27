@@ -1,6 +1,6 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
@@ -16,13 +16,6 @@ internal sealed class UpdateAttemptsHandler
     private const int MaxAttempts = 9;
     private const short MinRound = 1;
     private const short MaxRound = 3;
-
-    private static readonly HashSet<string> ValidDisciplines = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Squat",
-        "Bench",
-        "Deadlift",
-    };
 
     private readonly ILogger<UpdateAttemptsHandler> _logger;
     private readonly ResultsDbContext _dbContext;
@@ -85,11 +78,9 @@ internal sealed class UpdateAttemptsHandler
 
         foreach (AttemptEntry entry in command.Attempts)
         {
-            byte disciplineId = MapDiscipline(entry.Discipline);
-
             Attempt attempt = Attempt.Create(
                 participationId,
-                disciplineId,
+                (byte)entry.Discipline,
                 entry.Round,
                 entry.Weight,
                 entry.Good,
@@ -119,15 +110,15 @@ internal sealed class UpdateAttemptsHandler
             return new Error("Meets.TooManyAttempts", $"Cannot exceed {MaxAttempts} attempts.");
         }
 
-        HashSet<(string Discipline, short Round)> seen = [];
+        HashSet<(Discipline Discipline, short Round)> seen = [];
 
         foreach (AttemptEntry entry in command.Attempts)
         {
-            if (!ValidDisciplines.Contains(entry.Discipline))
+            if (entry.Discipline == Discipline.None || !Enum.IsDefined(entry.Discipline))
             {
                 return new Error(
                     "Meets.InvalidDiscipline",
-                    $"Discipline '{entry.Discipline}' is not valid. Must be Squat, Bench, or Deadlift.");
+                    "Discipline is not valid. Must be Squat, Bench, or Deadlift.");
             }
 
             if (entry.Round < MinRound || entry.Round > MaxRound)
@@ -144,7 +135,7 @@ internal sealed class UpdateAttemptsHandler
                     "Weight must be greater than 0.");
             }
 
-            if (!seen.Add((entry.Discipline.ToUpperInvariant(), entry.Round)))
+            if (!seen.Add((entry.Discipline, entry.Round)))
             {
                 return new Error(
                     "Meets.DuplicateAttempt",
@@ -153,16 +144,5 @@ internal sealed class UpdateAttemptsHandler
         }
 
         return Result.Success();
-    }
-
-    private static byte MapDiscipline(string discipline)
-    {
-        return discipline.ToUpperInvariant() switch
-        {
-            "SQUAT" => (byte)Discipline.Squat,
-            "BENCH" => (byte)Discipline.Bench,
-            "DEADLIFT" => (byte)Discipline.Deadlift,
-            _ => 0,
-        };
     }
 }
