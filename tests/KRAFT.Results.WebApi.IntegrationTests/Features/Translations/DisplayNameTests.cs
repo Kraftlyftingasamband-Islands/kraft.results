@@ -8,9 +8,9 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Translations;
 public sealed class DisplayNameTests
 {
     [Theory]
-    [InlineData(Discipline.Squat, "Hn\u00e9beygja")]
+    [InlineData(Discipline.Squat, "Hnébeygja")]
     [InlineData(Discipline.Bench, "Bekkpressa")]
-    [InlineData(Discipline.Deadlift, "R\u00e9ttst\u00f6\u00f0ulyfta")]
+    [InlineData(Discipline.Deadlift, "Réttstöðulyfta")]
     [InlineData(Discipline.None, "")]
     public void Discipline_ToDisplayName_ReturnsIcelandicName(Discipline discipline, string expected)
     {
@@ -74,8 +74,8 @@ public sealed class DisplayNameTests
     }
 
     [Theory]
-    [InlineData(true, "\u00c1n b\u00fana\u00f0ar")]
-    [InlineData(false, "Me\u00f0 b\u00fana\u00f0i")]
+    [InlineData(true, "Án búnaðar")]
+    [InlineData(false, "Með búnaði")]
     public void EquipmentType_ReturnsIcelandicLabel(bool isClassic, string expected)
     {
         // Arrange
@@ -88,12 +88,12 @@ public sealed class DisplayNameTests
     }
 
     [Theory]
-    [InlineData(1, "Hn\u00e9beygja")]
+    [InlineData(1, "Hnébeygja")]
     [InlineData(2, "Bekkpressa")]
-    [InlineData(3, "R\u00e9ttst\u00f6\u00f0ulyfta")]
+    [InlineData(3, "Réttstöðulyfta")]
     [InlineData(4, "Samtala")]
-    [InlineData(5, "Bekkpressa (st\u00f6k grein)")]
-    [InlineData(6, "R\u00e9ttst\u00f6\u00f0ulyfta (st\u00f6k grein)")]
+    [InlineData(5, "Bekkpressa (stök grein)")]
+    [InlineData(6, "Réttstöðulyfta (stök grein)")]
     [InlineData(0, "")]
     public void RecordCategory_ToDisplayName_ReturnsIcelandicName(int categoryValue, string expected)
     {

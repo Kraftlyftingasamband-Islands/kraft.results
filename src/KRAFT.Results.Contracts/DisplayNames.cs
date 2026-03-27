@@ -47,6 +47,6 @@ public static class DisplayNames
     }
 
     public static string EquipmentType(bool isClassic) => isClassic
-        ? "\u00c1n b\u00fana\u00f0ar"
-        : "Me\u00f0 b\u00fana\u00f0i";
+        ? "Án búnaðar"
+        : "Með búnaði";
 }
