@@ -1,6 +1,6 @@
-﻿namespace KRAFT.Results.WebApi.Enums;
+namespace KRAFT.Results.Contracts;
 
-internal enum Discipline
+public enum Discipline
 {
     None = 0,
     Squat = 1,
