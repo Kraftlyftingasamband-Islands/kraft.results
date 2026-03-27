@@ -311,6 +311,19 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- Participation: Place=-1, DQ (Anna Test, AthleteId=2)
             INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
             VALUES (2, 6, 82.0, 1, 1, -1, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4);
+
+            -- IsCurrent corruption test data: bench record for 93kg where IsCurrent=1 is on a LOWER weight
+            -- The higher-weight row (150.0) has IsCurrent=0, the lower-weight row (140.0) has IsCurrent=1
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (2, 1, 2, 2, 150.0, '2025-06-01', 0, 2, 0, 0, 'seed');
+
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (2, 1, 2, 2, 140.0, '2025-05-01', 0, 2, 1, 0, 'seed');
+
+            -- IsStandard flag corruption: record with IsStandard=1 but linked to a real athlete via AttemptId
+            -- BenchSingle (RecordCategoryId=5) for 83kg equipped open male
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
         """);
     }
 }
