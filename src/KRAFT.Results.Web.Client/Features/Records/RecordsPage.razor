@@ -81,7 +81,18 @@ else if (_groups is not null && _groups.Count > 0)
                         @foreach (RecordEntry record in group.Records)
                         {
                             <tr class="@(record.IsStandard ? "standard-row" : "")">
-                                <td class="weight-category-cell">@record.WeightCategory</td>
+                                <td class="weight-category-cell">
+                                    @if (!record.IsStandard)
+                                    {
+                                        <NavLink class="nav-link weight-category-link" href="@($"records/{record.Id}/history")" aria-label="@($"Saga metsins - {record.WeightCategory}")">
+                                            @record.WeightCategory
+                                        </NavLink>
+                                    }
+                                    else
+                                    {
+                                        @record.WeightCategory
+                                    }
+                                </td>
                                 @if (record.IsStandard)
                                 {
                                     <td colspan="7" class="standard-cell">Íslenski staðallinn</td>
@@ -103,11 +114,7 @@ else if (_groups is not null && _groups.Count > 0)
                                     <td class="text-center hide-mobile numeric-value">@(record.BirthYear?.ToString() ?? "-")</td>
                                     <td class="hide-mobile">@(record.Club ?? "-")</td>
                                     <td class="text-end numeric-value">@(record.BodyWeight?.ToString("F1") ?? "-")</td>
-                                    <td class="text-end numeric-value">
-                                        <NavLink class="nav-link record-history-link" href="@($"records/{record.Id}/history")" aria-label="@($"Saga metsins - {record.WeightCategory} {record.Weight:F1} kg")">
-                                            @record.Weight.ToString("F1")
-                                        </NavLink>
-                                    </td>
+                                    <td class="text-end numeric-value">@record.Weight.ToString("F1")</td>
                                     <td class="numeric-value">@record.Date.ToString("dd.MM.yyyy")</td>
                                     <td>
                                         @if (record.MeetSlug is not null)

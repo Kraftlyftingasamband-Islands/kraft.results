@@ -87,6 +87,19 @@ table {
     font-weight: 600;
 }
 
+::deep .weight-category-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 2px;
+    transition: text-decoration-color var(--transition-fast) ease;
+}
+
+::deep .weight-category-link:hover {
+    text-decoration-color: var(--color-primary);
+}
+
 .standard-row {
     font-style: italic;
     color: var(--color-text-muted);
