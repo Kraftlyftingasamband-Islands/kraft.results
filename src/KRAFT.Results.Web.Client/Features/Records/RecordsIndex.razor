@@ -24,25 +24,25 @@
     <h2>@("m".ToGenderGroupLabel())</h2>
     <div class="category-grid">
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "open")">@("open".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "open")">@GetCardLabel("open", "m")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "subjunior")">@("subjunior".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "subjunior")">@GetCardLabel("subjunior", "m")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "junior")">@("junior".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "junior")">@GetCardLabel("junior", "m")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "masters1")">@("masters1".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters1")">@GetCardLabel("masters1", "m")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "masters2")">@("masters2".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters2")">@GetCardLabel("masters2", "m")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "masters3")">@("masters3".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters3")">@GetCardLabel("masters3", "m")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("m", "masters4")">@("masters4".ToAgeCategoryLabel("m"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("m", "masters4")">@GetCardLabel("masters4", "m")</NavLink>
         </Card>
     </div>
 </section>
@@ -51,25 +51,25 @@
     <h2>@("f".ToGenderGroupLabel())</h2>
     <div class="category-grid">
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "open")">@("open".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "open")">@GetCardLabel("open", "f")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "subjunior")">@("subjunior".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "subjunior")">@GetCardLabel("subjunior", "f")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "junior")">@("junior".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "junior")">@GetCardLabel("junior", "f")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "masters1")">@("masters1".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters1")">@GetCardLabel("masters1", "f")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "masters2")">@("masters2".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters2")">@GetCardLabel("masters2", "f")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "masters3")">@("masters3".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters3")">@GetCardLabel("masters3", "f")</NavLink>
         </Card>
         <Card>
-            <NavLink class="card-link" href="@GetRecordUrl("f", "masters4")">@("masters4".ToAgeCategoryLabel("f"))</NavLink>
+            <NavLink class="card-link" href="@GetRecordUrl("f", "masters4")">@GetCardLabel("masters4", "f")</NavLink>
         </Card>
     </div>
 </section>
@@ -124,6 +124,13 @@
     {
         _eraSlug = slug;
         return Task.CompletedTask;
+    }
+
+    private static string GetCardLabel(string slug, string gender)
+    {
+        string label = slug.ToAgeCategoryLabel(gender);
+        string range = slug.ToAgeCategoryAgeRange();
+        return range.Length > 0 ? $"{label} ({range})" : label;
     }
 
     private string GetRecordUrl(string gender, string ageCategory)

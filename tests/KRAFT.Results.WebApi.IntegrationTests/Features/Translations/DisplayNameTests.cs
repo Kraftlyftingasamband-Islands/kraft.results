@@ -113,6 +113,30 @@ public sealed class DisplayNameTests
     }
 
     [Theory]
+    [InlineData("open", "")]
+    [InlineData("subjunior", "14-18 ára")]
+    [InlineData("junior", "19-23 ára")]
+    [InlineData("masters1", "40+")]
+    [InlineData("masters2", "50+")]
+    [InlineData("masters3", "60+")]
+    [InlineData("masters4", "70+")]
+    [InlineData("unknown", "")]
+    [InlineData("OPEN", "")]
+    [InlineData("Junior", "19-23 ára")]
+    [InlineData("Masters2", "50+")]
+    [InlineData("SUBJUNIOR", "14-18 ára")]
+    public void ToAgeCategoryAgeRange_ReturnsAgeRange(string slug, string expected)
+    {
+        // Arrange
+
+        // Act
+        string result = slug.ToAgeCategoryAgeRange();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData(1, "Hnébeygja")]
     [InlineData(2, "Bekkpressa")]
     [InlineData(3, "Réttstöðulyfta")]
