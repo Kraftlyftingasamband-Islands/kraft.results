@@ -5,6 +5,11 @@ namespace KRAFT.Results.WebApi.Features.Attempts;
 
 internal sealed class Attempt
 {
+    // For EF Core
+    private Attempt()
+    {
+    }
+
     public int AttemptId { get; private set; }
 
     public int ParticipationId { get; private set; }
@@ -28,4 +33,26 @@ internal sealed class Attempt
     public Participation Participation { get; private set; } = null!;
 
     public ICollection<Record> Records { get; } = [];
+
+    internal static Attempt Create(
+        int participationId,
+        byte disciplineId,
+        short round,
+        decimal weight,
+        bool good,
+        string createdBy)
+    {
+        return new Attempt
+        {
+            ParticipationId = participationId,
+            DisciplineId = disciplineId,
+            Round = round,
+            Weight = weight,
+            Good = good,
+            CreatedBy = createdBy,
+            CreatedOn = DateTime.UtcNow,
+            ModifiedBy = createdBy,
+            ModifiedOn = DateTime.UtcNow,
+        };
+    }
 }

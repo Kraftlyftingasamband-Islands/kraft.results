@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.AgeCategories;
+﻿using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Meets;
@@ -80,5 +81,34 @@ internal sealed class Participation
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };
+    }
+
+    internal void RecalculateTotals()
+    {
+        decimal bestSquat = BestGoodLift(Discipline.Squat);
+        decimal bestBench = BestGoodLift(Discipline.Bench);
+        decimal bestDeadlift = BestGoodLift(Discipline.Deadlift);
+
+        Squat = bestSquat;
+        Benchpress = bestBench;
+        Deadlift = bestDeadlift;
+
+        bool bombedOut = bestSquat == 0 || bestBench == 0 || bestDeadlift == 0;
+        Total = bombedOut ? 0 : bestSquat + bestBench + bestDeadlift;
+    }
+
+    private decimal BestGoodLift(Discipline discipline)
+    {
+        decimal best = 0;
+
+        foreach (Attempt attempt in Attempts)
+        {
+            if (attempt.DisciplineId == (byte)discipline && attempt.Good && attempt.Weight > best)
+            {
+                best = attempt.Weight;
+            }
+        }
+
+        return best;
     }
 }

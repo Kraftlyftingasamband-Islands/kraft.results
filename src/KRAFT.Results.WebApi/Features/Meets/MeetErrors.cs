@@ -10,6 +10,8 @@ internal static class MeetErrors
 
     internal const string MeetHasParticipationsCode = "Meets.HasParticipations";
 
+    internal const string ParticipationNotFoundCode = "Meets.ParticipationNotFound";
+
     internal const string AthleteAlreadyRegisteredCode = "Meets.AthleteAlreadyRegistered";
 
     internal static readonly Error EmptyTitle = new(
@@ -35,6 +37,10 @@ internal static class MeetErrors
     internal static readonly Error WeightCategoryNotFound = new(
         "Meets.WeightCategoryNotFound",
         "Weight category not found.");
+
+    internal static readonly Error ParticipationNotFound = new(
+        ParticipationNotFoundCode,
+        "Participation not found.");
 
     internal static readonly Error AthleteAlreadyRegistered = new(
         AthleteAlreadyRegisteredCode,
