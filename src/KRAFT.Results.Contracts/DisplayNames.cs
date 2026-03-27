@@ -71,6 +71,25 @@ public static class DisplayNames
         };
     }
 
+    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "Age category slugs are lowercase by convention")]
+    public static string ToAgeCategoryAgeRange(this string slug)
+    {
+        ArgumentNullException.ThrowIfNull(slug);
+
+        string normalized = slug.ToLowerInvariant();
+
+        return normalized switch
+        {
+            "subjunior" => "14-18 ára",
+            "junior" => "19-23 ára",
+            "masters1" => "40+",
+            "masters2" => "50+",
+            "masters3" => "60+",
+            "masters4" => "70+",
+            _ => string.Empty,
+        };
+    }
+
     public static string EquipmentType(bool isClassic) => isClassic
         ? "Án búnaðar"
         : "Með búnaði";
