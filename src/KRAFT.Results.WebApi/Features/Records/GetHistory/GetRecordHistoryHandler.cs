@@ -49,13 +49,14 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.IsStandard))
             .ToListAsync(cancellationToken);
 
+        string genderLabel = key.Gender.Value == "f" ? "Konur" : "Karlar";
         string equipmentType = key.IsRaw ? "Án búnaðar" : "Með búnaði";
 
         return new RecordHistoryResponse(
             MapCategoryName(key.RecordCategoryId),
             key.WeightCategoryTitle,
             key.AgeCategoryTitle,
-            key.Gender.ToString(),
+            genderLabel,
             equipmentType,
             key.EraTitle,
             entries);
