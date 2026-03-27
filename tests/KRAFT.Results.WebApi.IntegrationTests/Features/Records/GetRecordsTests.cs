@@ -67,10 +67,14 @@ public sealed class GetRecordsTests(IntegrationTestFixture fixture)
         femaleGroups.ShouldNotBeNull();
         femaleGroups.ShouldNotBeEmpty();
 
-        int maleRecordCount = maleGroups.Sum(g => g.Records.Count);
-        int femaleRecordCount = femaleGroups.Sum(g => g.Records.Count);
+        int maleNonEmptyCount = maleGroups
+            .SelectMany(g => g.Records)
+            .Count(r => r.Athlete is not null);
+        int femaleNonEmptyCount = femaleGroups
+            .SelectMany(g => g.Records)
+            .Count(r => r.Athlete is not null);
 
-        maleRecordCount.ShouldBeGreaterThan(femaleRecordCount);
+        maleNonEmptyCount.ShouldBeGreaterThan(femaleNonEmptyCount);
     }
 
     [Fact]
@@ -94,10 +98,14 @@ public sealed class GetRecordsTests(IntegrationTestFixture fixture)
         juniorGroups.ShouldNotBeNull();
         juniorGroups.ShouldNotBeEmpty();
 
-        int openCount = openGroups.Sum(g => g.Records.Count);
-        int juniorCount = juniorGroups.Sum(g => g.Records.Count);
+        int openNonEmptyCount = openGroups
+            .SelectMany(g => g.Records)
+            .Count(r => r.Athlete is not null);
+        int juniorNonEmptyCount = juniorGroups
+            .SelectMany(g => g.Records)
+            .Count(r => r.Athlete is not null);
 
-        openCount.ShouldBeGreaterThan(juniorCount);
+        openNonEmptyCount.ShouldBeGreaterThan(juniorNonEmptyCount);
     }
 
     [Fact]
@@ -114,14 +122,16 @@ public sealed class GetRecordsTests(IntegrationTestFixture fixture)
         classicGroups.ShouldNotBeNull();
         classicGroups.ShouldNotBeEmpty();
 
-        int classicCount = classicGroups.Sum(g => g.Records.Count);
-        classicCount.ShouldBe(1);
+        int classicNonEmptyCount = classicGroups
+            .SelectMany(g => g.Records)
+            .Count(r => r.Athlete is not null);
+        classicNonEmptyCount.ShouldBe(1);
     }
 
     [Fact]
-    public async Task ReturnsEmpty_WhenNoMatchingRecords()
+    public async Task ReturnsAllRecordCategories_EvenWithNoRecords()
     {
-        // Arrange
+        // Arrange — female junior equipped has no records but has active weight categories
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
@@ -130,7 +140,8 @@ public sealed class GetRecordsTests(IntegrationTestFixture fixture)
 
         // Assert
         groups.ShouldNotBeNull();
-        groups.ShouldBeEmpty();
+        groups.Count.ShouldBe(6);
+        groups.SelectMany(g => g.Records).ShouldAllBe(r => r.Athlete == null);
     }
 
     [Fact]
@@ -229,5 +240,81 @@ public sealed class GetRecordsTests(IntegrationTestFixture fixture)
         List<string> weightCategories = squatGroup.Records.Select(r => r.WeightCategory).ToList();
         weightCategories.Count.ShouldBeGreaterThanOrEqualTo(2);
         weightCategories.ShouldBe(weightCategories.OrderBy(w => decimal.Parse(w, System.Globalization.CultureInfo.InvariantCulture)).ToList());
+    }
+
+    [Fact]
+    public async Task ReturnsHighestWeight_WhenIsCurrentFlagIsCorrupt()
+    {
+        // Arrange — bench record for 93kg: 150.0 (IsCurrent=0) vs 140.0 (IsCurrent=1)
+        // The handler should return 150.0 (highest weight) regardless of IsCurrent flag
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        RecordGroup benchGroup = groups.First(g => g.Category == "Bekkpressa");
+        RecordEntry benchRecord93 = benchGroup.Records.First(r => r.WeightCategory == "93");
+        benchRecord93.Weight.ShouldBe(150.0m);
+    }
+
+    [Fact]
+    public async Task ReturnsIsStandardFalse_WhenRecordHasAthleteEvenIfDbFlagIsTrue()
+    {
+        // Arrange — BenchSingle 83kg has IsStandard=1 in DB but is linked to a real athlete via AttemptId
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        RecordGroup benchSingleGroup = groups.First(g => g.Category == "Bekkpressa (stök grein)");
+        RecordEntry benchSingleRecord83 = benchSingleGroup.Records.First(r => r.WeightCategory == "83");
+        benchSingleRecord83.Athlete.ShouldNotBeNull();
+        benchSingleRecord83.IsStandard.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ReturnsEmptyEntries_ForWeightCategoriesWithNoRecords()
+    {
+        // Arrange — 93kg has no deadlift record (equipped, open, male)
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+        RecordGroup deadliftGroup = groups.First(g => g.Category == "R\u00e9ttst\u00f6\u00f0ulyfta");
+        RecordEntry deadliftRecord93 = deadliftGroup.Records.First(r => r.WeightCategory == "93");
+        deadliftRecord93.Athlete.ShouldBeNull();
+        deadliftRecord93.Weight.ShouldBe(0m);
+    }
+
+    [Fact]
+    public async Task ReturnsAllActiveWeightCategories_EvenWithNoRecords()
+    {
+        // Arrange — open equipped male: active weight categories are 83kg and 93kg
+        // 93kg only has standard squat record + corrupt bench records, other categories have no records
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            CancellationToken.None);
+
+        // Assert
+        groups.ShouldNotBeNull();
+
+        foreach (RecordGroup group in groups)
+        {
+            List<string> weightCategories = group.Records.Select(r => r.WeightCategory).ToList();
+            weightCategories.ShouldContain("83");
+            weightCategories.ShouldContain("93");
+        }
     }
 }

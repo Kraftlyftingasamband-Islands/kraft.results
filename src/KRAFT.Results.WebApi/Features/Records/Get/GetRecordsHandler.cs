@@ -9,6 +9,16 @@ namespace KRAFT.Results.WebApi.Features.Records.Get;
 
 internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
 {
+    private static readonly RecordCategory[] DisplayCategories =
+    [
+        RecordCategory.Squat,
+        RecordCategory.Bench,
+        RecordCategory.Deadlift,
+        RecordCategory.Total,
+        RecordCategory.BenchSingle,
+        RecordCategory.DeadliftSingle,
+    ];
+
     public async Task<List<RecordGroup>> Handle(
         string gender,
         string ageCategory,
@@ -24,21 +34,36 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
         bool excludeJuniorsOnly = !string.Equals(ageCategory, "junior", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(ageCategory, "subjunior", StringComparison.OrdinalIgnoreCase);
 
-        List<RawRecordData> rawData = await dbContext.Set<Record>()
-            .Where(r => r.IsCurrent)
+        // Query 1: Fetch all active weight categories for this era/gender/date
+        List<ActiveWeightCategory> activeWeightCategories = await dbContext.Set<EraWeightCategory>()
+            .Where(ewc => ewc.EraId == eraId)
+            .Where(ewc => ewc.FromDate <= referenceDate)
+            .Where(ewc => ewc.ToDate >= referenceDate)
+            .Where(ewc => ewc.WeightCategory.Gender == Gender.Parse(genderLower))
+            .Where(ewc => !excludeJuniorsOnly || !ewc.WeightCategory.JuniorsOnly)
+            .OrderBy(ewc => ewc.WeightCategory.MinWeight)
+            .Select(ewc => new ActiveWeightCategory(
+                ewc.WeightCategoryId,
+                ewc.WeightCategory.Title,
+                ewc.WeightCategory.MinWeight))
+            .ToListAsync(cancellationToken);
+
+        if (activeWeightCategories.Count == 0)
+        {
+            return [];
+        }
+
+        List<int> activeWeightCategoryIds = activeWeightCategories
+            .Select(wc => wc.WeightCategoryId)
+            .ToList();
+
+        // Query 2: Fetch all candidate records (no IsCurrent filter)
+        List<RawRecordData> candidateRecords = await dbContext.Set<Record>()
             .Where(r => r.EraId == eraId)
-            .Where(r => r.WeightCategory.Gender == Gender.Parse(genderLower))
+            .Where(r => activeWeightCategoryIds.Contains(r.WeightCategoryId))
             .Where(r => r.AgeCategory.Slug == ageCategory)
             .Where(r => r.IsRaw == isClassic)
             .Where(r => r.RecordCategoryId != RecordCategory.TotalWilks && r.RecordCategoryId != RecordCategory.TotalIpfPoints)
-            .Where(r => dbContext.Set<EraWeightCategory>()
-                .Any(ewc => ewc.EraId == r.EraId
-                    && ewc.WeightCategoryId == r.WeightCategoryId
-                    && ewc.FromDate <= referenceDate
-                    && ewc.ToDate >= referenceDate))
-            .Where(r => !excludeJuniorsOnly || !r.WeightCategory.JuniorsOnly)
-            .OrderBy(r => r.RecordCategoryId)
-            .ThenBy(r => r.WeightCategory.MinWeight)
             .Select(r => new RawRecordData(
                 r.RecordId,
                 r.RecordCategoryId,
@@ -57,23 +82,57 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 r.IsStandard))
             .ToListAsync(cancellationToken);
 
-        List<RecordGroup> groups = rawData
-            .GroupBy(r => r.RecordCategoryId)
-            .Select(g => new RecordGroup(
-                MapCategoryName(g.Key),
-                g.Select(r => new RecordEntry(
-                    r.RecordId,
-                    r.WeightCategory,
-                    r.Athlete,
-                    r.AthleteSlug,
-                    r.BirthYear,
-                    r.Club,
-                    r.BodyWeight,
-                    r.Weight,
-                    r.Date,
-                    r.Meet,
-                    r.MeetSlug,
-                    r.IsStandard)).ToList()))
+        // C# step: Group by (WeightCategoryId, RecordCategoryId), pick highest Weight (then RecordId as tiebreaker)
+        Dictionary<(int WeightCategoryId, RecordCategory RecordCategoryId), RawRecordData> bestRecords = candidateRecords
+            .GroupBy(r => (r.WeightCategoryId, r.RecordCategoryId))
+            .ToDictionary(
+                g => g.Key,
+                g => g
+                    .OrderByDescending(r => r.Weight)
+                    .ThenByDescending(r => r.RecordId)
+                    .First());
+
+        // Cross-product: For each record category × each weight category, emit the best record or a placeholder
+        List<RecordGroup> groups = DisplayCategories
+            .Select(category => new RecordGroup(
+                MapCategoryName(category),
+                activeWeightCategories
+                    .Select(wc =>
+                    {
+                        (int WeightCategoryId, RecordCategory RecordCategoryId) key = (wc.WeightCategoryId, category);
+
+                        if (bestRecords.TryGetValue(key, out RawRecordData? record))
+                        {
+                            return new RecordEntry(
+                                record.RecordId,
+                                record.WeightCategory,
+                                record.Athlete,
+                                record.AthleteSlug,
+                                record.BirthYear,
+                                record.Club,
+                                record.BodyWeight,
+                                record.Weight,
+                                record.Date,
+                                record.Meet,
+                                record.MeetSlug,
+                                record.Athlete is null);
+                        }
+
+                        return new RecordEntry(
+                            0,
+                            wc.Title,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            0m,
+                            default,
+                            null,
+                            null,
+                            false);
+                    })
+                    .ToList()))
             .ToList();
 
         return groups;
@@ -89,6 +148,11 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
         : category == RecordCategory.DeadliftSingle ? "R\u00e9ttst\u00f6\u00f0ulyfta (st\u00f6k grein)"
         : string.Empty;
 #pragma warning restore S3358 // Ternary operators should not be nested
+
+    private sealed record ActiveWeightCategory(
+        int WeightCategoryId,
+        string Title,
+        decimal MinWeight);
 
     private sealed record RawRecordData(
         int RecordId,
