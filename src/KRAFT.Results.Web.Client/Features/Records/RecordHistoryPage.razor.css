@@ -89,20 +89,6 @@ table {
     border-inline-start: 4px solid var(--color-primary);
 }
 
-.current-badge {
-    display: inline-block;
-    margin-inline-start: 0.5rem;
-    padding: 0.125rem 0.5rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    color: var(--color-white);
-    background: var(--color-primary);
-    border-radius: 1rem;
-    vertical-align: middle;
-    white-space: nowrap;
-}
 
 .error-state {
     display: flex;

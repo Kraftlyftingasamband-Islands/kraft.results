@@ -94,10 +94,7 @@ else if (_response is not null && _response.Entries.Count > 0)
                                 {
                                     @entry.Athlete
                                 }
-                                @if (entry.IsCurrent)
-                                {
-                                    <span class="current-badge">Núverandi met</span>
-                                }
+
                             </td>
                             <td class="hide-mobile">@(entry.Club ?? "-")</td>
                             <td class="text-end numeric-value">@entry.Weight.ToString("F1")</td>
