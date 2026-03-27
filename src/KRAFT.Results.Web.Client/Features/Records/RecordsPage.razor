@@ -1,18 +1,23 @@
 @page "/records/{Gender}/{AgeCategory}"
 
+@using KRAFT.Results.Contracts.Eras
 @using KRAFT.Results.Contracts.Records
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-<PageTitle>Met - @GenderLabel - @AgeCategory</PageTitle>
+<PageTitle>Met - @(_selectedEra is not null && _selectedEra.Slug != _currentEraSlug ? $"{_selectedEra.Title} - " : "")@GenderLabel - @AgeCategory</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol>
         <li>
             <NavLink class="breadcrumb-link" href="records">Met</NavLink>
         </li>
+        @if (_selectedEra is not null && _selectedEra.Slug != _currentEraSlug)
+        {
+            <li>@_selectedEra.Title</li>
+        }
         <li>@GenderLabel</li>
         <li aria-current="page">@AgeCategory</li>
     </ol>
@@ -20,14 +25,13 @@
 
 <h1>@GenderLabel - @AgeCategory</h1>
 
-<div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
-    <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("classic"))">
-        Án búnaðar
-    </button>
-    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" disabled="@_isLoading" @onclick="@(() => SetEquipmentTypeAsync("equipped"))">
-        Með búnaði
-    </button>
-</div>
+<RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
+                CurrentEraSlug="@_currentEraSlug"
+                InitialEquipmentType="@_equipmentType"
+                InitialEraSlug="@_eraSlug"
+                Disabled="_isLoading"
+                OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
+                OnEraChanged="HandleEraChanged" />
 
 @if (_isLoading)
 {
@@ -49,7 +53,7 @@ else if (_groups is not null && _groups.Count > 0)
     {
         <section class="record-section">
             <h2>@group.Category</h2>
-            <div class="table-wrapper">
+            <div class="table-wrapper" tabindex="0" role="region" aria-label="@group.Category met">
                 <table aria-label="@group.Category">
                     <colgroup>
                         <col class="col-weight-category" />
@@ -139,7 +143,14 @@ else
     [SupplyParameterFromQuery(Name = "equipmentType")]
     public string? EquipmentType { get; set; }
 
+    [SupplyParameterFromQuery(Name = "era")]
+    public string? Era { get; set; }
+
     private string _equipmentType = "classic";
+    private string _eraSlug = "";
+    private string _currentEraSlug = "";
+    private List<EraSummary>? _eras;
+    private EraSummary? _selectedEra;
     private bool _isLoading = true;
     private bool _hasError;
     private List<RecordGroup>? _groups;
@@ -154,26 +165,72 @@ else
     protected override async Task OnInitializedAsync()
     {
         _equipmentType = EquipmentType ?? "classic";
+
+        try
+        {
+            _eras = await HttpClient.GetFromJsonAsync<List<EraSummary>>("/eras");
+
+            if (_eras is not null && _eras.Count > 0)
+            {
+                _currentEraSlug = _eras[^1].Slug;
+                _eraSlug = Era ?? _currentEraSlug;
+                _selectedEra = _eras.FirstOrDefault(e => e.Slug == _eraSlug);
+
+                EraSummary? initialEra = _eras?.Find(e => e.Slug == _eraSlug);
+                if (initialEra is not null)
+                {
+                    if (initialEra.HasClassicRecords && !initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "classic";
+                    }
+                    else if (!initialEra.HasClassicRecords && initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "equipped";
+                    }
+                }
+            }
+        }
+        catch
+        {
+            _eras = null;
+        }
+
         await LoadDataAsync();
     }
 
-    private async Task SetEquipmentTypeAsync(string type)
+    private async Task HandleEraChanged(string slug)
     {
+        _eraSlug = slug;
+        _selectedEra = _eras?.FirstOrDefault(e => e.Slug == _eraSlug);
+        UpdateUrl(replace: true);
+        await LoadDataAsync();
+    }
+
+    private async Task HandleEquipmentTypeChanged(string type)
+    {
+        if (_equipmentType == type)
+        {
+            return;
+        }
+
         _equipmentType = type;
-        UpdateUrl();
+        UpdateUrl(replace: true);
         await LoadDataAsync();
     }
 
-    private void UpdateUrl()
+    private void UpdateUrl(bool replace)
     {
+        Dictionary<string, object?> queryParams = new()
+        {
+            ["equipmentType"] = _equipmentType,
+            ["era"] = _eraSlug,
+        };
+
         string url = NavigationManager.GetUriWithQueryParameters(
             $"/records/{Gender}/{AgeCategory}",
-            new Dictionary<string, object?>
-            {
-                ["equipmentType"] = _equipmentType,
-            });
+            queryParams);
 
-        NavigationManager.NavigateTo(url, replace: true);
+        NavigationManager.NavigateTo(url, replace: replace);
     }
 
     private async Task LoadDataAsync()
@@ -184,6 +241,11 @@ else
         try
         {
             string url = $"/records?gender={Uri.EscapeDataString(Gender)}&ageCategory={Uri.EscapeDataString(AgeCategory)}&equipmentType={Uri.EscapeDataString(_equipmentType)}";
+
+            if (!string.IsNullOrEmpty(_eraSlug))
+            {
+                url += $"&era={Uri.EscapeDataString(_eraSlug)}";
+            }
 
             _groups = await HttpClient.GetFromJsonAsync<List<RecordGroup>>(url);
         }

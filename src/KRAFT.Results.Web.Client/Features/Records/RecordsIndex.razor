@@ -1,19 +1,23 @@
 @page "/records"
 
+@using KRAFT.Results.Contracts.Eras
 @using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
 
 <PageTitle>Met</PageTitle>
 
 <h1>Met</h1>
 
-<div class="equipment-toggle" role="group" aria-label="Tegund búnaðar">
-    <button class="toggle-btn @(_equipmentType == "classic" ? "active" : "")" aria-pressed="@(_equipmentType == "classic" ? "true" : "false")" @onclick="@(() => SetEquipmentType("classic"))">
-        Án búnaðar
-    </button>
-    <button class="toggle-btn @(_equipmentType == "equipped" ? "active" : "")" aria-pressed="@(_equipmentType == "equipped" ? "true" : "false")" @onclick="@(() => SetEquipmentType("equipped"))">
-        Með búnaði
-    </button>
-</div>
+<RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
+                CurrentEraSlug="@_currentEraSlug"
+                OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
+                OnEraChanged="HandleEraChanged" />
+
+@if (_erasLoadFailed)
+{
+    <p class="era-load-error">Ekki tókst að sækja tímabilsgögn.</p>
+}
 
 <section class="gender-section">
     <h2>Karlar</h2>
@@ -71,14 +75,65 @@
 
 @code {
     private string _equipmentType = "classic";
+    private List<EraSummary>? _eras;
+    private string _eraSlug = "";
+    private string _currentEraSlug = "";
+    private bool _erasLoadFailed;
 
-    private void SetEquipmentType(string type)
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _eras = await HttpClient.GetFromJsonAsync<List<EraSummary>>("/eras");
+            _erasLoadFailed = false;
+
+            if (_eras is not null && _eras.Count > 0)
+            {
+                _currentEraSlug = _eras[^1].Slug;
+                _eraSlug = _currentEraSlug;
+
+                EraSummary? initialEra = _eras.Find(e => e.Slug == _eraSlug);
+                if (initialEra is not null)
+                {
+                    if (initialEra.HasClassicRecords && !initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "classic";
+                    }
+                    else if (!initialEra.HasClassicRecords && initialEra.HasEquippedRecords)
+                    {
+                        _equipmentType = "equipped";
+                    }
+                }
+            }
+        }
+        catch
+        {
+            _eras = null;
+            _erasLoadFailed = true;
+        }
+    }
+
+    private Task HandleEquipmentTypeChanged(string type)
     {
         _equipmentType = type;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleEraChanged(string slug)
+    {
+        _eraSlug = slug;
+        return Task.CompletedTask;
     }
 
     private string GetRecordUrl(string gender, string ageCategory)
     {
-        return $"records/{gender}/{ageCategory}?equipmentType={_equipmentType}";
+        string url = $"records/{gender}/{ageCategory}?equipmentType={_equipmentType}";
+
+        if (_eraSlug != _currentEraSlug)
+        {
+            url += $"&era={_eraSlug}";
+        }
+
+        return url;
     }
 }
