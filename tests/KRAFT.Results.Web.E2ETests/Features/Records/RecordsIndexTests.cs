@@ -39,6 +39,7 @@ public class RecordsIndexTests(PlaywrightFixture fixture)
         femaleText.ShouldBe("Konur");
 
         ILocator categoryCards = page.Locator(".category-grid .card-link");
+        await Expect(categoryCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         int cardCount = await categoryCards.CountAsync();
         cardCount.ShouldBeGreaterThan(0);
     }
