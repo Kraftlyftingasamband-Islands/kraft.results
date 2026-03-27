@@ -1,5 +1,6 @@
 @page "/records"
 
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Eras
 @using KRAFT.Results.Web.Client.Components
 
@@ -20,7 +21,7 @@
 }
 
 <section class="gender-section">
-    <h2>Karlar</h2>
+    <h2>@("m".ToGenderGroupLabel())</h2>
     <div class="category-grid">
         <Card>
             <NavLink class="card-link" href="@GetRecordUrl("m", "open")">Open</NavLink>
@@ -47,7 +48,7 @@
 </section>
 
 <section class="gender-section">
-    <h2>Konur</h2>
+    <h2>@("f".ToGenderGroupLabel())</h2>
     <div class="category-grid">
         <Card>
             <NavLink class="card-link" href="@GetRecordUrl("f", "open")">Open</NavLink>

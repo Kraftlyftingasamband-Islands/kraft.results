@@ -137,11 +137,11 @@
                                 .OrderBy(g => (byte)g.Key))
                             {
                                 int roundCount = disciplineGroup.Count();
-                                string disciplineLabel = disciplineGroup.Key switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total };
+                                string disciplineLabel = disciplineGroup.Key.ToDisplayName();
                                 <th colspan="@roundCount" class="first-attempt" style="text-align: center; width: @(80 * roundCount)px">@disciplineLabel</th>
                             }
 
-                            <th class="first-attempt" style="text-align: right; width: 80px;">Samtala</th>
+                            <th class="first-attempt" style="text-align: right; width: 80px;">@Constants.Total</th>
 
                             @if (ShowIpfPoints)
                             {

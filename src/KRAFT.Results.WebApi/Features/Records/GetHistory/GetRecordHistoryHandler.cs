@@ -21,7 +21,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.Era.Title,
                 r.AgeCategory.Title ?? string.Empty,
                 r.WeightCategory.Title,
-                r.WeightCategory.Gender == Gender.Male ? "Karlar" : "Konur"))
+                r.WeightCategory.Gender == Gender.Male ? "Karlar" : "Konur")) // Inline: EF translates to SQL; see DisplayNames.ToGenderGroupLabel
             .FirstOrDefaultAsync(cancellationToken);
 
         if (key is null)
@@ -51,10 +51,10 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.IsStandard))
             .ToListAsync(cancellationToken);
 
-        string equipmentType = key.IsRaw ? "Án búnaðar" : "Með búnaði";
+        string equipmentType = Contracts.DisplayNames.EquipmentType(key.IsRaw);
 
         return new RecordHistoryResponse(
-            MapCategoryName(key.RecordCategoryId),
+            key.RecordCategoryId.ToDisplayName(),
             key.WeightCategoryTitle,
             key.AgeCategoryTitle,
             key.GenderLabel,
@@ -62,17 +62,6 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
             key.EraTitle,
             entries);
     }
-
-#pragma warning disable S3358 // Ternary operators should not be nested
-    private static string MapCategoryName(RecordCategory category) =>
-        category == RecordCategory.Squat ? "Hn\u00e9beygja"
-        : category == RecordCategory.Bench ? "Bekkpressa"
-        : category == RecordCategory.Deadlift ? "R\u00e9ttst\u00f6\u00f0ulyfta"
-        : category == RecordCategory.Total ? "Samtala"
-        : category == RecordCategory.BenchSingle ? "Bekkpressa (st\u00f6k grein)"
-        : category == RecordCategory.DeadliftSingle ? "R\u00e9ttst\u00f6\u00f0ulyfta (st\u00f6k grein)"
-        : string.Empty;
-#pragma warning restore S3358 // Ternary operators should not be nested
 
     private sealed record RecordKey(
         int EraId,
