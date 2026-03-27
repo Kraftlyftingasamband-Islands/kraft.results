@@ -1,0 +1,165 @@
+@page "/records/{Id:int}/history"
+
+@using KRAFT.Results.Contracts.Records
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Saga metsins@(_response is not null ? $" - {_response.Category} {_response.WeightCategory}" : "")</PageTitle>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+        <li>
+            <NavLink class="breadcrumb-link" href="records">Met</NavLink>
+        </li>
+        <li aria-current="page">Saga metsins</li>
+    </ol>
+</nav>
+
+<h1>Saga metsins</h1>
+
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki sögu...</span>
+    </div>
+}
+else if (_hasError)
+{
+    <div class="error-state" role="alert">
+        <p>Villa kom upp. Reyndu aftur.</p>
+        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
+    </div>
+}
+else if (_response is not null && _response.Entries.Count > 0)
+{
+    <div class="record-meta">
+        <span>@_response.Category</span>
+        <span class="meta-separator">&middot;</span>
+        <span>@_response.WeightCategory</span>
+        <span class="meta-separator">&middot;</span>
+        <span>@_response.AgeCategory</span>
+        <span class="meta-separator">&middot;</span>
+        <span>@_response.Gender</span>
+        <span class="meta-separator">&middot;</span>
+        <span>@_response.EquipmentType</span>
+        <span class="meta-separator">&middot;</span>
+        <span>@_response.Era</span>
+    </div>
+
+    <div class="table-wrapper" tabindex="0" role="region" aria-label="Saga metsins">
+        <table aria-label="Saga metsins">
+            <colgroup>
+                <col class="col-date" />
+                <col class="col-athlete" />
+                <col class="col-club" />
+                <col class="col-mark" />
+                <col class="col-bodyweight" />
+                <col class="col-meet" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th scope="col" aria-label="Dagsetning">Dags.</th>
+                    <th scope="col">Nafn</th>
+                    <th scope="col" class="hide-mobile">Félag</th>
+                    <th scope="col" class="text-end">Mark</th>
+                    <th scope="col" class="text-end hide-mobile" aria-label="Líkamsþyngd">Líkamsþ.</th>
+                    <th scope="col">Mót</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (RecordHistoryEntry entry in _response.Entries)
+                {
+                    <tr class="@(entry.IsCurrent ? "current-row" : "")" aria-current="@(entry.IsCurrent ? "true" : null)">
+                        <td class="numeric-value">@entry.Date.ToString("dd.MM.yyyy")</td>
+                        @if (entry.IsStandard)
+                        {
+                            <td class="standard-cell">Íslenski staðallinn</td>
+                            <td class="hide-mobile">-</td>
+                            <td class="text-end numeric-value">@entry.Weight.ToString("F1")</td>
+                            <td class="text-end hide-mobile">-</td>
+                            <td>-</td>
+                        }
+                        else
+                        {
+                            <td>
+                                @if (entry.AthleteSlug is not null)
+                                {
+                                    <NavLink class="nav-link" href="@($"athletes/{entry.AthleteSlug}")">
+                                        @entry.Athlete
+                                    </NavLink>
+                                }
+                                else
+                                {
+                                    @entry.Athlete
+                                }
+                            </td>
+                            <td class="hide-mobile">@(entry.Club ?? "-")</td>
+                            <td class="text-end numeric-value">
+                                @entry.Weight.ToString("F1")
+                                @if (entry.IsCurrent)
+                                {
+                                    <span class="current-badge">Núverandi met</span>
+                                }
+                            </td>
+                            <td class="text-end numeric-value hide-mobile">@(entry.BodyWeight?.ToString("F1") ?? "-")</td>
+                            <td>
+                                @if (entry.MeetSlug is not null)
+                                {
+                                    <NavLink class="nav-link" href="@($"meets/{entry.MeetSlug}")">
+                                        @entry.Meet
+                                    </NavLink>
+                                }
+                                else
+                                {
+                                    @entry.Meet
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        Engar færslur fundust.
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private RecordHistoryResponse? _response;
+    private bool _isLoading = true;
+    private bool _hasError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _hasError = false;
+
+        try
+        {
+            _response = await HttpClient.GetFromJsonAsync<RecordHistoryResponse>(
+                $"/records/{Id}/history");
+        }
+        catch
+        {
+            _hasError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

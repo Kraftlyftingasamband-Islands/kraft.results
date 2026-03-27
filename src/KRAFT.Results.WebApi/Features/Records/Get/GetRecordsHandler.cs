@@ -62,6 +62,7 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
             .Select(g => new RecordGroup(
                 MapCategoryName(g.Key),
                 g.Select(r => new RecordEntry(
+                    r.RecordId,
                     r.WeightCategory,
                     r.Athlete,
                     r.AthleteSlug,

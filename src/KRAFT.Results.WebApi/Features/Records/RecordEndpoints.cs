@@ -1,4 +1,5 @@
 using KRAFT.Results.WebApi.Features.Records.Get;
+using KRAFT.Results.WebApi.Features.Records.GetHistory;
 
 namespace KRAFT.Results.WebApi.Features.Records;
 
@@ -10,6 +11,7 @@ internal static class RecordEndpoints
             .WithTags("Records");
 
         group.MapGetRecordsEndpoint();
+        group.MapGetRecordHistoryEndpoint();
 
         return group;
     }

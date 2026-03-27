@@ -1,15 +1,13 @@
 namespace KRAFT.Results.Contracts.Records;
 
-public sealed record class RecordEntry(
-    int Id,
-    string WeightCategory,
+public sealed record class RecordHistoryEntry(
+    DateOnly Date,
     string? Athlete,
     string? AthleteSlug,
-    int? BirthYear,
     string? Club,
-    decimal? BodyWeight,
     decimal Weight,
-    DateOnly Date,
+    decimal? BodyWeight,
     string? Meet,
     string? MeetSlug,
+    bool IsCurrent,
     bool IsStandard);

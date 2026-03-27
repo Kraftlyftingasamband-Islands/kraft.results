@@ -103,7 +103,11 @@ else if (_groups is not null && _groups.Count > 0)
                                     <td class="text-center hide-mobile numeric-value">@(record.BirthYear?.ToString() ?? "-")</td>
                                     <td class="hide-mobile">@(record.Club ?? "-")</td>
                                     <td class="text-end numeric-value">@(record.BodyWeight?.ToString("F1") ?? "-")</td>
-                                    <td class="text-end numeric-value">@record.Weight.ToString("F1")</td>
+                                    <td class="text-end numeric-value">
+                                        <NavLink class="nav-link record-history-link" href="@($"records/{record.Id}/history")" aria-label="@($"Saga metsins - {record.WeightCategory} {record.Weight:F1} kg")">
+                                            @record.Weight.ToString("F1")
+                                        </NavLink>
+                                    </td>
                                     <td class="numeric-value">@record.Date.ToString("dd.MM.yyyy")</td>
                                     <td>
                                         @if (record.MeetSlug is not null)
