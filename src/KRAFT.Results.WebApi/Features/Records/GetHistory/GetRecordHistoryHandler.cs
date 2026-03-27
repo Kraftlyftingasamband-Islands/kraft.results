@@ -29,7 +29,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
             return null;
         }
 
-        List<RecordHistoryEntry> entries = await dbContext.Set<Record>()
+        List<RecordHistoryEntry> rawEntries = await dbContext.Set<Record>()
             .Where(r => r.EraId == key.EraId)
             .Where(r => r.AgeCategoryId == key.AgeCategoryId)
             .Where(r => r.WeightCategoryId == key.WeightCategoryId)
@@ -50,6 +50,12 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.IsCurrent,
                 r.IsStandard))
             .ToListAsync(cancellationToken);
+
+        List<RecordHistoryEntry> entries = rawEntries
+            .GroupBy(e => new { e.Date, e.MeetSlug })
+            .Select(g => g.OrderByDescending(e => e.Weight).First())
+            .OrderBy(e => e.Date)
+            .ToList();
 
         string equipmentType = key.IsRaw ? "Án búnaðar" : "Með búnaði";
 
