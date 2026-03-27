@@ -98,6 +98,6 @@ MSYS_NO_PATHCONV=1 docker exec -e SQLCMDPASSWORD="$SA_PASSWORD" "$CONTAINER_NAME
 echo "Applying migrations..."
 DB_PORT=$(docker port "$CONTAINER_NAME" 1433 | head -n 1 | cut -d: -f2)
 CONNECTION_STRING="Server=127.0.0.1,$DB_PORT;Database=$DB_NAME;User Id=sa;Password=$SA_PASSWORD;TrustServerCertificate=True"
-dotnet ef database update --project src/KRAFT.Results.WebApi --connection "$CONNECTION_STRING"
+dotnet ef database update --project src/KRAFT.Results.WebApi --connection "$CONNECTION_STRING" --no-build
 
 echo "Database '$DB_NAME' restored and migrations applied successfully."
