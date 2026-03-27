@@ -2,7 +2,6 @@
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
-using KRAFT.Results.WebApi.Mappers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +18,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
             .Where(x => x.Weight > 0)
             .GroupBy(x => new
             {
-                x.DisciplineId,
+                x.Discipline,
                 x.Participation.Meet.IsRaw,
                 x.Participation.Meet.MeetType.MeetTypeId,
             })
@@ -29,7 +28,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
                 .Select(a => new PersonalBest(
                     a.Participation.Meet.IsRaw,
                     IsSingleLift(a.Participation.Meet.MeetType.Title),
-                    a.DisciplineId,
+                    a.Discipline,
                     a.Weight,
                     a.Participation.WeightCategory.Title,
                     a.Participation.Weight,
@@ -54,7 +53,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
                 .Select(p => new PersonalBest(
                     p.Meet.IsRaw,
                     false,
-                    0,
+                    Discipline.None,
                     p.Total,
                     p.WeightCategory.Title,
                     p.Weight,
@@ -72,7 +71,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
             .Select(x => new AthletePersonalBest(
             x.IsRaw,
             x.IsSingleLiftRecord,
-            DisciplineMapper.Map(x.DisciplineId),
+            x.Discipline,
             x.Weight,
             x.WeightCategoryTitle,
             x.BodyWeight,
@@ -94,7 +93,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
     private sealed record class PersonalBest(
         bool IsRaw,
         bool IsSingleLiftRecord,
-        int DisciplineId,
+        Discipline Discipline,
         decimal Weight,
         string WeightCategoryTitle,
         decimal BodyWeight,

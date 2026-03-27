@@ -17,7 +17,7 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
         .OrderByDescending(x => x.Attempt!.Participation.Meet.StartDate)
         .ThenBy(x => x.WeightCategoryId)
         .ThenBy(x => x.AgeCategory.AgeCategoryId)
-        .ThenBy(x => x.Attempt!.DisciplineId)
+        .ThenBy(x => x.Attempt!.Discipline)
         .Select(x => new
         {
             x.Date,
@@ -27,7 +27,7 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
             AgeCategory = x.AgeCategory.Title,
             x.Attempt!.Participation.Total,
             x.Weight,
-            x.Attempt!.DisciplineId,
+            x.Attempt!.Discipline,
             x.RecordCategoryId,
             MeetTitle = x.Attempt!.Participation.Meet.Title,
             MeetYear = x.Attempt!.Participation.Meet.StartDate.Year,

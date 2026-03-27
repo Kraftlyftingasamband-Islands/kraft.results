@@ -1,3 +1,5 @@
-﻿namespace KRAFT.Results.Contracts.Meets;
+﻿using KRAFT.Results.Contracts;
 
-public sealed record class MeetAttempt(string Discipline, short Round, decimal Weight, bool IsGood, bool IsRecord);
+namespace KRAFT.Results.Contracts.Meets;
+
+public sealed record class MeetAttempt(Discipline Discipline, short Round, decimal Weight, bool IsGood, bool IsRecord);

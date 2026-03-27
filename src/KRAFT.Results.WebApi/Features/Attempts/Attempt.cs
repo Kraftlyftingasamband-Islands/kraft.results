@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Participations;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
 
 namespace KRAFT.Results.WebApi.Features.Attempts;
@@ -14,7 +15,7 @@ internal sealed class Attempt
 
     public int ParticipationId { get; private set; }
 
-    public byte DisciplineId { get; private set; }
+    public Discipline Discipline { get; private set; }
 
     public short Round { get; private set; }
 
@@ -36,7 +37,7 @@ internal sealed class Attempt
 
     internal static Attempt Create(
         int participationId,
-        byte disciplineId,
+        Discipline discipline,
         short round,
         decimal weight,
         bool good,
@@ -45,7 +46,7 @@ internal sealed class Attempt
         return new Attempt
         {
             ParticipationId = participationId,
-            DisciplineId = disciplineId,
+            Discipline = discipline,
             Round = round,
             Weight = weight,
             Good = good,

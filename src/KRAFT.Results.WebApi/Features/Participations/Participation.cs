@@ -103,7 +103,7 @@ internal sealed class Participation
 
         foreach (Attempt attempt in Attempts)
         {
-            if (attempt.DisciplineId == (byte)discipline && attempt.Good && attempt.Weight > best)
+            if (attempt.Discipline == discipline && attempt.Good && attempt.Weight > best)
             {
                 best = attempt.Weight;
             }

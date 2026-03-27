@@ -131,7 +131,7 @@
 
                             <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
-                            @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines[a.Discipline[0]]))
+                            @foreach (var round in weightCategory.First().Attempts.Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline)))
                             {
                                 <th class="@(round.Round == 1 ? "first-attempt" : string.Empty)" style="text-align: center; width: 80px">@round.Discipline</th>
                             }
@@ -163,7 +163,7 @@
 
                                 @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
                                 {
-                                    @foreach (var attempt in discipline.Where(a => IncludedDisciplines[a.Discipline[0]]).OrderBy(a => a.Round))
+                                    @foreach (var attempt in discipline.Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline)).OrderBy(a => a.Round))
                                     {
                                         <AttemptCell Attempt="attempt" />
                                     }
@@ -204,7 +204,7 @@
 
     private MeetDetails? Meet;
     private IReadOnlyList<MeetParticipation> Participations = [];
-    private Dictionary<char, bool> IncludedDisciplines = new();
+    private Dictionary<Discipline, bool> IncludedDisciplines = new();
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
     private bool ShowClubs;
@@ -268,7 +268,7 @@
 
             IncludedDisciplines = Participations
                 .SelectMany(participation => participation.Attempts)
-                .GroupBy(attempt => attempt.Discipline[0])
+                .GroupBy(attempt => attempt.Discipline)
                 .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
 
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
