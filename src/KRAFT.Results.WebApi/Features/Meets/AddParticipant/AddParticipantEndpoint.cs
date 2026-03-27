@@ -37,7 +37,7 @@ internal static class AddParticipantEndpoint
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
-        .RequireAuthorization();
+        .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         return endpoints;
     }
