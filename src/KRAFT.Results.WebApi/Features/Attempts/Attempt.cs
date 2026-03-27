@@ -39,6 +39,7 @@ internal sealed class Attempt
         byte disciplineId,
         short round,
         decimal weight,
+        bool good,
         string createdBy)
     {
         return new Attempt
@@ -46,8 +47,8 @@ internal sealed class Attempt
             ParticipationId = participationId,
             DisciplineId = disciplineId,
             Round = round,
-            Weight = Math.Abs(weight),
-            Good = weight > 0,
+            Weight = weight,
+            Good = good,
             CreatedBy = createdBy,
             CreatedOn = DateTime.UtcNow,
             ModifiedBy = createdBy,
@@ -55,10 +56,10 @@ internal sealed class Attempt
         };
     }
 
-    internal void Update(decimal weight, string modifiedBy)
+    internal void Update(decimal weight, bool good, string modifiedBy)
     {
-        Weight = Math.Abs(weight);
-        Good = weight > 0;
+        Weight = weight;
+        Good = good;
         ModifiedBy = modifiedBy;
         ModifiedOn = DateTime.UtcNow;
     }
