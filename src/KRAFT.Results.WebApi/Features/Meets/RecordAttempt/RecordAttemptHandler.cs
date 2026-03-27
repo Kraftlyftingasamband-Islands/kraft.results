@@ -60,9 +60,8 @@ internal sealed class RecordAttemptHandler
 
         User user = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
-        byte disciplineId = (byte)discipline;
         Attempt? existing = participation.Attempts
-            .FirstOrDefault(a => a.DisciplineId == disciplineId && a.Round == round);
+            .FirstOrDefault(a => a.Discipline == discipline && a.Round == round);
 
         if (existing is not null)
         {
@@ -72,7 +71,7 @@ internal sealed class RecordAttemptHandler
         {
             Attempt attempt = Attempt.Create(
                 participationId,
-                disciplineId,
+                discipline,
                 round,
                 command.Weight,
                 command.Good,

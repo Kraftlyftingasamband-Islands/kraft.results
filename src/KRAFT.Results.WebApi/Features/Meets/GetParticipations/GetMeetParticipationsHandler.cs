@@ -1,5 +1,4 @@
 using KRAFT.Results.Contracts.Meets;
-using KRAFT.Results.WebApi.Mappers;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +28,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 p.Attempts
                     .Where(a => a.Round < 4)
                     .Select(a => new MeetAttempt(
-                        $"{DisciplineMapper.Map(a.DisciplineId)[0]}{a.Round}",
+                        a.Discipline,
                         a.Round,
                         a.Weight,
                         a.Good,

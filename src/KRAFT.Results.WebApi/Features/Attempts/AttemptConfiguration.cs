@@ -30,6 +30,8 @@ internal sealed class AttemptConfiguration : IEntityTypeConfiguration<Attempt>
         builder.Property(e => e.Weight)
             .HasColumnType("numeric(18, 2)");
 
+        builder.Property(e => e.Discipline).HasColumnName("DisciplineId");
+
         builder.HasOne(d => d.Participation).WithMany(p => p.Attempts)
             .HasForeignKey(d => d.ParticipationId)
             .HasConstraintName("FK_Attempts_Participations");
