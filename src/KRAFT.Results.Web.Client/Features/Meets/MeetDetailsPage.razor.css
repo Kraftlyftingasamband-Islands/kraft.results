@@ -93,6 +93,10 @@
     text-align: center;
 }
 
+.bombed-out {
+    color: #6b7280;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .btn-action {
         transition: none;

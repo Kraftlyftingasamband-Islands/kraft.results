@@ -144,9 +144,13 @@
                             }
                         </tr>
 
-                        @foreach (var p in weightCategory.OrderBy(x => x.Rank))
+                        @foreach (var p in weightCategory
+                            .OrderBy(x => x.Disqualified)
+                            .ThenBy(x => x.Rank <= 0)
+                            .ThenBy(x => x.Rank)
+                            .ThenBy(x => x.Athlete))
                         {
-                            <tr>
+                            <tr class="@(p.Disqualified ? "bombed-out" : null)">
                                 <RankCell Rank="p.Rank"/>
                                 <AthleteCell Athlete="@p.Athlete" Slug="@p.AthleteSlug" />
                                 <td>
