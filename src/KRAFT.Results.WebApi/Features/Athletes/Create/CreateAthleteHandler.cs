@@ -4,7 +4,6 @@ using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
-using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -63,22 +62,11 @@ internal sealed class CreateAthleteHandler
             return TeamErrors.TeamDoesNotExist(command.TeamId.Value);
         }
 
-        if (!Gender.TryParse(command.Gender, out Gender? gender))
-        {
-            _logger.LogWarning(
-                "Failed to create athlete {First} {Last}: Invalid gender '{Gender}'",
-                command.FirstName,
-                command.LastName,
-                command.Gender);
-
-            return AthleteErrors.InvalidGender;
-        }
-
         Result<Athlete> result = Athlete.Create(
             creator: creator,
             firstName: command.FirstName,
             lastName: command.LastName,
-            gender: gender,
+            gender: command.Gender,
             country: country,
             team: team,
             dateOfBirth: command.DateOfBirth);
