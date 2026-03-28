@@ -104,7 +104,7 @@
     .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
     .GroupBy(x => new { x.Gender, x.AgeCategory, x.AgeCategorySlug })
     .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategorySlug.Length > 0 ? char.ToUpperInvariant(x.Key.AgeCategorySlug[0]) : ' '))
-    .ThenBy(x => x.Key.AgeCategory)
+    .ThenBy(x => x.Key.AgeCategorySlug)
     .ThenByDescending(x => x.Key.Gender))
 {
     <section class="card-section">
