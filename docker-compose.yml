@@ -62,7 +62,6 @@ services:
 
 volumes:
   kraft-data:
-    external: true
   caddy-data:
   caddy-config:
 
