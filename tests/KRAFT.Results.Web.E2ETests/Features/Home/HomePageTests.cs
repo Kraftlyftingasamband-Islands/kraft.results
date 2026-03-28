@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Microsoft.Playwright;
 
 using Shouldly;
@@ -25,10 +27,10 @@ public class HomePageTests(PlaywrightFixture fixture)
         response.Status.ShouldBe(200);
 
         ILocator nav = page.Locator("nav.nav");
-        await nav.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         await Expect(page).ToHaveTitleAsync(
-            new System.Text.RegularExpressions.Regex("KRAFT Results", System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            new Regex("KRAFT Results", RegexOptions.IgnoreCase),
             new PageAssertionsToHaveTitleOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
@@ -42,19 +44,18 @@ public class HomePageTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync(_fixture.BaseUrl);
         ILocator nav = page.Locator("nav.nav");
-        await nav.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         ILocator loginLink = nav.GetByText("Innskrá");
-        await loginLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(loginLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        string navText = await nav.InnerTextAsync();
-        navText.ShouldContain("Forsíða");
-        navText.ShouldContain("Mótaskrá");
-        navText.ShouldContain("Keppendur");
-        navText.ShouldContain("Stigatöflur");
-        navText.ShouldContain("Met");
-        navText.ShouldContain("Félög");
-        navText.ShouldContain("Innskrá");
+        await Expect(nav).ToContainTextAsync("Forsíða", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToContainTextAsync("Mótaskrá", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToContainTextAsync("Keppendur", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToContainTextAsync("Stigatöflur", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToContainTextAsync("Met", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToContainTextAsync("Félög", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(nav).ToContainTextAsync("Innskrá", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

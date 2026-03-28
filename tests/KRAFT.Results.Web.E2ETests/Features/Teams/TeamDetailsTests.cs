@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-using Shouldly;
+using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Teams;
 
@@ -19,15 +19,12 @@ public class TeamDetailsTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/teams/test-team");
 
         ILocator heading = page.Locator("h1").First;
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string teamTitle = await heading.InnerTextAsync();
-        teamTitle.ShouldNotBeNullOrWhiteSpace();
+        await Expect(heading).Not.ToBeEmptyAsync(new LocatorAssertionsToBeEmptyOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator membersHeading = page.Locator("h2", new PageLocatorOptions { HasText = "Meðlimir" });
-        await membersHeading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        string membersText = await membersHeading.InnerTextAsync();
-        membersText.ShouldBe("Meðlimir");
+        await Expect(membersHeading).ToHaveTextAsync("Meðlimir", new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

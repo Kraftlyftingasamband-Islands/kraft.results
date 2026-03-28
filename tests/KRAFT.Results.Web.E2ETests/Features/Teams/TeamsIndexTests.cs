@@ -1,7 +1,5 @@
 using Microsoft.Playwright;
 
-using Shouldly;
-
 using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Teams;
@@ -20,11 +18,10 @@ public class TeamsIndexTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/teams");
         ILocator heading = page.Locator("h3", new PageLocatorOptions { HasText = "Félög" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string headingText = await heading.InnerTextAsync();
-        headingText.ShouldBe("Félög");
+        await Expect(heading).ToHaveTextAsync("Félög", new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator teamNames = page.Locator(".card-grid .team-name");
         await Expect(teamNames).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });

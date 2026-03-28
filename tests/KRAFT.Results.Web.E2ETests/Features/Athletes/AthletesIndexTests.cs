@@ -1,7 +1,5 @@
 using Microsoft.Playwright;
 
-using Shouldly;
-
 using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Athletes;
@@ -20,14 +18,13 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/athletes");
         ILocator heading = page.Locator("h3", new PageLocatorOptions { HasText = "Keppendur" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator searchInput = page.Locator("input.search-input");
-        await searchInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(searchInput).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string headingText = await heading.InnerTextAsync();
-        headingText.ShouldBe("Keppendur");
+        await Expect(heading).ToHaveTextAsync("Keppendur", new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         await Expect(searchInput).ToBeVisibleAsync();
 
@@ -43,10 +40,10 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
         await using IAsyncDisposable contextGuard = context;
         await page.GotoAsync($"{_fixture.BaseUrl}/athletes");
         ILocator searchInput = page.Locator("input.search-input");
-        await searchInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(searchInput).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator athleteRows = page.Locator("table tbody tr");
-        await athleteRows.First.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(athleteRows.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act
         await searchInput.FillAsync("zzzznonexistent");

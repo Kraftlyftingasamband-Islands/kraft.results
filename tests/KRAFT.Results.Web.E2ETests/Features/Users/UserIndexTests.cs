@@ -1,7 +1,5 @@
 using Microsoft.Playwright;
 
-using Shouldly;
-
 using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Users;
@@ -23,7 +21,7 @@ public class UserIndexTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/users");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Notendur" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(heading).ToBeVisibleAsync();
@@ -31,7 +29,6 @@ public class UserIndexTests(PlaywrightFixture fixture)
         ILocator tableRows = page.Locator("table tbody tr");
         await Expect(tableRows.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        int rowCount = await tableRows.CountAsync();
-        rowCount.ShouldBeGreaterThanOrEqualTo(1);
+        await Expect(tableRows).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }
