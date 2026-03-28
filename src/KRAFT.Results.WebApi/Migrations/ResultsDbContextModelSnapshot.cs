@@ -807,24 +807,8 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.Property<bool>("IsStandard")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTimeOffset?>("ModifiedOn")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<int>("RecordCategoryId")
                         .HasColumnType("int");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<byte>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint")
-                        .HasDefaultValue((byte)0);
 
                     b.Property<decimal>("Weight")
                         .HasColumnType("decimal(18, 2)");
@@ -837,8 +821,6 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.HasIndex("EraId");
 
                     b.HasIndex("WeightCategoryId");
-
-                    b.HasIndex(new[] { "Status", "EraId", "AgeCategoryId", "WeightCategoryId", "RecordCategoryId", "IsRaw" }, "IX_Records_Status_Composite");
 
                     b.HasIndex(new[] { "IsCurrent", "EraId" }, "nci_wi_Records_3CB8ADEAD69A6DA29B4DC80D395ABC87");
 

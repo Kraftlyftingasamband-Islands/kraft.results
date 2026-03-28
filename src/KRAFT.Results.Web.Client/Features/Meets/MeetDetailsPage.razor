@@ -55,8 +55,8 @@
 
 <AuthorizeView Roles="Admin">
     <MeetPendingRecords PendingRecords="_pendingRecords"
-                        OnRecordApproved="HandleRecordApproved"
-                        OnRecordRejected="HandleRecordRejected" />
+                        MeetSlug="@Slug"
+                        OnRecordApproved="HandleRecordApproved" />
 </AuthorizeView>
 
 @if (ShowIpfPointLeaders)
@@ -281,14 +281,9 @@
         await _deleteDialog.ShowAsync();
     }
 
-    private void HandleRecordApproved(int recordId)
+    private void HandleRecordApproved(int attemptId)
     {
-        _pendingRecords = _pendingRecords.Where(r => r.RecordId != recordId).ToList();
-    }
-
-    private void HandleRecordRejected(int recordId)
-    {
-        _pendingRecords = _pendingRecords.Where(r => r.RecordId != recordId).ToList();
+        _pendingRecords = _pendingRecords.Where(r => r.AttemptId != attemptId).ToList();
     }
 
     private async Task HandleDelete()

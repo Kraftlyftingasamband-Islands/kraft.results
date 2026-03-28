@@ -1,5 +1,4 @@
 @using KRAFT.Results.Contracts.Records
-@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 
@@ -33,13 +32,13 @@
                         <th scope="col" style="text-align: right; width: 80px;">Mark</th>
                         <th scope="col" class="hide-mobile" style="text-align: center; width: 100px;">Þyngdarfl.</th>
                         <th scope="col" class="hide-mobile" style="text-align: center; width: 100px;">Aldursfl.</th>
-                        <th scope="col" style="width: 80px;"></th>
+                        <th scope="col" style="width: 50px;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ((PendingRecordEntry record, int index) in PendingRecords.Select((r, i) => (r, i)))
                     {
-                        <tr class="@(_fadingRecordIds.Contains(record.RecordId) ? "row-fading" : null)">
+                        <tr class="@(_fadingAttemptIds.Contains(record.AttemptId) ? "row-fading" : null)">
                             <td style="text-align: center;">@(index + 1)</td>
                             <td>@record.AthleteName</td>
                             <td>@record.Discipline</td>
@@ -49,10 +48,10 @@
                             <td>
                                 <div class="action-buttons">
                                     <button class="btn-approve"
-                                            disabled="@(_processingRecordId is not null)"
+                                            disabled="@(_processingAttemptId is not null)"
                                             aria-label="@($"Samþykkja met – {record.AthleteName}, {record.Discipline}")"
-                                            @onclick="() => HandleApprove(record.RecordId)">
-                                        @if (_processingRecordId == record.RecordId && _isApproving)
+                                            @onclick="() => HandleApprove(record.AttemptId)">
+                                        @if (_processingAttemptId == record.AttemptId)
                                         {
                                             <span class="spinner"></span>
                                         }
@@ -60,22 +59,6 @@
                                         {
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="action-icon">
                                                 <polyline points="20 6 9 17 4 12"/>
-                                            </svg>
-                                        }
-                                    </button>
-                                    <button class="btn-reject"
-                                            disabled="@(_processingRecordId is not null)"
-                                            aria-label="@($"Hafna meti – {record.AthleteName}, {record.Discipline}")"
-                                            @onclick="() => ShowRejectDialog(record.RecordId)">
-                                        @if (_processingRecordId == record.RecordId && !_isApproving)
-                                        {
-                                            <span class="spinner"></span>
-                                        }
-                                        else
-                                        {
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="action-icon">
-                                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                                <line x1="6" y1="6" x2="18" y2="18"/>
                                             </svg>
                                         }
                                     </button>
@@ -89,50 +72,35 @@
     }
 </section>
 
-<RejectRecordDialog @ref="_rejectDialog"
-                    Id="reject-record-dialog"
-                    Title="Hafna meti"
-                    Message="Ertu viss um að þú viljir hafna þessu meti?"
-                    ConfirmLabel="Hafna"
-                    OnConfirm="HandleReject"
-                    ErrorMessage="@_rejectDialogError"
-                    IsLoading="_isRejecting" />
-
 @code {
-    private RejectRecordDialog _rejectDialog = null!;
-    private int? _processingRecordId;
-    private int? _rejectingRecordId;
-    private bool _isApproving;
-    private bool _isRejecting;
+    private int? _processingAttemptId;
     private string? _errorMessage;
-    private string? _rejectDialogError;
-    private readonly HashSet<int> _fadingRecordIds = [];
+    private readonly HashSet<int> _fadingAttemptIds = [];
 
     [Parameter, EditorRequired]
     public IReadOnlyList<PendingRecordEntry> PendingRecords { get; set; } = [];
 
     [Parameter]
-    public EventCallback<int> OnRecordApproved { get; set; }
+    public string MeetSlug { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<int> OnRecordRejected { get; set; }
+    public EventCallback<int> OnRecordApproved { get; set; }
 
-    private async Task HandleApprove(int recordId)
+    private async Task HandleApprove(int attemptId)
     {
-        _processingRecordId = recordId;
-        _isApproving = true;
+        _processingAttemptId = attemptId;
         _errorMessage = null;
 
         try
         {
-            HttpResponseMessage response = await HttpClient.PutAsync($"/records/{recordId}/approve", null);
+            HttpResponseMessage response = await HttpClient.PutAsync($"/meets/{MeetSlug}/pending-records/{attemptId}/approve", null);
 
             if (response.IsSuccessStatusCode)
             {
-                _fadingRecordIds.Add(recordId);
+                _fadingAttemptIds.Add(attemptId);
                 StateHasChanged();
                 await Task.Delay(300);
-                await OnRecordApproved.InvokeAsync(recordId);
+                await OnRecordApproved.InvokeAsync(attemptId);
             }
             else
             {
@@ -147,56 +115,7 @@
         }
         finally
         {
-            _processingRecordId = null;
-            _isApproving = false;
-        }
-    }
-
-    private async Task ShowRejectDialog(int recordId)
-    {
-        _rejectingRecordId = recordId;
-        _rejectDialogError = null;
-        await _rejectDialog.ShowAsync();
-    }
-
-    private async Task HandleReject(string? reason)
-    {
-        if (_rejectingRecordId is null)
-        {
-            return;
-        }
-
-        int recordId = _rejectingRecordId.Value;
-        _processingRecordId = recordId;
-        _isRejecting = true;
-        _rejectDialogError = null;
-
-        try
-        {
-            RejectRecordCommand command = new(reason);
-            HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/records/{recordId}/reject", command);
-
-            if (response.IsSuccessStatusCode)
-            {
-                await _rejectDialog.CloseAsync();
-                _fadingRecordIds.Add(recordId);
-                StateHasChanged();
-                await Task.Delay(300);
-                await OnRecordRejected.InvokeAsync(recordId);
-            }
-            else
-            {
-                _rejectDialogError = "Villa kom upp við að hafna meti. Reyndu aftur síðar.";
-            }
-        }
-        catch (HttpRequestException)
-        {
-            _rejectDialogError = "Villa kom upp við að hafna meti. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _processingRecordId = null;
-            _isRejecting = false;
+            _processingAttemptId = null;
         }
     }
 

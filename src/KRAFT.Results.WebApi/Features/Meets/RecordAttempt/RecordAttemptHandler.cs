@@ -3,7 +3,6 @@ using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
-using KRAFT.Results.WebApi.Features.Records.DetectRecords;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 
@@ -19,18 +18,15 @@ internal sealed class RecordAttemptHandler
     private readonly ILogger<RecordAttemptHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly IHttpContextService _httpContextService;
-    private readonly RecordDetectionService _recordDetectionService;
 
     public RecordAttemptHandler(
         ILogger<RecordAttemptHandler> logger,
         ResultsDbContext dbContext,
-        IHttpContextService httpContextService,
-        RecordDetectionService recordDetectionService)
+        IHttpContextService httpContextService)
     {
         _logger = logger;
         _dbContext = dbContext;
         _httpContextService = httpContextService;
-        _recordDetectionService = recordDetectionService;
     }
 
     public async Task<Result> Handle(
@@ -49,7 +45,6 @@ internal sealed class RecordAttemptHandler
 
         Participation? participation = await _dbContext.Set<Participation>()
             .Include(p => p.Attempts)
-            .Include(p => p.Meet)
             .FirstOrDefaultAsync(
                 p => p.ParticipationId == participationId && p.MeetId == meetId,
                 cancellationToken);
@@ -75,12 +70,9 @@ internal sealed class RecordAttemptHandler
         Attempt? existing = participation.Attempts
             .FirstOrDefault(a => a.Discipline == discipline && a.Round == round);
 
-        Attempt savedAttempt;
-
         if (existing is not null)
         {
             existing.Update(command.Weight, command.Good, user.Username);
-            savedAttempt = existing;
         }
         else
         {
@@ -94,19 +86,9 @@ internal sealed class RecordAttemptHandler
 
             _dbContext.Set<Attempt>().Add(attempt);
             participation.Attempts.Add(attempt);
-            savedAttempt = attempt;
         }
 
         participation.RecalculateTotals();
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        await _recordDetectionService.DetectAsync(
-            participation,
-            savedAttempt,
-            participation.Meet,
-            user.Username,
-            cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

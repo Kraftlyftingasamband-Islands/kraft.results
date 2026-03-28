@@ -63,8 +63,7 @@ td {
     justify-content: flex-end;
 }
 
-.btn-approve,
-.btn-reject {
+.btn-approve {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -74,9 +73,6 @@ td {
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background-color var(--transition-fast) ease;
-}
-
-.btn-approve {
     background: #15803d;
     color: var(--color-white);
 }
@@ -85,23 +81,12 @@ td {
     background: #166534;
 }
 
-.btn-reject {
-    background: var(--color-danger);
-    color: var(--color-white);
-}
-
-.btn-reject:hover {
-    background: #b91c1c;
-}
-
-.btn-approve:disabled,
-.btn-reject:disabled {
+.btn-approve:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.btn-approve:focus-visible,
-.btn-reject:focus-visible {
+.btn-approve:focus-visible {
     outline: 2px solid var(--color-text);
     outline-offset: 2px;
 }
@@ -148,8 +133,7 @@ td {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .btn-approve,
-    .btn-reject {
+    .btn-approve {
         transition: none;
     }
 

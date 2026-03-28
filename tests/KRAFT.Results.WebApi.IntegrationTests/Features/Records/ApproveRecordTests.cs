@@ -9,20 +9,18 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
 public sealed class ApproveRecordTests(IntegrationTestFixture fixture)
 {
-    private const string BasePath = "/records";
-
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
-    public async Task ReturnsNoContent_WhenRecordIsPending()
+    public async Task ReturnsNoContent_WhenAttemptBeatsCurrentRecord()
     {
         // Arrange
-        int recordId = Constants.PendingRecordForApprovalId;
+        int attemptId = Constants.PendingRecords.RecordBreakingAttemptId;
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsync(
-            $"{BasePath}/{recordId}/approve",
+            $"/meets/{Constants.TestMeetSlug}/pending-records/{attemptId}/approve",
             null,
             CancellationToken.None);
 
@@ -31,14 +29,14 @@ public sealed class ApproveRecordTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenRecordIsNotPending()
+    public async Task ReturnsBadRequest_WhenAttemptAlreadyHasRecord()
     {
-        // Arrange — record 1 is already approved via seed backfill
-        int recordId = 1;
+        // Arrange — attempt 1 already has a record linked via AttemptId
+        int attemptId = 1;
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsync(
-            $"{BasePath}/{recordId}/approve",
+            $"/meets/{Constants.TestMeetSlug}/pending-records/{attemptId}/approve",
             null,
             CancellationToken.None);
 
@@ -46,18 +44,18 @@ public sealed class ApproveRecordTests(IntegrationTestFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
         error.ShouldNotBeNull();
-        error.Code.ShouldBe("Records.NotPending");
+        error.Code.ShouldBe("Meets.AlreadyHasRecord");
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenRecordDoesNotExist()
+    public async Task ReturnsNotFound_WhenAttemptDoesNotExist()
     {
         // Arrange
-        int recordId = 99999;
+        int attemptId = 99999;
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsync(
-            $"{BasePath}/{recordId}/approve",
+            $"/meets/{Constants.TestMeetSlug}/pending-records/{attemptId}/approve",
             null,
             CancellationToken.None);
 
@@ -65,18 +63,34 @@ public sealed class ApproveRecordTests(IntegrationTestFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
         error.ShouldNotBeNull();
-        error.Code.ShouldBe("Records.NotFound");
+        error.Code.ShouldBe("Meets.AttemptNotFound");
+    }
+
+    [Fact]
+    public async Task ReturnsNotFound_WhenAttemptIsInDifferentMeet()
+    {
+        // Arrange — attempt exists but not in this meet
+        int attemptId = Constants.PendingRecords.RecordBreakingAttemptId;
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsync(
+            $"/meets/non-existent-meet/pending-records/{attemptId}/approve",
+            null,
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task ReturnsUnauthorized_WhenNotAuthenticated()
     {
         // Arrange
-        int recordId = Constants.PendingRecordForApprovalId;
+        int attemptId = Constants.PendingRecords.RecordBreakingAttemptId;
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PutAsync(
-            $"{BasePath}/{recordId}/approve",
+            $"/meets/{Constants.TestMeetSlug}/pending-records/{attemptId}/approve",
             null,
             CancellationToken.None);
 

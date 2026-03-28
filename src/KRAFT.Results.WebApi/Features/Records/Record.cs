@@ -1,4 +1,3 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Attempts;
@@ -31,17 +30,9 @@ internal sealed class Record
 
     public bool IsRaw { get; private set; }
 
-    public RecordStatus Status { get; private set; }
-
-    public string? RejectionReason { get; private set; }
-
     public DateTime CreatedOn { get; private set; }
 
     public string CreatedBy { get; private set; } = null!;
-
-    public DateTimeOffset? ModifiedOn { get; private set; }
-
-    public string? ModifiedBy { get; private set; }
 
     public AgeCategory AgeCategory { get; private set; } = null!;
 
@@ -51,7 +42,7 @@ internal sealed class Record
 
     public WeightCategory WeightCategory { get; private set; } = null!;
 
-    internal static Record CreatePending(
+    internal static Record Create(
         int eraId,
         int ageCategoryId,
         int weightCategoryId,
@@ -74,46 +65,8 @@ internal sealed class Record
             IsRaw = isRaw,
             IsCurrent = false,
             IsStandard = false,
-            Status = RecordStatus.Pending,
             CreatedOn = DateTime.UtcNow,
             CreatedBy = createdBy,
         };
-    }
-
-    internal void UpdatePending(int attemptId, decimal weight, DateOnly date)
-    {
-        AttemptId = attemptId;
-        Weight = weight;
-        Date = date;
-        ModifiedOn = DateTimeOffset.UtcNow;
-    }
-
-    internal Result Approve(string modifiedBy)
-    {
-        if (Status != RecordStatus.Pending)
-        {
-            return RecordErrors.NotPending;
-        }
-
-        Status = RecordStatus.Approved;
-        ModifiedBy = modifiedBy;
-        ModifiedOn = DateTimeOffset.UtcNow;
-
-        return Result.Success();
-    }
-
-    internal Result Reject(string? reason, string modifiedBy)
-    {
-        if (Status != RecordStatus.Pending)
-        {
-            return RecordErrors.NotPending;
-        }
-
-        Status = RecordStatus.Rejected;
-        RejectionReason = reason;
-        ModifiedBy = modifiedBy;
-        ModifiedOn = DateTimeOffset.UtcNow;
-
-        return Result.Success();
     }
 }
