@@ -58,7 +58,14 @@ internal sealed class RecordAttemptHandler
             return MeetErrors.ParticipationNotFound;
         }
 
-        User user = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> userResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (userResult.IsFailure)
+        {
+            return Result.Failure(userResult.Error);
+        }
+
+        User user = userResult.FromResult();
 
         Attempt? existing = participation.Attempts
             .FirstOrDefault(a => a.Discipline == discipline && a.Round == round);

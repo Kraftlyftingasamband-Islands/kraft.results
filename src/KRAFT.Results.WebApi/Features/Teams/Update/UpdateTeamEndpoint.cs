@@ -1,6 +1,7 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,6 +27,7 @@ internal static class UpdateTeamEndpoint
                 {
                     TeamErrors.TeamNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })

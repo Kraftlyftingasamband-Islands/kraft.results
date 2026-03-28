@@ -2,6 +2,7 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +29,7 @@ internal static class AddParticipantEndpoint
                     MeetErrors.MeetNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     MeetErrors.AthleteAlreadyRegisteredCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })

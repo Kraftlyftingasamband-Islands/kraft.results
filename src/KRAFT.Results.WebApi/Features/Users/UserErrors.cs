@@ -7,6 +7,7 @@ internal static class UserErrors
     internal const string InvalidUsernameOrPasswordCode = "Users.InvalidUsernameOrPassword";
     internal const string UserNameExistsCode = "Users.UserNameExists";
     internal const string EmailExistsCode = "Users.EmailExists";
+    internal const string UserNameClaimMissingCode = "Users.UserNameClaimMissing";
 
     internal static readonly Error InvalidUsernameOrPassword = new(
         Code: InvalidUsernameOrPasswordCode,
@@ -35,4 +36,8 @@ internal static class UserErrors
     internal static readonly Error PasswordEmpty = new(
         Code: "Users.PasswordNameEmpty",
         Description: "Password must contain a value");
+
+    internal static readonly Error UserNameClaimMissing = new(
+        Code: UserNameClaimMissingCode,
+        Description: "The authentication token is missing the required name claim.");
 }

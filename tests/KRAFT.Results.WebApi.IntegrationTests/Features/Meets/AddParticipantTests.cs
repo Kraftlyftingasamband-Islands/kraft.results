@@ -140,4 +140,40 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task ReturnsUnauthorized_WhenNameClaimIsMissing()
+    {
+        // Arrange
+        HttpClient noNameClaimHttpClient = fixture.CreateNoNameClaimHttpClient();
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await noNameClaimHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenBodyWeightIsNegative()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithBodyWeight(-1m)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }

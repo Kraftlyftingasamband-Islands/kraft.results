@@ -1,6 +1,7 @@
 ﻿using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,6 +25,7 @@ internal static class CreateTeamEndpoint
                 failure: error => error.Code switch
                 {
                     TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
