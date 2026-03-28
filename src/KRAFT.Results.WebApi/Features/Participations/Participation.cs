@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
@@ -70,8 +71,28 @@ internal sealed class Participation
 
     public WeightCategory WeightCategory { get; private set; } = null!;
 
-    internal static Participation Create(User creator, int athleteId, int meetId, int weightCategoryId, decimal bodyWeight)
+    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, decimal bodyWeight)
     {
+        if (athleteId <= 0)
+        {
+            return ParticipationErrors.AthleteIdMustBePositive;
+        }
+
+        if (meetId <= 0)
+        {
+            return ParticipationErrors.MeetIdMustBePositive;
+        }
+
+        if (weightCategoryId <= 0)
+        {
+            return ParticipationErrors.WeightCategoryIdMustBePositive;
+        }
+
+        if (bodyWeight < 0)
+        {
+            return ParticipationErrors.BodyWeightMustNotBeNegative;
+        }
+
         return new Participation
         {
             AthleteId = athleteId,
