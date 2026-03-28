@@ -79,13 +79,13 @@ else if (_model is not null)
                 {
                     <p>Ertu viss um að þú viljir eyða þessum notanda?</p>
                     <div class="danger-actions">
-                        <button class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
-                        <button class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
+                        <button type="button" class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
+                        <button type="button" class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
                     </div>
                 }
                 else
                 {
-                    <button class="btn-danger" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
+                    <button type="button" class="btn-danger" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
                 }
                 @if (!string.IsNullOrEmpty(_deleteErrorMessage))
                 {
