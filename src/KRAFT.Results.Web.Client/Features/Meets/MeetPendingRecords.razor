@@ -1,0 +1,209 @@
+@using KRAFT.Results.Contracts.Records
+@using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
+
+<section class="card-section pending-records-section">
+    <div class="pending-records-header">
+        <h3>Met til samþykktar</h3>
+        @if (PendingRecords.Count > 0)
+        {
+            <span class="badge">@PendingRecords.Count í bið</span>
+        }
+    </div>
+
+    @if (_errorMessage is not null)
+    {
+        <div class="pending-records-error" role="alert">@_errorMessage</div>
+    }
+
+    @if (PendingRecords.Count == 0)
+    {
+        <p class="empty-state">Engin met í bið.</p>
+    }
+    else
+    {
+        <div class="table-overflow">
+            <table aria-label="Met til samþykktar">
+                <thead>
+                    <tr>
+                        <th scope="col" style="text-align: center; width: 42px;">#</th>
+                        <th scope="col">Keppandi</th>
+                        <th scope="col">Grein</th>
+                        <th scope="col" style="text-align: right; width: 80px;">Mark</th>
+                        <th scope="col" class="hide-mobile" style="text-align: center; width: 100px;">Þyngdarfl.</th>
+                        <th scope="col" class="hide-mobile" style="text-align: center; width: 100px;">Aldursfl.</th>
+                        <th scope="col" style="width: 80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ((PendingRecordEntry record, int index) in PendingRecords.Select((r, i) => (r, i)))
+                    {
+                        <tr class="@(_fadingRecordIds.Contains(record.RecordId) ? "row-fading" : null)">
+                            <td style="text-align: center;">@(index + 1)</td>
+                            <td>@record.AthleteName</td>
+                            <td>@record.Discipline</td>
+                            <td style="text-align: right;">@record.Weight</td>
+                            <td class="hide-mobile" style="text-align: center;">@record.WeightCategory</td>
+                            <td class="hide-mobile" style="text-align: center;">@record.AgeCategory</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-approve"
+                                            disabled="@(_processingRecordId is not null)"
+                                            aria-label="@($"Samþykkja met – {record.AthleteName}, {record.Discipline}")"
+                                            @onclick="() => HandleApprove(record.RecordId)">
+                                        @if (_processingRecordId == record.RecordId && _isApproving)
+                                        {
+                                            <span class="spinner"></span>
+                                        }
+                                        else
+                                        {
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="action-icon">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                        }
+                                    </button>
+                                    <button class="btn-reject"
+                                            disabled="@(_processingRecordId is not null)"
+                                            aria-label="@($"Hafna meti – {record.AthleteName}, {record.Discipline}")"
+                                            @onclick="() => ShowRejectDialog(record.RecordId)">
+                                        @if (_processingRecordId == record.RecordId && !_isApproving)
+                                        {
+                                            <span class="spinner"></span>
+                                        }
+                                        else
+                                        {
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="action-icon">
+                                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                            </svg>
+                                        }
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<RejectRecordDialog @ref="_rejectDialog"
+                    Id="reject-record-dialog"
+                    Title="Hafna meti"
+                    Message="Ertu viss um að þú viljir hafna þessu meti?"
+                    ConfirmLabel="Hafna"
+                    OnConfirm="HandleReject"
+                    ErrorMessage="@_rejectDialogError"
+                    IsLoading="_isRejecting" />
+
+@code {
+    private RejectRecordDialog _rejectDialog = null!;
+    private int? _processingRecordId;
+    private int? _rejectingRecordId;
+    private bool _isApproving;
+    private bool _isRejecting;
+    private string? _errorMessage;
+    private string? _rejectDialogError;
+    private readonly HashSet<int> _fadingRecordIds = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PendingRecordEntry> PendingRecords { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<int> OnRecordApproved { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRecordRejected { get; set; }
+
+    private async Task HandleApprove(int recordId)
+    {
+        _processingRecordId = recordId;
+        _isApproving = true;
+        _errorMessage = null;
+
+        try
+        {
+            HttpResponseMessage response = await HttpClient.PutAsync($"/records/{recordId}/approve", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _fadingRecordIds.Add(recordId);
+                StateHasChanged();
+                await Task.Delay(300);
+                await OnRecordApproved.InvokeAsync(recordId);
+            }
+            else
+            {
+                _errorMessage = "Villa kom upp við að samþykkja met. Reyndu aftur síðar.";
+                _ = ScheduleErrorDismissAsync();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að samþykkja met. Reyndu aftur síðar.";
+            _ = ScheduleErrorDismissAsync();
+        }
+        finally
+        {
+            _processingRecordId = null;
+            _isApproving = false;
+        }
+    }
+
+    private async Task ShowRejectDialog(int recordId)
+    {
+        _rejectingRecordId = recordId;
+        _rejectDialogError = null;
+        await _rejectDialog.ShowAsync();
+    }
+
+    private async Task HandleReject(string? reason)
+    {
+        if (_rejectingRecordId is null)
+        {
+            return;
+        }
+
+        int recordId = _rejectingRecordId.Value;
+        _processingRecordId = recordId;
+        _isRejecting = true;
+        _rejectDialogError = null;
+
+        try
+        {
+            RejectRecordCommand command = new(reason);
+            HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/records/{recordId}/reject", command);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await _rejectDialog.CloseAsync();
+                _fadingRecordIds.Add(recordId);
+                StateHasChanged();
+                await Task.Delay(300);
+                await OnRecordRejected.InvokeAsync(recordId);
+            }
+            else
+            {
+                _rejectDialogError = "Villa kom upp við að hafna meti. Reyndu aftur síðar.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _rejectDialogError = "Villa kom upp við að hafna meti. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _processingRecordId = null;
+            _isRejecting = false;
+        }
+    }
+
+    private async Task ScheduleErrorDismissAsync()
+    {
+        await Task.Delay(5000);
+        _errorMessage = null;
+        StateHasChanged();
+    }
+}

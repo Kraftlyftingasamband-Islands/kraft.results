@@ -324,6 +324,17 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- BenchSingle (RecordCategoryId=5) for 83kg equipped open male
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
+
+            -- Set all existing records to Approved status
+            UPDATE dbo.Records SET Status = 1 WHERE Status = 0;
+
+            -- Pending record for approval testing (DeadliftSingle, 83kg, equipped, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy, Status)
+            VALUES (2, 1, 1, 6, 260.0, '2025-03-15', 0, 3, 0, 0, 'seed', 0);
+
+            -- Pending record for rejection testing (DeadliftSingle, 93kg, equipped, open, male)
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy, Status)
+            VALUES (2, 1, 2, 6, 270.0, '2025-03-15', 0, 3, 0, 0, 'seed', 0);
         """);
     }
 }

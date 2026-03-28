@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KRAFT.Results.WebApi.Enums;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KRAFT.Results.WebApi.Features.Records;
@@ -24,6 +26,15 @@ internal sealed class RecordConfiguration : IEntityTypeConfiguration<Record>
 
         builder.Property(e => e.Weight)
             .HasColumnType("decimal(18, 2)");
+
+        builder.Property(e => e.Status)
+            .HasDefaultValue(RecordStatus.Pending);
+
+        builder.Property(e => e.RejectionReason)
+            .HasMaxLength(500);
+
+        builder.Property(e => e.ModifiedBy)
+            .HasMaxLength(50);
 
         builder.HasOne(d => d.AgeCategory)
             .WithMany(p => p.Records)
