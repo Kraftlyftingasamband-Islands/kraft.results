@@ -22,7 +22,11 @@
     }
 </div>
 
-@if (_isLoading)
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="error-message" role="alert">@_errorMessage</div>
+}
+else if (_isLoading)
 {
     <div class="spinner-container" role="status">
         <div class="spinner"></div>
@@ -38,22 +42,31 @@ else
                 <th>Tölvupóstfang</th>
                 <th>Hlutverk</th>
                 <th>Stofnaður</th>
-                <th></th>
+                <th><span class="visually-hidden">Aðgerðir</span></th>
             </tr>
         </thead>
 
         <tbody>
-            @foreach (UserSummary User in Users)
+            @if (!Users.Any())
             {
                 <tr>
-                    <td>@User.Name</td>
-                    <td>@User.Email</td>
-                    <td>@string.Join(", ", User.Roles)</td>
-                    <td>@User.CreatedOn.ToShortDateString()</td>
-                    <td>
-                        <a href="@($"/users/{User.UserId}/edit")" class="btn-edit">Breyta</a>
-                    </td>
+                    <td colspan="5">Engir notendur fundust.</td>
                 </tr>
+            }
+            else
+            {
+                @foreach (UserSummary User in Users)
+                {
+                    <tr>
+                        <td>@User.Name</td>
+                        <td>@User.Email</td>
+                        <td>@string.Join(", ", User.Roles)</td>
+                        <td>@User.CreatedOn.ToShortDateString()</td>
+                        <td>
+                            <a href="@($"/users/{User.UserId}/edit")" class="btn-edit" aria-label="@($"Breyta {User.Name}")">Breyta</a>
+                        </td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
@@ -62,6 +75,7 @@ else
 @code {
     private IReadOnlyCollection<UserSummary> Users = [];
     private bool _isLoading = true;
+    private string? _errorMessage;
 
     private void NavigateToCreate()
     {
@@ -75,8 +89,18 @@ else
             return;
         }
 
-        Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
-        _isLoading = false;
-        StateHasChanged();
+        try
+        {
+            Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að sækja notendur. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 }

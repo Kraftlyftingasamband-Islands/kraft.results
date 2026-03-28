@@ -23,8 +23,9 @@ internal static class GetUsersEndpoint
         .WithDescription("Gets a list of all users")
         .Produces<IReadOnlyList<UserSummary>>()
         .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
-        .RequireAuthorization();
+        .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         return endpoints;
     }

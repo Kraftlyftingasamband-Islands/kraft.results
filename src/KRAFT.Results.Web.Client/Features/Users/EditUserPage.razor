@@ -35,6 +35,7 @@ else if (_model is not null)
                            aria-describedby="@(HasError ? "edit-error" : null)"
                            @bind-Value="_model.FirstName"
                            disabled="@_isLoading" />
+                <ValidationMessage For="@(() => _model.FirstName)" />
             </div>
 
             <div class="form-field">
@@ -45,6 +46,7 @@ else if (_model is not null)
                            aria-describedby="@(HasError ? "edit-error" : null)"
                            @bind-Value="_model.LastName"
                            disabled="@_isLoading" />
+                <ValidationMessage For="@(() => _model.LastName)" />
             </div>
 
             <div class="form-field">
@@ -56,6 +58,7 @@ else if (_model is not null)
                            aria-describedby="@(HasError ? "edit-error" : null)"
                            @bind-Value="_model.Email"
                            disabled="@_isLoading" />
+                <ValidationMessage For="@(() => _model.Email)" />
             </div>
 
             <div class="form-actions">
@@ -86,7 +89,7 @@ else if (_model is not null)
                 <p>Ertu viss um að þú viljir eyða þessum notanda?</p>
                 <div class="danger-actions">
                     <button class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
-                    <button class="btn-cancel-danger" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
+                    <button class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
                 </div>
             }
             else
@@ -118,6 +121,7 @@ else if (_errorMessage is not null)
     private string? _errorMessage;
     private string? _deleteErrorMessage;
     private bool _showDeleteConfirmation;
+    private ElementReference _cancelDeleteButton;
 
     private bool HasError => !string.IsNullOrEmpty(_errorMessage);
 
@@ -194,10 +198,13 @@ else if (_errorMessage is not null)
         }
     }
 
-    private void ConfirmDelete()
+    private async Task ConfirmDelete()
     {
         _showDeleteConfirmation = true;
         _deleteErrorMessage = null;
+        StateHasChanged();
+        await Task.Yield();
+        await _cancelDeleteButton.FocusAsync();
     }
 
     private void CancelDelete()
