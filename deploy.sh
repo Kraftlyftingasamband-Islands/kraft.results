@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /mnt/user/appdata/kraft.results
+cd /mnt/user/appdata/kraft-src
 git fetch origin main
 LOCAL=$(git rev-parse main)
 REMOTE=$(git rev-parse origin/main)
