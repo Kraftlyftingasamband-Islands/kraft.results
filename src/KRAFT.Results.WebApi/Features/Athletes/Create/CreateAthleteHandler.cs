@@ -24,7 +24,14 @@ internal sealed class CreateAthleteHandler
 
     public async Task<Result<int>> Handle(CreateAthleteCommand command, CancellationToken cancellationToken)
     {
-        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> creatorResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (creatorResult.IsFailure)
+        {
+            return creatorResult.Error;
+        }
+
+        User creator = creatorResult.FromResult();
 
         if (await IsDuplicateAthlete(command.FirstName, command.LastName, command.DateOfBirth, cancellationToken))
         {

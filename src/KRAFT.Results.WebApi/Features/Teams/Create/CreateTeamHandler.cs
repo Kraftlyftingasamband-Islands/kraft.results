@@ -23,7 +23,14 @@ internal sealed class CreateTeamHandler
 
     public async Task<Result<int>> Handle(CreateTeamCommand command, CancellationToken cancellationToken)
     {
-        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> creatorResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (creatorResult.IsFailure)
+        {
+            return creatorResult.Error;
+        }
+
+        User creator = creatorResult.FromResult();
 
         if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
         {

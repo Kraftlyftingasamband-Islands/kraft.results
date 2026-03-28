@@ -22,7 +22,14 @@ internal sealed class UpdateMeetHandler
 
     public async Task<Result> Handle(string slug, UpdateMeetCommand command, CancellationToken cancellationToken)
     {
-        User modifier = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> modifierResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (modifierResult.IsFailure)
+        {
+            return Result.Failure(modifierResult.Error);
+        }
+
+        User modifier = modifierResult.FromResult();
 
         Meet? meet = await _dbContext.Set<Meet>()
             .Where(x => x.Slug == slug)

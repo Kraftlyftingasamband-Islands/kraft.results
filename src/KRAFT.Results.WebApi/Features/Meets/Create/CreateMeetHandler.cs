@@ -22,7 +22,14 @@ internal sealed class CreateMeetHandler
 
     public async Task<Result<string>> Handle(CreateMeetCommand command, CancellationToken cancellationToken)
     {
-        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> creatorResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (creatorResult.IsFailure)
+        {
+            return creatorResult.Error;
+        }
+
+        User creator = creatorResult.FromResult();
 
         if (await IsDuplicateAsync(command.Title, command.StartDate, cancellationToken))
         {

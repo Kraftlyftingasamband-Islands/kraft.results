@@ -1,6 +1,7 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,7 @@ internal static class UpdateAthleteEndpoint
                 failure: error => error.Code switch
                 {
                     AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })

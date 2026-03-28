@@ -25,7 +25,14 @@ internal sealed class AddParticipantHandler
 
     public async Task<Result<int>> Handle(int meetId, AddParticipantCommand command, CancellationToken cancellationToken)
     {
-        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> creatorResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (creatorResult.IsFailure)
+        {
+            return new Result<int>(creatorResult.Error);
+        }
+
+        User creator = creatorResult.FromResult();
 
         Result? validationError = await ValidateAsync(meetId, command.AthleteId, command.WeightCategoryId, cancellationToken);
 

@@ -16,7 +16,6 @@ internal sealed class HttpContextService : IHttpContextService
     public bool IsInRole(string role)
         => _httpContextAccessor.HttpContext?.User is ClaimsPrincipal user && user.IsInRole(role);
 
-    public string GetUserName()
-        => _httpContextAccessor.HttpContext?.User.FindFirstValue(JwtRegisteredClaimNames.Name)
-        ?? throw new InvalidOperationException("HTTP context does not contain username");
+    public string? GetUserName()
+        => _httpContextAccessor.HttpContext?.User.FindFirstValue(JwtRegisteredClaimNames.Name);
 }

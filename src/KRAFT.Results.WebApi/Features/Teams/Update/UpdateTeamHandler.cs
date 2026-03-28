@@ -23,7 +23,14 @@ internal sealed class UpdateTeamHandler
 
     public async Task<Result> Handle(string slug, UpdateTeamCommand command, CancellationToken cancellationToken)
     {
-        User modifier = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> modifierResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (modifierResult.IsFailure)
+        {
+            return Result.Failure(modifierResult.Error);
+        }
+
+        User modifier = modifierResult.FromResult();
 
         Team? team = await _dbContext.Set<Team>()
             .Where(x => x.Slug == slug)

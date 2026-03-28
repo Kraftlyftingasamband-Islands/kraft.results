@@ -24,7 +24,14 @@ internal sealed class UpdateAthleteHandler
 
     public async Task<Result> Handle(string slug, UpdateAthleteCommand command, CancellationToken cancellationToken)
     {
-        User modifier = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> modifierResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (modifierResult.IsFailure)
+        {
+            return Result.Failure(modifierResult.Error);
+        }
+
+        User modifier = modifierResult.FromResult();
 
         Athlete? athlete = await _dbContext.Set<Athlete>()
             .Where(x => x.Slug == slug)
