@@ -82,6 +82,16 @@
     color: var(--color-primary-dark);
 }
 
+.error-message {
+    padding: 0.75rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    color: var(--color-danger);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .spinner,
     .btn-action,
