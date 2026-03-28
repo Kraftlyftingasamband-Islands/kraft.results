@@ -9,5 +9,5 @@ public static class Constants
     public const string SingeLift = "stök grein";
     public const string Powerlifting = "Kraftlyftingar";
 
-    public static readonly char[] AgeCategoryOrder = ['O', 'S', 'J', 'M'];
+    public static readonly char[] AgeCategoryOrder = ['S', 'J', 'O', 'M'];
 }
