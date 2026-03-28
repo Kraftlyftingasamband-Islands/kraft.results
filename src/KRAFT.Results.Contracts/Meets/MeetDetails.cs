@@ -18,4 +18,5 @@ public sealed record class MeetDetails(
     bool PublishedInCalendar,
     bool PublishedResults,
     bool RecordsPossible,
-    bool IsClassic);
+    bool IsClassic,
+    bool ShowTeamPoints);

@@ -5,6 +5,7 @@ using KRAFT.Results.WebApi.Features.Meets.Get;
 using KRAFT.Results.WebApi.Features.Meets.GetDetails;
 using KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
 using KRAFT.Results.WebApi.Features.Meets.GetParticipations;
+using KRAFT.Results.WebApi.Features.Meets.GetTeamPoints;
 using KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
 using KRAFT.Results.WebApi.Features.Meets.Update;
 
@@ -23,6 +24,7 @@ internal static class MeetEndpoints
         group.MapGetMeetsEndpoint();
         group.MapGetMeetDetailsEndpoint();
         group.MapGetMeetParticipationsEndpoint();
+        group.MapGetMeetTeamPointsEndpoint();
         group.MapUpdateMeetEndpoint();
         group.MapRecordAttemptEndpoint();
         group.MapDeleteMeetEndpoint();

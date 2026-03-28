@@ -1,7 +1,9 @@
 @page "/meets/{slug}"
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Contracts.TeamCompetition
 @using KRAFT.Results.Web.Client.Components
+@using KRAFT.Results.Web.Client.Features.TeamCompetition
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -190,6 +192,36 @@
     <br />
 }
 
+@if (ShowTeamStandings)
+{
+    <h2>Lidastig</h2>
+
+    @if (IsPreGenderSplit)
+    {
+        <div class="standings-grid standings-grid-single">
+            <div class="gender-section">
+                <StandingsTable Standings="_teamPointsResponse!.Combined"
+                                AriaLabel="Stigatafla lida i moti" />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="standings-grid">
+            <div class="gender-section">
+                <h2 class="section-header">@("f".ToGenderGroupLabel())</h2>
+                <StandingsTable Standings="_teamPointsResponse!.Women"
+                                AriaLabel="Stigatafla kvenna i moti" />
+            </div>
+            <div class="gender-section">
+                <h2 class="section-header">@("m".ToGenderGroupLabel())</h2>
+                <StandingsTable Standings="_teamPointsResponse!.Men"
+                                AriaLabel="Stigatafla karla i moti" />
+            </div>
+        </div>
+    }
+}
+
 <ConfirmDialog @ref="_deleteDialog"
                Id="delete-meet-dialog"
                Title="Eyða móti"
@@ -210,9 +242,12 @@
     private MeetDetails? Meet;
     private IReadOnlyList<MeetParticipation> Participations = [];
     private Dictionary<Discipline, bool> IncludedDisciplines = new();
+    private MeetTeamPointsResponse? _teamPointsResponse;
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
     private bool ShowClubs;
+    private bool ShowTeamStandings;
+    private bool IsPreGenderSplit;
     private string? _errorMessage;
 
     private async Task ShowDeleteDialog()
@@ -279,6 +314,16 @@
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
             ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
             ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
+
+            if (Meet?.ShowTeamPoints is true)
+            {
+                _teamPointsResponse = await HttpClient.GetFromJsonAsync<MeetTeamPointsResponse>($"/meets/{Slug}/team-points");
+                ShowTeamStandings = _teamPointsResponse is not null
+                    && (_teamPointsResponse.Women.Count > 0
+                        || _teamPointsResponse.Men.Count > 0
+                        || _teamPointsResponse.Combined.Count > 0);
+                IsPreGenderSplit = Meet.StartDate.Year < 2015;
+            }
         }
         catch (HttpRequestException)
         {
