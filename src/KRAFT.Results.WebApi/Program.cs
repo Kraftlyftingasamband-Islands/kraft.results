@@ -3,12 +3,14 @@ using System.Text;
 
 using KRAFT.Results.WebApi;
 using KRAFT.Results.WebApi.Features;
+using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 using KRAFT.Results.WebApi.Middleware;
 using KRAFT.Results.WebApi.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using Scalar.AspNetCore;
@@ -17,15 +19,21 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+bool isDevelopment = builder.Environment.IsDevelopment();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer();
+
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>((options, jwtOptions) =>
     {
-        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        JwtOptions jwt = jwtOptions.Value;
+        options.RequireHttpsMetadata = !isDevelopment;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+            ValidIssuer = jwt.Issuer,
+            ValidAudience = jwt.Audience,
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
