@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -21,9 +22,9 @@ internal static class DeleteAthleteEndpoint
                 success: () => TypedResults.NoContent(),
                 failure: error => error.Code switch
                 {
-                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(error.Description),
-                    AthleteErrors.AthleteHasParticipationsCode => TypedResults.Conflict(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    AthleteErrors.AthleteHasParticipationsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

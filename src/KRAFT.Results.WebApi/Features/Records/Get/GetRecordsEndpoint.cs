@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Records;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -21,7 +22,7 @@ internal static class GetRecordsEndpoint
 
     internal static RouteGroupBuilder MapGetRecordsEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapGet("/", static async Task<Results<Ok<List<RecordGroup>>, BadRequest<string>>> (
+        endpoints.MapGet("/", static async Task<Results<Ok<List<RecordGroup>>, BadRequest<ErrorResponse>>> (
             [FromQuery] string gender,
             [FromQuery] string ageCategory,
             [FromQuery] string? equipmentType,
@@ -32,19 +33,19 @@ internal static class GetRecordsEndpoint
         {
             if (!Gender.TryParse(gender, out _))
             {
-                return TypedResults.BadRequest("Invalid gender parameter.");
+                return TypedResults.BadRequest(new ErrorResponse("Records.InvalidGender", "Invalid gender parameter."));
             }
 
             if (!ValidAgeCategories.Contains(ageCategory, StringComparer.OrdinalIgnoreCase))
             {
-                return TypedResults.BadRequest("Invalid age category.");
+                return TypedResults.BadRequest(new ErrorResponse("Records.InvalidAgeCategory", "Invalid age category."));
             }
 
             string resolvedEquipmentType = equipmentType ?? "classic";
 
             if (!ValidEquipmentTypes.Contains(resolvedEquipmentType, StringComparer.OrdinalIgnoreCase))
             {
-                return TypedResults.BadRequest("Invalid equipment type.");
+                return TypedResults.BadRequest(new ErrorResponse("Records.InvalidEquipmentType", "Invalid equipment type."));
             }
 
             int eraId;
@@ -57,7 +58,7 @@ internal static class GetRecordsEndpoint
 
                 if (matchedEra is null)
                 {
-                    return TypedResults.BadRequest("Unknown era.");
+                    return TypedResults.BadRequest(new ErrorResponse("Records.UnknownEra", "Unknown era."));
                 }
 
                 eraId = matchedEra.EraId;

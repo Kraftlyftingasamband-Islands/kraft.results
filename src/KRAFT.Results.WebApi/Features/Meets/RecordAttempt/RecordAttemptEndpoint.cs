@@ -29,8 +29,8 @@ internal static class RecordAttemptEndpoint
                 success: () => TypedResults.NoContent(),
                 failure: error => error.Code switch
                 {
-                    MeetErrors.ParticipationNotFoundCode => TypedResults.NotFound(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    MeetErrors.ParticipationNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

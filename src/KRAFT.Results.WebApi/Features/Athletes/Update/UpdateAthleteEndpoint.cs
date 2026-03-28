@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Abstractions;
 
@@ -23,8 +24,8 @@ internal static class UpdateAthleteEndpoint
                 success: () => TypedResults.Ok(),
                 failure: error => error.Code switch
                 {
-                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

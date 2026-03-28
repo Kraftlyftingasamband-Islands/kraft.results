@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
@@ -24,10 +25,10 @@ internal static class AddParticipantEndpoint
                 success: participationId => TypedResults.Created($"/meets/{meetId}/participants/{participationId}", new AddParticipantResponse(participationId)),
                 failure: error => error.Code switch
                 {
-                    MeetErrors.MeetNotFoundCode => TypedResults.NotFound(error.Description),
-                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(error.Description),
-                    MeetErrors.AthleteAlreadyRegisteredCode => TypedResults.Conflict(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    MeetErrors.MeetNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    MeetErrors.AthleteAlreadyRegisteredCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

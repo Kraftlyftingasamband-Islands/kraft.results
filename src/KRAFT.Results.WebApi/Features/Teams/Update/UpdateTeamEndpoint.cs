@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
 
@@ -23,13 +24,9 @@ internal static class UpdateTeamEndpoint
                 success: () => TypedResults.Ok(),
                 failure: error => error.Code switch
                 {
-                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(error.Description),
-                    TeamErrors.EmptyTitleCode => TypedResults.BadRequest(error.Description),
-                    TeamErrors.InvalidTitleShortCode => TypedResults.BadRequest(error.Description),
-                    TeamErrors.EmptyTitleFullCode => TypedResults.BadRequest(error.Description),
-                    TeamErrors.TitleTooLongCode => TypedResults.BadRequest(error.Description),
-                    TeamErrors.TitleFullTooLongCode => TypedResults.BadRequest(error.Description),
-                    _ => TypedResults.BadRequest("Invalid request."),
+                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)
@@ -38,6 +35,7 @@ internal static class UpdateTeamEndpoint
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
         .RequireAuthorization(policy => policy.RequireRole("Admin"));
 

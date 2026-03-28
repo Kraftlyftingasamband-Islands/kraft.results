@@ -5,6 +5,8 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @using System.Net
+@using System.Net.Http.Json
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Countries
 @using KRAFT.Results.Contracts.Teams
@@ -83,7 +85,15 @@ else
 
             if (response.StatusCode == HttpStatusCode.Conflict)
             {
-                _errorMessage = "Keppandi með þessu nafni og fæðingardegi er þegar til.";
+                ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+                if (error?.Code == ErrorCodes.AthletesAlreadyExists)
+                {
+                    _errorMessage = "Keppandi með þessu nafni og fæðingardegi er þegar til.";
+                    return;
+                }
+
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
                 return;
             }
 

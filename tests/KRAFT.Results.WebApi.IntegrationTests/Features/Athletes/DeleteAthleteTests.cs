@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
@@ -30,19 +31,20 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WithDescription_WhenAthleteDoesNotExist()
+    public async Task ReturnsNotFound_WithErrorCode_WhenAthleteDoesNotExist()
     {
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/non-existent-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("Athlete not found.");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Athletes.NotFound");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WithDescription_WhenAthleteHasParticipations()
+    public async Task ReturnsConflict_WithErrorCode_WhenAthleteHasParticipations()
     {
         // Arrange — the seeded athlete has participations
         string seededAthleteSlug = Constants.TestAthleteSlug;
@@ -52,8 +54,9 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("Cannot delete an athlete that has participations.");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Athletes.HasParticipations");
     }
 
     [Fact]

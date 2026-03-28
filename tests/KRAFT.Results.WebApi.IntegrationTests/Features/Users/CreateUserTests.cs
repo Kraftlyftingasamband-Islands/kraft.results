@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
@@ -48,7 +49,7 @@ public sealed class CreateUserTests
     }
 
     [Fact]
-    public async Task ReturnsConflict_WithDescription_WhenUsernameExists()
+    public async Task ReturnsConflict_WithErrorCode_WhenUsernameExists()
     {
         // Arrange
         CreateUserCommand command = new CreateUserCommandBuilder()
@@ -60,12 +61,13 @@ public sealed class CreateUserTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("User name already exists");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Users.UserNameExists");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WithDescription_WhenEmailExists()
+    public async Task ReturnsConflict_WithErrorCode_WhenEmailExists()
     {
         // Arrange
         CreateUserCommand command = new CreateUserCommandBuilder()
@@ -77,8 +79,9 @@ public sealed class CreateUserTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("already a user with that e-mail");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Users.EmailExists");
     }
 
     [Theory]
