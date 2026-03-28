@@ -4,33 +4,34 @@ using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Records.Approve;
+namespace KRAFT.Results.WebApi.Features.Meets.ApprovePendingRecord;
 
-internal static class ApproveRecordEndpoint
+internal static class ApprovePendingRecordEndpoint
 {
-    internal const string Name = "ApproveRecord";
+    internal const string Name = "ApprovePendingRecord";
 
-    internal static RouteGroupBuilder MapApproveRecordEndpoint(this RouteGroupBuilder endpoints)
+    internal static RouteGroupBuilder MapApprovePendingRecordEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapPut("/{recordId:int}/approve", static async (
-            [FromRoute] int recordId,
-            [FromServices] ApproveRecordHandler handler,
+        endpoints.MapPut("/{slug}/pending-records/{attemptId:int}/approve", static async (
+            [FromRoute] string slug,
+            [FromRoute] int attemptId,
+            [FromServices] ApprovePendingRecordHandler handler,
             CancellationToken cancellationToken) =>
         {
-            Result result = await handler.Handle(recordId, cancellationToken);
+            Result result = await handler.Handle(slug, attemptId, cancellationToken);
 
             return result.Match<IResult>(
                 success: () => TypedResults.NoContent(),
                 failure: error => error.Code switch
                 {
-                    RecordErrors.RecordNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    ApprovePendingRecordHandler.AttemptNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)
-        .WithSummary("Approves a pending record.")
-        .WithDescription("Changes the status of a pending record to approved.")
+        .WithSummary("Approves a pending record for a meet.")
+        .WithDescription("Creates a new record row for a good-lift attempt that exceeds the current record.")
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)

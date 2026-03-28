@@ -12,7 +12,6 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
     public async Task<RecordHistoryResponse?> Handle(int recordId, CancellationToken cancellationToken)
     {
         RecordKey? key = await dbContext.Set<Record>()
-            .Where(r => r.Status == RecordStatus.Approved)
             .Where(r => r.RecordId == recordId)
             .Select(r => new RecordKey(
                 r.EraId,
@@ -33,7 +32,6 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
         }
 
         List<RecordHistoryEntry> entries = await dbContext.Set<Record>()
-            .Where(r => r.Status == RecordStatus.Approved)
             .Where(r => r.EraId == key.EraId)
             .Where(r => r.AgeCategoryId == key.AgeCategoryId)
             .Where(r => r.WeightCategoryId == key.WeightCategoryId)

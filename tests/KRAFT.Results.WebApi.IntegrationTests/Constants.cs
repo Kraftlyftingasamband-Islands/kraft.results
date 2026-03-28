@@ -1,4 +1,4 @@
-﻿namespace KRAFT.Results.WebApi.IntegrationTests;
+namespace KRAFT.Results.WebApi.IntegrationTests;
 
 internal static class Constants
 {
@@ -10,10 +10,14 @@ internal static class Constants
     internal const string TestCountryName = "Iceland";
     internal const string TestMeetTitle = "Test Meet 2025";
     internal const string TestMeetSlug = "test-meet-2025";
-    internal const int PendingRecordForApprovalId = 20;
-    internal const int PendingRecordForRejectionId = 21;
 
     internal static readonly DateOnly TestAthleteDateOfBirth = new(1985, 7, 2);
+
+    internal static class PendingRecords
+    {
+        internal const int RecordBreakingAttemptId = 4;
+        internal const int NonRecordBreakingAttemptId = 5;
+    }
 
     internal static class TeamCompetition
     {

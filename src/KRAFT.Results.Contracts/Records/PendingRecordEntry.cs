@@ -1,9 +1,10 @@
 namespace KRAFT.Results.Contracts.Records;
 
 public sealed record class PendingRecordEntry(
-    int RecordId,
+    int AttemptId,
     string AthleteName,
     string Discipline,
     decimal Weight,
     string WeightCategory,
-    string AgeCategory);
+    string AgeCategory,
+    decimal? CurrentRecordWeight);

@@ -1,5 +1,3 @@
-﻿using KRAFT.Results.WebApi.Enums;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,8 +8,6 @@ internal sealed class RecordConfiguration : IEntityTypeConfiguration<Record>
     public void Configure(EntityTypeBuilder<Record> builder)
     {
         builder.ToTable("Records", "dbo");
-
-        builder.HasIndex(e => new { e.Status, e.EraId, e.AgeCategoryId, e.WeightCategoryId, e.RecordCategoryId, e.IsRaw }, "IX_Records_Status_Composite");
 
         builder.HasIndex(e => new { e.IsCurrent, e.EraId }, "nci_wi_Records_3CB8ADEAD69A6DA29B4DC80D395ABC87");
 
@@ -28,15 +24,6 @@ internal sealed class RecordConfiguration : IEntityTypeConfiguration<Record>
 
         builder.Property(e => e.Weight)
             .HasColumnType("decimal(18, 2)");
-
-        builder.Property(e => e.Status)
-            .HasDefaultValue(RecordStatus.Pending);
-
-        builder.Property(e => e.RejectionReason)
-            .HasMaxLength(500);
-
-        builder.Property(e => e.ModifiedBy)
-            .HasMaxLength(50);
 
         builder.HasOne(d => d.AgeCategory)
             .WithMany(p => p.Records)

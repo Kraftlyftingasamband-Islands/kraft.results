@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 using Testcontainers.MsSql;
 
@@ -106,6 +106,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO EraWeightCategories (EraId, WeightCategoryId, FromDate, ToDate)
             VALUES (1, 5, '2011-01-01', '2018-12-31');
 
+            -- Attempts 1-3: standard attempts linked to records
             INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
             VALUES (1, 1, 3, 200.0, 1, 'seed', 'seed');
 
@@ -114,6 +115,14 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
             INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
             VALUES (1, 3, 3, 250.0, 1, 'seed', 'seed');
+
+            -- Attempt 4: record-breaking squat (210 > current record of 200 for classic/open/83kg/male)
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 1, 2, 210.0, 1, 'seed', 'seed');
+
+            -- Attempt 5: non-record-breaking squat (190 <= current record of 200 for equipped/open/83kg/male)
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 1, 1, 190.0, 1, 'seed', 'seed');
 
             -- Squat record (equipped, open, male)
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
@@ -324,17 +333,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- BenchSingle (RecordCategoryId=5) for 83kg equipped open male
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
-
-            -- Set all existing records to Approved status
-            UPDATE dbo.Records SET Status = 1 WHERE Status = 0;
-
-            -- Pending record for approval testing (DeadliftSingle, 83kg, equipped, open, male)
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy, Status)
-            VALUES (2, 1, 1, 6, 260.0, '2025-03-15', 0, 3, 0, 0, 'seed', 0);
-
-            -- Pending record for rejection testing (DeadliftSingle, 93kg, equipped, open, male)
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy, Status)
-            VALUES (2, 1, 2, 6, 270.0, '2025-03-15', 0, 3, 0, 0, 'seed', 0);
         """);
     }
 }
