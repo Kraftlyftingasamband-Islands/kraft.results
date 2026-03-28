@@ -1,10 +1,12 @@
-﻿<div class="birth-year-container">
+@using KRAFT.Results.Contracts
+
+<div class="birth-year-container">
     <div class="side left">
         @Year
     </div>
 
-    <div class="side right">
-        @AgeCategory
+    <div class="side right" title="@AgeCategoryDisplayName">
+        @AgeCategoryAbbreviation
     </div>
 </div>
 
@@ -15,14 +17,23 @@
     [Parameter, EditorRequired]
     public int RelativeYear { get; init; }
 
-    public string AgeCategory => (RelativeYear - Year) switch
+    [Parameter]
+    public string? Gender { get; init; }
+
+    private string AgeCategorySlug => (RelativeYear - Year) switch
     {
-        <= 18 => "SJ",
-        > 18 and <= 23 => "J",
-        >= 70 => "M4",
-        >= 60 => "M3",
-        >= 50 => "M2",
-        >= 40 => "M1",
-        _ => "O",
+        <= 18 => "subjunior",
+        > 18 and <= 23 => "junior",
+        >= 70 => "masters4",
+        >= 60 => "masters3",
+        >= 50 => "masters2",
+        >= 40 => "masters1",
+        _ => "open",
     };
+
+    private string AgeCategoryDisplayName => AgeCategorySlug.ToAgeCategoryLabel(Gender);
+
+    private string AgeCategoryAbbreviation => AgeCategoryDisplayName.Length > 0
+        ? AgeCategoryDisplayName[0].ToString()
+        : string.Empty;
 }
