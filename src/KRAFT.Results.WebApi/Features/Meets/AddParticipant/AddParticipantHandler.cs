@@ -27,28 +27,11 @@ internal sealed class AddParticipantHandler
     {
         User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
-        if (!await MeetExistsAsync(meetId, cancellationToken))
-        {
-            _logger.LogWarning("Meet with Id {MeetId} was not found", meetId);
-            return MeetErrors.MeetNotFound;
-        }
+        Result? validationError = await ValidateAsync(meetId, command.AthleteId, command.WeightCategoryId, cancellationToken);
 
-        if (!await AthleteExistsAsync(command.AthleteId, cancellationToken))
+        if (validationError is not null)
         {
-            _logger.LogWarning("Athlete with Id {AthleteId} was not found", command.AthleteId);
-            return AthleteErrors.AthleteNotFound;
-        }
-
-        if (!await WeightCategoryExistsAsync(command.WeightCategoryId, cancellationToken))
-        {
-            _logger.LogWarning("Weight category with Id {WeightCategoryId} was not found", command.WeightCategoryId);
-            return MeetErrors.WeightCategoryNotFound;
-        }
-
-        if (await IsAlreadyRegisteredAsync(meetId, command.AthleteId, cancellationToken))
-        {
-            _logger.LogWarning("Athlete {AthleteId} is already registered in meet {MeetId}", command.AthleteId, meetId);
-            return MeetErrors.AthleteAlreadyRegistered;
+            return new Result<int>(validationError.Error);
         }
 
         Participation participation = Participation.Create(
@@ -67,19 +50,46 @@ internal sealed class AddParticipantHandler
         return participation.ParticipationId;
     }
 
-    private Task<bool> MeetExistsAsync(int meetId, CancellationToken cancellationToken) =>
-        _dbContext.Set<Meet>()
-            .AnyAsync(m => EF.Property<int>(m, "MeetId") == meetId, cancellationToken);
+    private async Task<Result?> ValidateAsync(int meetId, int athleteId, int weightCategoryId, CancellationToken cancellationToken)
+    {
+        var existence = await _dbContext.Set<Meet>()
+            .Where(m => EF.Property<int>(m, "MeetId") == meetId)
+            .Select(m => new
+            {
+                MeetExists = true,
+                AthleteExists = _dbContext.Set<Athlete>()
+                    .Any(a => a.AthleteId == athleteId),
+                WeightCategoryExists = _dbContext.Set<WeightCategory>()
+                    .Any(w => w.WeightCategoryId == weightCategoryId),
+                AlreadyRegistered = _dbContext.Set<Participation>()
+                    .Any(p => p.MeetId == meetId && p.AthleteId == athleteId),
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
-    private Task<bool> AthleteExistsAsync(int athleteId, CancellationToken cancellationToken) =>
-        _dbContext.Set<Athlete>()
-            .AnyAsync(a => a.AthleteId == athleteId, cancellationToken);
+        if (existence is null)
+        {
+            _logger.LogWarning("Meet with Id {MeetId} was not found", meetId);
+            return Result.Failure(MeetErrors.MeetNotFound);
+        }
 
-    private Task<bool> WeightCategoryExistsAsync(int weightCategoryId, CancellationToken cancellationToken) =>
-        _dbContext.Set<WeightCategory>()
-            .AnyAsync(w => w.WeightCategoryId == weightCategoryId, cancellationToken);
+        if (!existence.AthleteExists)
+        {
+            _logger.LogWarning("Athlete with Id {AthleteId} was not found", athleteId);
+            return Result.Failure(AthleteErrors.AthleteNotFound);
+        }
 
-    private Task<bool> IsAlreadyRegisteredAsync(int meetId, int athleteId, CancellationToken cancellationToken) =>
-        _dbContext.Set<Participation>()
-            .AnyAsync(p => p.MeetId == meetId && p.AthleteId == athleteId, cancellationToken);
+        if (!existence.WeightCategoryExists)
+        {
+            _logger.LogWarning("Weight category with Id {WeightCategoryId} was not found", weightCategoryId);
+            return Result.Failure(MeetErrors.WeightCategoryNotFound);
+        }
+
+        if (existence.AlreadyRegistered)
+        {
+            _logger.LogWarning("Athlete {AthleteId} is already registered in meet {MeetId}", athleteId, meetId);
+            return Result.Failure(MeetErrors.AthleteAlreadyRegistered);
+        }
+
+        return null;
+    }
 }
