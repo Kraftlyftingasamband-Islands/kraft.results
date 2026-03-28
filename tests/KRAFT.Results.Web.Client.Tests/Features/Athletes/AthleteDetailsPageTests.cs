@@ -26,7 +26,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 IsSingleLift: true,
                 WeightCategory: "83 kg",
                 AgeCategory: "Open",
-                Type: $"{Constants.Bench} ({Constants.SingeLift})",
+                Type: Constants.Bench,
                 Weight: 150.0m,
                 Meet: "Test Meet",
                 MeetSlug: "test-meet"),

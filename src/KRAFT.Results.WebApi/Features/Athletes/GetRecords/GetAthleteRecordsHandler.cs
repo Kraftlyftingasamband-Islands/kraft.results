@@ -53,8 +53,8 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
         : category == RecordCategory.Bench ? Constants.Bench
         : category == RecordCategory.Deadlift ? Constants.Deadlift
         : category == RecordCategory.Total ? Constants.Total
-        : category == RecordCategory.BenchSingle ? $"{Constants.Bench} ({Constants.SingeLift})"
-        : category == RecordCategory.DeadliftSingle ? $"{Constants.Deadlift} ({Constants.SingeLift})"
+        : category == RecordCategory.BenchSingle ? Constants.Bench
+        : category == RecordCategory.DeadliftSingle ? Constants.Deadlift
         : string.Empty;
 #pragma warning restore S3358 // Ternary operators should not be nested
 }
