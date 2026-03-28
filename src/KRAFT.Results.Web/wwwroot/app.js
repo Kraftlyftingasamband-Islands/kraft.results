@@ -3,7 +3,11 @@ window.Kraftresults = {
         const dialog = document.getElementById(id);
         if (dialog && !dialog.open) {
             if (!dialog._cancelHandler) {
-                dialog._cancelHandler = function(e) { e.preventDefault(); };
+                dialog._cancelHandler = function(e) {
+                    if (dialog.querySelector('[aria-busy="true"]')) {
+                        e.preventDefault();
+                    }
+                };
                 dialog.addEventListener('cancel', dialog._cancelHandler);
             }
             dialog._triggerElement = document.activeElement;

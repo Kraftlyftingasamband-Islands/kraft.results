@@ -68,8 +68,8 @@ td {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -158,6 +158,11 @@ td {
     }
 
     .spinner {
-        animation: none;
+        animation: pulse 1s ease-in-out infinite;
     }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }

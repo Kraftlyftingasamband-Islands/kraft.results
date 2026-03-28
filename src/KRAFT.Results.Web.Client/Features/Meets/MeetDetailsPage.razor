@@ -9,6 +9,7 @@
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (_errorMessage is not null)
 {
@@ -70,17 +71,17 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="text-align: center; width: 42px;">#</th>
-                                <th>Nafn</th>
-                                <th style="text-align: center; width: 80px;">Fæðingarár</th>
+                                <th scope="col" style="text-align: center; width: 42px;">#</th>
+                                <th scope="col">Nafn</th>
+                                <th scope="col" style="text-align: center; width: 80px;">Fæðingarár</th>
 
                                 @if (ShowClubs)
                                 {
-                                    <th style="text-align: center; width: 80px;">Félag</th>
+                                    <th scope="col" style="text-align: center; width: 80px;">Félag</th>
                                 }
 
-                                <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
-                                <th style="text-align: right; width: 80px;">IPF stig</th>
+                                <th scope="col" style="text-align: center; width: 80px;">Líkamsþyngd</th>
+                                <th scope="col" style="text-align: right; width: 80px;">IPF stig</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,18 +129,18 @@
             <h5>@weightCategory.Key kg</h5>
             <div class="table-overflow">
                 <table>
-                    <tbody>
+                    <thead>
                         <tr>
-                            <th style="text-align: center; width: 42px;">#</th>
-                            <th>Nafn</th>
-                            <th style="text-align: center; width: 80px;">Fæðingarár</th>
+                            <th scope="col" style="text-align: center; width: 42px;">#</th>
+                            <th scope="col">Nafn</th>
+                            <th scope="col" style="text-align: center; width: 80px;">Fæðingarár</th>
 
                             @if (ShowClubs)
                             {
-                                <th style="text-align: center; width: 80px;">Félag</th>
+                                <th scope="col" style="text-align: center; width: 80px;">Félag</th>
                             }
 
-                            <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
+                            <th scope="col" style="text-align: center; width: 80px;">Líkamsþyngd</th>
 
                             @foreach (var disciplineGroup in weightCategory.First().Attempts
                                 .Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline))
@@ -148,17 +149,18 @@
                             {
                                 int roundCount = disciplineGroup.Count();
                                 string disciplineLabel = disciplineGroup.Key.ToDisplayName();
-                                <th colspan="@roundCount" class="first-attempt" style="text-align: center; width: @(80 * roundCount)px">@disciplineLabel</th>
+                                <th scope="col" colspan="@roundCount" class="first-attempt" style="text-align: center; width: @(80 * roundCount)px">@disciplineLabel</th>
                             }
 
-                            <th class="first-attempt" style="text-align: right; width: 80px;">@Constants.Total</th>
+                            <th scope="col" class="first-attempt" style="text-align: right; width: 80px;">@Constants.Total</th>
 
                             @if (ShowIpfPoints)
                             {
-                                <th style="text-align: right; width: 80px;">IPF stig</th>
+                                <th scope="col" style="text-align: right; width: 80px;">IPF stig</th>
                             }
                         </tr>
-
+                    </thead>
+                    <tbody>
                         @foreach (var p in weightCategory
                             .OrderBy(x => x.Disqualified)
                             .ThenBy(x => x.Rank <= 0)
@@ -358,13 +360,17 @@
                 IsPreGenderSplit = Meet.StartDate.Year < 2015;
             }
 
-            try
+            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.IsInRole("Admin"))
             {
-                _pendingRecords = await HttpClient.GetFromJsonAsync<List<PendingRecordEntry>>($"/meets/{Slug}/pending-records") ?? [];
-            }
-            catch (HttpRequestException)
-            {
-                _pendingRecords = [];
+                try
+                {
+                    _pendingRecords = await HttpClient.GetFromJsonAsync<List<PendingRecordEntry>>($"/meets/{Slug}/pending-records") ?? [];
+                }
+                catch (HttpRequestException)
+                {
+                    _pendingRecords = [];
+                }
             }
         }
         catch (HttpRequestException)

@@ -11,6 +11,8 @@ internal sealed class RecordConfiguration : IEntityTypeConfiguration<Record>
     {
         builder.ToTable("Records", "dbo");
 
+        builder.HasIndex(e => new { e.Status, e.EraId, e.AgeCategoryId, e.WeightCategoryId, e.RecordCategoryId, e.IsRaw }, "IX_Records_Status_Composite");
+
         builder.HasIndex(e => new { e.IsCurrent, e.EraId }, "nci_wi_Records_3CB8ADEAD69A6DA29B4DC80D395ABC87");
 
         builder.HasIndex(e => new { e.AgeCategoryId, e.EraId, e.RecordCategoryId, e.WeightCategoryId, e.IsRaw, e.Date }, "nci_wi_Records_40FB705E-F1AE-4E31-998B-DE4A0332DA61");
