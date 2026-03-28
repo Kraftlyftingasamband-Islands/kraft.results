@@ -70,16 +70,50 @@
 }
 
 .btn-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.625rem;
     font-family: var(--font-body);
     font-size: 0.8125rem;
     font-weight: 500;
+    line-height: 1;
     color: var(--color-primary);
-    text-decoration: none;
-    transition: color var(--transition-fast) ease;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition:
+        background var(--transition-fast) ease,
+        border-color var(--transition-fast) ease,
+        color var(--transition-fast) ease;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-font-smoothing: antialiased;
 }
 
 .btn-edit:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
     color: var(--color-primary-dark);
+}
+
+.btn-edit:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+
+.btn-edit:active {
+    background: #f8dde1;
+    color: var(--color-primary-dark);
+}
+
+.btn-edit-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
 }
 
 .error-message {
