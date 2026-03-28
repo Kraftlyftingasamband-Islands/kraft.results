@@ -13,12 +13,12 @@ internal static class UserErrors
         Description: "Invalid username or password.");
 
     internal static readonly Error UserNameExists = new(
-        Code: EmailExistsCode,
-        Description: "There is already a user with that e-mail");
-
-    internal static readonly Error EmailExists = new(
         Code: UserNameExistsCode,
         Description: "User name already exists");
+
+    internal static readonly Error EmailExists = new(
+        Code: EmailExistsCode,
+        Description: "There is already a user with that e-mail");
 
     internal static readonly Error UserNameEmpty = new(
         Code: "Users.UserNameEmpty",
