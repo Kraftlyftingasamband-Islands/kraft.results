@@ -1,4 +1,7 @@
-﻿using KRAFT.Results.Contracts.Users;
+﻿using System.Security.Cryptography;
+using System.Text;
+
+using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -37,7 +40,9 @@ internal sealed class LoginHandler
         }
 
         // Hash old password if stored as plain text
-        if (command.Password == user.Password)
+        if (CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(command.Password),
+            Encoding.UTF8.GetBytes(user.Password)))
         {
             _logger.LogInformation("Migrating password hash for user: {Username}", command.Username);
             user.Password = Password.Hash(user.Password);
