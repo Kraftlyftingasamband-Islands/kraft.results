@@ -140,4 +140,22 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenBodyWeightIsNegative()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithBodyWeight(-1m)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }
