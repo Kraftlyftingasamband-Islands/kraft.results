@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 using Microsoft.Playwright;
 
@@ -31,7 +30,7 @@ public class MeetIndexTests(PlaywrightFixture fixture)
 
         ILocator yearLabel = page.Locator(".year-label");
         await Expect(yearLabel).ToHaveTextAsync(
-            new Regex("MÓTASKRÁ", RegexOptions.IgnoreCase),
+            "Mótaskrá",
             new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
