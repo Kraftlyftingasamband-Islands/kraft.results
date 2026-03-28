@@ -102,8 +102,8 @@
 
 @foreach (var genderAgeAgeCategory in Participations
     .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
-    .GroupBy(x => new { x.Gender, x.AgeCategory })
-    .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategory[0]))
+    .GroupBy(x => new { x.Gender, x.AgeCategory, x.AgeCategorySlug })
+    .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategorySlug.Length > 0 ? char.ToUpperInvariant(x.Key.AgeCategorySlug[0]) : ' '))
     .ThenBy(x => x.Key.AgeCategory)
     .ThenByDescending(x => x.Key.Gender))
 {
