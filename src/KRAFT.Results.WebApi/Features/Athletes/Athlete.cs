@@ -46,7 +46,7 @@ internal sealed class Athlete
 
     public ICollection<Participation> Participations { get; } = [];
 
-    internal static Result<Athlete> Create(User creator, string firstName, string lastName, Gender gender, Country country, DateOnly? dateOfBirth, Team? team)
+    internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -56,6 +56,11 @@ internal sealed class Athlete
         if (string.IsNullOrWhiteSpace(lastName))
         {
             return AthleteErrors.LastNameIsEmpty;
+        }
+
+        if (!Gender.TryParse(gender, out Gender? parsedGender))
+        {
+            return AthleteErrors.InvalidGender;
         }
 
         if (dateOfBirth.HasValue && dateOfBirth.Value > DateOnly.FromDateTime(DateTime.UtcNow))
@@ -67,7 +72,7 @@ internal sealed class Athlete
         {
             Firstname = firstName,
             Lastname = lastName,
-            Gender = gender,
+            Gender = parsedGender,
             DateOfBirth = dateOfBirth,
             Country = country,
             Team = team,
@@ -77,7 +82,7 @@ internal sealed class Athlete
         };
     }
 
-    internal Result Update(User modifier, string firstName, string lastName, Gender gender, Country country, DateOnly? dateOfBirth, Team? team)
+    internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -89,6 +94,11 @@ internal sealed class Athlete
             return AthleteErrors.LastNameIsEmpty;
         }
 
+        if (!Gender.TryParse(gender, out Gender? parsedGender))
+        {
+            return AthleteErrors.InvalidGender;
+        }
+
         if (dateOfBirth.HasValue && dateOfBirth.Value > DateOnly.FromDateTime(DateTime.UtcNow))
         {
             return AthleteErrors.DateOfBirthInFuture;
@@ -96,7 +106,7 @@ internal sealed class Athlete
 
         Firstname = firstName;
         Lastname = lastName;
-        Gender = gender;
+        Gender = parsedGender;
         DateOfBirth = dateOfBirth;
         Country = country;
         Team = team;
