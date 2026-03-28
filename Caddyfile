@@ -1,0 +1,7 @@
+kraft.karirafn.is {
+    reverse_proxy web:8080
+}
+
+kraft-api.karirafn.is {
+    reverse_proxy api:8080
+}
