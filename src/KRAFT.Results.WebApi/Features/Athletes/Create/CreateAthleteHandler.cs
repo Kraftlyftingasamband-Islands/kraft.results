@@ -95,6 +95,6 @@ internal sealed class CreateAthleteHandler
         _dbContext.Set<Athlete>()
         .Where(x => x.Firstname == firstName)
         .Where(x => x.Lastname == lastName)
-        .Where(x => x.DateOfBirth == dateOfBirth)
+        .Where(x => x.DateOfBirth == null || x.DateOfBirth == dateOfBirth)
         .AnyAsync(cancellationToken);
 }
