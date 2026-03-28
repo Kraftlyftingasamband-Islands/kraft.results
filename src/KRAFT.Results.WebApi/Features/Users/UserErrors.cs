@@ -8,6 +8,8 @@ internal static class UserErrors
     internal const string UserNameExistsCode = "Users.UserNameExists";
     internal const string EmailExistsCode = "Users.EmailExists";
     internal const string UserNameClaimMissingCode = "Users.UserNameClaimMissing";
+    internal const string UserNotFoundCode = "Users.NotFound";
+    internal const string CannotDeleteSelfCode = "Users.CannotDeleteSelf";
 
     internal static readonly Error InvalidUsernameOrPassword = new(
         Code: InvalidUsernameOrPasswordCode,
@@ -40,4 +42,12 @@ internal static class UserErrors
     internal static readonly Error UserNameClaimMissing = new(
         Code: UserNameClaimMissingCode,
         Description: "The authentication token is missing the required name claim.");
+
+    internal static readonly Error UserNotFound = new(
+        Code: UserNotFoundCode,
+        Description: "User not found.");
+
+    internal static readonly Error CannotDeleteSelf = new(
+        Code: CannotDeleteSelfCode,
+        Description: "An admin cannot delete their own account.");
 }

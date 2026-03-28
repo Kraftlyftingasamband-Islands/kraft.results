@@ -69,9 +69,23 @@
     background: var(--color-primary-dark);
 }
 
+.btn-edit {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+.btn-edit:hover {
+    color: var(--color-primary-dark);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .spinner,
-    .btn-action {
+    .btn-action,
+    .btn-edit {
         animation: none;
         transition: none;
     }

@@ -70,4 +70,25 @@ internal sealed class User
 
         return user;
     }
+
+    internal Result Update(User modifier, string firstName, string lastName, Email email)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            return UserErrors.FirstNameEmpty;
+        }
+
+        if (string.IsNullOrWhiteSpace(lastName))
+        {
+            return UserErrors.LastNameEmpty;
+        }
+
+        Firstname = firstName;
+        Lastname = lastName;
+        Email = email;
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = modifier.Username;
+
+        return Result.Success();
+    }
 }

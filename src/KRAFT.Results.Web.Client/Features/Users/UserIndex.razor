@@ -38,6 +38,7 @@ else
                 <th>Tölvupóstfang</th>
                 <th>Hlutverk</th>
                 <th>Stofnaður</th>
+                <th></th>
             </tr>
         </thead>
 
@@ -49,6 +50,9 @@ else
                     <td>@User.Email</td>
                     <td>@string.Join(", ", User.Roles)</td>
                     <td>@User.CreatedOn.ToShortDateString()</td>
+                    <td>
+                        <a href="@($"/users/{User.UserId}/edit")" class="btn-edit">Breyta</a>
+                    </td>
                 </tr>
             }
         </tbody>
