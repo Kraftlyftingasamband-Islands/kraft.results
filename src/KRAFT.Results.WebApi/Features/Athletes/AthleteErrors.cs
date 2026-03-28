@@ -8,6 +8,10 @@ internal static class AthleteErrors
     internal const string AthleteNotFoundCode = "Athletes.NotFound";
     internal const string AthleteHasParticipationsCode = "Athletes.HasParticipations";
 
+    internal static readonly Error AlreadyExists = new(
+        AlreadyExistsCode,
+        "An athlete with that name and date of birth already exists.");
+
     internal static Error FirstNameIsEmpty => new(
         "Athletes.FirstNameIsEmpty",
         "First name cannot be empty.");
@@ -31,8 +35,4 @@ internal static class AthleteErrors
     internal static Error AthleteHasParticipations => new(
         AthleteHasParticipationsCode,
         "Cannot delete an athlete that has participations.");
-
-    internal static Error AlreadyExists(string firstName, string lastName, DateOnly dateOfBirth) => new(
-        AlreadyExistsCode,
-        $"An athlete with the first name '{firstName}', last name '{lastName}' and date of birth {dateOfBirth:yyyy-MM-dd} already exists");
 }

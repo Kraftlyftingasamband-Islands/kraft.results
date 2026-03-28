@@ -33,7 +33,7 @@ internal sealed class CreateAthleteHandler
                 command.FirstName,
                 command.LastName,
                 command.DateOfBirth);
-            return AthleteErrors.AlreadyExists(command.FirstName, command.LastName, command.DateOfBirth);
+            return AthleteErrors.AlreadyExists;
         }
 
         if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)

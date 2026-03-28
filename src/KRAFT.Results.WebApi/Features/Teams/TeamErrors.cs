@@ -41,9 +41,9 @@ internal static class TeamErrors
         TeamHasAthletesCode,
         "Cannot delete a team that has athletes assigned.");
 
-    internal static Error ShortTitleExists(string titleShort) => new(
+    internal static readonly Error ShortTitleExists = new(
         ShortTitleExistsCode,
-        $"Team with short title {titleShort} already exists.");
+        "A team with that short title already exists.");
 
     internal static Error TeamDoesNotExist(int id) => new(
         "Teams.TeamDoesNotExist",
