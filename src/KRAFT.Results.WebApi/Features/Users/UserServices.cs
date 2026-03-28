@@ -17,6 +17,7 @@ internal static class UserServices
         services.AddOptions<JwtOptions>()
             .Configure<IConfiguration>((options, configuration)
                 => configuration.GetRequiredSection(JwtOptions.SectionName).Bind(options))
+            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return services;
