@@ -30,7 +30,7 @@
                 CurrentEraSlug="@_currentEraSlug"
                 InitialEquipmentType="@_equipmentType"
                 InitialEraSlug="@_eraSlug"
-                Disabled="_isLoading"
+                Disabled="@(_isLoading || !RendererInfo.IsInteractive)"
                 OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
                 OnEraChanged="HandleEraChanged" />
 
