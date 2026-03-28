@@ -106,6 +106,7 @@ internal sealed class Athlete
 
         Firstname = firstName;
         Lastname = lastName;
+        Slug = ValueObjects.Slug.Create($"{firstName} {lastName}");
         Gender = parsedGender;
         DateOfBirth = dateOfBirth;
         Country = country;
