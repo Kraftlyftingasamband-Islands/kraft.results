@@ -82,10 +82,10 @@ public static class DisplayNames
         {
             "subjunior" => "14-18 ára",
             "junior" => "19-23 ára",
-            "masters1" => "40+",
-            "masters2" => "50+",
-            "masters3" => "60+",
-            "masters4" => "70+",
+            "masters1" => "40+ ára",
+            "masters2" => "50+ ára",
+            "masters3" => "60+ ára",
+            "masters4" => "70+ ára",
             _ => string.Empty,
         };
     }
