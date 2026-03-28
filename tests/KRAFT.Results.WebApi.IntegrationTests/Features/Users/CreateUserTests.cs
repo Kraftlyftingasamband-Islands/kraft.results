@@ -61,7 +61,7 @@ public sealed class CreateUserTests
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("e-mail");
+        body.ShouldContain("User name already exists");
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public sealed class CreateUserTests
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("already exists");
+        body.ShouldContain("already a user with that e-mail");
     }
 
     [Theory]
