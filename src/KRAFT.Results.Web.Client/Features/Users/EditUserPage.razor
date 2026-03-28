@@ -74,6 +74,23 @@ else if (_model is not null)
                 </button>
 
                 <a href="/users" class="btn-cancel">Til baka</a>
+
+                @if (_showDeleteConfirmation)
+                {
+                    <p>Ertu viss um að þú viljir eyða þessum notanda?</p>
+                    <div class="danger-actions">
+                        <button class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
+                        <button class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn-danger" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
+                }
+                @if (!string.IsNullOrEmpty(_deleteErrorMessage))
+                {
+                    <div class="error-message" role="alert">@_deleteErrorMessage</div>
+                }
             </div>
 
             @if (!string.IsNullOrEmpty(_errorMessage))
@@ -81,26 +98,6 @@ else if (_model is not null)
                 <div id="edit-error" class="error-message" role="alert">@_errorMessage</div>
             }
         </EditForm>
-
-        <div class="danger-zone">
-            <h4>Hættusvæði</h4>
-            @if (_showDeleteConfirmation)
-            {
-                <p>Ertu viss um að þú viljir eyða þessum notanda?</p>
-                <div class="danger-actions">
-                    <button class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
-                    <button class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
-                </div>
-            }
-            else
-            {
-                <button class="btn-danger" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
-            }
-            @if (!string.IsNullOrEmpty(_deleteErrorMessage))
-            {
-                <div class="error-message" role="alert">@_deleteErrorMessage</div>
-            }
-        </div>
     </div>
 }
 else if (_errorMessage is not null)

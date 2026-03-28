@@ -63,7 +63,7 @@ else
                         <td>@string.Join(", ", User.Roles)</td>
                         <td>@User.CreatedOn.ToShortDateString()</td>
                         <td>
-                            <a href="@($"/users/{User.UserId}/edit")" class="btn-edit" aria-label="@($"Breyta {User.Name}")">Breyta</a>
+                            <button class="btn-edit" aria-label="@($"Breyta {User.Name}")" @onclick="() => NavigateToEdit(User.UserId)">Breyta</button>
                         </td>
                     </tr>
                 }
@@ -80,6 +80,11 @@ else
     private void NavigateToCreate()
     {
         NavigationManager.NavigateTo("/users/create");
+    }
+
+    private void NavigateToEdit(int userId)
+    {
+        NavigationManager.NavigateTo($"/users/{userId}/edit");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
