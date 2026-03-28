@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.Contracts.Athletes;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -22,8 +23,8 @@ internal static class CreateAthleteEndpoint
                 success: athleteId => TypedResults.Created($"/{athleteId}", new { AthleteId = athleteId }),
                 failure: error => error.Code switch
                 {
-                    AthleteErrors.AlreadyExistsCode => TypedResults.Conflict(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    AthleteErrors.AlreadyExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

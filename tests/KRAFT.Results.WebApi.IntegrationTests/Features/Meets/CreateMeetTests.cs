@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
@@ -56,7 +57,7 @@ public sealed class CreateMeetTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsConflict_WithDescription_WhenMeetExists()
+    public async Task ReturnsConflict_WithErrorCode_WhenMeetExists()
     {
         // Arrange
         CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
@@ -67,8 +68,9 @@ public sealed class CreateMeetTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("already exists");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.AlreadyExists");
     }
 
     [Fact]

@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.Contracts.Users;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ internal static class LoginEndpoint
                 failure: error => error.Code switch
                 {
                     UserErrors.InvalidUsernameOrPasswordCode => TypedResults.Unauthorized(),
-                    _ => TypedResults.BadRequest(error.Description),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

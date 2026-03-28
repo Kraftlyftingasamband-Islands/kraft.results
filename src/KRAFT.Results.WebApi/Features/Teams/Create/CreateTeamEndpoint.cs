@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.Contracts.Teams;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,8 @@ internal static class CreateTeamEndpoint
                 success: teamId => TypedResults.Created($"/{teamId}", new { TeamId = teamId }),
                 failure: error => error.Code switch
                 {
-                    _ => TypedResults.BadRequest(error.Description),
+                    TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)
@@ -30,6 +32,7 @@ internal static class CreateTeamEndpoint
         .WithDescription("Adds a new Team to the database and returns its Id.")
         .Produces<int>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
         .RequireAuthorization(policy => policy.RequireRole("Admin"));
 

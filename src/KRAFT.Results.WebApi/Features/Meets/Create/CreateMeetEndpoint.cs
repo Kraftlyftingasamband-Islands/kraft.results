@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.Contracts.Meets;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -22,8 +23,8 @@ internal static class CreateMeetEndpoint
                 success: slug => TypedResults.Created($"/{slug}", new { Slug = slug }),
                 failure: error => error.Code switch
                 {
-                    MeetErrors.MeetExistsCode => TypedResults.Conflict(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    MeetErrors.MeetExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

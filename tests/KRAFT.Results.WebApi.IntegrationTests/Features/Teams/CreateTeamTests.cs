@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
@@ -104,7 +105,7 @@ public sealed class CreateTeamTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenShortTitleExists()
+    public async Task ReturnsConflict_WithErrorCode_WhenShortTitleExists()
     {
         // Arrange
         string shortTitle = "ABC";
@@ -120,6 +121,9 @@ public sealed class CreateTeamTests(IntegrationTestFixture fixture)
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, secondCommand, CancellationToken.None);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe(ErrorCodes.TeamsShortTitleExists);
     }
 }

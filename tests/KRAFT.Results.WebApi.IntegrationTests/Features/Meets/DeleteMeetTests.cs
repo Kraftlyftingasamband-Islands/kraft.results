@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
@@ -30,19 +31,20 @@ public sealed class DeleteMeetTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WithDescription_WhenMeetDoesNotExist()
+    public async Task ReturnsNotFound_WithErrorCode_WhenMeetDoesNotExist()
     {
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/non-existent-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("Meet not found.");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.NotFound");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WithDescription_WhenMeetHasParticipations()
+    public async Task ReturnsConflict_WithErrorCode_WhenMeetHasParticipations()
     {
         // Arrange — the seeded meet has participations
         string slug = Constants.TestMeetSlug;
@@ -52,8 +54,9 @@ public sealed class DeleteMeetTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("Cannot delete a meet that has participations.");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.HasParticipations");
     }
 
     [Fact]

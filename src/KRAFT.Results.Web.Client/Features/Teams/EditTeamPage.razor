@@ -5,6 +5,8 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @using System.Net
+@using System.Net.Http.Json
+@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Countries
 @using KRAFT.Results.Contracts.Teams
 
@@ -96,15 +98,15 @@ else if (_errorMessage is not null)
                 return;
             }
 
-            if (response.StatusCode == HttpStatusCode.BadRequest)
+            if (response.StatusCode == HttpStatusCode.Conflict)
             {
-                string body = await response.Content.ReadAsStringAsync();
+                ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
 
-                _errorMessage = body.Contains("already exists")
-                    ? "Félag með þessa skammstöfun er þegar til."
-                    : "Villa kom upp. Reyndu aftur síðar.";
-
-                return;
+                if (error?.Code == ErrorCodes.TeamsShortTitleExists)
+                {
+                    _errorMessage = "Félag með þessa skammstöfun er þegar til.";
+                    return;
+                }
             }
 
             if (!response.IsSuccessStatusCode)

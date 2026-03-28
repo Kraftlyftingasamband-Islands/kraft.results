@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.Contracts.Users;
+﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,9 @@ internal static class CreateUserEndpoint
                 success: id => TypedResults.Created($"/{id}", new { UserId = id }),
                 failure: error => error.Code switch
                 {
-                    UserErrors.UserNameExistsCode => TypedResults.Conflict(error.Description),
-                    UserErrors.EmailExistsCode => TypedResults.Conflict(error.Description),
-                    _ => TypedResults.BadRequest(error.Description),
+                    UserErrors.UserNameExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.EmailExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)

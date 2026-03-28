@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
@@ -33,7 +34,7 @@ public sealed class UpdateTeamTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WithDescription_WhenTeamDoesNotExist()
+    public async Task ReturnsNotFound_WithErrorCode_WhenTeamDoesNotExist()
     {
         // Arrange
         UpdateTeamCommand command = new UpdateTeamCommandBuilder().Build();
@@ -43,8 +44,9 @@ public sealed class UpdateTeamTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
-        body.ShouldContain("Team not found.");
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Teams.NotFound");
     }
 
     [Fact]
@@ -142,7 +144,7 @@ public sealed class UpdateTeamTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenShortTitleAlreadyExists()
+    public async Task ReturnsConflict_WithErrorCode_WhenShortTitleAlreadyExists()
     {
         // Arrange
         string slug = await CreateTeamAsync();
@@ -160,7 +162,10 @@ public sealed class UpdateTeamTests(IntegrationTestFixture fixture)
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe(ErrorCodes.TeamsShortTitleExists);
     }
 
     private async Task<string> CreateTeamAsync()
