@@ -50,7 +50,12 @@
     outline-color: var(--color-text);
 }
 
-.toggle-btn:hover:not(.active) {
+.toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.toggle-btn:hover:not(.active):not(:disabled) {
     background-color: var(--color-primary-light);
     color: var(--color-primary);
 }
