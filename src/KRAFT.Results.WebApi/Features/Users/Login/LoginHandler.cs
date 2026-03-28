@@ -36,8 +36,7 @@ internal sealed class LoginHandler
             return UserErrors.InvalidUsernameOrPassword;
         }
 
-        // Hash old password if stored as plain text
-        if (command.Password == user.Password)
+        if (!user.Password.IsHashed)
         {
             _logger.LogInformation("Migrating password hash for user: {Username}", command.Username);
             user.Password = Password.Hash(user.Password);

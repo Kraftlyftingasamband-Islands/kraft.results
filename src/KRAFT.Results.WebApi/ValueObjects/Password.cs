@@ -18,6 +18,34 @@ internal sealed class Password : ValueObject<string>
     {
     }
 
+    internal bool IsHashed
+    {
+        get
+        {
+            string[] parts = Value.Split(Separator, 2);
+            if (parts.Length != 2)
+            {
+                return false;
+            }
+
+            if (parts[0].Length != SaltSize * 2 || parts[1].Length != HashSize * 2)
+            {
+                return false;
+            }
+
+            try
+            {
+                Convert.FromHexString(parts[0]);
+                Convert.FromHexString(parts[1]);
+                return true;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+    }
+
     internal static Password Parse(string value) => new(value);
 
     internal static Result<Password> Hash(string value)
