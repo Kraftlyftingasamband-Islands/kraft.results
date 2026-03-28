@@ -46,8 +46,8 @@ public sealed class DatabaseFixture : IAsyncLifetime
             VALUES ('Test team', 'TTM', 'Test team', 1, {Constants.TestTeamSlug});
 
             SET IDENTITY_INSERT AgeCategories ON;
-            INSERT INTO AgeCategories (AgeCategoryId, Title)
-            VALUES (1, 'Open');
+            INSERT INTO AgeCategories (AgeCategoryId, Title, TitleShort, Slug)
+            VALUES (1, 'Open', 'Open', 'open');
             SET IDENTITY_INSERT AgeCategories OFF;
 
             SET IDENTITY_INSERT WeightCategories ON;

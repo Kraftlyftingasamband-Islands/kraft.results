@@ -112,6 +112,21 @@ public sealed class GetMeetParticipationsTests
     }
 
     [Fact]
+    public async Task AgeCategoryIsTranslatedToIcelandic()
+    {
+        // Arrange
+
+        // Act
+        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(Path, CancellationToken.None);
+
+        // Assert
+        participations.ShouldNotBeNull();
+        MeetParticipation participation = participations.First(p => p.Athlete == "Charlie Test");
+        participation.AgeCategory.ShouldBe("Opinn flokkur");
+        participation.AgeCategorySlug.ShouldBe("open");
+    }
+
+    [Fact]
     public async Task DisqualifiedFieldIsFalseForPlacedParticipant()
     {
         // Arrange

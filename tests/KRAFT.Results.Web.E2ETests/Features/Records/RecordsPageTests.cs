@@ -25,7 +25,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         // Assert
         string headingText = await heading.InnerTextAsync();
         headingText.ShouldContain("Karlar");
-        headingText.ShouldContain("open");
+        headingText.ShouldContain("Opinn flokkur");
 
         ILocator breadcrumb = page.Locator("nav.breadcrumb");
         await breadcrumb.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });

@@ -7,6 +7,7 @@ public sealed record class MeetParticipation(
     string Gender,
     int YearOfBirth,
     string AgeCategory,
+    string AgeCategorySlug,
     string WeightCategory,
     string Club,
     string ClubSlug,
