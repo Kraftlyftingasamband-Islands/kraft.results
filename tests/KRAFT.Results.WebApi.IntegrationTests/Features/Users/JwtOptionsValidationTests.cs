@@ -8,13 +8,15 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
 public sealed class JwtOptionsValidationTests
 {
+    private const string ValidKey = "valid-key-value-that-is-at-least-32-chars";
+
     [Fact]
     public void Succeeds_WhenAllPropertiesAreValid()
     {
         // Arrange
         JwtOptions options = new()
         {
-            Key = "valid-key-value",
+            Key = ValidKey,
             Issuer = "valid-issuer",
             Audience = "valid-audience",
         };
@@ -47,12 +49,31 @@ public sealed class JwtOptionsValidationTests
     }
 
     [Fact]
+    public void Fails_WhenKeyIsShorterThan32Characters()
+    {
+        // Arrange
+        JwtOptions options = new()
+        {
+            Key = "short-key-under-32-chars",
+            Issuer = "valid-issuer",
+            Audience = "valid-audience",
+        };
+
+        // Act
+        bool isValid = TryValidate(options, out List<ValidationResult> results);
+
+        // Assert
+        isValid.ShouldBeFalse();
+        results.ShouldContain(r => r.MemberNames.Contains(nameof(JwtOptions.Key)));
+    }
+
+    [Fact]
     public void Fails_WhenIssuerIsEmpty()
     {
         // Arrange
         JwtOptions options = new()
         {
-            Key = "valid-key-value",
+            Key = ValidKey,
             Issuer = string.Empty,
             Audience = "valid-audience",
         };
@@ -71,7 +92,7 @@ public sealed class JwtOptionsValidationTests
         // Arrange
         JwtOptions options = new()
         {
-            Key = "valid-key-value",
+            Key = ValidKey,
             Issuer = "valid-issuer",
             Audience = string.Empty,
         };

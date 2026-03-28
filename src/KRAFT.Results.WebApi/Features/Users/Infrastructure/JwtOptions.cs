@@ -6,7 +6,7 @@ internal sealed class JwtOptions
 {
     internal const string SectionName = "Jwt";
 
-    [MinLength(1)]
+    [MinLength(32)]
     public required string Key { get; init; }
 
     [MinLength(1)]
