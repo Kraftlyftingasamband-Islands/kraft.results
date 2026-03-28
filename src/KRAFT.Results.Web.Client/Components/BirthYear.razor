@@ -33,7 +33,23 @@
 
     private string AgeCategoryDisplayName => AgeCategorySlug.ToAgeCategoryLabel(Gender);
 
-    private string AgeCategoryAbbreviation => AgeCategoryDisplayName.Length > 0
-        ? AgeCategoryDisplayName[0].ToString()
-        : string.Empty;
+    private string AgeCategoryAbbreviation
+    {
+        get
+        {
+            if (AgeCategoryDisplayName.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            string firstChar = AgeCategoryDisplayName[0].ToString();
+
+            if (AgeCategorySlug.StartsWith("masters", StringComparison.Ordinal) && AgeCategorySlug.Length == 8)
+            {
+                return firstChar + AgeCategorySlug[7];
+            }
+
+            return firstChar;
+        }
+    }
 }
