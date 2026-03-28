@@ -1,30 +1,34 @@
+using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.TeamCompetition;
 
 using Microsoft.EntityFrameworkCore;
 
 using static KRAFT.Results.WebApi.Features.TeamCompetition.TeamStandingsBuilder;
 
-namespace KRAFT.Results.WebApi.Features.TeamCompetition.Get;
+namespace KRAFT.Results.WebApi.Features.Meets.GetTeamPoints;
 
-internal sealed class GetTeamCompetitionHandler
+internal sealed class GetMeetTeamPointsHandler(ResultsDbContext dbContext)
 {
-    private readonly ResultsDbContext _dbContext;
-
-    public GetTeamCompetitionHandler(ResultsDbContext dbContext)
+    public async Task<MeetTeamPointsResponse?> Handle(string slug, CancellationToken cancellationToken)
     {
-        _dbContext = dbContext;
-    }
+        Meet? meet = await dbContext.Set<Meet>()
+            .Where(m => m.Slug == slug)
+            .FirstOrDefaultAsync(cancellationToken);
 
-    public async Task<TeamCompetitionResponse> Handle(int year, CancellationToken cancellationToken)
-    {
+        if (meet is null)
+        {
+            return null;
+        }
+
+        int year = meet.StartDate.Year;
         bool isGenderSplit = year >= GenderSplitStartYear;
         int bestN = GetBestN(year);
 
-        List<TeamPointRow> rows = await _dbContext.Set<Participation>()
+        List<TeamPointRow> rows = await dbContext.Set<Participation>()
+            .Where(p => p.Meet.Slug == slug)
             .Where(p => !p.Disqualified)
-            .Where(p => p.Meet.IsInTeamCompetition)
-            .Where(p => p.Meet.StartDate.Year == year)
             .Where(p => p.TeamId != null)
             .Where(p => p.TeamPoints != null && p.TeamPoints > 0)
             .Select(p => new TeamPointRow(
@@ -46,10 +50,10 @@ internal sealed class GetTeamCompetitionHandler
             List<TeamCompetitionStanding> men = BuildStandings(
                 rows.Where(r => r.Gender == "m"), bestN);
 
-            return new TeamCompetitionResponse(year, true, women, men, []);
+            return new MeetTeamPointsResponse(true, women, men, []);
         }
 
         List<TeamCompetitionStanding> combined = BuildStandings(rows, bestN);
-        return new TeamCompetitionResponse(year, false, [], [], combined);
+        return new MeetTeamPointsResponse(false, [], [], combined);
     }
 }

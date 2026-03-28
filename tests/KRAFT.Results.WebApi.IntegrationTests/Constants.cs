@@ -17,6 +17,8 @@ internal static class Constants
     {
         internal const string AlphaTeamSlug = "alpha-team";
         internal const string BetaTeamSlug = "beta-team";
+        internal const string TcMeet12025Slug = "tc-meet-1-2025";
+        internal const string TcMeet12026Slug = "tc-meet-1-2026";
     }
 
     internal static class TestUser

@@ -28,6 +28,7 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
                 x.PublishedInCalendar,
                 x.PublishedResults,
                 x.RecordsPossible,
-                x.IsRaw))
+                x.IsRaw,
+                x.ShowTeamPoints))
             .FirstOrDefaultAsync(cancellationToken);
 }
