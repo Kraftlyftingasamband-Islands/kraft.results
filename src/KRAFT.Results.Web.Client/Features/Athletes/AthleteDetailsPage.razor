@@ -54,7 +54,7 @@
             @foreach (var best in group)
             {
                 <Card>
-                    <a href="@($"/meets/{best.MeetSlug}")" aria-label="@(best.Discipline switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total }) — @($"{best.Weight:F1}") kg@(best.IsSingleLift ? $" - {Constants.SingeLift}" : "")"></a>
+                    <a href="@($"/meets/{best.MeetSlug}")" aria-label="@(best.Discipline switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total }) — @($"{best.Weight:F1}") kg"></a>
                     @if (best.IsSingleLift)
                     {
                         <div class="card-badge">@Constants.SingeLift</div>
@@ -81,7 +81,7 @@
             @foreach(var record in group)
             {
                 <Card>
-                    <a href="@($"/meets/{record.MeetSlug}")" aria-label="@record.Type — @($"{record.Weight:F1}") kg@(record.IsSingleLift ? $" - {Constants.SingeLift}" : "")"></a>
+                    <a href="@($"/meets/{record.MeetSlug}")" aria-label="@record.Type — @($"{record.Weight:F1}") kg"></a>
                     @if (record.IsSingleLift)
                     {
                         <div class="card-badge">@Constants.SingeLift</div>
