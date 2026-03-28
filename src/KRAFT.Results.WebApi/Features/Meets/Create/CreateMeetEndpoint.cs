@@ -22,7 +22,7 @@ internal static class CreateMeetEndpoint
                 success: slug => TypedResults.Created($"/{slug}", new { Slug = slug }),
                 failure: error => error.Code switch
                 {
-                    MeetErrors.MeetExistsCode => TypedResults.Conflict(),
+                    MeetErrors.MeetExistsCode => TypedResults.Conflict(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

@@ -21,8 +21,8 @@ internal static class DeleteTeamEndpoint
                 success: () => TypedResults.NoContent(),
                 failure: error => error.Code switch
                 {
-                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(),
-                    TeamErrors.TeamHasAthletesCode => TypedResults.Conflict(),
+                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(error.Description),
+                    TeamErrors.TeamHasAthletesCode => TypedResults.Conflict(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

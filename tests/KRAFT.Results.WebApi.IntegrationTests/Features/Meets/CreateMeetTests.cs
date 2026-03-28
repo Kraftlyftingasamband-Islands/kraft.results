@@ -56,7 +56,7 @@ public sealed class CreateMeetTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsConflict_WhenMeetExists()
+    public async Task ReturnsConflict_WithDescription_WhenMeetExists()
     {
         // Arrange
         CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
@@ -67,6 +67,8 @@ public sealed class CreateMeetTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("already exists");
     }
 
     [Fact]

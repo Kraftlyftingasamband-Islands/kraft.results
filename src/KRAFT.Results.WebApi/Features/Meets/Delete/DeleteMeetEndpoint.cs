@@ -21,8 +21,8 @@ internal static class DeleteMeetEndpoint
                 success: () => TypedResults.NoContent(),
                 failure: error => error.Code switch
                 {
-                    MeetErrors.MeetNotFoundCode => TypedResults.NotFound(),
-                    MeetErrors.MeetHasParticipationsCode => TypedResults.Conflict(),
+                    MeetErrors.MeetNotFoundCode => TypedResults.NotFound(error.Description),
+                    MeetErrors.MeetHasParticipationsCode => TypedResults.Conflict(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

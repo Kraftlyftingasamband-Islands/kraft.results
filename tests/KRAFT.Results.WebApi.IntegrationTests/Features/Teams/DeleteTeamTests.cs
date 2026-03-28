@@ -31,17 +31,19 @@ public sealed class DeleteTeamTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenTeamDoesNotExist()
+    public async Task ReturnsNotFound_WithDescription_WhenTeamDoesNotExist()
     {
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/non-existent-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Team not found.");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WhenTeamHasAthletes()
+    public async Task ReturnsConflict_WithDescription_WhenTeamHasAthletes()
     {
         // Arrange
         (string slug, int teamId) = await CreateTeamWithIdAsync();
@@ -57,6 +59,8 @@ public sealed class DeleteTeamTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Cannot delete a team that has athletes assigned.");
     }
 
     [Fact]

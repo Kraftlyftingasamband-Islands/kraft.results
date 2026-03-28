@@ -23,7 +23,7 @@ internal static class UpdateTeamEndpoint
                 success: () => TypedResults.Ok(),
                 failure: error => error.Code switch
                 {
-                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(),
+                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(error.Description),
                     TeamErrors.EmptyTitleCode => TypedResults.BadRequest(error.Description),
                     TeamErrors.InvalidTitleShortCode => TypedResults.BadRequest(error.Description),
                     TeamErrors.EmptyTitleFullCode => TypedResults.BadRequest(error.Description),

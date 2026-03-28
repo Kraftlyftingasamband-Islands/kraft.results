@@ -30,17 +30,19 @@ public sealed class DeleteMeetTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenMeetDoesNotExist()
+    public async Task ReturnsNotFound_WithDescription_WhenMeetDoesNotExist()
     {
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/non-existent-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Meet not found.");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WhenMeetHasParticipations()
+    public async Task ReturnsConflict_WithDescription_WhenMeetHasParticipations()
     {
         // Arrange — the seeded meet has participations
         string slug = Constants.TestMeetSlug;
@@ -50,6 +52,8 @@ public sealed class DeleteMeetTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Cannot delete a meet that has participations.");
     }
 
     [Fact]
