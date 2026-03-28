@@ -82,6 +82,10 @@
             {
                 <Card>
                     <a href="@($"/meets/{record.MeetSlug}")" aria-label="@record.Type"></a>
+                    @if (record.IsSingleLift)
+                    {
+                        <div class="card-badge">@Constants.SingeLift</div>
+                    }
                     <div class="card-label">@record.Type</div>
                     <div class="card-weight">@($"{record.Weight:F1}") <span class="card-unit">kg</span></div>
                     <div class="card-meta">
