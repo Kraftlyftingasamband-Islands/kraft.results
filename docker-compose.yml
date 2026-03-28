@@ -28,6 +28,7 @@ services:
         condition: service_started
     networks:
       - kraft-net
+      - proxy
     restart: unless-stopped
 
   web:
@@ -44,28 +45,15 @@ services:
         condition: service_started
     networks:
       - kraft-net
-    restart: unless-stopped
-
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "6080:80"
-      - "6443:443"
-      - "6443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data
-      - caddy-config:/config
-    networks:
-      - kraft-net
+      - proxy
     restart: unless-stopped
 
 volumes:
   kraft-data:
     name: kraft-data
-  caddy-data:
-  caddy-config:
 
 networks:
   kraft-net:
     driver: bridge
+  proxy:
+    external: true
