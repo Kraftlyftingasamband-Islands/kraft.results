@@ -1,0 +1,78 @@
+@inject IJSRuntime JSRuntime
+
+<dialog id="@Id" role="alertdialog" aria-labelledby="@($"{Id}-title")" aria-describedby="@($"{Id}-message")" @oncancel="HandleCancel">
+    <div class="reject-dialog-content">
+        <h2 id="@($"{Id}-title")" class="reject-dialog-title">@Title</h2>
+        <p id="@($"{Id}-message")" class="reject-dialog-message">@Message</p>
+
+        <div class="reject-dialog-field">
+            <label for="@($"{Id}-reason")">Ástæða (valfrjálst)</label>
+            <textarea id="@($"{Id}-reason")" @bind="_reason" rows="3" disabled="@IsLoading"></textarea>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="reject-dialog-error" role="alert">@ErrorMessage</div>
+        }
+
+        <div class="reject-dialog-actions">
+            <button class="btn-confirm" @onclick="HandleConfirm" disabled="@IsLoading" aria-busy="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>@ConfirmLabel</span>
+                }
+            </button>
+            <button class="btn-cancel" @onclick="HandleCancel" disabled="@IsLoading" autofocus>Hætta við</button>
+        </div>
+    </div>
+</dialog>
+
+@code {
+    private string? _reason;
+
+    [Parameter, EditorRequired]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string ConfirmLabel { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public EventCallback<string?> OnConfirm { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    public async Task ShowAsync()
+    {
+        _reason = null;
+        await JSRuntime.InvokeVoidAsync("Kraftresults.showDialog", Id);
+    }
+
+    public async Task CloseAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("Kraftresults.closeDialog", Id);
+    }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync(_reason);
+    }
+
+    private async Task HandleCancel()
+    {
+        await CloseAsync();
+    }
+}

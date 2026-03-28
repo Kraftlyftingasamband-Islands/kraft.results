@@ -1,5 +1,7 @@
+using KRAFT.Results.WebApi.Features.Records.Approve;
 using KRAFT.Results.WebApi.Features.Records.Get;
 using KRAFT.Results.WebApi.Features.Records.GetHistory;
+using KRAFT.Results.WebApi.Features.Records.Reject;
 
 namespace KRAFT.Results.WebApi.Features.Records;
 
@@ -12,6 +14,8 @@ internal static class RecordEndpoints
 
         group.MapGetRecordsEndpoint();
         group.MapGetRecordHistoryEndpoint();
+        group.MapApproveRecordEndpoint();
+        group.MapRejectRecordEndpoint();
 
         return group;
     }

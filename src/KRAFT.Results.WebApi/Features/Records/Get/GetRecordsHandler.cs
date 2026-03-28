@@ -59,6 +59,7 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
 
         // Query 2: Fetch all candidate records (no IsCurrent filter)
         List<RawRecordData> candidateRecords = await dbContext.Set<Record>()
+            .Where(r => r.Status == RecordStatus.Approved)
             .Where(r => r.EraId == eraId)
             .Where(r => activeWeightCategoryIds.Contains(r.WeightCategoryId))
             .Where(r => r.AgeCategory.Slug == ageCategory)

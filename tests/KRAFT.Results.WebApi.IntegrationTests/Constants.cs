@@ -10,6 +10,8 @@ internal static class Constants
     internal const string TestCountryName = "Iceland";
     internal const string TestMeetTitle = "Test Meet 2025";
     internal const string TestMeetSlug = "test-meet-2025";
+    internal const int PendingRecordForApprovalId = 20;
+    internal const int PendingRecordForRejectionId = 21;
 
     internal static readonly DateOnly TestAthleteDateOfBirth = new(1985, 7, 2);
 

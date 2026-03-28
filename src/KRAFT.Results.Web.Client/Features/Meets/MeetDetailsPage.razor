@@ -1,9 +1,11 @@
 @page "/meets/{slug}"
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Contracts.Records
 @using KRAFT.Results.Contracts.TeamCompetition
 @using KRAFT.Results.Web.Client.Components
 @using KRAFT.Results.Web.Client.Features.TeamCompetition
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -49,6 +51,12 @@
     <br />
     @Meet?.Location<br />
 </p>
+
+<AuthorizeView Roles="Admin">
+    <MeetPendingRecords PendingRecords="_pendingRecords"
+                        OnRecordApproved="HandleRecordApproved"
+                        OnRecordRejected="HandleRecordRejected" />
+</AuthorizeView>
 
 @if (ShowIpfPointLeaders)
 {
@@ -249,6 +257,7 @@
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
     private string? _deleteErrorMessage;
+    private List<PendingRecordEntry> _pendingRecords = [];
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -268,6 +277,16 @@
     {
         _deleteErrorMessage = null;
         await _deleteDialog.ShowAsync();
+    }
+
+    private void HandleRecordApproved(int recordId)
+    {
+        _pendingRecords = _pendingRecords.Where(r => r.RecordId != recordId).ToList();
+    }
+
+    private void HandleRecordRejected(int recordId)
+    {
+        _pendingRecords = _pendingRecords.Where(r => r.RecordId != recordId).ToList();
     }
 
     private async Task HandleDelete()
@@ -337,6 +356,15 @@
                         || _teamPointsResponse.Men.Count > 0
                         || _teamPointsResponse.Combined.Count > 0);
                 IsPreGenderSplit = Meet.StartDate.Year < 2015;
+            }
+
+            try
+            {
+                _pendingRecords = await HttpClient.GetFromJsonAsync<List<PendingRecordEntry>>($"/meets/{Slug}/pending-records") ?? [];
+            }
+            catch (HttpRequestException)
+            {
+                _pendingRecords = [];
             }
         }
         catch (HttpRequestException)
