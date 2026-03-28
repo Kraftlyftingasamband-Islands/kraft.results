@@ -25,6 +25,7 @@ internal static class CreateUserEndpoint
                 {
                     UserErrors.UserNameExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.EmailExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })

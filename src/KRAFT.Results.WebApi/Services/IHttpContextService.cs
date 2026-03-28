@@ -2,7 +2,7 @@
 
 internal interface IHttpContextService
 {
-    string GetUserName();
+    string? GetUserName();
 
     bool IsInRole(string role);
 }

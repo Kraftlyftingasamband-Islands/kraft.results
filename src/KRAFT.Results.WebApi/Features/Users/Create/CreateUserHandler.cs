@@ -22,7 +22,14 @@ internal sealed class CreateUserHandler
 
     public async Task<Result<int>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
-        User creator = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+        Result<User> creatorResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
+
+        if (creatorResult.IsFailure)
+        {
+            return creatorResult.Error;
+        }
+
+        User creator = creatorResult.FromResult();
 
         Result<Email> email = Email.Create(command.Email);
 

@@ -25,6 +25,18 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         })
         .CreateClient();
 
+    public HttpClient CreateNoNameClaimHttpClient() =>
+        Factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddAuthentication(TestNoNameClaimAuthHandler.SchemeName)
+                    .AddScheme<AuthenticationSchemeOptions, TestNoNameClaimAuthHandler>(
+                    TestNoNameClaimAuthHandler.SchemeName, options => { });
+            });
+        })
+        .CreateClient();
+
     public HttpClient CreateNonAdminAuthorizedHttpClient() =>
         Factory.WithWebHostBuilder(builder =>
         {

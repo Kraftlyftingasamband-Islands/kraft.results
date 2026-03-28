@@ -1,6 +1,7 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,6 +31,7 @@ internal static class RecordAttemptEndpoint
                 failure: error => error.Code switch
                 {
                     MeetErrors.ParticipationNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })

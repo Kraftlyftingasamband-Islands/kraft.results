@@ -142,6 +142,24 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task ReturnsUnauthorized_WhenNameClaimIsMissing()
+    {
+        // Arrange
+        HttpClient noNameClaimHttpClient = fixture.CreateNoNameClaimHttpClient();
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteId(ExistingAthleteId)
+            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await noNameClaimHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task ReturnsBadRequest_WhenBodyWeightIsNegative()
     {
         // Arrange
