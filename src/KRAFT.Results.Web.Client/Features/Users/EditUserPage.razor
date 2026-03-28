@@ -1,0 +1,263 @@
+@page "/users/{UserId:int}/edit"
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net
+@using KRAFT.Results.Contracts.Users
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Breyta notanda</PageTitle>
+<h3>Breyta notanda</h3>
+
+@if (_isInitializing)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki gögn...</span>
+    </div>
+}
+else if (_model is not null)
+{
+    <div class="form-card">
+        <EditForm Model="_model" OnValidSubmit="HandleSubmit" FormName="edit-user">
+            <DataAnnotationsValidator />
+
+            <div class="form-field">
+                <label class="form-label" for="firstname">Fornafn</label>
+                <InputText id="firstname"
+                           class="form-input"
+                           autocomplete="given-name"
+                           aria-describedby="@(HasError ? "edit-error" : null)"
+                           @bind-Value="_model.FirstName"
+                           disabled="@_isLoading" />
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="lastname">Eftirnafn</label>
+                <InputText id="lastname"
+                           class="form-input"
+                           autocomplete="family-name"
+                           aria-describedby="@(HasError ? "edit-error" : null)"
+                           @bind-Value="_model.LastName"
+                           disabled="@_isLoading" />
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="email">Tölvupóstfang</label>
+                <InputText type="email"
+                           id="email"
+                           class="form-input"
+                           autocomplete="email"
+                           aria-describedby="@(HasError ? "edit-error" : null)"
+                           @bind-Value="_model.Email"
+                           disabled="@_isLoading" />
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <span>Augnablik...</span>
+                    }
+                    else
+                    {
+                        <span>Vista breytingar</span>
+                    }
+                </button>
+
+                <a href="/users" class="btn-cancel">Til baka</a>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div id="edit-error" class="error-message" role="alert">@_errorMessage</div>
+            }
+        </EditForm>
+
+        <div class="danger-zone">
+            <h4>Hættusvæði</h4>
+            @if (_showDeleteConfirmation)
+            {
+                <p>Ertu viss um að þú viljir eyða þessum notanda?</p>
+                <div class="danger-actions">
+                    <button class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
+                    <button class="btn-cancel-danger" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
+                </div>
+            }
+            else
+            {
+                <button class="btn-danger" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
+            }
+            @if (!string.IsNullOrEmpty(_deleteErrorMessage))
+            {
+                <div class="error-message" role="alert">@_deleteErrorMessage</div>
+            }
+        </div>
+    </div>
+}
+else if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+        <a href="/users">Til baka í notandalista</a>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int UserId { get; set; }
+
+    private EditUserModel? _model;
+    private bool _isInitializing = true;
+    private bool _isLoading;
+    private string? _errorMessage;
+    private string? _deleteErrorMessage;
+    private bool _showDeleteConfirmation;
+
+    private bool HasError => !string.IsNullOrEmpty(_errorMessage);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            UserEditDetails? user = await HttpClient.GetFromJsonAsync<UserEditDetails>($"/users/{UserId}/edit");
+
+            if (user is null)
+            {
+                _errorMessage = "Notandi fannst ekki.";
+                return;
+            }
+
+            _model = new EditUserModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email ?? string.Empty,
+            };
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            UpdateUserCommand command = new(
+                _model!.FirstName,
+                _model.LastName,
+                _model.Email);
+
+            HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/users/{UserId}", command);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _errorMessage = "Notandi fannst ekki.";
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                _errorMessage = "Tölvupóstfang er þegar í notkun.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            NavigationManager.NavigateTo("/users");
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ConfirmDelete()
+    {
+        _showDeleteConfirmation = true;
+        _deleteErrorMessage = null;
+    }
+
+    private void CancelDelete()
+    {
+        _showDeleteConfirmation = false;
+    }
+
+    private async Task HandleDelete()
+    {
+        _isLoading = true;
+        _deleteErrorMessage = null;
+
+        try
+        {
+            HttpResponseMessage response = await HttpClient.DeleteAsync($"/users/{UserId}");
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                _deleteErrorMessage = "Þú getur ekki eytt þínum eigin aðgangi.";
+                _showDeleteConfirmation = false;
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _deleteErrorMessage = "Notandi fannst ekki.";
+                _showDeleteConfirmation = false;
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _deleteErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                _showDeleteConfirmation = false;
+                return;
+            }
+
+            NavigationManager.NavigateTo("/users");
+        }
+        catch (HttpRequestException)
+        {
+            _deleteErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+            _showDeleteConfirmation = false;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class EditUserModel
+    {
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+    }
+}

@@ -16,6 +16,7 @@ internal sealed class GetUsersHandler
     public Task<List<UserSummary>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<User>()
         .Select(x => new UserSummary(
+            x.UserId,
             $"{x.Firstname} {x.Lastname}",
             x.Email,
             x.CreatedOn,
