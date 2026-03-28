@@ -41,10 +41,10 @@ internal static class TeamErrors
         "Cannot delete a team that has athletes assigned.");
 
     internal static Error ShortTitleExists(string titleShort) => new(
-        "Athletes.ShortTitleExists",
+        "Teams.ShortTitleExists",
         $"Team with short title {titleShort} already exists.");
 
     internal static Error TeamDoesNotExist(int id) => new(
-        "Athletes.TeamDoesNotExist",
+        "Teams.TeamDoesNotExist",
         $"Team with Id {id} does not exist.");
 }
