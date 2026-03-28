@@ -1,7 +1,5 @@
 using Microsoft.Playwright;
 
-using Shouldly;
-
 using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Rankings;
@@ -20,14 +18,12 @@ public class RankingsTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/rankings");
         ILocator heading = page.Locator("h1");
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string headingText = await heading.InnerTextAsync();
-        headingText.ShouldBe("Stigatöflur");
+        await Expect(heading).ToHaveTextAsync("Stigatöflur", new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator filterBar = page.Locator(".filter-bar");
-        await filterBar.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(filterBar).ToBeVisibleAsync();
+        await Expect(filterBar).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

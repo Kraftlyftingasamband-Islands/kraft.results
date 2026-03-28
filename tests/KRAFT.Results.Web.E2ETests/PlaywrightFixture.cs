@@ -6,6 +6,8 @@ using Aspire.Hosting.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 
+using static Microsoft.Playwright.Assertions;
+
 [assembly: AssemblyFixture(typeof(KRAFT.Results.Web.E2ETests.PlaywrightFixture))]
 
 namespace KRAFT.Results.Web.E2ETests;
@@ -34,7 +36,7 @@ public sealed class PlaywrightFixture : IAsyncLifetime
     {
         await page.GotoAsync($"{BaseUrl}/login");
         ILocator usernameInput = page.Locator("#username");
-        await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(usernameInput).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         await page.WaitForFunctionAsync(
             "() => window.Blazor !== undefined && window.Blazor !== null",

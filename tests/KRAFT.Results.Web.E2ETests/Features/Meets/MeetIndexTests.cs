@@ -1,8 +1,7 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 using Microsoft.Playwright;
-
-using Shouldly;
 
 using static Microsoft.Playwright.Assertions;
 
@@ -23,15 +22,17 @@ public class MeetIndexTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/meets");
         ILocator yearValue = page.Locator(".year-value");
-        await yearValue.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(yearValue).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string yearText = await yearValue.InnerTextAsync();
-        yearText.ShouldBe(currentYear.ToString(CultureInfo.InvariantCulture));
+        await Expect(yearValue).ToHaveTextAsync(
+            currentYear.ToString(CultureInfo.InvariantCulture),
+            new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator yearLabel = page.Locator(".year-label");
-        string label = await yearLabel.InnerTextAsync();
-        label.ShouldBe("MÓTASKRÁ", StringCompareShould.IgnoreCase);
+        await Expect(yearLabel).ToHaveTextAsync(
+            new Regex("MÓTASKRÁ", RegexOptions.IgnoreCase),
+            new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -44,15 +45,15 @@ public class MeetIndexTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
         ILocator yearValue = page.Locator(".year-value");
-        await yearValue.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(yearValue).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string yearText = await yearValue.InnerTextAsync();
-        yearText.ShouldBe(TestDataSeeder.SeededMeetYear.ToString(CultureInfo.InvariantCulture));
+        await Expect(yearValue).ToHaveTextAsync(
+            TestDataSeeder.SeededMeetYear.ToString(CultureInfo.InvariantCulture),
+            new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator meetItems = page.Locator("article.meet-item");
         await Expect(meetItems.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        int meetCount = await meetItems.CountAsync();
-        meetCount.ShouldBeGreaterThan(0);
+        await Expect(meetItems).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

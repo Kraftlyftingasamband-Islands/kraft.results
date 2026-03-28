@@ -1,6 +1,6 @@
-using Microsoft.Playwright;
+using System.Text.RegularExpressions;
 
-using Shouldly;
+using Microsoft.Playwright;
 
 using static Microsoft.Playwright.Assertions;
 
@@ -23,7 +23,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(heading).ToBeVisibleAsync();
@@ -42,7 +42,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         ILocator nafnLabel = page.GetByText("Nafn", new PageGetByTextOptions { Exact = true });
@@ -67,7 +67,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act
         await page.Locator("#title").FillAsync($"E2E Test Meet {Guid.NewGuid():N}");
@@ -76,9 +76,9 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await page.Locator("button[type='submit']").ClickAsync();
 
         // Assert — should navigate back to /meets on success
-        await page.WaitForURLAsync("**/meets", new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        string url = page.Url;
-        url.ShouldEndWith("/meets");
+        await Expect(page).ToHaveURLAsync(
+            new Regex("/meets$"),
+            new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -95,21 +95,21 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         // Create the first meet
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         await page.Locator("#title").FillAsync(meetTitle);
         await page.Locator("#start-date").FillAsync("2026-07-01");
         await page.Locator("#meet-type").SelectOptionAsync(new SelectOptionValue { Label = "Kraftlyftingar" });
         await page.Locator("button[type='submit']").ClickAsync();
 
-        await page.WaitForURLAsync("**/meets", new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        string firstCreateUrl = page.Url;
-        firstCreateUrl.ShouldEndWith("/meets");
+        await Expect(page).ToHaveURLAsync(
+            new Regex("/meets$"),
+            new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act — try to create the same meet again
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
         heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         await page.Locator("#title").FillAsync(meetTitle);
         await page.Locator("#start-date").FillAsync("2026-07-01");
@@ -118,9 +118,9 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
 
         // Assert
         ILocator errorMessage = page.Locator("#meet-form-error");
-        await errorMessage.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        string errorText = await errorMessage.InnerTextAsync();
-        errorText.ShouldBe("Mót með þessu nafni og dagsetningu er þegar til.");
+        await Expect(errorMessage).ToHaveTextAsync(
+            "Mót með þessu nafni og dagsetningu er þegar til.",
+            new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt mót" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act — click submit without filling name or date (meet type is auto-selected)
         await page.Locator("button[type='submit']").ClickAsync();
@@ -144,8 +144,7 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         ILocator validationMessages = page.Locator(".validation-message");
         await Expect(validationMessages.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        int messageCount = await validationMessages.CountAsync();
-        messageCount.ShouldBeGreaterThan(0);
+        await Expect(validationMessages).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -159,8 +158,8 @@ public class CreateMeetPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/meets/create");
 
         // Assert — should redirect to login
-        await page.WaitForURLAsync("**/login**", new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        string url = page.Url;
-        url.ShouldContain("/login");
+        await Expect(page).ToHaveURLAsync(
+            new Regex("/login"),
+            new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

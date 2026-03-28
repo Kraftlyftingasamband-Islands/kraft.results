@@ -19,7 +19,7 @@ public class AthleteDetailsTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/athletes/testie-mctestface");
 
         ILocator heading = page.Locator("h1").First;
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(heading).Not.ToBeEmptyAsync(new LocatorAssertionsToBeEmptyOptions { Timeout = PageConstants.DefaultTimeoutMs });

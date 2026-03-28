@@ -1,7 +1,5 @@
 using Microsoft.Playwright;
 
-using Shouldly;
-
 using static Microsoft.Playwright.Assertions;
 
 namespace KRAFT.Results.Web.E2ETests.Features.Teams;
@@ -23,7 +21,7 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/teams/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt félag" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(heading).ToBeVisibleAsync();
@@ -42,7 +40,7 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/teams/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýtt félag" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         ILocator nafnLabel = page.GetByText("Nafn", new PageGetByTextOptions { Exact = true });
@@ -71,7 +69,7 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/teams");
 
         ILocator createTeamLink = page.GetByRole(AriaRole.Link, new PageGetByRoleOptions { Name = "Stofna félag" });
-        await createTeamLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(createTeamLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(createTeamLink).ToBeVisibleAsync();
@@ -89,15 +87,14 @@ public class CreateTeamPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/teams");
 
         ILocator createTeamLink = page.GetByRole(AriaRole.Link, new PageGetByRoleOptions { Name = "Stofna félag" });
-        await createTeamLink.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(createTeamLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Act
         await createTeamLink.ClickAsync();
 
-        await page.WaitForURLAsync("**/teams/create", new PageWaitForURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
-
         // Assert
-        string url = page.Url;
-        url.ShouldEndWith("/teams/create");
+        await Expect(page).ToHaveURLAsync(
+            new System.Text.RegularExpressions.Regex("/teams/create$"),
+            new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

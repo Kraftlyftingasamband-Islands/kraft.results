@@ -1,6 +1,6 @@
-using Microsoft.Playwright;
+using System.Text.RegularExpressions;
 
-using Shouldly;
+using Microsoft.Playwright;
 
 using static Microsoft.Playwright.Assertions;
 
@@ -20,25 +20,20 @@ public class LoginTests(PlaywrightFixture fixture)
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/login");
         ILocator heading = page.Locator("h1.login-title");
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        string headingText = await heading.InnerTextAsync();
-        headingText.ShouldBe("KRAFT.Results");
+        await Expect(heading).ToHaveTextAsync("KRAFT.Results", new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator usernameInput = page.Locator("#username");
-        await usernameInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(usernameInput).ToBeVisibleAsync();
+        await Expect(usernameInput).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator passwordInput = page.Locator("#password");
-        await passwordInput.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(passwordInput).ToBeVisibleAsync();
+        await Expect(passwordInput).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         ILocator submitButton = page.Locator("button[type='submit']");
-        await submitButton.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(submitButton).ToBeVisibleAsync();
+        await Expect(submitButton).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        string submitText = await submitButton.InnerTextAsync();
-        submitText.ShouldContain("Innskrá");
+        await Expect(submitButton).ToHaveTextAsync(new Regex("Innskrá"), new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

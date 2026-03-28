@@ -21,7 +21,7 @@ public class CreateUserPageTests(PlaywrightFixture fixture)
         await page.GotoAsync($"{_fixture.BaseUrl}/users/create");
 
         ILocator heading = page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Nýr notandi" });
-        await heading.WaitForAsync(new LocatorWaitForOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(heading).ToBeVisibleAsync();
