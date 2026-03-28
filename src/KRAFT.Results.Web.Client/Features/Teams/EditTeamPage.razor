@@ -110,6 +110,9 @@ else if (_errorMessage is not null)
                     _errorMessage = "Félag með þessa skammstöfun er þegar til.";
                     return;
                 }
+
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
             }
 
             if (!response.IsSuccessStatusCode)

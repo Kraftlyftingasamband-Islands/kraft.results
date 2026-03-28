@@ -79,6 +79,9 @@ else
                     _errorMessage = "Félag með þessa skammstöfun er þegar til.";
                     return;
                 }
+
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
             }
 
             if (!response.IsSuccessStatusCode)
