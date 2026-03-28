@@ -16,15 +16,26 @@
 <PageTitle>Nýtt félag</PageTitle>
 <h3>Nýtt félag</h3>
 
-<TeamForm Countries="_countries"
-          OnSubmit="HandleSubmit"
-          IsLoading="_isLoading"
-          ErrorMessage="@_errorMessage"
-          SubmitLabel="Stofna félag"
-          BackUrl="/teams" />
+@if (_isInitializing)
+{
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki gögn...</span>
+    </div>
+}
+else
+{
+    <TeamForm Countries="_countries"
+              OnSubmit="HandleSubmit"
+              IsLoading="_isLoading"
+              ErrorMessage="@_errorMessage"
+              SubmitLabel="Stofna félag"
+              BackUrl="/teams" />
+}
 
 @code {
     private IReadOnlyCollection<CountrySummary> _countries = [];
+    private bool _isInitializing = true;
     private bool _isLoading;
     private string? _errorMessage;
 
@@ -37,6 +48,10 @@
         catch (HttpRequestException)
         {
             _errorMessage = "Gat ekki sótt lönd. Reyndu að endurhlaða síðuna.";
+        }
+        finally
+        {
+            _isInitializing = false;
         }
     }
 

@@ -38,7 +38,7 @@ internal sealed class CreateTeamHandler
         if (await _dbContext.Set<Team>().AnyAsync(x => x.TitleShort == command.TitleShort, cancellationToken: cancellationToken))
         {
             _logger.LogWarning("Short title {Title} already exists", command.TitleShort);
-            return TeamErrors.ShortTitleExists(command.TitleShort);
+            return TeamErrors.ShortTitleExists;
         }
 
         Result<Team> result = Team.Create(

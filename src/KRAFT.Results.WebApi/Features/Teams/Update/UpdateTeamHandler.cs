@@ -48,7 +48,7 @@ internal sealed class UpdateTeamHandler
         if (await IsDuplicateShortTitleAsync(slug, command.TitleShort, cancellationToken))
         {
             _logger.LogWarning("Short title {TitleShort} already exists", command.TitleShort);
-            return Result.Failure(TeamErrors.ShortTitleExists(command.TitleShort));
+            return Result.Failure(TeamErrors.ShortTitleExists);
         }
 
         Result result = team.Update(modifier, command.Title, command.TitleShort, command.TitleFull, country);

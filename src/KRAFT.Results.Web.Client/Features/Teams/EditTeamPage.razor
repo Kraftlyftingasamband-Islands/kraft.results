@@ -18,7 +18,10 @@
 
 @if (_isInitializing)
 {
-    <p>Hleð...</p>
+    <div class="spinner-container" role="status">
+        <div class="spinner"></div>
+        <span class="visually-hidden">Sæki gögn...</span>
+    </div>
 }
 else if (_initialValues is not null)
 {
