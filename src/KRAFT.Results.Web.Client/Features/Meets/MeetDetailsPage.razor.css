@@ -119,7 +119,7 @@
     overflow: hidden;
 }
 
-h2.section-header {
+.section-header {
     margin: 0;
     padding: 0.875rem 1.25rem;
     background-color: var(--color-text);
@@ -129,6 +129,13 @@ h2.section-header {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+}
+
+.empty-section {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
 }
 
 @media (max-width: 899px) {

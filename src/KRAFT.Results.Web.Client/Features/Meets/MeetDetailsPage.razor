@@ -194,14 +194,14 @@
 
 @if (ShowTeamStandings)
 {
-    <h2>Lidastig</h2>
+    <h2>Liðastig</h2>
 
     @if (IsPreGenderSplit)
     {
         <div class="standings-grid standings-grid-single">
             <div class="gender-section">
                 <StandingsTable Standings="_teamPointsResponse!.Combined"
-                                AriaLabel="Stigatafla lida i moti" />
+                                AriaLabel="Stigatafla liða í móti" />
             </div>
         </div>
     }
@@ -209,14 +209,28 @@
     {
         <div class="standings-grid">
             <div class="gender-section">
-                <h2 class="section-header">@("f".ToGenderGroupLabel())</h2>
-                <StandingsTable Standings="_teamPointsResponse!.Women"
-                                AriaLabel="Stigatafla kvenna i moti" />
+                <h3 class="section-header">@("f".ToGenderGroupLabel())</h3>
+                @if (_teamPointsResponse!.Women.Count > 0)
+                {
+                    <StandingsTable Standings="_teamPointsResponse!.Women"
+                                    AriaLabel="Stigatafla kvenna í móti" />
+                }
+                else
+                {
+                    <div class="empty-section">Engar niðurstöður.</div>
+                }
             </div>
             <div class="gender-section">
-                <h2 class="section-header">@("m".ToGenderGroupLabel())</h2>
-                <StandingsTable Standings="_teamPointsResponse!.Men"
-                                AriaLabel="Stigatafla karla i moti" />
+                <h3 class="section-header">@("m".ToGenderGroupLabel())</h3>
+                @if (_teamPointsResponse!.Men.Count > 0)
+                {
+                    <StandingsTable Standings="_teamPointsResponse!.Men"
+                                    AriaLabel="Stigatafla karla í móti" />
+                }
+                else
+                {
+                    <div class="empty-section">Engar niðurstöður.</div>
+                }
             </div>
         </div>
     }
