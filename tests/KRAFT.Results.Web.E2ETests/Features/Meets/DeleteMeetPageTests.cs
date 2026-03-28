@@ -37,12 +37,8 @@ public class DeleteMeetPageTests(PlaywrightFixture fixture)
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
         await using IAsyncDisposable contextGuard = context;
 
-        // Act — navigate via the index to ensure Blazor enhanced navigation works
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
-        ILocator firstMeetLink = page.Locator("article.meet-item a").First;
-        await Expect(firstMeetLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await firstMeetLink.ClickAsync();
-
+        // Act
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetSlug}");
         ILocator resultsHeading = page.Locator("h2", new PageLocatorOptions { HasText = "Úrslit" });
         await Expect(resultsHeading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
@@ -139,17 +135,13 @@ public class DeleteMeetPageTests(PlaywrightFixture fixture)
     [Fact]
     public async Task ShowsError_WhenMeetHasParticipations()
     {
-        // Arrange — the seeded meet has participations; navigate via index for reliable loading
+        // Arrange — the seeded meet has participations
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
         await using IAsyncDisposable contextGuard = context;
 
         await _fixture.LoginAsync(page);
 
-        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetYear}");
-        ILocator firstMeetLink = page.Locator("article.meet-item a").First;
-        await Expect(firstMeetLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await firstMeetLink.ClickAsync();
-
+        await page.GotoAsync($"{_fixture.BaseUrl}/meets/{TestDataSeeder.SeededMeetSlug}");
         ILocator resultsHeading = page.Locator("h2", new PageLocatorOptions { HasText = "Úrslit" });
         await Expect(resultsHeading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 

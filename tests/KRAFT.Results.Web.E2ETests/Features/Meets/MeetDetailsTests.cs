@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Microsoft.Playwright;
 
 using static Microsoft.Playwright.Assertions;
@@ -20,6 +22,9 @@ public class MeetDetailsTests(PlaywrightFixture fixture)
         ILocator firstMeetLink = page.Locator("article.meet-item a").First;
         await Expect(firstMeetLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await firstMeetLink.ClickAsync();
+        await Expect(page).ToHaveURLAsync(
+            new Regex($"/meets/{Regex.Escape(TestDataSeeder.SeededMeetSlug)}$"),
+            new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Wait for the meet details page to render
         ILocator resultsHeading = page.Locator("h2", new PageLocatorOptions { HasText = "Úrslit" });
