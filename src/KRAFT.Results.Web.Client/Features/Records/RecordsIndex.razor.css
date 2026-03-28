@@ -14,9 +14,18 @@
 }
 
 ::deep .card-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
     font-weight: 600;
     font-size: 1rem;
     color: var(--color-text);
+}
+
+::deep .card-label-range {
+    font-weight: 400;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
 }
 
 .era-load-error {
