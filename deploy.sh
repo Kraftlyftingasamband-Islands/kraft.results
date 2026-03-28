@@ -6,8 +6,8 @@ LOCAL=$(git rev-parse main)
 REMOTE=$(git rev-parse origin/main)
 if [ "$LOCAL" != "$REMOTE" ]; then
     echo "$(date): Changes detected, deploying..."
-    git checkout main
-    git pull origin main
+    git reset --hard origin/main
+    git clean -fd
     docker-compose build api web
     docker-compose up -d api web
     echo "$(date): Deploy complete"
