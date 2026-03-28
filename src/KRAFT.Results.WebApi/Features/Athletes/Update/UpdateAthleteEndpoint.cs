@@ -23,7 +23,7 @@ internal static class UpdateAthleteEndpoint
                 success: () => TypedResults.Ok(),
                 failure: error => error.Code switch
                 {
-                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(),
+                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

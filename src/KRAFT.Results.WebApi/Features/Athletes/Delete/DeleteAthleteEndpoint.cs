@@ -21,9 +21,9 @@ internal static class DeleteAthleteEndpoint
                 success: () => TypedResults.NoContent(),
                 failure: error => error.Code switch
                 {
-                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(),
-                    AthleteErrors.AthleteHasParticipationsCode => TypedResults.Conflict(),
-                    _ => TypedResults.BadRequest(),
+                    AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(error.Description),
+                    AthleteErrors.AthleteHasParticipationsCode => TypedResults.Conflict(error.Description),
+                    _ => TypedResults.BadRequest(error.Description),
                 });
         })
         .WithName(Name)

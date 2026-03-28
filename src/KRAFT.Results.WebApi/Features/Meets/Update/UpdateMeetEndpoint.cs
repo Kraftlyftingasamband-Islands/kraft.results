@@ -23,8 +23,8 @@ internal static class UpdateMeetEndpoint
                 success: () => TypedResults.Ok(),
                 failure: error => error.Code switch
                 {
-                    MeetErrors.MeetNotFoundCode => TypedResults.NotFound(),
-                    MeetErrors.MeetExistsCode => TypedResults.Conflict(),
+                    MeetErrors.MeetNotFoundCode => TypedResults.NotFound(error.Description),
+                    MeetErrors.MeetExistsCode => TypedResults.Conflict(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

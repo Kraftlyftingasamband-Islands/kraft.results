@@ -33,7 +33,7 @@ public sealed class UpdateTeamTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenTeamDoesNotExist()
+    public async Task ReturnsNotFound_WithDescription_WhenTeamDoesNotExist()
     {
         // Arrange
         UpdateTeamCommand command = new UpdateTeamCommandBuilder().Build();
@@ -43,6 +43,8 @@ public sealed class UpdateTeamTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Team not found.");
     }
 
     [Fact]

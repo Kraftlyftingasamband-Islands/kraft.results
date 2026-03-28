@@ -35,7 +35,7 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenAthleteDoesNotExist()
+    public async Task ReturnsNotFound_WithDescription_WhenAthleteDoesNotExist()
     {
         // Arrange
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder().Build();
@@ -46,6 +46,8 @@ public sealed class UpdateAthleteTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Athlete not found.");
     }
 
     [Fact]

@@ -30,17 +30,19 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenAthleteDoesNotExist()
+    public async Task ReturnsNotFound_WithDescription_WhenAthleteDoesNotExist()
     {
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/non-existent-slug", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Athlete not found.");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WhenAthleteHasParticipations()
+    public async Task ReturnsConflict_WithDescription_WhenAthleteHasParticipations()
     {
         // Arrange — the seeded athlete has participations
         string seededAthleteSlug = Constants.TestAthleteSlug;
@@ -50,6 +52,8 @@ public sealed class DeleteAthleteTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Cannot delete an athlete that has participations.");
     }
 
     [Fact]

@@ -48,7 +48,7 @@ public sealed class CreateUserTests
     }
 
     [Fact]
-    public async Task ReturnsConflict_WhenUsernameExists()
+    public async Task ReturnsConflict_WithDescription_WhenUsernameExists()
     {
         // Arrange
         CreateUserCommand command = new CreateUserCommandBuilder()
@@ -60,10 +60,12 @@ public sealed class CreateUserTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("e-mail");
     }
 
     [Fact]
-    public async Task ReturnsConflict_WhenEmailExists()
+    public async Task ReturnsConflict_WithDescription_WhenEmailExists()
     {
         // Arrange
         CreateUserCommand command = new CreateUserCommandBuilder()
@@ -75,6 +77,8 @@ public sealed class CreateUserTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("already exists");
     }
 
     [Theory]

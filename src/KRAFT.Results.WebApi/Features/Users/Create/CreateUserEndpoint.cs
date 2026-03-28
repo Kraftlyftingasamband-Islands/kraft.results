@@ -22,8 +22,8 @@ internal static class CreateUserEndpoint
                 success: id => TypedResults.Created($"/{id}", new { UserId = id }),
                 failure: error => error.Code switch
                 {
-                    UserErrors.UserNameExistsCode => TypedResults.Conflict(),
-                    UserErrors.EmailExistsCode => TypedResults.Conflict(),
+                    UserErrors.UserNameExistsCode => TypedResults.Conflict(error.Description),
+                    UserErrors.EmailExistsCode => TypedResults.Conflict(error.Description),
                     _ => TypedResults.BadRequest(error.Description),
                 });
         })

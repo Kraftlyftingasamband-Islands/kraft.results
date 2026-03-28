@@ -33,7 +33,7 @@ public sealed class UpdateMeetTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenMeetDoesNotExist()
+    public async Task ReturnsNotFound_WithDescription_WhenMeetDoesNotExist()
     {
         // Arrange
         UpdateMeetCommand command = new UpdateMeetCommandBuilder().Build();
@@ -43,6 +43,8 @@ public sealed class UpdateMeetTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        string body = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        body.ShouldContain("Meet not found.");
     }
 
     [Fact]
