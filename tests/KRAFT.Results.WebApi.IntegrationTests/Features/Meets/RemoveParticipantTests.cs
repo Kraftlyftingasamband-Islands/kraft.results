@@ -13,7 +13,7 @@ public sealed class RemoveParticipantTests(IntegrationTestFixture fixture)
 {
     private const int NonExistentMeetId = 99999;
     private const int NonExistentParticipationId = 99999;
-    private const int ExistingMeetId = 2;
+    private const int ExistingMeetId = 4;
     private const int ExistingWeightCategoryId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
