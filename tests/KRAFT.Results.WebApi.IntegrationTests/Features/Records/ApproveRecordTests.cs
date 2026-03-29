@@ -16,7 +16,7 @@ public sealed class ApproveRecordTests(IntegrationTestFixture fixture)
     public async Task ReturnsNoContent_WhenAttemptBeatsCurrentRecord()
     {
         // Arrange
-        int attemptId = Constants.PendingRecords.RecordBreakingAttemptId;
+        int attemptId = Constants.PendingRecords.ApproveAttemptId;
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsync(

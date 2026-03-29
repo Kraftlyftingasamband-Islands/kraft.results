@@ -17,6 +17,7 @@ internal static class Constants
     {
         internal const int RecordBreakingAttemptId = 4;
         internal const int NonRecordBreakingAttemptId = 5;
+        internal const int ApproveAttemptId = 6;
     }
 
     internal static class TeamCompetition

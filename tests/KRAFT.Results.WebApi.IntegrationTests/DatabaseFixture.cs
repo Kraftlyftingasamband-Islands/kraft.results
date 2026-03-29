@@ -124,6 +124,11 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
             VALUES (1, 1, 1, 190.0, 1, 'seed', 'seed');
 
+            -- Attempt 6: record-breaking bench for raw slot (no existing raw bench record, so any weight qualifies)
+            -- Reserved exclusively for ApproveRecordTests to prevent cross-test contamination
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 2, 2, 145.0, 1, 'seed', 'seed');
+
             -- Squat record (equipped, open, male)
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 1, 200.0, '2025-03-15', 0, 1, 1, 0, 'seed');
