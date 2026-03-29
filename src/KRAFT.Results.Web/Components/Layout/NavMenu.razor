@@ -1,8 +1,47 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
 @code {
     private bool _isOpen;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _handler;
+    private DotNetObjectReference<NavMenu>? _dotNetRef;
 
     private void ToggleNav() => _isOpen = !_isOpen;
     private void CloseNav() => _isOpen = false;
+
+    [JSInvokable]
+    public void CloseFromJs()
+    {
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/NavMenu.razor.js");
+            _handler = await _module.InvokeAsync<IJSObjectReference>("initialize", _dotNetRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_handler is not null)
+        {
+            await _handler.InvokeVoidAsync("dispose");
+            await _handler.DisposeAsync();
+        }
+
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+        }
+
+        _dotNetRef?.Dispose();
+    }
 }
 
 <button class="navbar-toggler @(_isOpen ? "is-open" : "")"
