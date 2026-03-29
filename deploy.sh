@@ -10,6 +10,8 @@ else
     exit 1
 fi
 
+cd /mnt/user/appdata/kraft-src
+
 if [ "$1" = "--build" ]; then
     echo "$(date): Building and starting containers..."
     $COMPOSE build api
@@ -18,8 +20,6 @@ if [ "$1" = "--build" ]; then
     echo "$(date): Deploy complete"
     exit 0
 fi
-
-cd /mnt/user/appdata/kraft-src
 git fetch origin main
 LOCAL=$(git rev-parse main)
 REMOTE=$(git rev-parse origin/main)
