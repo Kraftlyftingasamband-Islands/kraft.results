@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
-if command -v docker-compose &>/dev/null; then
+if docker-compose version &>/dev/null 2>&1; then
     COMPOSE="docker-compose"
-else
+elif docker compose version &>/dev/null 2>&1; then
     COMPOSE="docker compose"
+else
+    echo "Error: docker compose not found" >&2
+    exit 1
 fi
 
 if [ "$1" = "--build" ]; then
