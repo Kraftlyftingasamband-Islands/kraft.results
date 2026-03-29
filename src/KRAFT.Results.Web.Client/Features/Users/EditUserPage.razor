@@ -86,8 +86,8 @@ else if (_model is not null)
                         <option value="Editor">Editor</option>
                         <option value="User">User</option>
                     </select>
-                    <div id="role-status" class="role-success" role="status" aria-live="polite">@_roleSuccessMessage</div>
-                    <div id="role-error" class="error-message" role="alert" aria-live="assertive">@_roleErrorMessage</div>
+                    <div id="role-status" class="@(_roleSuccessMessage is not null ? "role-success" : null)" role="status" aria-live="polite">@_roleSuccessMessage</div>
+                    <div id="role-error" class="@(_roleErrorMessage is not null ? "error-message" : null)" role="alert" aria-live="assertive">@_roleErrorMessage</div>
                 }
             </div>
 
