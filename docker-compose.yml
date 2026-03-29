@@ -1,5 +1,6 @@
 services:
   sql:
+    container_name: kraft-sql
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
@@ -11,6 +12,7 @@ services:
     restart: unless-stopped
 
   api:
+    container_name: kraft-api
     build:
       context: .
       dockerfile: src/KRAFT.Results.WebApi/Dockerfile
@@ -32,6 +34,7 @@ services:
     restart: unless-stopped
 
   web:
+    container_name: kraft-web
     build:
       context: .
       dockerfile: src/KRAFT.Results.Web/Dockerfile
@@ -51,6 +54,7 @@ services:
 volumes:
   kraft-data:
     name: kraft-data
+    external: true
 
 networks:
   kraft-net:
