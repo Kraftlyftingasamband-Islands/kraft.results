@@ -10,7 +10,7 @@ else
     exit 1
 fi
 
-cd /mnt/user/appdata/kraft-src
+cd "$(dirname "$0")"
 
 if [ "$1" = "--build" ]; then
     echo "$(date): Building and starting containers..."
