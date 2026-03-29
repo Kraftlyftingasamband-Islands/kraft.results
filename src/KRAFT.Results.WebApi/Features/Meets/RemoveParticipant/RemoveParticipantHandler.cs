@@ -19,7 +19,8 @@ internal sealed class RemoveParticipantHandler
     public async Task<Result> Handle(int meetId, int participationId, CancellationToken cancellationToken)
     {
         Participation? participation = await _dbContext.Set<Participation>()
-            .Where(p => p.ParticipationId == participationId && p.MeetId == meetId)
+            .Where(p => p.ParticipationId == participationId)
+            .Where(p => p.MeetId == meetId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (participation is null)
