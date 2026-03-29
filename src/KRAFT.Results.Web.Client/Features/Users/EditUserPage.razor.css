@@ -190,26 +190,13 @@
     font-style: italic;
 }
 
-.role-success {
-    font-size: 0.8125rem;
-    color: var(--color-success);
-    margin-block-start: 0.375rem;
-    animation: role-fade-in var(--transition-fast) ease;
-}
-
-@keyframes role-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .spinner,
     ::deep .form-input,
     .btn-primary,
     .btn-cancel,
     .btn-danger,
-    .btn-cancel-danger,
-    .role-success {
+    .btn-cancel-danger {
         animation: none;
         transition: none;
     }

@@ -68,7 +68,7 @@ else if (_model is not null)
                 @if (_isSelfEdit)
                 {
                     <select id="role" class="form-input" disabled aria-describedby="role-note">
-                        <option>@_selectedRole</option>
+                        <option>@_model.Role</option>
                     </select>
                     <p id="role-note" class="role-note">
                         Þú getur ekki breytt hlutverki þíns eigin aðgangs
@@ -76,18 +76,11 @@ else if (_model is not null)
                 }
                 else
                 {
-                    <select id="role" class="form-input"
-                            value="@_selectedRole"
-                            @onchange="HandleRoleChange"
-                            disabled="@(_isLoading || _isRoleSaving)"
-                            aria-busy="@_isRoleSaving"
-                            aria-describedby="role-status role-error">
+                    <InputSelect id="role" class="form-input" @bind-Value="_model.Role" disabled="@_isLoading">
                         <option value="Admin">Admin</option>
                         <option value="Editor">Editor</option>
                         <option value="User">User</option>
-                    </select>
-                    <div id="role-status" class="@(_roleSuccessMessage is not null ? "role-success" : null)" role="status" aria-live="polite">@_roleSuccessMessage</div>
-                    <div id="role-error" class="@(_roleErrorMessage is not null ? "error-message" : null)" role="alert" aria-live="assertive">@_roleErrorMessage</div>
+                    </InputSelect>
                 }
             </div>
 
@@ -149,12 +142,8 @@ else if (_errorMessage is not null)
     private string? _deleteErrorMessage;
     private bool _showDeleteConfirmation;
     private ElementReference _cancelDeleteButton;
-    private string _selectedRole = string.Empty;
-    private bool _isRoleSaving;
-    private string? _roleSuccessMessage;
-    private string? _roleErrorMessage;
+    private string _originalRole = string.Empty;
     private bool _isSelfEdit;
-    private CancellationTokenSource? _roleSuccessCts;
 
     private bool HasError => !string.IsNullOrEmpty(_errorMessage);
 
@@ -181,8 +170,9 @@ else if (_errorMessage is not null)
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email ?? string.Empty,
+                Role = user.Role,
             };
-            _selectedRole = user.Role;
+            _originalRole = user.Role;
         }
         catch (HttpRequestException)
         {
@@ -191,62 +181,6 @@ else if (_errorMessage is not null)
         finally
         {
             _isInitializing = false;
-        }
-    }
-
-    private async Task HandleRoleChange(ChangeEventArgs e)
-    {
-        string? newRole = e.Value?.ToString();
-
-        if (string.IsNullOrEmpty(newRole) || newRole == _selectedRole)
-        {
-            return;
-        }
-
-        string previousRole = _selectedRole;
-        _selectedRole = newRole;
-        _isRoleSaving = true;
-        _roleSuccessMessage = null;
-        _roleErrorMessage = null;
-
-        if (_roleSuccessCts is not null)
-        {
-            await _roleSuccessCts.CancelAsync();
-            _roleSuccessCts.Dispose();
-            _roleSuccessCts = null;
-        }
-
-        try
-        {
-            ChangeUserRoleCommand command = new(newRole);
-            HttpResponseMessage response = await HttpClient.PatchAsJsonAsync($"/users/{UserId}/role", command);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _selectedRole = previousRole;
-                _roleErrorMessage = "Villa kom upp við að breyta hlutverki.";
-                return;
-            }
-
-            _roleSuccessMessage = "Hlutverk breytt";
-
-            _roleSuccessCts = new CancellationTokenSource();
-            CancellationToken token = _roleSuccessCts.Token;
-
-            _ = Task.Delay(2000, token).ContinueWith(_ =>
-            {
-                _roleSuccessMessage = null;
-                InvokeAsync(StateHasChanged);
-            }, token, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
-        }
-        catch (HttpRequestException)
-        {
-            _selectedRole = previousRole;
-            _roleErrorMessage = "Villa kom upp við að breyta hlutverki.";
-        }
-        finally
-        {
-            _isRoleSaving = false;
         }
     }
 
@@ -280,6 +214,30 @@ else if (_errorMessage is not null)
             {
                 _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
                 return;
+            }
+
+            if (_model!.Role != _originalRole)
+            {
+                ChangeUserRoleCommand roleCommand = new(_model.Role);
+                HttpResponseMessage roleResponse = await HttpClient.PatchAsJsonAsync($"/users/{UserId}/role", roleCommand);
+
+                if (roleResponse.StatusCode == HttpStatusCode.Conflict)
+                {
+                    _errorMessage = "Þú getur ekki breytt hlutverki þíns eigin aðgangs.";
+                    return;
+                }
+
+                if (roleResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _errorMessage = "Notandi fannst ekki.";
+                    return;
+                }
+
+                if (!roleResponse.IsSuccessStatusCode)
+                {
+                    _errorMessage = "Villa kom upp við að breyta hlutverki.";
+                    return;
+                }
             }
 
             NavigationManager.NavigateTo("/users");
@@ -362,5 +320,8 @@ else if (_errorMessage is not null)
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Role { get; set; } = string.Empty;
     }
 }
