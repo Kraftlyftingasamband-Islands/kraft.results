@@ -2,17 +2,42 @@
     appearance: none;
     cursor: pointer;
     width: 3.5rem;
-    height: 2.5rem;
-    color: white;
+    height: 3.5rem;
     position: absolute;
-    top: 0.5rem;
-    right: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.1);
+    top: 0;
+    right: 0;
+    border: none;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0;
 }
 
-.navbar-toggler:checked {
-    background-color: rgba(255, 255, 255, 0.5);
+.bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.2s  ease;
+    transform-origin: center;
+}
+
+.navbar-toggler.is-open .bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-toggler.is-open .bar:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.navbar-toggler.is-open .bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 
@@ -85,7 +110,7 @@
     }
 
     & ::deep .nav-link {
-        color: rgba(255, 255, 255, 0.6);
+        color: rgba(255, 255, 255, 0.85);
         background: none;
         border: none;
         border-radius: 0;
@@ -114,21 +139,23 @@
 }
 
 .nav-scrollable {
-    display: none;
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
-.navbar-toggler:checked ~ .nav-scrollable {
-    display: block;
+.nav-scrollable.is-open {
+    max-height: 100svh;
 }
 
 .sidebar-footer {
     padding-inline: 1.25rem;
     padding-block: 1rem;
-    position: absolute;
-    inset-block-end: 0;
-    inset-inline: 0;
     border-block-start: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.65);
     font-size: 0.75rem;
     letter-spacing: 0.03em;
 }
@@ -141,7 +168,15 @@
     .nav-scrollable {
         position: relative;
         display: block;
+        max-height: none;
         height: 100vh;
         overflow-y: auto;
+        box-shadow: none;
+    }
+
+    .sidebar-footer {
+        position: absolute;
+        inset-block-end: 0;
+        inset-inline: 0;
     }
 }
