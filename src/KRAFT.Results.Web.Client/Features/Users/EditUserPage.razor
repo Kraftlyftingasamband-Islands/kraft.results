@@ -6,10 +6,12 @@
 
 @using System.ComponentModel.DataAnnotations
 @using System.Net
+@using System.Security.Claims
 @using KRAFT.Results.Contracts.Users
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Breyta notanda</PageTitle>
 <h3>Breyta notanda</h3>
@@ -59,6 +61,39 @@ else if (_model is not null)
                            @bind-Value="_model.Email"
                            disabled="@_isLoading" />
                 <ValidationMessage For="@(() => _model.Email)" />
+            </div>
+
+            <div class="form-field role-field">
+                <label class="form-label" for="role">Hlutverk</label>
+                @if (_isSelfEdit)
+                {
+                    <select id="role" class="form-input" disabled aria-describedby="role-note">
+                        <option>@_selectedRole</option>
+                    </select>
+                    <p id="role-note" class="role-note">
+                        Þú getur ekki breytt hlutverki þíns eigin aðgangs
+                    </p>
+                }
+                else
+                {
+                    <select id="role" class="form-input"
+                            value="@_selectedRole"
+                            @onchange="HandleRoleChange"
+                            disabled="@(_isLoading || _isRoleSaving)"
+                            aria-busy="@_isRoleSaving">
+                        <option value="Admin">Admin</option>
+                        <option value="Editor">Editor</option>
+                        <option value="User">User</option>
+                    </select>
+                    @if (_roleSuccessMessage is not null)
+                    {
+                        <div class="role-success" role="status">@_roleSuccessMessage</div>
+                    }
+                    @if (_roleErrorMessage is not null)
+                    {
+                        <div class="error-message" role="alert">@_roleErrorMessage</div>
+                    }
+                }
             </div>
 
             <div class="form-actions">
@@ -119,6 +154,12 @@ else if (_errorMessage is not null)
     private string? _deleteErrorMessage;
     private bool _showDeleteConfirmation;
     private ElementReference _cancelDeleteButton;
+    private string _selectedRole = string.Empty;
+    private bool _isRoleSaving;
+    private string? _roleSuccessMessage;
+    private string? _roleErrorMessage;
+    private bool _isSelfEdit;
+    private CancellationTokenSource? _roleSuccessCts;
 
     private bool HasError => !string.IsNullOrEmpty(_errorMessage);
 
@@ -126,6 +167,12 @@ else if (_errorMessage is not null)
     {
         try
         {
+            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            string? currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? authState.User.FindFirst("sub")?.Value;
+
+            _isSelfEdit = currentUserId is not null && int.TryParse(currentUserId, out int parsedId) && parsedId == UserId;
+
             UserEditDetails? user = await HttpClient.GetFromJsonAsync<UserEditDetails>($"/users/{UserId}/edit");
 
             if (user is null)
@@ -140,6 +187,7 @@ else if (_errorMessage is not null)
                 LastName = user.LastName,
                 Email = user.Email ?? string.Empty,
             };
+            _selectedRole = user.Role;
         }
         catch (HttpRequestException)
         {
@@ -148,6 +196,62 @@ else if (_errorMessage is not null)
         finally
         {
             _isInitializing = false;
+        }
+    }
+
+    private async Task HandleRoleChange(ChangeEventArgs e)
+    {
+        string? newRole = e.Value?.ToString();
+
+        if (string.IsNullOrEmpty(newRole) || newRole == _selectedRole)
+        {
+            return;
+        }
+
+        string previousRole = _selectedRole;
+        _selectedRole = newRole;
+        _isRoleSaving = true;
+        _roleSuccessMessage = null;
+        _roleErrorMessage = null;
+
+        if (_roleSuccessCts is not null)
+        {
+            await _roleSuccessCts.CancelAsync();
+            _roleSuccessCts.Dispose();
+            _roleSuccessCts = null;
+        }
+
+        try
+        {
+            ChangeUserRoleCommand command = new(newRole);
+            HttpResponseMessage response = await HttpClient.PatchAsJsonAsync($"/users/{UserId}/role", command);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _selectedRole = previousRole;
+                _roleErrorMessage = "Villa kom upp við að breyta hlutverki.";
+                return;
+            }
+
+            _roleSuccessMessage = "Hlutverk breytt";
+
+            _roleSuccessCts = new CancellationTokenSource();
+            CancellationToken token = _roleSuccessCts.Token;
+
+            _ = Task.Delay(2000, token).ContinueWith(_ =>
+            {
+                _roleSuccessMessage = null;
+                InvokeAsync(StateHasChanged);
+            }, token, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
+        }
+        catch (HttpRequestException)
+        {
+            _selectedRole = previousRole;
+            _roleErrorMessage = "Villa kom upp við að breyta hlutverki.";
+        }
+        finally
+        {
+            _isRoleSaving = false;
         }
     }
 

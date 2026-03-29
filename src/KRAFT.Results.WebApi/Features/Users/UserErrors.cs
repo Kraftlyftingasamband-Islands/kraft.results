@@ -10,6 +10,8 @@ internal static class UserErrors
     internal const string UserNameClaimMissingCode = "Users.UserNameClaimMissing";
     internal const string UserNotFoundCode = "Users.NotFound";
     internal const string CannotDeleteSelfCode = "Users.CannotDeleteSelf";
+    internal const string CannotChangeOwnRoleCode = "Users.CannotChangeOwnRole";
+    internal const string RoleNotFoundCode = "Users.RoleNotFound";
 
     internal static readonly Error InvalidUsernameOrPassword = new(
         Code: InvalidUsernameOrPasswordCode,
@@ -50,4 +52,12 @@ internal static class UserErrors
     internal static readonly Error CannotDeleteSelf = new(
         Code: CannotDeleteSelfCode,
         Description: "An admin cannot delete their own account.");
+
+    internal static readonly Error CannotChangeOwnRole = new(
+        Code: CannotChangeOwnRoleCode,
+        Description: "An admin cannot change their own role.");
+
+    internal static readonly Error RoleNotFound = new(
+        Code: RoleNotFoundCode,
+        Description: "The specified role does not exist.");
 }

@@ -12,6 +12,7 @@ internal sealed class GetUserEditDetailsHandler(ResultsDbContext dbContext)
             .Select(x => new UserEditDetails(
                 x.Firstname!,
                 x.Lastname!,
-                x.Email))
+                x.Email,
+                x.UserRoles.Select(ur => ur.Role.RoleName).FirstOrDefault() ?? string.Empty))
             .FirstOrDefaultAsync(cancellationToken);
 }

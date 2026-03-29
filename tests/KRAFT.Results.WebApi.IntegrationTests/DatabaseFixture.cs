@@ -346,6 +346,14 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- BenchSingle (RecordCategoryId=5) for 83kg equipped open male
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
+
+            -- Roles
+            INSERT INTO Roles (RoleId, RoleName)
+            VALUES (1, 'Admin'), (2, 'Editor'), (3, 'User');
+
+            -- Link seeded test user (UserId=1) to Admin role
+            INSERT INTO UserRoles (UserId, RoleId)
+            VALUES (1, 1);
         """);
     }
 }
