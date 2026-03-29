@@ -124,11 +124,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
             VALUES (1, 1, 1, 190.0, 1, 'seed', 'seed');
 
-            -- Attempt 6: record-breaking bench for raw slot (no existing raw bench record, so any weight qualifies)
-            -- Reserved exclusively for ApproveRecordTests to prevent cross-test contamination
-            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES (1, 2, 2, 145.0, 1, 'seed', 'seed');
-
             -- Squat record (equipped, open, male)
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 1, 200.0, '2025-03-15', 0, 1, 1, 0, 'seed');
@@ -207,6 +202,19 @@ public sealed class DatabaseFixture : IAsyncLifetime
             -- Female athlete for gender-split testing (non-IS country to avoid ranking interference)
             INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
             VALUES ('Anna', 'Test', '1990-01-01', 'f', 2, 'anna-test');
+
+            -- Female participation in test meet — used exclusively by ApproveRecordTests for isolation.
+            -- When this attempt is approved, it creates a classic female squat record that does NOT
+            -- appear in any male-filtered records query, preventing cross-test contamination.
+            DECLARE @FemaleTestMeetParticipationId INT;
+            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES (2, 1, 61.5, 3, 1, 1, 0, 110.0, 70.0, 130.0, 310.0, 250.0, 55.0, 99);
+            SET @FemaleTestMeetParticipationId = SCOPE_IDENTITY();
+
+            -- Attempt 6: female squat for open/63kg raw slot (no existing raw record for this slot)
+            -- Reserved exclusively for ApproveRecordTests to prevent cross-test contamination
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (@FemaleTestMeetParticipationId, 1, 3, 110.0, 1, 'seed', 'seed');
 
             -- Male athlete 2 (non-IS country to avoid ranking interference)
             INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
