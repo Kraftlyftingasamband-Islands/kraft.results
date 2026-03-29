@@ -9,6 +9,7 @@ using KRAFT.Results.WebApi.Features.Meets.GetParticipations;
 using KRAFT.Results.WebApi.Features.Meets.GetPendingRecords;
 using KRAFT.Results.WebApi.Features.Meets.GetTeamPoints;
 using KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
+using KRAFT.Results.WebApi.Features.Meets.RemoveParticipant;
 using KRAFT.Results.WebApi.Features.Meets.Update;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
@@ -28,6 +29,7 @@ internal static class MeetServices
         services.AddScoped<ApprovePendingRecordHandler>();
         services.AddScoped<UpdateMeetHandler>();
         services.AddScoped<RecordAttemptHandler>();
+        services.AddScoped<RemoveParticipantHandler>();
         services.AddScoped<DeleteMeetHandler>();
 
         return services;
