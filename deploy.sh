@@ -14,7 +14,8 @@ if [ "$LOCAL" != "$REMOTE" ]; then
     echo "$(date): Changes detected, deploying..."
     git reset --hard origin/main
     git clean -fd
-    $COMPOSE build api web
+    $COMPOSE build api
+    $COMPOSE build web
     $COMPOSE up -d api web
     echo "$(date): Deploy complete"
 fi
