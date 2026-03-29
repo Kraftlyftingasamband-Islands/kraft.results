@@ -11,6 +11,7 @@ main {
 
 .sidebar {
     background-color: var(--color-primary);
+    min-height: 3.5rem;
 }
 
 @media (min-width: 641px) {
