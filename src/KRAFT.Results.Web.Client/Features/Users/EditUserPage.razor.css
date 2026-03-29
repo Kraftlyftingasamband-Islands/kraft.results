@@ -70,6 +70,11 @@
     transition: border-color var(--transition-fast) ease;
 }
 
+::deep .form-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 ::deep .form-input:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
