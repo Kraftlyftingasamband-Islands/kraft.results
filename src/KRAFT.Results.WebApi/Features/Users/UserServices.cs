@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Users.Create;
+﻿using KRAFT.Results.WebApi.Features.Users.ChangeRole;
+using KRAFT.Results.WebApi.Features.Users.Create;
 using KRAFT.Results.WebApi.Features.Users.Delete;
 using KRAFT.Results.WebApi.Features.Users.Get;
 using KRAFT.Results.WebApi.Features.Users.GetEditDetails;
@@ -19,6 +20,7 @@ internal static class UserServices
         services.AddScoped<GetUsersHandler>();
         services.AddScoped<GetUserEditDetailsHandler>();
         services.AddScoped<UpdateUserHandler>();
+        services.AddScoped<ChangeUserRoleHandler>();
 
         services.AddOptions<JwtOptions>()
             .Configure<IConfiguration>((options, configuration)

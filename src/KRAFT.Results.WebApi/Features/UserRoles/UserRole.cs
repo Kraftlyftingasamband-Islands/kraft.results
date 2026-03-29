@@ -22,4 +22,13 @@ internal sealed class UserRole
     public Role Role { get; private set; } = null!;
 
     public User User { get; private set; } = null!;
+
+    internal static UserRole Create(int userId, int roleId)
+    {
+        return new UserRole
+        {
+            UserId = userId,
+            RoleId = roleId,
+        };
+    }
 }

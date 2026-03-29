@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Users.Create;
+﻿using KRAFT.Results.WebApi.Features.Users.ChangeRole;
+using KRAFT.Results.WebApi.Features.Users.Create;
 using KRAFT.Results.WebApi.Features.Users.Delete;
 using KRAFT.Results.WebApi.Features.Users.Get;
 using KRAFT.Results.WebApi.Features.Users.GetEditDetails;
@@ -20,6 +21,7 @@ internal static class UserEndpoints
         group.MapGetUsersEndpoint();
         group.MapGetUserEditDetailsEndpoint();
         group.MapUpdateUserEndpoint();
+        group.MapChangeUserRoleEndpoint();
 
         return endpoints;
     }
