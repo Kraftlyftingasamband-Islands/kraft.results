@@ -1,5 +1,11 @@
 #!/bin/bash
 set -e
+
+if command -v docker-compose &>/dev/null; then
+    COMPOSE="docker-compose"
+else
+    COMPOSE="docker compose"
+fi
 cd /mnt/user/appdata/kraft-src
 git fetch origin main
 LOCAL=$(git rev-parse main)
@@ -8,7 +14,7 @@ if [ "$LOCAL" != "$REMOTE" ]; then
     echo "$(date): Changes detected, deploying..."
     git reset --hard origin/main
     git clean -fd
-    docker-compose build api web
-    docker-compose up -d api web
+    $COMPOSE build api web
+    $COMPOSE up -d api web
     echo "$(date): Deploy complete"
 fi
