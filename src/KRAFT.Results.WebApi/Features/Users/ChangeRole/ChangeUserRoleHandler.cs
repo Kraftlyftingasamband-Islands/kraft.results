@@ -9,6 +9,8 @@ namespace KRAFT.Results.WebApi.Features.Users.ChangeRole;
 
 internal sealed class ChangeUserRoleHandler
 {
+    private static readonly HashSet<string> AllowedRoles = ["Admin", "Editor", "User"];
+
     private readonly ILogger<ChangeUserRoleHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly IHttpContextService _httpContextService;
@@ -22,6 +24,17 @@ internal sealed class ChangeUserRoleHandler
 
     public async Task<Result> Handle(int userId, string roleName, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(roleName))
+        {
+            return Result.Failure(UserErrors.RoleNotFound);
+        }
+
+        if (!AllowedRoles.Contains(roleName))
+        {
+            _logger.LogWarning("Attempted to assign disallowed role '{RoleName}'", roleName);
+            return Result.Failure(UserErrors.RoleNotFound);
+        }
+
         Result<User> callerResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
         if (callerResult.IsFailure)
