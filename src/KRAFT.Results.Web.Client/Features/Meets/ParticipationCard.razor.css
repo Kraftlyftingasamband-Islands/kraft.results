@@ -172,9 +172,9 @@
         display: none;
     }
 
-    /* Name column: fixed 220px, wraps to 2 lines */
+    /* Name column: fixed 280px, wraps to 2 lines */
     .p-name-col {
-        max-width: 220px;
+        max-width: 280px;
     }
 
     .p-name {
