@@ -32,6 +32,11 @@
     transition: color var(--transition-fast) ease;
 }
 .sc-team-abbr:hover { color: var(--color-primary-dark); }
+.sc-team-abbr:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
 
 .sc-team-name {
     font-size: 13px; color: var(--color-text-muted);
@@ -58,6 +63,12 @@
     .sc-team-name { font-size: 12px; }
     .sc-points { font-size: 15px; }
     .sc-points-label { display: none; }
+}
+
+.standings-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

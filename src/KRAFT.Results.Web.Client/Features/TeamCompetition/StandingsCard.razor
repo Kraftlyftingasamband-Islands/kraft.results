@@ -1,9 +1,18 @@
 @using KRAFT.Results.Contracts.TeamCompetition
 
 <div class="sc-card @(_isFirst ? "sc-card-first" : null)">
-    <div class="sc-rank @_rankClass">
-        @_rankDisplay
-    </div>
+    @if (_isMedal)
+    {
+        <div class="sc-rank @_rankClass" role="img" aria-label="@_rankAriaLabel">
+            @_rankDisplay
+        </div>
+    }
+    else
+    {
+        <div class="sc-rank @_rankClass">
+            @_rankDisplay
+        </div>
+    }
     <div class="sc-name-col">
         @if (!string.IsNullOrEmpty(Standing.TeamSlug))
         {
@@ -26,12 +35,15 @@
     public TeamCompetitionStanding Standing { get; init; } = null!;
 
     private bool _isFirst;
+    private bool _isMedal;
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;
+    private string _rankAriaLabel = string.Empty;
 
     protected override void OnParametersSet()
     {
         _isFirst = Standing.Rank == 1;
+        _isMedal = Standing.Rank is 1 or 2 or 3;
         _rankDisplay = Standing.Rank switch
         {
             1 => "\U0001f947",
@@ -40,6 +52,7 @@
             _ when Standing.Rank > 0 => Standing.Rank.ToString(),
             _ => "\u2013",
         };
-        _rankClass = Standing.Rank is 1 or 2 or 3 ? "rank-medal" : string.Empty;
+        _rankClass = _isMedal ? "rank-medal" : string.Empty;
+        _rankAriaLabel = _isMedal ? $"{Standing.Rank}. s\u00e6ti" : string.Empty;
     }
 }
