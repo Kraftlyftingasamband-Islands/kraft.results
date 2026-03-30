@@ -150,44 +150,44 @@
 {
     <h2>Liðakeppni</h2>
 
-    @if (IsPreGenderSplit)
-    {
-        <div class="standings-grid standings-grid-single">
-            <div class="gender-section">
-                <StandingsTable Standings="_teamPointsResponse!.Combined"
-                                AriaLabel="Stigatafla liða í móti" />
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="standings-grid">
-            <div class="gender-section">
-                <h3 class="section-header">@("f".ToGenderGroupLabel())</h3>
-                @if (_teamPointsResponse!.Women.Count > 0)
-                {
-                    <StandingsTable Standings="_teamPointsResponse!.Women"
-                                    AriaLabel="Stigatafla kvenna í móti" />
-                }
-                else
-                {
-                    <div class="empty-section">Engar niðurstöður.</div>
-                }
-            </div>
-            <div class="gender-section">
-                <h3 class="section-header">@("m".ToGenderGroupLabel())</h3>
-                @if (_teamPointsResponse!.Men.Count > 0)
-                {
-                    <StandingsTable Standings="_teamPointsResponse!.Men"
-                                    AriaLabel="Stigatafla karla í móti" />
-                }
-                else
-                {
-                    <div class="empty-section">Engar niðurstöður.</div>
-                }
-            </div>
-        </div>
-    }
+    <div class="standings-container">
+        @if (IsPreGenderSplit)
+        {
+            @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Combined)
+            {
+                <StandingsCard Standing="standing" />
+            }
+        }
+        else
+        {
+            @if (_teamPointsResponse!.Women.Count > 0)
+            {
+                <section class="standings-gender">
+                    <h4>@("f".ToGenderGroupLabel())</h4>
+                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
+                    {
+                        <StandingsCard Standing="standing" />
+                    }
+                </section>
+            }
+
+            @if (_teamPointsResponse!.Men.Count > 0)
+            {
+                <section class="standings-gender">
+                    <h4>@("m".ToGenderGroupLabel())</h4>
+                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
+                    {
+                        <StandingsCard Standing="standing" />
+                    }
+                </section>
+            }
+
+            @if (_teamPointsResponse!.Women.Count == 0 && _teamPointsResponse!.Men.Count == 0)
+            {
+                <div class="empty-section">Engar niðurstöður.</div>
+            }
+        }
+    </div>
 }
 
 <ConfirmDialog @ref="_deleteDialog"
