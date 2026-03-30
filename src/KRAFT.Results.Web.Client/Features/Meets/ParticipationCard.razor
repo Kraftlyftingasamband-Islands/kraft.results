@@ -37,15 +37,11 @@
 
     <div class="p-footer-row">
         <div class="p-total">
-            @if (Participation.Disqualified)
-            {
-                <span class="p-dq-text">Diskvalifikað</span>
-            }
-            else if (Participation.Total > 0)
+            @if (!Participation.Disqualified && Participation.Total > 0)
             {
                 @($"{Participation.Total:F1}")
             }
-            else
+            else if (!Participation.Disqualified)
             {
                 <span>–</span>
             }
@@ -101,15 +97,18 @@
         }
         else
         {
-            _rankDisplay = (Participation.Rank > 0 && Participation.Rank < int.MaxValue - 1)
-                ? Participation.Rank.ToString()
-                : "–";
+            _rankDisplay = Participation.Rank switch
+            {
+                1 => "🥇",
+                2 => "🥈",
+                3 => "🥉",
+                _ when Participation.Rank > 0 && Participation.Rank < int.MaxValue - 1 => Participation.Rank.ToString(),
+                _ => "–",
+            };
 
             _rankClass = Participation.Rank switch
             {
-                1 => "rank-gold",
-                2 => "rank-silver",
-                3 => "rank-bronze",
+                1 or 2 or 3 => "rank-medal",
                 _ => string.Empty,
             };
 
