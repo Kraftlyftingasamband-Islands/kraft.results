@@ -161,7 +161,7 @@
         grid-template-columns: var(--grid-template);
         align-items: center;
         gap: 8px;
-        padding: 10px 12px;
+        padding: 6px 12px 10px;
         flex-direction: unset;
     }
 
