@@ -13,6 +13,7 @@
 .worktrees/
 CLAUDE.md
 docs/superpowers/
+.superpowers/
 
 # User-specific files
 *.rsuser
