@@ -203,6 +203,18 @@
     margin-block-end: 2rem;
 }
 
+.standings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem 1.5rem;
+}
+
+@container (min-width: 600px) {
+    .standings-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 .standings-gender {
     margin-block-end: 1.5rem;
 }

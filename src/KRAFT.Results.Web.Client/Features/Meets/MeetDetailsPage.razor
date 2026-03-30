@@ -162,31 +162,33 @@
         }
         else
         {
-            @if (_teamPointsResponse!.Women.Count > 0)
-            {
-                <section class="standings-gender">
-                    <h4>@("f".ToGenderGroupLabel())</h4>
-                    <ol class="standings-list">
-                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
-                        {
-                            <li><StandingsCard Standing="standing" /></li>
-                        }
-                    </ol>
-                </section>
-            }
+            <div class="standings-grid">
+                @if (_teamPointsResponse!.Women.Count > 0)
+                {
+                    <section class="standings-gender">
+                        <h4>@("f".ToGenderGroupLabel())</h4>
+                        <ol class="standings-list">
+                            @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
+                            {
+                                <li><StandingsCard Standing="standing" /></li>
+                            }
+                        </ol>
+                    </section>
+                }
 
-            @if (_teamPointsResponse!.Men.Count > 0)
-            {
-                <section class="standings-gender">
-                    <h4>@("m".ToGenderGroupLabel())</h4>
-                    <ol class="standings-list">
-                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
-                        {
-                            <li><StandingsCard Standing="standing" /></li>
-                        }
-                    </ol>
-                </section>
-            }
+                @if (_teamPointsResponse!.Men.Count > 0)
+                {
+                    <section class="standings-gender">
+                        <h4>@("m".ToGenderGroupLabel())</h4>
+                        <ol class="standings-list">
+                            @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
+                            {
+                                <li><StandingsCard Standing="standing" /></li>
+                            }
+                        </ol>
+                    </section>
+                }
+            </div>
 
             @if (_teamPointsResponse!.Women.Count == 0 && _teamPointsResponse!.Men.Count == 0)
             {
