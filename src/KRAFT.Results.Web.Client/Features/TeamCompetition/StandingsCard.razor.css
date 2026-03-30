@@ -24,7 +24,7 @@
 
 .rank-medal { background: transparent; font-size: 22px; width: auto; min-width: 26px; }
 
-.sc-name-col { display: flex; flex-direction: column; min-width: 0; }
+.sc-name-col { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 
 .sc-team-abbr {
     font-weight: 700; font-size: 16px; color: var(--color-primary);
@@ -46,10 +46,10 @@
 
 .sc-individual-points {
     display: flex;
-    flex: 1;
     flex-wrap: wrap;
     gap: 3px;
     align-items: center;
+    justify-content: flex-end;
 }
 
 .sc-point-chip {
@@ -65,7 +65,7 @@
 
 .sc-points {
     font-weight: 800; font-size: 17px; color: var(--color-primary);
-    flex-shrink: 0; text-align: right; margin-inline-start: auto;
+    flex-shrink: 0; text-align: right;
     font-variant-numeric: tabular-nums;
     display: flex; flex-direction: column; align-items: flex-end;
 }
