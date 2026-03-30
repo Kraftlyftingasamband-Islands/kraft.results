@@ -126,6 +126,7 @@
 .results-container {
     max-width: 960px;
     margin-inline: auto;
+    container-type: inline-size;
 }
 
 /* Column headers row — desktop only */
@@ -133,7 +134,7 @@
     display: none;
 }
 
-@media (min-width: 768px) {
+@container (min-width: 900px) {
     .card-col-headers {
         display: grid;
         grid-template-columns: var(--grid-template);
