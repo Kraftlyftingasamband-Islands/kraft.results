@@ -12,6 +12,7 @@
 
 <RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
                 CurrentEraSlug="@_currentEraSlug"
+                Disabled="@(!RendererInfo.IsInteractive)"
                 OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
                 OnEraChanged="HandleEraChanged" />
 
