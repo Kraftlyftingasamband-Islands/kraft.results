@@ -136,7 +136,7 @@
 }
 
 /* ===== Desktop: grid row ===== */
-@media (min-width: 768px) {
+@container (min-width: 900px) {
     .p-card {
         display: grid;
         grid-template-columns: var(--grid-template);
@@ -174,7 +174,7 @@
 
     /* Name column: fixed 220px, wraps to 2 lines */
     .p-name-col {
-        max-width: 220px;
+        max-width: 180px;
     }
 
     .p-name {
