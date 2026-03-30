@@ -89,7 +89,7 @@
 
     protected override void OnParametersSet()
     {
-        _recordContext = $"{Participation.Gender} · {Participation.AgeCategory} · {Participation.WeightCategory} kg";
+        _recordContext = $"Met: {Participation.Gender} · {Participation.AgeCategory} · {Participation.WeightCategory} kg";
 
         List<string> metaParts = [Participation.YearOfBirth.ToString()];
         metaParts.Add($"{Participation.BodyWeight:F2} kg");
