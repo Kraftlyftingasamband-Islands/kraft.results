@@ -44,12 +44,12 @@
     width: auto;
     min-width: 26px;
 }
-.rank-dq     { background: #9ca3af; font-size: 9px; }
 
 .p-name-col {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    flex: 1;
 }
 
 .p-name {
@@ -64,6 +64,24 @@
     font-size: 12px;
     color: var(--color-text-muted);
     margin-block-start: 2px;
+}
+
+.p-club {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: color var(--transition-fast) ease;
+}
+
+.p-club:hover {
+    color: var(--color-primary-dark);
+}
+
+.p-club-empty {
+    display: none;
 }
 
 /* Attempts: vertical stack on mobile */
@@ -87,8 +105,9 @@
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    min-width: 60px;
+    width: 95px;
     flex-shrink: 0;
+    text-align: left;
 }
 
 .p-pills {
@@ -177,5 +196,16 @@
 
     .p-ipf {
         text-align: right;
+    }
+
+    /* Club column on desktop */
+    .p-club {
+        font-size: 12px;
+        text-align: left;
+    }
+
+    /* Always show club cell on desktop (fills grid column even when empty) */
+    .p-club-empty {
+        display: block;
     }
 }
