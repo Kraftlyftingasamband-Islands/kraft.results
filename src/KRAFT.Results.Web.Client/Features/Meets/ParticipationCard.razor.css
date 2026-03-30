@@ -21,7 +21,7 @@
 .p-header-row {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
 }
 
 .p-rank {
