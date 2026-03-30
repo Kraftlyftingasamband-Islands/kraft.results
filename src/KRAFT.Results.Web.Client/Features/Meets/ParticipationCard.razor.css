@@ -135,6 +135,25 @@
     color: var(--color-text-muted);
 }
 
+/* ===== Medium: disciplines side-by-side ===== */
+@container (min-width: 580px) {
+    .p-attempts {
+        flex-direction: row;
+        gap: 16px;
+    }
+
+    .p-disc-col {
+        flex: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .p-disc-label {
+        width: auto;
+    }
+}
+
 /* ===== Desktop: grid row ===== */
 @container (min-width: 960px) {
     .p-card {
