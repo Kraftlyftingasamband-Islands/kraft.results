@@ -124,7 +124,7 @@
 /* ===== Results container ===== */
 
 .results-container {
-    max-width: 960px;
+    max-width: 1100px;
     margin-inline: auto;
     container-type: inline-size;
 }
@@ -134,7 +134,7 @@
     display: none;
 }
 
-@container (min-width: 900px) {
+@container (min-width: 960px) {
     .card-col-headers {
         display: grid;
         grid-template-columns: var(--grid-template);
