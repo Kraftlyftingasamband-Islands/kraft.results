@@ -30,31 +30,33 @@ else if (_response is not null)
     @if (_response.IsGenderSplit)
     {
         <div class="standings-container">
-            @if (_response.Women.Count > 0)
-            {
-                <section class="standings-gender">
-                    <h4>@("f".ToGenderGroupLabel())</h4>
-                    <ol class="standings-list">
-                        @foreach (TeamCompetitionStanding standing in _response.Women)
-                        {
-                            <li><StandingsCard Standing="standing" /></li>
-                        }
-                    </ol>
-                </section>
-            }
+            <div class="standings-grid">
+                @if (_response.Women.Count > 0)
+                {
+                    <section class="standings-gender">
+                        <h4>@("f".ToGenderGroupLabel())</h4>
+                        <ol class="standings-list">
+                            @foreach (TeamCompetitionStanding standing in _response.Women)
+                            {
+                                <li><StandingsCard Standing="standing" /></li>
+                            }
+                        </ol>
+                    </section>
+                }
 
-            @if (_response.Men.Count > 0)
-            {
-                <section class="standings-gender">
-                    <h4>@("m".ToGenderGroupLabel())</h4>
-                    <ol class="standings-list">
-                        @foreach (TeamCompetitionStanding standing in _response.Men)
-                        {
-                            <li><StandingsCard Standing="standing" /></li>
-                        }
-                    </ol>
-                </section>
-            }
+                @if (_response.Men.Count > 0)
+                {
+                    <section class="standings-gender">
+                        <h4>@("m".ToGenderGroupLabel())</h4>
+                        <ol class="standings-list">
+                            @foreach (TeamCompetitionStanding standing in _response.Men)
+                            {
+                                <li><StandingsCard Standing="standing" /></li>
+                            }
+                        </ol>
+                    </section>
+                }
+            </div>
 
             @if (_response.Women.Count == 0 && _response.Men.Count == 0)
             {
