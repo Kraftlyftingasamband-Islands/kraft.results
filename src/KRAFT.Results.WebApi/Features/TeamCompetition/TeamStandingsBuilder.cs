@@ -50,8 +50,7 @@ internal static class TeamStandingsBuilder
                     first.TeamSlug,
                     first.LogoImageFilename,
                     totalPoints,
-                    tiebreakerCounts,
-                    allBestPoints.OrderByDescending(p => p).ToList());
+                    tiebreakerCounts);
             })
             .OrderByDescending(t => t.TotalPoints)
             .ThenByDescending(t => t.TiebreakerCounts.GetValueOrDefault(12))
@@ -84,8 +83,7 @@ internal static class TeamStandingsBuilder
                 team.TeamTitleShort,
                 team.TeamSlug,
                 team.LogoImageFilename,
-                team.TotalPoints,
-                team.AllBestPoints));
+                team.TotalPoints));
         }
 
         return standings;
@@ -119,6 +117,5 @@ internal static class TeamStandingsBuilder
         string TeamSlug,
         string? LogoImageFilename,
         int TotalPoints,
-        Dictionary<int, int> TiebreakerCounts,
-        IReadOnlyList<int> AllBestPoints);
+        Dictionary<int, int> TiebreakerCounts);
 }

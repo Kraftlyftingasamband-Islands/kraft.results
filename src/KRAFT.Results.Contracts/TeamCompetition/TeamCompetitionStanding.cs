@@ -6,5 +6,4 @@ public sealed record class TeamCompetitionStanding(
     string TeamTitleShort,
     string? TeamSlug,
     string? LogoImageFilename,
-    int TotalPoints,
-    IReadOnlyList<int> IndividualPoints);
+    int TotalPoints);
