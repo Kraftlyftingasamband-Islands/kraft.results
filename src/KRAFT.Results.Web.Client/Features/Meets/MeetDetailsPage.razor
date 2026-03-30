@@ -223,10 +223,10 @@
                 .Where(kv => kv.Value)
                 .OrderBy(kv => (byte)kv.Key)
                 .Select(_ => "1fr"));
-            string clubPart = ShowClubs ? "65px " : string.Empty;
+            string clubPart = ShowClubs ? "58px " : string.Empty;
             return ShowIpfPoints
-                ? $"26px 220px {clubPart}{discPart} 70px 70px"
-                : $"26px 220px {clubPart}{discPart} 70px";
+                ? $"22px 280px {clubPart}{discPart} 63px 68px"
+                : $"22px 280px {clubPart}{discPart} 63px";
         }
     }
 
