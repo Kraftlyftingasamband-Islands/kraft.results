@@ -68,19 +68,19 @@
             {
                 <div class="leaders-gender-col">
                     <h3 class="leaders-gender-heading">@gender.Key</h3>
-                    @foreach ((MeetParticipation p, int index) in gender.OrderByDescending(p => p.IpfPoints).Take(3).Select((p, i) => (p, i)))
+                    @foreach (var leader in gender.OrderByDescending(x => x.IpfPoints).Take(3).Select((x, i) => (Participation: x, Index: i)))
                     {
                         <div class="leader-row">
                             <span class="leader-medal" aria-hidden="true">
-                                @((index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
+                                @((leader.Index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
                             </span>
                             <div class="leader-info">
-                                <NavLink class="leader-name" href="@($"/athletes/{p.AthleteSlug}")">@p.Athlete</NavLink>
+                                <NavLink class="leader-name" href="@($"/athletes/{leader.Participation.AthleteSlug}")">@leader.Participation.Athlete</NavLink>
                                 <span class="leader-meta">
-                                    @p.YearOfBirth@(!string.IsNullOrWhiteSpace(p.Club) ? $" · {p.Club}" : string.Empty) · @($"{p.BodyWeight:F2}") kg
+                                    @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @($"{leader.Participation.BodyWeight:F2}") kg
                                 </span>
                             </div>
-                            <span class="leader-pts">@($"{p.IpfPoints:F2}")</span>
+                            <span class="leader-pts">@($"{leader.Participation.IpfPoints:F2}")</span>
                         </div>
                     }
                 </div>
