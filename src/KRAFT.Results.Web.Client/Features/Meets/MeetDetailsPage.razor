@@ -62,145 +62,80 @@
 @if (ShowIpfPointLeaders)
 {
     <h2>Stigahæstu keppendur</h2>
-    <div class="card-grid card-grid-2">
-        @foreach (var gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
+    <div class="leaders-section">
+        @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
         {
-            <section class="card-section">
-                <h4>@gender.Key</h4>
-                <div class="table-overflow">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th scope="col" style="text-align: center; width: 42px;">#</th>
-                                <th scope="col">Nafn</th>
-                                <th scope="col" style="text-align: center; width: 80px;">Fæðingarár</th>
-
-                                @if (ShowClubs)
-                                {
-                                    <th scope="col" style="text-align: center; width: 80px;">Félag</th>
-                                }
-
-                                <th scope="col" style="text-align: center; width: 80px;">Líkamsþyngd</th>
-                                <th scope="col" style="text-align: right; width: 80px;">IPF stig</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var p in gender.OrderByDescending(p => p.IpfPoints).Select((participation, index) => (Rank: index + 1, Participation: participation)).Take(3))
-                            {
-                                <tr>
-                                    <RankCell Rank="p.Rank" />
-                                    <AthleteCell Athlete="@p.Participation.Athlete" Slug="@p.Participation.AthleteSlug" />
-                                    <td>
-                                        <BirthYear Year="@p.Participation.YearOfBirth" RelativeYear="@(Meet?.StartDate.Year ?? 0)" />
-                                    </td>
-                                    <ClubCell Club="@p.Participation.Club" Slug="@p.Participation.ClubSlug" IsVisible="@ShowClubs" />
-                                    <td>
-                                        <BodyWeight Value="p.Participation.BodyWeight" />
-                                    </td>
-                                    <WeightCell Weight="p.Participation.IpfPoints" SignificantDigits="2" />
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+            <h3 class="leaders-gender-heading">@gender.Key.ToGenderGroupLabel()</h3>
+            @foreach ((MeetParticipation p, int index) in gender.OrderByDescending(p => p.IpfPoints).Take(3).Select((p, i) => (p, i)))
+            {
+                <div class="leader-row">
+                    <span class="leader-medal" aria-hidden="true">
+                        @((index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
+                    </span>
+                    <div class="leader-info">
+                        <NavLink class="leader-name" href="@($"/athletes/{p.AthleteSlug}")">@p.Athlete</NavLink>
+                        <span class="leader-meta">
+                            @p.YearOfBirth@(!string.IsNullOrWhiteSpace(p.Club) ? $" · {p.Club}" : string.Empty) · @($"{p.BodyWeight:F2}") kg
+                        </span>
+                    </div>
+                    <span class="leader-pts">@($"{p.IpfPoints:F2}")</span>
                 </div>
-            </section>
+            }
         }
     </div>
-    <br/>
+    <br />
 }
 
 <h2>Úrslit</h2>
 
-@foreach (var genderAgeAgeCategory in Participations
-    .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
-    .GroupBy(x => new { x.Gender, x.AgeCategory, x.AgeCategorySlug })
-    .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategorySlug.Length > 0 ? char.ToUpperInvariant(x.Key.AgeCategorySlug[0]) : ' '))
-    .ThenBy(x => x.Key.AgeCategorySlug)
-    .ThenByDescending(x => x.Key.Gender))
-{
-    <section class="card-section">
-        <h4>@genderAgeAgeCategory.Key.Gender - @genderAgeAgeCategory.Key.AgeCategory</h4>
+<div class="results-container">
+    @foreach (var genderAgeAgeCategory in Participations
+        .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
+        .GroupBy(x => new { x.Gender, x.AgeCategory, x.AgeCategorySlug })
+        .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategorySlug.Length > 0 ? char.ToUpperInvariant(x.Key.AgeCategorySlug[0]) : ' '))
+        .ThenBy(x => x.Key.AgeCategorySlug)
+        .ThenByDescending(x => x.Key.Gender))
+    {
+        <section class="card-section">
+            <h4>@genderAgeAgeCategory.Key.Gender.ToGenderGroupLabel() — @genderAgeAgeCategory.Key.AgeCategory</h4>
+            <br />
+
+            @foreach (IGrouping<string, MeetParticipation> weightCategory in genderAgeAgeCategory
+                .GroupBy(x => x.WeightCategory)
+                .OrderBy(x => x.Max(y => y.BodyWeight)))
+            {
+                <h5>@weightCategory.Key kg</h5>
+
+                <div class="card-col-headers" style="@($"--grid-template: {ResultsGridTemplate}")" aria-hidden="true">
+                    <span></span>
+                    <span>Nafn</span>
+                    @foreach (KeyValuePair<Discipline, bool> disc in IncludedDisciplines.Where(kv => kv.Value).OrderBy(kv => (byte)kv.Key))
+                    {
+                        <span class="col-header-center">@disc.Key.ToDisplayName()</span>
+                    }
+                    <span class="col-header-right">@Constants.Total</span>
+                    @if (ShowIpfPoints)
+                    {
+                        <span class="col-header-right">IPF stig</span>
+                    }
+                </div>
+
+                @foreach (MeetParticipation p in weightCategory
+                    .OrderBy(x => x.Disqualified)
+                    .ThenBy(x => x.Rank <= 0)
+                    .ThenBy(x => x.Rank)
+                    .ThenBy(x => x.Athlete))
+                {
+                    <ParticipationCard Participation="p"
+                                       ShowIpfPoints="ShowIpfPoints"
+                                       IncludedDisciplines="IncludedDisciplines"
+                                       DesktopGridTemplate="@ResultsGridTemplate" />
+                }
+            }
+        </section>
         <br />
-
-        @foreach (var weightCategory in genderAgeAgeCategory
-            .GroupBy(x => x.WeightCategory)
-            .OrderBy(x => x.Max(y => y.BodyWeight)))
-        {
-            <h5>@weightCategory.Key kg</h5>
-            <div class="table-overflow">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col" style="text-align: center; width: 42px;">#</th>
-                            <th scope="col">Nafn</th>
-                            <th scope="col" style="text-align: center; width: 80px;">Fæðingarár</th>
-
-                            @if (ShowClubs)
-                            {
-                                <th scope="col" style="text-align: center; width: 80px;">Félag</th>
-                            }
-
-                            <th scope="col" style="text-align: center; width: 80px;">Líkamsþyngd</th>
-
-                            @foreach (var disciplineGroup in weightCategory.First().Attempts
-                                .Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline))
-                                .GroupBy(a => a.Discipline)
-                                .OrderBy(g => (byte)g.Key))
-                            {
-                                int roundCount = disciplineGroup.Count();
-                                string disciplineLabel = disciplineGroup.Key.ToDisplayName();
-                                <th scope="col" colspan="@roundCount" class="first-attempt" style="text-align: center; width: @(80 * roundCount)px">@disciplineLabel</th>
-                            }
-
-                            <th scope="col" class="first-attempt" style="text-align: right; width: 80px;">@Constants.Total</th>
-
-                            @if (ShowIpfPoints)
-                            {
-                                <th scope="col" style="text-align: right; width: 80px;">IPF stig</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var p in weightCategory
-                            .OrderBy(x => x.Disqualified)
-                            .ThenBy(x => x.Rank <= 0)
-                            .ThenBy(x => x.Rank)
-                            .ThenBy(x => x.Athlete))
-                        {
-                            <tr class="@(p.Disqualified ? "bombed-out" : null)">
-                                <RankCell Rank="p.Rank"/>
-                                <AthleteCell Athlete="@p.Athlete" Slug="@p.AthleteSlug" />
-                                <td>
-                                    <BirthYear Year="@p.YearOfBirth" RelativeYear="@(Meet?.StartDate.Year ?? 0)" />
-                                </td>
-                                <ClubCell Club="@p.Club" Slug="@p.ClubSlug" IsVisible="@ShowClubs" />
-                                <td>
-                                    <BodyWeight Value="p.BodyWeight" />
-                                </td>
-
-                                @foreach (var discipline in p.Attempts.GroupBy(a => a.Discipline))
-                                {
-                                    @foreach (var attempt in discipline.Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline)).OrderBy(a => a.Round))
-                                    {
-                                        <AttemptCell Attempt="attempt" />
-                                    }
-                                }
-
-                                <WeightCell Weight="p.Total" />
-
-                                @if (ShowIpfPoints)
-                                {
-                                    <WeightCell Weight="p.IpfPoints" SignificantDigits="2" />
-                                }
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </section>
-    <br />
-}
+    }
+</div>
 
 @if (ShowTeamStandings)
 {
@@ -270,10 +205,23 @@
     private MeetTeamPointsResponse? _teamPointsResponse;
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
-    private bool ShowClubs;
     private bool ShowTeamStandings;
     private bool IsPreGenderSplit;
     private string? _errorMessage;
+
+    private string ResultsGridTemplate
+    {
+        get
+        {
+            string discPart = string.Join(" ", IncludedDisciplines
+                .Where(kv => kv.Value)
+                .OrderBy(kv => (byte)kv.Key)
+                .Select(_ => "1fr"));
+            return ShowIpfPoints
+                ? $"26px 220px {discPart} 80px 60px"
+                : $"26px 220px {discPart} 80px";
+        }
+    }
 
     private async Task ShowDeleteDialog()
     {
@@ -343,7 +291,6 @@
 
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
             ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
-            ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
 
             if (Meet?.ShowTeamPoints is true)
             {
@@ -373,5 +320,4 @@
             _errorMessage = "Villa kom upp við að sækja mót. Reyndu aftur síðar.";
         }
     }
-
 }

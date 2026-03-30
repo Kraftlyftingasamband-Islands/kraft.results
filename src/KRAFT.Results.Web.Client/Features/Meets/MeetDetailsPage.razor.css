@@ -52,20 +52,102 @@
     background: #b91c1c;
 }
 
-.card-grid {
-    display: grid;
-    gap: 1rem;
+/* ===== IPF point leaders ===== */
+
+.leaders-section {
+    margin-block-end: 1.5rem;
 }
 
-.card-grid-2 {
-    grid-template-columns: 1fr 1fr;
+.leaders-gender-heading {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-block: 0.75rem 0.375rem;
 }
 
-@media (max-width: 1200px) {
-    .card-grid-2 {
-        grid-template-columns: 1fr;
+.leader-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    margin-block-end: 4px;
+}
+
+.leader-medal {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.leader-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.leader-name {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leader-meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.leader-pts {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+/* ===== Results container ===== */
+
+.results-container {
+    max-width: 960px;
+    margin-inline: auto;
+}
+
+/* Column headers row — desktop only */
+.card-col-headers {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .card-col-headers {
+        display: grid;
+        grid-template-columns: var(--grid-template);
+        gap: 10px;
+        padding: 2px 18px 4px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        font-weight: 600;
+        align-items: center;
     }
 }
+
+.col-header-center {
+    text-align: center;
+}
+
+.col-header-right {
+    text-align: right;
+}
+
+/* ===== Card section (gender+age group container) ===== */
 
 .card-section {
     border: 1px solid var(--color-border);
@@ -75,13 +157,7 @@
     background: var(--color-white);
 }
 
-.table-overflow {
-    overflow-x: auto;
-}
-
-.first-attempt {
-    border-inline-start: 1px solid var(--color-border);
-}
+/* ===== Error ===== */
 
 .error-message {
     padding: 0.75rem;
@@ -93,9 +169,7 @@
     text-align: center;
 }
 
-.bombed-out {
-    color: #6b7280;
-}
+/* ===== Team standings ===== */
 
 .standings-grid {
     display: grid;
