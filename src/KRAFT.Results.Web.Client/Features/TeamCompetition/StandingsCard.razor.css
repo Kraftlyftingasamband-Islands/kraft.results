@@ -44,6 +44,24 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+.sc-individual-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-block-start: 4px;
+}
+
+.sc-point-chip {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    padding: 1px 4px;
+    line-height: 1.4;
+}
+
 .sc-points {
     font-weight: 800; font-size: 17px; color: var(--color-primary);
     flex-shrink: 0; text-align: right;
@@ -63,12 +81,6 @@
     .sc-team-name { font-size: 12px; }
     .sc-points { font-size: 15px; }
     .sc-points-label { display: none; }
-}
-
-.standings-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

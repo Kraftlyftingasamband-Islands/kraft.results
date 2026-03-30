@@ -29,6 +29,12 @@
     font-size: 0.9375rem;
 }
 
+.standings-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
 .empty-state {
     padding: 2rem 1rem;
     text-align: center;
