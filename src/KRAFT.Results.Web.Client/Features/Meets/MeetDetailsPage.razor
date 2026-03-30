@@ -153,10 +153,12 @@
     <div class="standings-container">
         @if (IsPreGenderSplit)
         {
-            @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Combined)
-            {
-                <StandingsCard Standing="standing" />
-            }
+            <ol class="standings-list">
+                @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Combined)
+                {
+                    <li><StandingsCard Standing="standing" /></li>
+                }
+            </ol>
         }
         else
         {
@@ -164,10 +166,12 @@
             {
                 <section class="standings-gender">
                     <h4>@("f".ToGenderGroupLabel())</h4>
-                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
-                    {
-                        <StandingsCard Standing="standing" />
-                    }
+                    <ol class="standings-list">
+                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
+                        {
+                            <li><StandingsCard Standing="standing" /></li>
+                        }
+                    </ol>
                 </section>
             }
 
@@ -175,10 +179,12 @@
             {
                 <section class="standings-gender">
                     <h4>@("m".ToGenderGroupLabel())</h4>
-                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
-                    {
-                        <StandingsCard Standing="standing" />
-                    }
+                    <ol class="standings-list">
+                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
+                        {
+                            <li><StandingsCard Standing="standing" /></li>
+                        }
+                    </ol>
                 </section>
             }
 

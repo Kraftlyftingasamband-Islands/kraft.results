@@ -34,10 +34,12 @@ else if (_response is not null)
             {
                 <section class="standings-gender">
                     <h4>@("f".ToGenderGroupLabel())</h4>
-                    @foreach (TeamCompetitionStanding standing in _response.Women)
-                    {
-                        <StandingsCard Standing="standing" />
-                    }
+                    <ol class="standings-list">
+                        @foreach (TeamCompetitionStanding standing in _response.Women)
+                        {
+                            <li><StandingsCard Standing="standing" /></li>
+                        }
+                    </ol>
                 </section>
             }
 
@@ -45,10 +47,12 @@ else if (_response is not null)
             {
                 <section class="standings-gender">
                     <h4>@("m".ToGenderGroupLabel())</h4>
-                    @foreach (TeamCompetitionStanding standing in _response.Men)
-                    {
-                        <StandingsCard Standing="standing" />
-                    }
+                    <ol class="standings-list">
+                        @foreach (TeamCompetitionStanding standing in _response.Men)
+                        {
+                            <li><StandingsCard Standing="standing" /></li>
+                        }
+                    </ol>
                 </section>
             }
 
@@ -63,10 +67,12 @@ else if (_response is not null)
         @if (_response.Combined.Count > 0)
         {
             <div class="standings-container">
-                @foreach (TeamCompetitionStanding standing in _response.Combined)
-                {
-                    <StandingsCard Standing="standing" />
-                }
+                <ol class="standings-list">
+                    @foreach (TeamCompetitionStanding standing in _response.Combined)
+                    {
+                        <li><StandingsCard Standing="standing" /></li>
+                    }
+                </ol>
             </div>
         }
         else
