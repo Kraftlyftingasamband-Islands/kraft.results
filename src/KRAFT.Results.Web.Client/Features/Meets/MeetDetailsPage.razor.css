@@ -96,7 +96,7 @@
 
 .leader-name {
     font-weight: 700;
-    font-size: 0.875rem;
+    font-size: 1rem;
     color: var(--color-primary);
     text-decoration: none;
     white-space: nowrap;
@@ -110,13 +110,13 @@
 }
 
 .leader-meta {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     color: var(--color-text-muted);
 }
 
 .leader-pts {
     font-weight: 800;
-    font-size: 1rem;
+    font-size: 1.125rem;
     color: var(--color-primary);
     flex-shrink: 0;
 }

@@ -65,7 +65,7 @@
     <div class="leaders-section">
         @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
         {
-            <h3 class="leaders-gender-heading">@gender.Key.ToGenderGroupLabel()</h3>
+            <h3 class="leaders-gender-heading">@gender.Key</h3>
             @foreach ((MeetParticipation p, int index) in gender.OrderByDescending(p => p.IpfPoints).Take(3).Select((p, i) => (p, i)))
             {
                 <div class="leader-row">
@@ -97,7 +97,7 @@
         .ThenByDescending(x => x.Key.Gender))
     {
         <section class="card-section">
-            <h4>@genderAgeAgeCategory.Key.Gender.ToGenderGroupLabel() — @genderAgeAgeCategory.Key.AgeCategory</h4>
+            <h4>@genderAgeAgeCategory.Key.Gender — @genderAgeAgeCategory.Key.AgeCategory</h4>
             <br />
 
             @foreach (IGrouping<string, MeetParticipation> weightCategory in genderAgeAgeCategory
