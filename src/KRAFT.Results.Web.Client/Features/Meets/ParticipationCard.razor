@@ -44,6 +44,7 @@
 
     <div class="p-footer-row">
         <div class="p-total">
+            <span class="p-footer-label">Samtals</span>
             @if (!Participation.Disqualified && Participation.Total > 0)
             {
                 @($"{Participation.Total:F1}")
@@ -56,6 +57,7 @@
         @if (ShowIpfPoints)
         {
             <div class="p-ipf">
+                <span class="p-footer-label">IPF stig</span>
                 @if (!Participation.Disqualified && Participation.IpfPoints > 0)
                 {
                     @($"{Participation.IpfPoints:F2}")
