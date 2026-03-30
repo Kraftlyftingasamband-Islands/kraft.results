@@ -1,0 +1,73 @@
+.pill {
+    min-width: 40px;
+    height: 22px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 5px;
+    box-sizing: border-box;
+    position: relative;
+    cursor: default;
+}
+
+.pill-good {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.pill-bad {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.pill-record {
+    background: #059669;
+    color: #ffffff;
+}
+
+.pill-skipped {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+.tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111827;
+    color: white;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 5px 9px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 10;
+    line-height: 1.5;
+}
+
+.tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #111827;
+}
+
+.pill-record:hover .tip,
+.pill-record:focus .tip {
+    display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pill {
+        transition: none;
+    }
+}
