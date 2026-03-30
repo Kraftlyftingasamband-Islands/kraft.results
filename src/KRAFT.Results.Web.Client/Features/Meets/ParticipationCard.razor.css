@@ -194,6 +194,7 @@
     /* Name column: fixed 280px, wraps to 2 lines */
     .p-name-col {
         max-width: 280px;
+        padding-inline-start: 8px;
     }
 
     .p-name {
