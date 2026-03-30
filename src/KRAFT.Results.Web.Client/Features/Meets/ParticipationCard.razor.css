@@ -222,6 +222,7 @@
     .p-club {
         font-size: 12px;
         text-align: left;
+        align-self: start;
     }
 
     /* Always show club cell on desktop (fills grid column even when empty) */
