@@ -65,7 +65,7 @@
 
 .sc-points {
     font-weight: 800; font-size: 17px; color: var(--color-primary);
-    flex-shrink: 0; text-align: right;
+    flex-shrink: 0; text-align: right; margin-inline-start: auto;
     font-variant-numeric: tabular-nums;
     display: flex; flex-direction: column; align-items: flex-end;
 }
