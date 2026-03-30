@@ -55,6 +55,8 @@
 /* ===== IPF point leaders ===== */
 
 .leaders-section {
+    max-width: 960px;
+    margin-inline: auto;
     margin-block-end: 1.5rem;
 }
 
@@ -98,6 +100,11 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color var(--transition-fast) ease;
+}
+
+.leader-name:hover {
+    color: var(--color-primary-dark);
 }
 
 .leader-meta {
@@ -219,7 +226,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .btn-action {
+    .btn-action,
+    .leader-name {
         transition: none;
     }
 }
