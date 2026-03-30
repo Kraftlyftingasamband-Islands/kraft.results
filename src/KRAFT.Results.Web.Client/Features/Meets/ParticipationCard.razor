@@ -6,17 +6,24 @@
      style="@($"--grid-template: {DesktopGridTemplate}")">
 
     <div class="p-header-row">
-        <div class="p-rank @_rankClass" aria-hidden="@(!string.IsNullOrEmpty(_rankClass) && !Participation.Disqualified ? "true" : null)">
-            @if (!string.IsNullOrEmpty(_rankClass) && !Participation.Disqualified)
-            {
-                <span class="visually-hidden">@_rankName</span>
-            }
+        <div class="p-rank @_rankClass">
             @_rankDisplay
         </div>
         <div class="p-name-col">
             <NavLink class="p-name" href="@($"/athletes/{Participation.AthleteSlug}")">@Participation.Athlete</NavLink>
             <span class="p-meta">@_metaLine</span>
         </div>
+        @if (ShowClub)
+        {
+            @if (!string.IsNullOrWhiteSpace(Participation.Club) && !string.IsNullOrWhiteSpace(Participation.ClubSlug))
+            {
+                <NavLink class="p-club" href="@($"/teams/{Participation.ClubSlug}")">@Participation.Club</NavLink>
+            }
+            else
+            {
+                <div class="p-club p-club-empty"></div>
+            }
+        }
     </div>
 
     <div class="p-attempts">
@@ -66,6 +73,9 @@
     public bool ShowIpfPoints { get; init; }
 
     [Parameter, EditorRequired]
+    public bool ShowClub { get; init; }
+
+    [Parameter, EditorRequired]
     public Dictionary<Discipline, bool> IncludedDisciplines { get; init; } = new();
 
     [Parameter, EditorRequired]
@@ -75,7 +85,6 @@
     private string _metaLine = string.Empty;
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;
-    private string _rankName = string.Empty;
     private List<IGrouping<Discipline, MeetAttempt>> _visibleDisciplineGroups = [];
 
     protected override void OnParametersSet()
@@ -83,17 +92,13 @@
         _recordContext = $"{Participation.Gender} · {Participation.AgeCategory} · {Participation.WeightCategory} kg";
 
         List<string> metaParts = [Participation.YearOfBirth.ToString()];
-        if (!string.IsNullOrWhiteSpace(Participation.Club))
-        {
-            metaParts.Add(Participation.Club);
-        }
         metaParts.Add($"{Participation.BodyWeight:F2} kg");
         _metaLine = string.Join(" · ", metaParts);
 
         if (Participation.Disqualified)
         {
-            _rankDisplay = "DQ";
-            _rankClass = "rank-dq";
+            _rankDisplay = "–";
+            _rankClass = string.Empty;
         }
         else
         {
@@ -109,14 +114,6 @@
             _rankClass = Participation.Rank switch
             {
                 1 or 2 or 3 => "rank-medal",
-                _ => string.Empty,
-            };
-
-            _rankName = Participation.Rank switch
-            {
-                1 => "gull",
-                2 => "silfur",
-                3 => "brons",
                 _ => string.Empty,
             };
         }

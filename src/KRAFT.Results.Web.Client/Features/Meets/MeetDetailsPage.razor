@@ -109,6 +109,10 @@
                 <div class="card-col-headers" style="@($"--grid-template: {ResultsGridTemplate}")" aria-hidden="true">
                     <span></span>
                     <span>Nafn</span>
+                    @if (ShowClubs)
+                    {
+                        <span>Félag</span>
+                    }
                     @foreach (KeyValuePair<Discipline, bool> disc in IncludedDisciplines.Where(kv => kv.Value).OrderBy(kv => (byte)kv.Key))
                     {
                         <span class="col-header-center">@disc.Key.ToDisplayName()</span>
@@ -128,6 +132,7 @@
                 {
                     <ParticipationCard Participation="p"
                                        ShowIpfPoints="ShowIpfPoints"
+                                       ShowClub="ShowClubs"
                                        IncludedDisciplines="IncludedDisciplines"
                                        DesktopGridTemplate="@ResultsGridTemplate" />
                 }
@@ -205,6 +210,7 @@
     private MeetTeamPointsResponse? _teamPointsResponse;
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
+    private bool ShowClubs;
     private bool ShowTeamStandings;
     private bool IsPreGenderSplit;
     private string? _errorMessage;
@@ -217,9 +223,10 @@
                 .Where(kv => kv.Value)
                 .OrderBy(kv => (byte)kv.Key)
                 .Select(_ => "1fr"));
+            string clubPart = ShowClubs ? "80px " : string.Empty;
             return ShowIpfPoints
-                ? $"26px 220px {discPart} 80px 60px"
-                : $"26px 220px {discPart} 80px";
+                ? $"26px 220px {clubPart}{discPart} 80px 60px"
+                : $"26px 220px {clubPart}{discPart} 80px";
         }
     }
 
@@ -290,6 +297,7 @@
                 .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
 
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
+            ShowClubs = Participations.Any(p => !string.IsNullOrWhiteSpace(p.Club));
             ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
 
             if (Meet?.ShowTeamPoints is true)
