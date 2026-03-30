@@ -66,21 +66,23 @@
         @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
         {
             <h3 class="leaders-gender-heading">@gender.Key</h3>
-            @foreach ((MeetParticipation p, int index) in gender.OrderByDescending(p => p.IpfPoints).Take(3).Select((p, i) => (p, i)))
-            {
-                <div class="leader-row">
-                    <span class="leader-medal" aria-hidden="true">
-                        @((index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
-                    </span>
-                    <div class="leader-info">
-                        <NavLink class="leader-name" href="@($"/athletes/{p.AthleteSlug}")">@p.Athlete</NavLink>
-                        <span class="leader-meta">
-                            @p.YearOfBirth@(!string.IsNullOrWhiteSpace(p.Club) ? $" · {p.Club}" : string.Empty) · @($"{p.BodyWeight:F2}") kg
+            <div class="leaders-gender-rows">
+                @foreach ((MeetParticipation p, int index) in gender.OrderByDescending(p => p.IpfPoints).Take(3).Select((p, i) => (p, i)))
+                {
+                    <div class="leader-row">
+                        <span class="leader-medal" aria-hidden="true">
+                            @((index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
                         </span>
+                        <div class="leader-info">
+                            <NavLink class="leader-name" href="@($"/athletes/{p.AthleteSlug}")">@p.Athlete</NavLink>
+                            <span class="leader-meta">
+                                @p.YearOfBirth@(!string.IsNullOrWhiteSpace(p.Club) ? $" · {p.Club}" : string.Empty) · @($"{p.BodyWeight:F2}") kg
+                            </span>
+                        </div>
+                        <span class="leader-pts">@($"{p.IpfPoints:F2}")</span>
                     </div>
-                    <span class="leader-pts">@($"{p.IpfPoints:F2}")</span>
-                </div>
-            }
+                }
+            </div>
         }
     </div>
     <br />
