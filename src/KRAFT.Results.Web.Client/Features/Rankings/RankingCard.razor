@@ -7,26 +7,28 @@
             <NavLink class="r-name" href="@($"/athletes/{Entry.AthleteSlug}")">@Entry.Athlete</NavLink>
             <span class="r-meta">@Entry.WeightCategory kg · @Entry.BodyWeight.ToString("F2") kg</span>
         </div>
-        @if (Entry.IpfPoints.HasValue)
-        {
-            <div class="r-ipf-col">
-                <span class="r-ipf-label">IPF stig</span>
-                <span class="r-ipf">@Entry.IpfPoints.Value.ToString("F2")</span>
+        <div class="r-right">
+            <div class="r-secondary">
+                <span class="r-score-item">
+                    <span class="r-score-label">@DisciplineLabel</span>
+                    <span class="r-score-val">@Entry.Result.ToString("F1")</span>
+                </span>
+                <span class="r-score-item">
+                    <span class="r-score-label">Wilks</span>
+                    <span class="r-score-val">@Entry.Wilks.ToString("F2")</span>
+                </span>
             </div>
-        }
+            @if (Entry.IpfPoints.HasValue)
+            {
+                <div class="r-ipf-col">
+                    <span class="r-ipf-label">IPF stig</span>
+                    <span class="r-ipf">@Entry.IpfPoints.Value.ToString("F2")</span>
+                </div>
+            }
+        </div>
     </div>
     <div class="r-footer-row">
         <NavLink class="r-meet-link" href="@($"/meets/{Entry.MeetSlug}")">@Entry.MeetTitle</NavLink>
-        <div class="r-scores">
-            <span class="r-score-item">
-                <span class="r-score-label">@DisciplineLabel</span>
-                <span class="r-score-val">@Entry.Result.ToString("F1")</span>
-            </span>
-            <span class="r-score-item">
-                <span class="r-score-label">Wilks</span>
-                <span class="r-score-val">@Entry.Wilks.ToString("F2")</span>
-            </span>
-        </div>
     </div>
 </div>
 
