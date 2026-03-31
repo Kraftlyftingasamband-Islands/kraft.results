@@ -84,7 +84,7 @@
 
     <br />
 
-    @foreach (IGrouping<string, AthleteParticipation> meetType in Participations.GroupBy(x => x.MeetType) ?? [])
+    @foreach (IGrouping<string, AthleteParticipation> meetType in Participations.GroupBy(x => x.MeetType))
     {
         <h4>@meetType.Key</h4>
 
