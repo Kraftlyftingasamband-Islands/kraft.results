@@ -72,9 +72,8 @@
 }
 
 .card-list {
-    display: flex;
-    flex-direction: column;
-    container-type: inline-size;
+    width: 100%;
     max-width: 720px;
     margin-inline: auto;
+    container-type: inline-size;
 }
