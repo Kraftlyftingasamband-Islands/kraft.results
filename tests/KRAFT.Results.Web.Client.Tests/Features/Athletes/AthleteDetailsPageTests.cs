@@ -41,7 +41,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> badges = cut.FindAll(".card-badge")
+            List<string> badges = cut.FindAll(".ar-sl-badge")
                 .Select(e => e.TextContent)
                 .ToList();
 
@@ -76,8 +76,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".card-grid").Count.ShouldBeGreaterThan(0);
-            cut.FindAll(".card-badge").Count.ShouldBe(0);
+            cut.FindAll(".ar-card").Count.ShouldBeGreaterThan(0);
+            cut.FindAll(".ar-sl-badge").Count.ShouldBe(0);
         });
     }
 
