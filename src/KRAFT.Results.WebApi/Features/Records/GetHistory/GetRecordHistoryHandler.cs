@@ -20,6 +20,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.RecordCategoryId,
                 r.IsRaw,
                 r.Era.Title,
+                r.Era.EndDate.Year > DateTime.UtcNow.Year,
                 r.AgeCategory.Slug ?? string.Empty,
                 r.WeightCategory.Title,
                 r.WeightCategory.Gender == Gender.Male ? "Karlar" : "Konur",
@@ -43,15 +44,19 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.Date,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Slug : null,
-                r.Attempt != null ? r.Attempt.Participation.Team!.TitleShort : null,
-                r.Attempt != null ? r.Attempt.Participation.Team!.Slug : null,
                 r.Weight,
                 r.Attempt != null ? r.Attempt.Participation.Weight : (decimal?)null,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Title + " " + r.Attempt.Participation.Meet.StartDate.Year : null,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Slug : null,
                 r.IsCurrent,
-                r.IsStandard))
+                r.IsStandard,
+                null))
             .ToListAsync(cancellationToken);
+
+        for (int i = 1; i < entries.Count; i++)
+        {
+            entries[i] = entries[i] with { Delta = entries[i].Weight - entries[i - 1].Weight };
+        }
 
         string equipmentType = Contracts.DisplayNames.EquipmentType(key.IsRaw);
 
@@ -61,7 +66,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
             key.AgeCategorySlug.ToAgeCategoryLabel(key.GenderCode),
             key.GenderLabel,
             equipmentType,
-            key.EraTitle,
+            key.IsCurrentEra ? null : key.EraTitle,
             entries);
     }
 
@@ -72,6 +77,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
         RecordCategory RecordCategoryId,
         bool IsRaw,
         string EraTitle,
+        bool IsCurrentEra,
         string AgeCategorySlug,
         string WeightCategoryTitle,
         string GenderLabel,

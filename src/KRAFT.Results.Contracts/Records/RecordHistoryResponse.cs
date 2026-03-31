@@ -6,5 +6,5 @@ public sealed record class RecordHistoryResponse(
     string AgeCategory,
     string Gender,
     string EquipmentType,
-    string Era,
+    string? Era,
     IReadOnlyList<RecordHistoryEntry> Entries);

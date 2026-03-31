@@ -4,11 +4,10 @@ public sealed record class RecordHistoryEntry(
     DateOnly Date,
     string? Athlete,
     string? AthleteSlug,
-    string? Club,
-    string? ClubSlug,
     decimal Weight,
     decimal? BodyWeight,
     string? Meet,
     string? MeetSlug,
     bool IsCurrent,
-    bool IsStandard);
+    bool IsStandard,
+    decimal? Delta);

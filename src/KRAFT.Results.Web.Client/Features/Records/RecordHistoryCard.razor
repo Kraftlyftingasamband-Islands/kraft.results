@@ -1,0 +1,61 @@
+@using KRAFT.Results.Contracts.Records
+
+<div class="rhc-card @(Entry.IsCurrent ? "rhc-current" : null) @(Entry.IsStandard ? "rhc-standard" : null)"
+     aria-current="@(Entry.IsCurrent ? "true" : null)">
+
+    <div class="rhc-header-row">
+        <div class="rhc-name-col">
+            @if (Entry.IsStandard)
+            {
+                <span class="rhc-standard-text">Íslenski staðallinn</span>
+            }
+            else if (Entry.AthleteSlug is not null)
+            {
+                <NavLink class="rhc-name" href="@($"athletes/{Entry.AthleteSlug}")">@Entry.Athlete</NavLink>
+            }
+            else
+            {
+                <span class="rhc-name-plain">@Entry.Athlete</span>
+            }
+        </div>
+        <div class="rhc-mark-col">
+            <span class="rhc-mark">@Entry.Weight.ToString("F1")</span>
+        </div>
+    </div>
+
+    <div class="rhc-footer-row">
+        <div class="rhc-footer-top">
+            <span class="rhc-footer-meta">@_footerMeta</span>
+            @if (Entry.Delta.HasValue)
+            {
+                <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
+            }
+        </div>
+        @if (!Entry.IsStandard && Entry.Meet is not null)
+        {
+            @if (Entry.MeetSlug is not null)
+            {
+                <NavLink class="rhc-footer-link" href="@($"meets/{Entry.MeetSlug}")">@Entry.Meet</NavLink>
+            }
+            else
+            {
+                <span class="rhc-footer-item">@Entry.Meet</span>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public RecordHistoryEntry Entry { get; set; } = null!;
+
+    private string _footerMeta = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        string date = Entry.Date.ToString("dd.MM.yyyy");
+        _footerMeta = Entry.BodyWeight.HasValue
+            ? $"{date} · {Entry.BodyWeight.Value:F1} kg"
+            : date;
+    }
+}
