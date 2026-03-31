@@ -22,16 +22,16 @@ internal sealed class ChangeUserRoleHandler
         _httpContextService = httpContextService;
     }
 
-    public async Task<Result> Handle(int userId, string roleName, CancellationToken cancellationToken)
+    public async Task<Result> Handle(int userId, IReadOnlyList<string> roleNames, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(roleName))
+        if (roleNames.Count == 0)
         {
-            return Result.Failure(UserErrors.RoleNotFound);
+            return Result.Failure(UserErrors.RolesRequired);
         }
 
-        if (!AllowedRoles.Contains(roleName))
+        if (roleNames.Any(roleName => !AllowedRoles.Contains(roleName)))
         {
-            _logger.LogWarning("Attempted to assign disallowed role '{RoleName}'", roleName);
+            _logger.LogWarning("Attempted to assign disallowed role(s)");
             return Result.Failure(UserErrors.RoleNotFound);
         }
 
@@ -61,18 +61,27 @@ internal sealed class ChangeUserRoleHandler
             return Result.Failure(UserErrors.UserNotFound);
         }
 
-        Role? role = await _dbContext.Set<Role>()
-            .Where(r => r.RoleName == roleName)
-            .FirstOrDefaultAsync(cancellationToken);
+        List<Role> roles = await _dbContext.Set<Role>()
+            .Where(r => roleNames.Contains(r.RoleName))
+            .ToListAsync(cancellationToken);
 
-        if (role is null)
+        if (roles.Count != roleNames.Distinct(StringComparer.OrdinalIgnoreCase).Count())
         {
-            _logger.LogWarning("Role '{RoleName}' was not found", roleName);
-            return Result.Failure(UserErrors.RoleNotFound);
+            return UserErrors.RoleNotFound;
         }
 
-        _dbContext.Set<UserRole>().RemoveRange(user.UserRoles);
-        _dbContext.Set<UserRole>().Add(UserRole.Create(user.UserId, role.RoleId));
+        HashSet<int> currentRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToHashSet();
+        HashSet<int> desiredRoleIds = roles.Select(r => r.RoleId).ToHashSet();
+
+        List<UserRole> toRemove = user.UserRoles.Where(ur => !desiredRoleIds.Contains(ur.RoleId)).ToList();
+        List<int> toAdd = desiredRoleIds.Where(id => !currentRoleIds.Contains(id)).ToList();
+
+        _dbContext.Set<UserRole>().RemoveRange(toRemove);
+
+        foreach (int roleId in toAdd)
+        {
+            _dbContext.Set<UserRole>().Add(UserRole.Create(user.UserId, roleId));
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

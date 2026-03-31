@@ -4,4 +4,4 @@ public sealed record class UserEditDetails(
     string FirstName,
     string LastName,
     string? Email,
-    string Role);
+    IReadOnlyList<string> Roles);
