@@ -1,0 +1,49 @@
+@using System.Globalization
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+
+<a class="apb-card-link" href="@($"/meets/{Best.MeetSlug}")" aria-label="@_disciplineLabel — @Best.Weight.ToString("F1", CultureInfo.InvariantCulture) kg">
+    <div class="apb-card">
+        <div class="apb-badge">@_badgeText</div>
+        <div class="apb-name-col">
+            <span class="apb-label">
+                @if (Best.IsSingleLift)
+                {
+                    <span class="apb-sl-badge">@Constants.SingeLift</span>
+                }
+                @_disciplineLabel
+            </span>
+            <span class="apb-meta">@Best.Date.ToString("dd.MM.yyyy") · @Best.BodyWeight.ToString("F1", CultureInfo.InvariantCulture) kg</span>
+        </div>
+        <div class="apb-mark-col">
+            <span class="apb-weight">@Best.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="apb-unit">kg</span></span>
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter, EditorRequired]
+    public AthletePersonalBest Best { get; set; } = null!;
+
+    private string _disciplineLabel = string.Empty;
+    private string _badgeText = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        _disciplineLabel = Best.Discipline switch
+        {
+            Discipline.Squat => Constants.Squat,
+            Discipline.Bench => Constants.Bench,
+            Discipline.Deadlift => Constants.Deadlift,
+            _ => Constants.Total,
+        };
+
+        _badgeText = Best.Discipline switch
+        {
+            Discipline.Squat => "H",
+            Discipline.Bench => "B",
+            Discipline.Deadlift => "R",
+            _ => "S",
+        };
+    }
+}
