@@ -92,7 +92,8 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.IsRaw)),
+                p.Meet.IsRaw,
+                DateOnly.FromDateTime(p.Meet.StartDate))),
             "bench" => query.Select(p => new RawRankingData(
                 p.AthleteId,
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
@@ -104,7 +105,8 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.IsRaw)),
+                p.Meet.IsRaw,
+                DateOnly.FromDateTime(p.Meet.StartDate))),
             "deadlift" => query.Select(p => new RawRankingData(
                 p.AthleteId,
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
@@ -116,7 +118,8 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.IsRaw)),
+                p.Meet.IsRaw,
+                DateOnly.FromDateTime(p.Meet.StartDate))),
             _ => query.Select(p => new RawRankingData(
                 p.AthleteId,
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
@@ -128,7 +131,8 @@ internal sealed class GetRankingsHandler
                 p.Wilks,
                 p.Meet.Title,
                 p.Meet.Slug,
-                p.Meet.IsRaw)),
+                p.Meet.IsRaw,
+                DateOnly.FromDateTime(p.Meet.StartDate))),
         };
 
         List<RawRankingData> rawData = await rawQuery.ToListAsync(cancellationToken);
@@ -166,7 +170,8 @@ internal sealed class GetRankingsHandler
                 r.Wilks,
                 r.MeetTitle,
                 r.MeetSlug,
-                r.IsRaw))
+                r.IsRaw,
+                r.MeetDate))
             .ToList();
 
         return new PagedResponse<RankingEntry>(items, page, pageSize, totalCount);
@@ -183,7 +188,8 @@ internal sealed class GetRankingsHandler
         decimal Wilks,
         string MeetTitle,
         string MeetSlug,
-        bool IsRaw)
+        bool IsRaw,
+        DateOnly MeetDate)
     {
         public decimal CalculatedIpfPoints { get; set; }
     }

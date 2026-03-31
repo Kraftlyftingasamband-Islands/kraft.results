@@ -69,43 +69,6 @@
     margin-block-start: 1px;
 }
 
-/* ── Right group: secondary scores + big IPF ── */
-
-.r-right {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.r-secondary {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    align-items: flex-end;
-}
-
-.r-score-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.r-score-label {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-text-muted);
-}
-
-.r-score-val {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text);
-    font-variant-numeric: tabular-nums;
-}
-
 .r-ipf-col {
     flex-shrink: 0;
     display: flex;
@@ -123,7 +86,7 @@
 
 .r-ipf {
     font-weight: 800;
-    font-size: 36px;
+    font-size: 26px;
     color: var(--color-primary);
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -134,6 +97,8 @@
 .r-footer-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding-block-start: 6px;
     border-block-start: 1px solid var(--color-border);
 }
@@ -153,6 +118,13 @@
     color: var(--color-primary);
 }
 
+.r-meet-date {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
 /* ===== Desktop: flatten to grid row ===== */
 
 @container (min-width: 680px) {
@@ -161,7 +133,7 @@
         grid-template-columns: 30px 1fr auto;
         grid-template-rows: auto auto;
         align-items: center;
-        column-gap: 12px;
+        column-gap: 16px;
         row-gap: 0;
         padding: 8px 14px;
         flex-direction: unset;
@@ -189,9 +161,10 @@
         grid-row: 1;
     }
 
-    .r-right {
+    .r-ipf-col {
         grid-column: 3;
         grid-row: 1;
+        align-items: flex-end;
     }
 
     .r-name {
