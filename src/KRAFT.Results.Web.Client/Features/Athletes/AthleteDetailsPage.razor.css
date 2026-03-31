@@ -76,4 +76,5 @@
     flex-direction: column;
     container-type: inline-size;
     max-width: 720px;
+    margin-inline: auto;
 }
