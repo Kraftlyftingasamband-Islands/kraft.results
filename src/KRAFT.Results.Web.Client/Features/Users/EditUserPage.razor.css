@@ -186,7 +186,7 @@
 .role-field {
     border: none;
     padding: 0;
-    margin: 0;
+    margin-inline: 0;
 }
 
 .role-checkbox-group {
