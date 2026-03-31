@@ -46,7 +46,7 @@
 
 @if (PersonalBests.Count > 0)
 {
-    @foreach (var group in PersonalBests.GroupBy(x => x.IsClassic))
+    @foreach (IGrouping<bool, AthletePersonalBest> group in PersonalBests.GroupBy(x => x.IsClassic))
     {
         <h3>Besti árangur @(DisplayNames.EquipmentType(group.Key).ToLowerInvariant())</h3>
 
@@ -63,7 +63,7 @@
 @if (Records.Count > 0)
 {
     <h3>Núverandi íslandsmet (@Records.Count)</h3>
-    @foreach (var group in Records.GroupBy(x => x.IsClassic))
+    @foreach (IGrouping<bool, AthleteRecord> group in Records.GroupBy(x => x.IsClassic))
     {
         <h4>@DisplayNames.EquipmentType(group.Key) (@group.Count())</h4>
         <div class="card-list">
@@ -84,18 +84,20 @@
 
     <br />
 
-    @foreach (var meetType in Participations.GroupBy(x => x.MeetType) ?? [])
+    @foreach (IGrouping<string, AthleteParticipation> meetType in Participations.GroupBy(x => x.MeetType) ?? [])
     {
         <h4>@meetType.Key</h4>
 
-        @foreach (AthleteParticipation p in meetType)
-        {
-            <AthleteParticipationCard
-                Participation="p"
-                MeetType="@meetType.Key"
-                ShowClub="@ShowClubs"
-                ShowIpfPoints="@true" />
-        }
+        <div class="card-list">
+            @foreach (AthleteParticipation p in meetType)
+            {
+                <AthleteParticipationCard
+                    Participation="p"
+                    MeetType="@meetType.Key"
+                    ShowClub="@ShowClubs"
+                    ShowIpfPoints="@true" />
+            }
+        </div>
     }
 }
 
