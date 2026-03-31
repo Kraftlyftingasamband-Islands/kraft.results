@@ -68,51 +68,11 @@ else if (_hasError)
 }
 else if (_response is not null && _response.Items.Count > 0)
 {
-    <div class="table-wrapper">
-        <table aria-label="Stigatafla">
-            <colgroup>
-                <col class="col-rank" />
-                <col class="col-athlete" />
-                <col class="col-numeric" />
-                <col class="col-numeric" />
-                <col class="col-numeric" />
-                <col class="col-numeric" />
-                <col class="col-numeric" />
-                <col class="col-meet" />
-            </colgroup>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Keppandi</th>
-                    <th class="text-center">Þyngdarfl.</th>
-                    <th class="text-end hide-mobile">Líkamsþ.</th>
-                    <th class="text-end">@DisciplineLabel</th>
-                    <th class="text-end hide-mobile">IPF stig</th>
-                    <th class="text-end hide-mobile">Wilks</th>
-                    <th>Mót</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (RankingEntry entry in _response.Items)
-                {
-                    <tr>
-                        <RankCell Rank="@entry.Rank" />
-                        <AthleteCell Athlete="@entry.Athlete" Slug="@entry.AthleteSlug" />
-                        <td class="text-center numeric-value">@entry.WeightCategory</td>
-                        <td class="text-end hide-mobile numeric-value">@entry.BodyWeight.ToString("F2")</td>
-                        <td class="text-end numeric-value">@entry.Result.ToString("F1")</td>
-                        <td class="text-end hide-mobile numeric-value">@(entry.IpfPoints?.ToString("F2") ?? "-")</td>
-                        <td class="text-end hide-mobile numeric-value">@entry.Wilks.ToString("F2")</td>
-                        <td>
-                            <NavLink class="nav-link" href="@($"/meets/{entry.MeetSlug}")">
-                                @entry.MeetTitle
-                            </NavLink>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="rankings-list">
+        @foreach (RankingEntry entry in _response.Items)
+        {
+            <RankingCard Entry="entry" DisciplineLabel="@DisciplineLabel" />
+        }
     </div>
 
     @if (TotalPages > 1)

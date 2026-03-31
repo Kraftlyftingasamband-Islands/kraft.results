@@ -12,4 +12,5 @@ public sealed record class RankingEntry(
     decimal Wilks,
     string MeetTitle,
     string MeetSlug,
-    bool IsClassic);
+    bool IsClassic,
+    DateOnly MeetDate);
