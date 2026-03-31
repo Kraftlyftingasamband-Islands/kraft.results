@@ -90,35 +90,40 @@ else if (_model is not null)
             </fieldset>
 
             <div class="form-actions">
-                <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
-                    @if (_isLoading)
+                <div class="form-actions-primary">
+                    <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
+                        @if (_isLoading)
+                        {
+                            <span>Augnablik...</span>
+                        }
+                        else
+                        {
+                            <span>Vista breytingar</span>
+                        }
+                    </button>
+                    <a href="/users" class="btn-cancel">Til baka</a>
+                </div>
+
+                <hr class="form-actions-divider" />
+
+                <div class="form-actions-danger">
+                    @if (_showDeleteConfirmation)
                     {
-                        <span>Augnablik...</span>
+                        <p class="delete-confirm-text">Ertu viss um að þú viljir eyða þessum notanda?</p>
+                        <div class="danger-actions">
+                            <button type="button" class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
+                            <button type="button" class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
+                        </div>
                     }
                     else
                     {
-                        <span>Vista breytingar</span>
+                        <button type="button" class="btn-delete-ghost" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
                     }
-                </button>
-
-                <a href="/users" class="btn-cancel">Til baka</a>
-
-                @if (_showDeleteConfirmation)
-                {
-                    <p>Ertu viss um að þú viljir eyða þessum notanda?</p>
-                    <div class="danger-actions">
-                        <button type="button" class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
-                        <button type="button" class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
-                    </div>
-                }
-                else
-                {
-                    <button type="button" class="btn-danger" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
-                }
-                @if (!string.IsNullOrEmpty(_deleteErrorMessage))
-                {
-                    <div class="error-message" role="alert">@_deleteErrorMessage</div>
-                }
+                    @if (!string.IsNullOrEmpty(_deleteErrorMessage))
+                    {
+                        <div class="error-message" role="alert">@_deleteErrorMessage</div>
+                    }
+                </div>
             </div>
 
             @if (!string.IsNullOrEmpty(_errorMessage))
