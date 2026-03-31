@@ -1,4 +1,3 @@
-@using System.Globalization
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 
@@ -16,7 +15,7 @@
             <span class="ar-meta">@Record.AgeCategory · @Record.Date.ToString("dd.MM.yyyy")</span>
         </div>
         <div class="ar-mark-col">
-            <a class="ar-mark ar-mark-link" href="@($"/meets/{Record.MeetSlug}")">@Record.Weight.ToString("F1", CultureInfo.InvariantCulture)</a>
+            <a class="ar-mark ar-mark-link" href="@($"/meets/{Record.MeetSlug}")">@Record.Weight.ToString("F1")</a>
         </div>
     </div>
 </div>
