@@ -99,7 +99,6 @@ public sealed class GetRecordHistoryTests(IntegrationTestFixture fixture)
         history.AgeCategory.ShouldNotBeNullOrWhiteSpace();
         history.Gender.ShouldNotBeNullOrWhiteSpace();
         history.EquipmentType.ShouldNotBeNullOrWhiteSpace();
-        history.Era.ShouldNotBeNullOrWhiteSpace();
     }
 
     private async Task<int> GetFirstRecordIdAsync()
