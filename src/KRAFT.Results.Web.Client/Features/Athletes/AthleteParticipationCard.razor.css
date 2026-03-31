@@ -1,0 +1,135 @@
+.ap-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-inline-start: 4px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-block-end: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ap-card-dq {
+    border-inline-start-color: #9ca3af;
+    opacity: 0.7;
+}
+
+.ap-header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.ap-rank {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 11px;
+}
+
+.rank-medal {
+    background: transparent;
+    font-size: 22px;
+    width: auto;
+    min-width: 26px;
+}
+
+.ap-name-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ap-meet {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+.ap-meet:hover {
+    color: var(--color-primary-dark);
+}
+
+.ap-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.ap-club {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+.ap-club:hover {
+    color: var(--color-primary-dark);
+}
+
+.ap-lifts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-block-start: 6px;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.ap-lift-pill {
+    flex: 1;
+    min-width: 60px;
+    background: #f3f4f6;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ap-lift-total {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.ap-lift-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.ap-lift-total .ap-lift-label {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.ap-lift-val {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.ap-lift-total .ap-lift-val {
+    color: var(--color-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ap-meet,
+    .ap-club {
+        transition: none;
+    }
+}

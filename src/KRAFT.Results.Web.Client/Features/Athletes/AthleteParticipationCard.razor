@@ -1,0 +1,104 @@
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+@using Microsoft.AspNetCore.Components.Routing
+
+<div class="ap-card @(Participation.IsDisqualified ? "ap-card-dq" : null)">
+    <div class="ap-header-row">
+        <div class="ap-rank @_rankClass">@_rankDisplay</div>
+        <div class="ap-name-col">
+            <NavLink class="ap-meet" href="@($"/meets/{Participation.MeetSlug}")">@Participation.Meet</NavLink>
+            <span class="ap-meta">@_metaLine</span>
+            @if (ShowClub && !string.IsNullOrWhiteSpace(Participation.Club) && !string.IsNullOrWhiteSpace(Participation.ClubSlug))
+            {
+                <NavLink class="ap-club" href="@($"/teams/{Participation.ClubSlug}")">@Participation.Club</NavLink>
+            }
+        </div>
+    </div>
+    @if (!Participation.IsDisqualified)
+    {
+        <div class="ap-lifts">
+            @if (MeetType == Constants.Powerlifting)
+            {
+                <div class="ap-lift-pill">
+                    <span class="ap-lift-label">@Constants.Squat</span>
+                    <span class="ap-lift-val">@(Participation.Squat > 0 ? Participation.Squat.ToString("F1") : "\u2013")</span>
+                </div>
+            }
+            @if (MeetType == Constants.Powerlifting || MeetType.StartsWith(Constants.Bench, StringComparison.Ordinal))
+            {
+                <div class="ap-lift-pill">
+                    <span class="ap-lift-label">@Constants.Bench</span>
+                    <span class="ap-lift-val">@(Participation.Benchpress > 0 ? Participation.Benchpress.ToString("F1") : "\u2013")</span>
+                </div>
+            }
+            @if (MeetType == Constants.Powerlifting || MeetType.StartsWith(Constants.Deadlift, StringComparison.Ordinal))
+            {
+                <div class="ap-lift-pill">
+                    <span class="ap-lift-label">@Constants.Deadlift</span>
+                    <span class="ap-lift-val">@(Participation.Deadlift > 0 ? Participation.Deadlift.ToString("F1") : "\u2013")</span>
+                </div>
+            }
+            @if (MeetType == Constants.Powerlifting)
+            {
+                <div class="ap-lift-pill ap-lift-total">
+                    <span class="ap-lift-label">@Constants.Total</span>
+                    <span class="ap-lift-val">@(Participation.Total > 0 ? Participation.Total.ToString("F1") : "\u2013")</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public AthleteParticipation Participation { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public string MeetType { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public bool ShowClub { get; set; }
+
+    [Parameter, EditorRequired]
+    public bool ShowIpfPoints { get; set; }
+
+    private string _rankDisplay = string.Empty;
+    private string _rankClass = string.Empty;
+    private string _metaLine = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (Participation.IsDisqualified)
+        {
+            _rankDisplay = "\u2013";
+            _rankClass = string.Empty;
+        }
+        else
+        {
+            _rankDisplay = Participation.Rank switch
+            {
+                1 => "\U0001f947",
+                2 => "\U0001f948",
+                3 => "\U0001f949",
+                _ when Participation.Rank > 0 && Participation.Rank < int.MaxValue - 1 => Participation.Rank.ToString(),
+                _ => "\u2013",
+            };
+
+            _rankClass = Participation.Rank is 1 or 2 or 3 ? "rank-medal" : string.Empty;
+        }
+
+        List<string> metaParts =
+        [
+            Participation.Date.ToString("dd.MM.yyyy"),
+            Participation.WeightCategory,
+            $"{Participation.BodyWeight:F1} kg",
+        ];
+
+        if (ShowIpfPoints && Participation.IpfPoints.HasValue && Participation.IpfPoints.Value > 0)
+        {
+            metaParts.Add($"IPF {Participation.IpfPoints.Value:F2}");
+        }
+
+        _metaLine = string.Join(" \u00b7 ", metaParts);
+    }
+}
