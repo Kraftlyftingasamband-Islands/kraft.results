@@ -1,0 +1,138 @@
+/* ===== Record History Card — mobile-first ===== */
+
+.rhc-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-inline-start: 4px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-block-end: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rhc-current {
+    border-inline-start-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.rhc-standard {
+    border-inline-start-color: var(--color-border);
+    opacity: 0.65;
+}
+
+/* ── Header row ── */
+
+.rhc-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rhc-name-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.rhc-name {
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    transition: color var(--transition-fast) ease;
+}
+
+.rhc-name:hover {
+    color: var(--color-primary-dark);
+}
+
+.rhc-name-plain {
+    font-weight: 700;
+    font-size: 17px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.rhc-standard-text {
+    font-style: italic;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.rhc-mark-col {
+    flex-shrink: 0;
+}
+
+.rhc-mark {
+    font-weight: 800;
+    font-size: 26px;
+    color: var(--color-primary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.rhc-current .rhc-mark,
+.rhc-current .rhc-name {
+    color: var(--color-primary-dark);
+}
+
+.rhc-delta {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a8a3c;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Footer row ── */
+
+.rhc-footer-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+}
+
+.rhc-footer-top {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.rhc-footer-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.rhc-footer-link {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+.rhc-footer-link:hover {
+    color: var(--color-primary);
+}
+
+.rhc-footer-item {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rhc-name,
+    .rhc-footer-link {
+        transition: none;
+    }
+}

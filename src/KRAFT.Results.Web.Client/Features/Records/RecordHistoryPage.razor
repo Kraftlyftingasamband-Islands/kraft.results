@@ -4,13 +4,14 @@
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 
 <PageTitle>Saga metsins@(_response is not null ? $" - {_response.Category} {_response.WeightCategory}" : "")</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol>
         <li>
-            <NavLink class="breadcrumb-link" href="records">Met</NavLink>
+            <button class="breadcrumb-link breadcrumb-back" @onclick="@(() => JS.InvokeVoidAsync("history.back"))">Met</button>
         </li>
         <li aria-current="page">Saga metsins</li>
     </ol>
@@ -44,89 +45,18 @@ else if (_response is not null && _response.Entries.Count > 0)
         <span>@_response.Gender</span>
         <span class="meta-separator">&middot;</span>
         <span>@_response.EquipmentType</span>
-        <span class="meta-separator">&middot;</span>
-        <span>@_response.Era</span>
+        @if (_response.Era is not null)
+        {
+            <span class="meta-separator">&middot;</span>
+            <span>@_response.Era</span>
+        }
     </div>
 
-    <div class="table-wrapper" tabindex="0" role="region" aria-label="Saga metsins">
-        <table aria-label="Saga metsins">
-            <colgroup>
-                <col class="col-date" />
-                <col class="col-athlete" />
-                <col class="col-club" />
-                <col class="col-mark" />
-                <col class="col-bodyweight" />
-                <col class="col-meet" />
-            </colgroup>
-            <thead>
-                <tr>
-                    <th scope="col" aria-label="Dagsetning">Dags.</th>
-                    <th scope="col">Nafn</th>
-                    <th scope="col" class="hide-mobile">Félag</th>
-                    <th scope="col" class="text-end">Mark</th>
-                    <th scope="col" class="text-end hide-mobile" aria-label="Líkamsþyngd">Líkamsþ.</th>
-                    <th scope="col">Mót</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (RecordHistoryEntry entry in _response.Entries)
-                {
-                    <tr class="@(entry.IsCurrent ? "current-row" : "")" aria-current="@(entry.IsCurrent ? "true" : null)">
-                        <td class="numeric-value">@entry.Date.ToString("dd.MM.yyyy")</td>
-                        @if (entry.IsStandard)
-                        {
-                            <td class="standard-cell">Íslenski staðallinn</td>
-                            <td class="hide-mobile">-</td>
-                            <td class="text-end numeric-value">@entry.Weight.ToString("F1")</td>
-                            <td class="text-end hide-mobile">-</td>
-                            <td>-</td>
-                        }
-                        else
-                        {
-                            <td>
-                                @if (entry.AthleteSlug is not null)
-                                {
-                                    <NavLink class="nav-link" href="@($"athletes/{entry.AthleteSlug}")">
-                                        @entry.Athlete
-                                    </NavLink>
-                                }
-                                else
-                                {
-                                    @entry.Athlete
-                                }
-
-                            </td>
-                            <td class="hide-mobile">
-                                @if (entry.ClubSlug is not null)
-                                {
-                                    <NavLink class="nav-link" href="@($"teams/{entry.ClubSlug}")">
-                                        @entry.Club
-                                    </NavLink>
-                                }
-                                else
-                                {
-                                    @(entry.Club ?? "-")
-                                }
-                            </td>
-                            <td class="text-end numeric-value">@entry.Weight.ToString("F1")</td>
-                            <td class="text-end numeric-value hide-mobile">@(entry.BodyWeight?.ToString("F1") ?? "-")</td>
-                            <td>
-                                @if (entry.MeetSlug is not null)
-                                {
-                                    <NavLink class="nav-link" href="@($"meets/{entry.MeetSlug}")">
-                                        @entry.Meet
-                                    </NavLink>
-                                }
-                                else
-                                {
-                                    @entry.Meet
-                                }
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="rhc-list">
+        @foreach (RecordHistoryEntry entry in _response.Entries)
+        {
+            <RecordHistoryCard Entry="entry" />
+        }
     </div>
 }
 else

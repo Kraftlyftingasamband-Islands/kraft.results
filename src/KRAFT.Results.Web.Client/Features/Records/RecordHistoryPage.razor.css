@@ -23,6 +23,14 @@
     color: var(--color-primary);
 }
 
+.breadcrumb-back {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
 .record-meta {
     display: flex;
     flex-wrap: wrap;
@@ -34,71 +42,19 @@
     background: var(--color-white);
     border-radius: var(--radius-sm);
     font-size: 0.9375rem;
+    max-width: 720px;
+    margin-inline: auto;
 }
 
 .meta-separator {
     color: var(--color-text-muted);
 }
 
-.table-wrapper {
-    overflow-x: auto;
+.rhc-list {
+    max-width: 720px;
+    margin-inline: auto;
+    container-type: inline-size;
 }
-
-table {
-    table-layout: fixed;
-}
-
-.col-date {
-    width: 7rem;
-}
-
-.col-athlete {
-    width: 18rem;
-}
-
-.col-club {
-    width: 6rem;
-}
-
-.col-mark {
-    width: 5.5rem;
-}
-
-.col-bodyweight {
-    width: 5.5rem;
-}
-
-.col-meet {
-}
-
-.numeric-value {
-    font-variant-numeric: tabular-nums;
-}
-
-.text-end {
-    text-align: end;
-}
-
-.standard-cell {
-    font-style: italic;
-    color: var(--color-text-muted);
-}
-
-.current-row {
-    background: var(--color-primary-light) !important;
-    border-inline-start: 4px solid var(--color-primary);
-    font-weight: 600;
-}
-
-.current-row td {
-    color: var(--color-primary-dark);
-}
-
-::deep .current-row .nav-link {
-    color: var(--color-primary-dark);
-    font-weight: 600;
-}
-
 
 .error-state {
     display: flex;
@@ -165,12 +121,6 @@ table {
 @keyframes spin {
     to {
         transform: rotate(360deg);
-    }
-}
-
-@media (max-width: 641px) {
-    .hide-mobile {
-        display: none;
     }
 }
 
