@@ -1,0 +1,129 @@
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Client.Components
+
+<div class="p-card @(Participation.Disqualified ? "p-card-dq" : null)"
+     style="@($"--grid-template: {DesktopGridTemplate}")">
+
+    <div class="p-header-row">
+        <div class="p-rank @_rankClass">
+            @_rankDisplay
+        </div>
+        <div class="p-name-col">
+            <NavLink class="p-name" href="@($"/athletes/{Participation.AthleteSlug}")">@Participation.Athlete</NavLink>
+            <span class="p-meta">@_metaLine</span>
+        </div>
+        @if (ShowClub)
+        {
+            @if (!string.IsNullOrWhiteSpace(Participation.Club) && !string.IsNullOrWhiteSpace(Participation.ClubSlug))
+            {
+                <NavLink class="p-club" href="@($"/teams/{Participation.ClubSlug}")">@Participation.Club</NavLink>
+            }
+            else
+            {
+                <div class="p-club p-club-empty"></div>
+            }
+        }
+    </div>
+
+    <div class="p-attempts">
+        @foreach (IGrouping<Discipline, MeetAttempt> disciplineGroup in _visibleDisciplineGroups)
+        {
+            <div class="p-disc-col">
+                <span class="p-disc-label">@disciplineGroup.Key.ToDisplayName()</span>
+                <div class="p-pills">
+                    @foreach (MeetAttempt attempt in disciplineGroup.OrderBy(a => a.Round))
+                    {
+                        <AttemptPill Attempt="attempt"
+                                     RecordContext="@(attempt.IsRecord && attempt.IsGood ? _recordContext : null)" />
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="p-footer-row">
+        <div class="p-total">
+            <span class="p-footer-label">Samtala</span>
+            @if (!Participation.Disqualified && Participation.Total > 0)
+            {
+                @($"{Participation.Total:F1}")
+            }
+            else if (!Participation.Disqualified)
+            {
+                <span>–</span>
+            }
+        </div>
+        @if (ShowIpfPoints)
+        {
+            <div class="p-ipf">
+                <span class="p-footer-label">IPF stig</span>
+                @if (!Participation.Disqualified && Participation.IpfPoints > 0)
+                {
+                    @($"{Participation.IpfPoints:F2}")
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public MeetParticipation Participation { get; init; } = null!;
+
+    [Parameter, EditorRequired]
+    public bool ShowIpfPoints { get; init; }
+
+    [Parameter, EditorRequired]
+    public bool ShowClub { get; init; }
+
+    [Parameter, EditorRequired]
+    public Dictionary<Discipline, bool> IncludedDisciplines { get; init; } = new();
+
+    [Parameter, EditorRequired]
+    public string DesktopGridTemplate { get; init; } = string.Empty;
+
+    private string _recordContext = string.Empty;
+    private string _metaLine = string.Empty;
+    private string _rankDisplay = string.Empty;
+    private string _rankClass = string.Empty;
+    private List<IGrouping<Discipline, MeetAttempt>> _visibleDisciplineGroups = [];
+
+    protected override void OnParametersSet()
+    {
+        _recordContext = $"Met: {Participation.Gender} · {Participation.AgeCategory} · {Participation.WeightCategory} kg";
+
+        List<string> metaParts = [Participation.YearOfBirth.ToString()];
+        metaParts.Add($"{Participation.BodyWeight:F2} kg");
+        _metaLine = string.Join(" · ", metaParts);
+
+        if (Participation.Disqualified)
+        {
+            _rankDisplay = "–";
+            _rankClass = string.Empty;
+        }
+        else
+        {
+            _rankDisplay = Participation.Rank switch
+            {
+                1 => "🥇",
+                2 => "🥈",
+                3 => "🥉",
+                _ when Participation.Rank > 0 && Participation.Rank < int.MaxValue - 1 => Participation.Rank.ToString(),
+                _ => "–",
+            };
+
+            _rankClass = Participation.Rank switch
+            {
+                1 or 2 or 3 => "rank-medal",
+                _ => string.Empty,
+            };
+        }
+
+        _visibleDisciplineGroups = Participation.Attempts
+            .Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline))
+            .GroupBy(a => a.Discipline)
+            .OrderBy(g => (byte)g.Key)
+            .ToList();
+    }
+}

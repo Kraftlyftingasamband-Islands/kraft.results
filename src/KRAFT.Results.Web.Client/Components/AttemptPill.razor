@@ -1,0 +1,44 @@
+@using KRAFT.Results.Contracts.Meets
+
+<span class="@_classes" tabindex="@(Attempt.IsRecord && Attempt.IsGood ? "0" : null)">
+    @_value
+    @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
+    {
+        <span class="tip" role="tooltip">@RecordContext</span>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public MeetAttempt Attempt { get; init; } = null!;
+
+    [Parameter]
+    public string? RecordContext { get; init; }
+
+    private string _classes = string.Empty;
+    private string _value = "–";
+
+    protected override void OnParametersSet()
+    {
+        if (Attempt.Weight == 0)
+        {
+            _classes = "pill pill-skipped";
+            return;
+        }
+
+        _value = $"{Attempt.Weight:F1}";
+
+        if (Attempt.IsGood && Attempt.IsRecord)
+        {
+            _classes = "pill pill-record";
+        }
+        else if (Attempt.IsGood)
+        {
+            _classes = "pill pill-good";
+        }
+        else
+        {
+            _classes = "pill pill-bad";
+        }
+    }
+}

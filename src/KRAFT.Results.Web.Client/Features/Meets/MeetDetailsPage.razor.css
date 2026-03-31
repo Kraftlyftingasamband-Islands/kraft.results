@@ -52,36 +52,136 @@
     background: #b91c1c;
 }
 
-.card-grid {
+/* ===== IPF point leaders ===== */
+
+.leaders-section {
+    max-width: 1100px;
+    margin-inline: auto;
+    margin-block-end: 1.5rem;
+    container-type: inline-size;
+}
+
+.leaders-gender-heading {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text);
+    margin-block: 0 0.375rem;
+    border-block-end: 1px solid var(--color-border);
+    padding-block-end: 0.25rem;
+}
+
+.leaders-grid {
     display: grid;
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.5rem 1.5rem;
 }
 
-.card-grid-2 {
-    grid-template-columns: 1fr 1fr;
+.leaders-gender-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-@media (max-width: 1200px) {
-    .card-grid-2 {
-        grid-template-columns: 1fr;
+@container (min-width: 600px) {
+    .leaders-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
-.card-section {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    border-inline-start: 4px solid var(--color-primary);
-    padding: 1rem;
+.leader-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
     background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
 }
 
-.table-overflow {
-    overflow-x: auto;
+.leader-medal {
+    font-size: 1.25rem;
+    flex-shrink: 0;
 }
 
-.first-attempt {
-    border-inline-start: 1px solid var(--color-border);
+.leader-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
 }
+
+.leader-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color var(--transition-fast) ease;
+}
+
+.leader-name:hover {
+    color: var(--color-primary-dark);
+}
+
+.leader-meta {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.leader-pts {
+    font-weight: 800;
+    font-size: 1.125rem;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+/* ===== Results container ===== */
+
+.results-container {
+    max-width: 1100px;
+    margin-inline: auto;
+    container-type: inline-size;
+}
+
+/* Column headers row — desktop only */
+.card-col-headers {
+    display: none;
+}
+
+@container (min-width: 960px) {
+    .card-col-headers {
+        display: grid;
+        grid-template-columns: var(--grid-template);
+        gap: 10px;
+        padding: 2px 18px 0;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        font-weight: 600;
+        align-items: end;
+    }
+}
+
+.col-header-center {
+    text-align: center;
+}
+
+.col-header-right {
+    text-align: right;
+}
+
+/* ===== Card section (gender+age group container) ===== */
+
+.card-section {
+    margin-block-end: 1.5rem;
+}
+
+/* ===== Error ===== */
 
 .error-message {
     padding: 0.75rem;
@@ -93,42 +193,30 @@
     text-align: center;
 }
 
-.bombed-out {
-    color: #6b7280;
+/* ===== Team standings ===== */
+
+.standings-container {
+    max-width: 1100px;
+    margin-inline: auto;
+    container-type: inline-size;
+    margin-block-start: 1rem;
+    margin-block-end: 2rem;
 }
 
 .standings-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    align-items: start;
-    margin-block-start: 1.5rem;
-    margin-block-end: 2rem;
-}
-
-.standings-grid-single {
     grid-template-columns: 1fr;
+    gap: 0.5rem 1.5rem;
 }
 
-.gender-section {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    border-inline-start: 4px solid var(--color-primary);
-    background: var(--color-white);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
+@container (min-width: 600px) {
+    .standings-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-.section-header {
-    margin: 0;
-    padding: 0.875rem 1.25rem;
-    background-color: var(--color-text);
-    color: var(--color-white);
-    font-family: var(--font-heading);
-    font-size: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+.standings-gender {
+    margin-block-end: 1.5rem;
 }
 
 .empty-section {
@@ -138,14 +226,15 @@
     font-size: 0.9375rem;
 }
 
-@media (max-width: 899px) {
-    .standings-grid {
-        grid-template-columns: 1fr;
-    }
+.standings-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .btn-action {
+    .btn-action,
+    .leader-name {
         transition: none;
     }
 }

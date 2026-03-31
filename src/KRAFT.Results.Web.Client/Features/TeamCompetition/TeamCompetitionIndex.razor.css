@@ -1,34 +1,25 @@
+.standings-container {
+    max-width: 1100px;
+    margin-inline: auto;
+    container-type: inline-size;
+    margin-block-start: 1rem;
+    margin-block-end: 2rem;
+}
+
 .standings-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    align-items: start;
-    margin-block-start: 1.5rem;
-}
-
-.standings-grid-single {
     grid-template-columns: 1fr;
+    gap: 0.5rem 1.5rem;
 }
 
-.gender-section {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    border-inline-start: 4px solid var(--color-primary);
-    background: var(--color-white);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
+@container (min-width: 600px) {
+    .standings-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-h2.section-header {
-    margin: 0;
-    padding: 0.875rem 1.25rem;
-    background-color: var(--color-text);
-    color: var(--color-white);
-    font-family: var(--font-heading);
-    font-size: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+.standings-gender {
+    margin-block-end: 1.5rem;
 }
 
 .empty-section {
@@ -36,6 +27,12 @@ h2.section-header {
     text-align: center;
     color: var(--color-text-muted);
     font-size: 0.9375rem;
+}
+
+.standings-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .empty-state {
@@ -103,12 +100,6 @@ h2.section-header {
 @keyframes spin {
     to {
         transform: rotate(360deg);
-    }
-}
-
-@media (max-width: 899px) {
-    .standings-grid {
-        grid-template-columns: 1fr;
     }
 }
 

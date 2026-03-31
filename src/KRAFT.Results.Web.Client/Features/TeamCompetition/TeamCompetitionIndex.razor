@@ -29,40 +29,52 @@ else if (_response is not null)
 {
     @if (_response.IsGenderSplit)
     {
-        <div class="standings-grid">
-            <div class="gender-section">
-                <h2 class="section-header">@("f".ToGenderGroupLabel())</h2>
+        <div class="standings-container">
+            <div class="standings-grid">
                 @if (_response.Women.Count > 0)
                 {
-                    <StandingsTable Standings="_response.Women" AriaLabel="Stigatafla kvenna" />
+                    <section class="standings-gender">
+                        <h4>@("f".ToGenderGroupLabel())</h4>
+                        <ol class="standings-list">
+                            @foreach (TeamCompetitionStanding standing in _response.Women)
+                            {
+                                <li><StandingsCard Standing="standing" /></li>
+                            }
+                        </ol>
+                    </section>
                 }
-                else
+
+                @if (_response.Men.Count > 0)
                 {
-                    <div class="empty-section">Engar nidurstödur.</div>
+                    <section class="standings-gender">
+                        <h4>@("m".ToGenderGroupLabel())</h4>
+                        <ol class="standings-list">
+                            @foreach (TeamCompetitionStanding standing in _response.Men)
+                            {
+                                <li><StandingsCard Standing="standing" /></li>
+                            }
+                        </ol>
+                    </section>
                 }
             </div>
 
-            <div class="gender-section">
-                <h2 class="section-header">@("m".ToGenderGroupLabel())</h2>
-                @if (_response.Men.Count > 0)
-                {
-                    <StandingsTable Standings="_response.Men" AriaLabel="Stigatafla karla" />
-                }
-                else
-                {
-                    <div class="empty-section">Engar nidurstödur.</div>
-                }
-            </div>
+            @if (_response.Women.Count == 0 && _response.Men.Count == 0)
+            {
+                <div class="empty-section">Engar nidurstödur.</div>
+            }
         </div>
     }
     else
     {
         @if (_response.Combined.Count > 0)
         {
-            <div class="standings-grid standings-grid-single">
-                <div class="gender-section">
-                    <StandingsTable Standings="_response.Combined" AriaLabel="Stigatafla lidakeppni" />
-                </div>
+            <div class="standings-container">
+                <ol class="standings-list">
+                    @foreach (TeamCompetitionStanding standing in _response.Combined)
+                    {
+                        <li><StandingsCard Standing="standing" /></li>
+                    }
+                </ol>
             </div>
         }
         else
