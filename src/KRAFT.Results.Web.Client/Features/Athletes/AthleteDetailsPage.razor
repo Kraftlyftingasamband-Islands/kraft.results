@@ -50,21 +50,10 @@
     {
         <h3>Besti árangur @(DisplayNames.EquipmentType(group.Key).ToLowerInvariant())</h3>
 
-        <div class="card-grid">
-            @foreach (var best in group)
+        <div class="card-list">
+            @foreach (AthletePersonalBest best in group)
             {
-                <Card>
-                    <a href="@($"/meets/{best.MeetSlug}")" aria-label="@(best.Discipline switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total }) — @($"{best.Weight:F1}") kg"></a>
-                    @if (best.IsSingleLift)
-                    {
-                        <div class="card-badge">@Constants.SingeLift</div>
-                    }
-                    <div class="card-label">@(best.Discipline switch { Discipline.Squat => Constants.Squat, Discipline.Bench => Constants.Bench, Discipline.Deadlift => Constants.Deadlift, _ => Constants.Total })</div>
-                    <div class="card-weight">@($"{best.Weight:F1}") <span class="card-unit">kg</span></div>
-                    <div class="card-meta">
-                        @($"{best.Date:dd-MM-yyyy}") &middot; @best.BodyWeight kg
-                    </div>
-                </Card>
+                <AthletePersonalBestCard Best="best" />
             }
         </div>
         <br />
@@ -77,21 +66,10 @@
     @foreach (var group in Records.GroupBy(x => x.IsClassic))
     {
         <h4>@DisplayNames.EquipmentType(group.Key) (@group.Count())</h4>
-        <div class="card-grid">
-            @foreach(var record in group)
+        <div class="card-list">
+            @foreach (AthleteRecord record in group)
             {
-                <Card>
-                    <a href="@($"/meets/{record.MeetSlug}")" aria-label="@record.Type — @($"{record.Weight:F1}") kg"></a>
-                    @if (record.IsSingleLift)
-                    {
-                        <div class="card-badge">@Constants.SingeLift</div>
-                    }
-                    <div class="card-label">@record.Type</div>
-                    <div class="card-weight">@($"{record.Weight:F1}") <span class="card-unit">kg</span></div>
-                    <div class="card-meta">
-                        @($"{record.Date:dd-MM-yyyy}") &middot; @record.AgeCategory @record.WeightCategory
-                    </div>
-                </Card>
+                <AthleteRecordCard Record="record" />
             }
         </div>
         <br />
@@ -110,104 +88,14 @@
     {
         <h4>@meetType.Key</h4>
 
-        <div class="table-overflow">
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Dags.</th>
-
-                        <th>Mót</th>
-
-                        <th style="text-align: center; width: 42px;">#</th>
-
-                        @if (ShowClubs)
-                        {
-                            <th style="text-align: center; width: 80px;">Félag</th>
-                        }
-
-                        <th style="text-align: center; width: 80px;">Þyngdarflokkur</th>
-
-                        <th style="text-align: center; width: 80px;">Líkamsþyngd</th>
-
-                        @if (meetType.Key == Constants.Powerlifting)
-                        {
-                            <th style="text-align: center; width: 80px;">
-                                @Constants.Squat
-                            </th>
-                        }
-
-                        @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Bench))
-                        {
-                            <th style="text-align: center; width: 80px;">
-                                @Constants.Bench
-                            </th>
-                        }
-
-                        @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Deadlift))
-                        {
-                            <th style="text-align: center; width: 80px;">
-                                @(meetType.Any(x => x.Deadlift > 0) ? Constants.Deadlift : string.Empty)
-                            </th>
-                        }
-
-                        @if (meetType.Key == Constants.Powerlifting)
-                        {
-                            <th style="text-align: center; width: 80px;">Samanlagt</th>
-                        }
-
-                        <th style="text-align: center; width: 80px;">IPF stig</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach (AthleteParticipation p in meetType)
-                    {
-                        <tr>
-                            <td>@p.Date.ToString("dd.MM.yyyy")</td>
-
-                            <td>
-                                <NavLink class="nav-link" href="@($"/meets/{p.MeetSlug}")">
-                                    @p.Meet
-                                </NavLink>
-                            </td>
-
-                            <RankCell Rank="@p.Rank" />
-                            <ClubCell Club="@p.Club" Slug="@p.ClubSlug" IsVisible="@ShowClubs"/>
-
-                            <td style="text-align: center;">@p.WeightCategory</td>
-
-                            <td>
-                                <BodyWeight Value="p.BodyWeight"/>
-                            </td>
-
-                            @if (meetType.Key == Constants.Powerlifting)
-                            {
-                                <WeightCell Weight="@p.Squat" />
-                            }
-
-                            @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Bench))
-                            {
-                                <WeightCell Weight="@p.Benchpress" />
-                            }
-
-                            @if (meetType.Key == Constants.Powerlifting || meetType.Key.StartsWith(Constants.Deadlift))
-                            {
-                                <WeightCell Weight="@p.Deadlift" />
-                            }
-
-                            @if (meetType.Key == Constants.Powerlifting)
-                            {
-                                <WeightCell Weight="@p.Total" />
-                            }
-
-                            <WeightCell Weight="@p.IpfPoints" SignificantDigits="2" />
-                        </tr>
-                    }
-                </tbody>
-
-            </table>
-        </div>
+        @foreach (AthleteParticipation p in meetType)
+        {
+            <AthleteParticipationCard
+                Participation="p"
+                MeetType="@meetType.Key"
+                ShowClub="@ShowClubs"
+                ShowIpfPoints="@true" />
+        }
     }
 }
 
