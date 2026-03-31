@@ -10,20 +10,6 @@
 
 <PageTitle>Met - @(_selectedEra is not null && _selectedEra.Slug != _currentEraSlug ? $"{_selectedEra.Title} - " : "")@GenderLabel - @AgeCategoryLabel</PageTitle>
 
-<nav class="breadcrumb" aria-label="Breadcrumb">
-    <ol>
-        <li>
-            <NavLink class="breadcrumb-link" href="records">Met</NavLink>
-        </li>
-        @if (_selectedEra is not null && _selectedEra.Slug != _currentEraSlug)
-        {
-            <li>@_selectedEra.Title</li>
-        }
-        <li>@GenderLabel</li>
-        <li aria-current="page">@AgeCategoryLabel</li>
-    </ol>
-</nav>
-
 <h1>@GenderLabel - @AgeCategoryLabel</h1>
 
 <RecordsToolbar Eras="@(_eras ?? new List<EraSummary>())"
@@ -54,87 +40,10 @@ else if (_groups is not null && _groups.Count > 0)
     {
         <section class="record-section">
             <h2>@group.Category</h2>
-            <div class="table-wrapper" tabindex="0" role="region" aria-label="@group.Category met">
-                <table aria-label="@group.Category">
-                    <colgroup>
-                        <col class="col-weight-category" />
-                        <col class="col-athlete" />
-                        <col class="col-birthyear" />
-                        <col class="col-club" />
-                        <col class="col-bodyweight" />
-                        <col class="col-mark" />
-                        <col class="col-date" />
-                        <col class="col-meet" />
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th scope="col" aria-label="Flokkur">Fl.</th>
-                            <th scope="col">Nafn</th>
-                            <th scope="col" class="text-center hide-mobile" aria-label="Fæðingarár">F.ár</th>
-                            <th scope="col" class="hide-mobile">Félag</th>
-                            <th scope="col" class="text-end" aria-label="Líkamsþyngd">Líkamsþ.</th>
-                            <th scope="col" class="text-end">Mark</th>
-                            <th scope="col" aria-label="Dagsetning">Dags.</th>
-                            <th scope="col">Mót</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (RecordEntry record in group.Records)
-                        {
-                            <tr class="@(record.IsStandard ? "standard-row" : "")">
-                                <td class="weight-category-cell">
-                                    @if (!record.IsStandard)
-                                    {
-                                        <NavLink class="nav-link weight-category-link" href="@($"records/{record.Id}/history")" aria-label="@($"Saga metsins - {record.WeightCategory}")">
-                                            @record.WeightCategory
-                                        </NavLink>
-                                    }
-                                    else
-                                    {
-                                        @record.WeightCategory
-                                    }
-                                </td>
-                                @if (record.IsStandard)
-                                {
-                                    <td colspan="7" class="standard-cell">Íslenski staðallinn</td>
-                                }
-                                else
-                                {
-                                    <td>
-                                        @if (record.AthleteSlug is not null)
-                                        {
-                                            <NavLink class="nav-link" href="@($"athletes/{record.AthleteSlug}")">
-                                                @record.Athlete
-                                            </NavLink>
-                                        }
-                                        else
-                                        {
-                                            @record.Athlete
-                                        }
-                                    </td>
-                                    <td class="text-center hide-mobile numeric-value">@(record.BirthYear?.ToString() ?? "-")</td>
-                                    <td class="hide-mobile">@(record.Club ?? "-")</td>
-                                    <td class="text-end numeric-value">@(record.BodyWeight?.ToString("F1") ?? "-")</td>
-                                    <td class="text-end numeric-value">@record.Weight.ToString("F1")</td>
-                                    <td class="numeric-value">@record.Date.ToString("dd.MM.yyyy")</td>
-                                    <td>
-                                        @if (record.MeetSlug is not null)
-                                        {
-                                            <NavLink class="nav-link" href="@($"meets/{record.MeetSlug}")">
-                                                @record.Meet
-                                            </NavLink>
-                                        }
-                                        else
-                                        {
-                                            @record.Meet
-                                        }
-                                    </td>
-                                }
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+            @foreach (RecordEntry record in group.Records)
+            {
+                <RecordCard Record="record" />
+            }
         </section>
     }
 }
