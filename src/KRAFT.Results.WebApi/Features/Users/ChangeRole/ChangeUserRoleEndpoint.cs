@@ -18,7 +18,7 @@ internal static class ChangeUserRoleEndpoint
             [FromServices] ChangeUserRoleHandler handler,
             CancellationToken cancellationToken) =>
         {
-            Result result = await handler.Handle(userId, command.Role, cancellationToken);
+            Result result = await handler.Handle(userId, command.Roles, cancellationToken);
 
             return result.Match<IResult>(
                 success: () => TypedResults.Ok(),
@@ -28,12 +28,13 @@ internal static class ChangeUserRoleEndpoint
                     UserErrors.CannotChangeOwnRoleCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     UserErrors.RoleNotFoundCode => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
+                    UserErrors.RolesRequiredCode => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
         })
         .WithName(Name)
-        .WithSummary("Changes a user's role.")
-        .WithDescription("Changes a user's role. An admin cannot change their own role.")
+        .WithSummary("Changes a user's roles.")
+        .WithDescription("Changes a user's roles. An admin cannot change their own roles.")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)

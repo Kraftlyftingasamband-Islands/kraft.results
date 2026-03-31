@@ -63,26 +63,31 @@ else if (_model is not null)
                 <ValidationMessage For="@(() => _model.Email)" />
             </div>
 
-            <div class="form-field role-field">
-                <label class="form-label" for="role">Hlutverk</label>
+            <fieldset class="form-field role-field" aria-describedby="@(_rolesError is not null ? "roles-error" : null)">
+                <legend class="form-label">Hlutverk</legend>
+                <div class="role-checkbox-group">
+                    @foreach (string role in _availableRoles)
+                    {
+                        <label class="role-checkbox-label" for="@($"role-{role.ToLowerInvariant()}")">
+                            <input type="checkbox"
+                                   id="@($"role-{role.ToLowerInvariant()}")"
+                                   class="role-checkbox"
+                                   checked="@IsRoleSelected(role)"
+                                   disabled="@(_isSelfEdit || _isLoading)"
+                                   @onchange="@(e => ToggleRole(role, e))" />
+                            <span class="role-checkbox-text">@role</span>
+                        </label>
+                    }
+                </div>
                 @if (_isSelfEdit)
                 {
-                    <select id="role" class="form-input" disabled aria-describedby="role-note">
-                        <option>@_model.Role</option>
-                    </select>
-                    <p id="role-note" class="role-note">
-                        Þú getur ekki breytt hlutverki þíns eigin aðgangs
-                    </p>
+                    <p class="role-note">Þú getur ekki breytt hlutverki þíns eigin aðgangs</p>
                 }
-                else
+                @if (_rolesError is not null)
                 {
-                    <InputSelect id="role" class="form-input" @bind-Value="_model.Role" disabled="@_isLoading">
-                        <option value="Admin">Admin</option>
-                        <option value="Editor">Editor</option>
-                        <option value="User">User</option>
-                    </InputSelect>
+                    <p id="roles-error" class="role-error" role="alert">@_rolesError</p>
                 }
-            </div>
+            </fieldset>
 
             <div class="form-actions">
                 <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
@@ -142,10 +147,40 @@ else if (_errorMessage is not null)
     private string? _deleteErrorMessage;
     private bool _showDeleteConfirmation;
     private ElementReference _cancelDeleteButton;
-    private string _originalRole = string.Empty;
     private bool _isSelfEdit;
+    private static readonly string[] _availableRoles = ["Admin", "Editor", "User"];
+    private string? _rolesError;
 
     private bool HasError => !string.IsNullOrEmpty(_errorMessage);
+
+    private bool IsRoleSelected(string role)
+    {
+        return _model?.Roles.Contains(role) ?? false;
+    }
+
+    private void ToggleRole(string role, ChangeEventArgs e)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        bool isChecked = (bool)(e.Value ?? false);
+
+        if (isChecked && !_model.Roles.Contains(role))
+        {
+            _model.Roles.Add(role);
+        }
+        else if (!isChecked)
+        {
+            _model.Roles.Remove(role);
+        }
+
+        if (_model.Roles.Count > 0)
+        {
+            _rolesError = null;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -170,9 +205,8 @@ else if (_errorMessage is not null)
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email ?? string.Empty,
-                Role = user.Role,
+                Roles = [..user.Roles],
             };
-            _originalRole = user.Role;
         }
         catch (HttpRequestException)
         {
@@ -191,6 +225,13 @@ else if (_errorMessage is not null)
 
         try
         {
+            if (_model!.Roles.Count == 0)
+            {
+                _rolesError = "Velja verður að minnsta kosti eitt hlutverk.";
+                _isLoading = false;
+                return;
+            }
+
             UpdateUserCommand command = new(
                 _model!.FirstName,
                 _model.LastName,
@@ -216,28 +257,25 @@ else if (_errorMessage is not null)
                 return;
             }
 
-            if (_model!.Role != _originalRole)
+            ChangeUserRoleCommand roleCommand = new(_model.Roles);
+            HttpResponseMessage roleResponse = await HttpClient.PatchAsJsonAsync($"/users/{UserId}/role", roleCommand);
+
+            if (roleResponse.StatusCode == HttpStatusCode.Conflict)
             {
-                ChangeUserRoleCommand roleCommand = new(_model.Role);
-                HttpResponseMessage roleResponse = await HttpClient.PatchAsJsonAsync($"/users/{UserId}/role", roleCommand);
+                _errorMessage = "Þú getur ekki breytt hlutverki þíns eigin aðgangs.";
+                return;
+            }
 
-                if (roleResponse.StatusCode == HttpStatusCode.Conflict)
-                {
-                    _errorMessage = "Þú getur ekki breytt hlutverki þíns eigin aðgangs.";
-                    return;
-                }
+            if (roleResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                _errorMessage = "Notandi fannst ekki.";
+                return;
+            }
 
-                if (roleResponse.StatusCode == HttpStatusCode.NotFound)
-                {
-                    _errorMessage = "Notandi fannst ekki.";
-                    return;
-                }
-
-                if (!roleResponse.IsSuccessStatusCode)
-                {
-                    _errorMessage = "Villa kom upp við að breyta hlutverki.";
-                    return;
-                }
+            if (!roleResponse.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp við að breyta hlutverki.";
+                return;
             }
 
             NavigationManager.NavigateTo("/users");
@@ -321,7 +359,6 @@ else if (_errorMessage is not null)
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        public string Role { get; set; } = string.Empty;
+        public List<string> Roles { get; set; } = [];
     }
 }

@@ -22,7 +22,7 @@ public sealed class ChangeUserRoleTests(IntegrationTestFixture fixture)
     {
         // Arrange
         int userId = await CreateUserAsync();
-        ChangeUserRoleCommand command = new("Editor");
+        ChangeUserRoleCommand command = new(["Editor"]);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
@@ -35,14 +35,37 @@ public sealed class ChangeUserRoleTests(IntegrationTestFixture fixture)
             $"{BasePath}/{userId}/edit", CancellationToken.None);
         UserEditDetails? details = await editResponse.Content.ReadFromJsonAsync<UserEditDetails>(CancellationToken.None);
         details.ShouldNotBeNull();
-        details.Role.ShouldBe("Editor");
+        details.Roles.ShouldContain("Editor");
+    }
+
+    [Fact]
+    public async Task ReturnsOk_WhenMultipleRolesAssigned()
+    {
+        // Arrange
+        int userId = await CreateUserAsync();
+        ChangeUserRoleCommand command = new(["Admin", "Editor"]);
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
+            $"{BasePath}/{userId}/role", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        HttpResponseMessage editResponse = await _authorizedHttpClient.GetAsync(
+            $"{BasePath}/{userId}/edit", CancellationToken.None);
+        UserEditDetails? details = await editResponse.Content.ReadFromJsonAsync<UserEditDetails>(CancellationToken.None);
+        details.ShouldNotBeNull();
+        details.Roles.ShouldContain("Admin");
+        details.Roles.ShouldContain("Editor");
+        details.Roles.Count.ShouldBe(2);
     }
 
     [Fact]
     public async Task ReturnsNotFound_WhenUserDoesNotExist()
     {
         // Arrange
-        ChangeUserRoleCommand command = new("Admin");
+        ChangeUserRoleCommand command = new(["Admin"]);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
@@ -60,7 +83,7 @@ public sealed class ChangeUserRoleTests(IntegrationTestFixture fixture)
     {
         // Arrange
         int selfUserId = await GetSeededUserIdAsync();
-        ChangeUserRoleCommand command = new("Editor");
+        ChangeUserRoleCommand command = new(["Editor"]);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
@@ -78,7 +101,7 @@ public sealed class ChangeUserRoleTests(IntegrationTestFixture fixture)
     {
         // Arrange
         int userId = await CreateUserAsync();
-        ChangeUserRoleCommand command = new("SuperAdmin");
+        ChangeUserRoleCommand command = new(["SuperAdmin"]);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
@@ -92,11 +115,57 @@ public sealed class ChangeUserRoleTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task ReturnsBadRequest_WhenRolesEmpty()
+    {
+        // Arrange
+        int userId = await CreateUserAsync();
+        ChangeUserRoleCommand command = new([]);
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
+            $"{BasePath}/{userId}/role", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Users.RolesRequired");
+    }
+
+    [Fact]
+    public async Task ReturnsOk_WhenRoleIsRemovedDuringReconciliation()
+    {
+        // Arrange
+        int userId = await CreateUserAsync();
+        ChangeUserRoleCommand assignCommand = new(["Admin", "Editor"]);
+        HttpResponseMessage assignResponse = await _authorizedHttpClient.PatchAsJsonAsync(
+            $"{BasePath}/{userId}/role", assignCommand, CancellationToken.None);
+        assignResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        ChangeUserRoleCommand reconcileCommand = new(["Editor"]);
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
+            $"{BasePath}/{userId}/role", reconcileCommand, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        HttpResponseMessage editResponse = await _authorizedHttpClient.GetAsync(
+            $"{BasePath}/{userId}/edit", CancellationToken.None);
+        UserEditDetails? details = await editResponse.Content.ReadFromJsonAsync<UserEditDetails>(CancellationToken.None);
+        details.ShouldNotBeNull();
+        details.Roles.ShouldContain("Editor");
+        details.Roles.ShouldNotContain("Admin");
+        details.Roles.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
         int userId = await CreateUserAsync();
-        ChangeUserRoleCommand command = new("Editor");
+        ChangeUserRoleCommand command = new(["Editor"]);
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.PatchAsJsonAsync(
@@ -110,7 +179,7 @@ public sealed class ChangeUserRoleTests(IntegrationTestFixture fixture)
     public async Task ReturnsUnauthorized_WhenNotAuthenticated()
     {
         // Arrange
-        ChangeUserRoleCommand command = new("Editor");
+        ChangeUserRoleCommand command = new(["Editor"]);
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PatchAsJsonAsync(

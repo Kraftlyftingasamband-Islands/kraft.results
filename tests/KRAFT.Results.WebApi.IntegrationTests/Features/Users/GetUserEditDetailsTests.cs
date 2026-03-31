@@ -30,7 +30,7 @@ public sealed class GetUserEditDetailsTests(IntegrationTestFixture fixture)
         UserEditDetails? details = await response.Content.ReadFromJsonAsync<UserEditDetails>(CancellationToken.None);
         details.ShouldNotBeNull();
         details.Email.ShouldBe(Constants.TestUser.Email);
-        details.Role.ShouldBe("Admin");
+        details.Roles.ShouldContain("Admin");
     }
 
     [Fact]

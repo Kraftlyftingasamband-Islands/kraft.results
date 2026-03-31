@@ -12,6 +12,7 @@ internal static class UserErrors
     internal const string CannotDeleteSelfCode = "Users.CannotDeleteSelf";
     internal const string CannotChangeOwnRoleCode = "Users.CannotChangeOwnRole";
     internal const string RoleNotFoundCode = "Users.RoleNotFound";
+    internal const string RolesRequiredCode = "Users.RolesRequired";
 
     internal static readonly Error InvalidUsernameOrPassword = new(
         Code: InvalidUsernameOrPasswordCode,
@@ -60,4 +61,8 @@ internal static class UserErrors
     internal static readonly Error RoleNotFound = new(
         Code: RoleNotFoundCode,
         Description: "The specified role does not exist.");
+
+    internal static readonly Error RolesRequired = new(
+        Code: RolesRequiredCode,
+        Description: "At least one role must be specified.");
 }
