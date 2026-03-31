@@ -38,39 +38,10 @@
     outline-offset: 2px;
 }
 
-.table-wrapper {
-    overflow-x: auto;
-}
-
-table {
-    table-layout: fixed;
-}
-
-.col-rank {
-    width: 3.5rem;
-}
-
-.col-athlete {
-    width: 18rem;
-}
-
-.col-numeric {
-    width: 6rem;
-}
-
-.col-meet {
-}
-
-.numeric-value {
-    font-variant-numeric: tabular-nums;
-}
-
-.text-end {
-    text-align: end;
-}
-
-.text-center {
-    text-align: center;
+.rankings-list {
+    max-width: 720px;
+    margin-inline: auto;
+    container-type: inline-size;
 }
 
 .pagination {
@@ -190,21 +161,11 @@ table {
         min-width: auto;
         flex: 1;
     }
-
-    .hide-mobile {
-        display: none;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .filter-select {
-        transition: none;
-    }
-
-    .page-btn {
-        transition: none;
-    }
-
+    .filter-select,
+    .page-btn,
     .retry-btn {
         transition: none;
     }

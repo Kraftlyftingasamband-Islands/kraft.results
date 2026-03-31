@@ -1,0 +1,46 @@
+@using KRAFT.Results.Contracts.Rankings
+
+<div class="r-card">
+    <div class="r-header-row">
+        <div class="r-rank @_rankClass" aria-hidden="true">@_rankDisplay</div>
+        <div class="r-name-col">
+            <NavLink class="r-name" href="@($"/athletes/{Entry.AthleteSlug}")">@Entry.Athlete</NavLink>
+            <span class="r-meta">@Entry.WeightCategory kg · @Entry.BodyWeight.ToString("F2") kg · @Entry.Result.ToString("F1") @DisciplineLabel</span>
+        </div>
+        @if (Entry.IpfPoints.HasValue)
+        {
+            <div class="r-ipf-col">
+                <span class="r-ipf-label">IPF stig</span>
+                <span class="r-ipf">@Entry.IpfPoints.Value.ToString("F2")</span>
+            </div>
+        }
+    </div>
+    <div class="r-footer-row">
+        <NavLink class="r-meet-link" href="@($"/meets/{Entry.MeetSlug}")">@Entry.MeetTitle</NavLink>
+        <span class="r-meet-date">@Entry.MeetDate.ToString("dd.MM.yyyy")</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public RankingEntry Entry { get; set; } = null!;
+
+    [Parameter]
+    public string DisciplineLabel { get; set; } = string.Empty;
+
+    private string _rankDisplay = string.Empty;
+    private string _rankClass = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        _rankDisplay = Entry.Rank switch
+        {
+            1 => "🥇",
+            2 => "🥈",
+            3 => "🥉",
+            _ => Entry.Rank.ToString(),
+        };
+
+        _rankClass = Entry.Rank is 1 or 2 or 3 ? "rank-medal" : string.Empty;
+    }
+}
