@@ -31,10 +31,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 18px;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
+}
+
+.apb-badge svg {
+    width: 20px;
+    height: 20px;
 }
 
 .apb-name-col {
