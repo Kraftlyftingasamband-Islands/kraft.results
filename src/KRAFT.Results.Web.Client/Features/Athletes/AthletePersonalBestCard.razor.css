@@ -21,23 +21,6 @@
     border-color: var(--color-primary);
 }
 
-.apb-badge {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    background: var(--color-primary);
-    color: var(--color-white);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.apb-badge svg {
-    width: 20px;
-    height: 20px;
-}
-
 .apb-name-col {
     flex: 1;
     min-width: 0;
