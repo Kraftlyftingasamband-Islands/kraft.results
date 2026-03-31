@@ -1,0 +1,125 @@
+.ar-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-inline-start: 4px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-block-end: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ar-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ar-cat {
+    flex-shrink: 0;
+    min-width: 44px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 22px;
+    padding: 6px 10px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.ar-name-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ar-type {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ar-sl-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    padding: 2px 5px;
+    flex-shrink: 0;
+}
+
+.ar-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-block-start: 1px;
+}
+
+.ar-mark-col {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.ar-mark {
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--color-primary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+.ar-mark-link:hover {
+    color: var(--color-primary-dark);
+}
+
+@container (min-width: 680px) {
+    .ar-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        column-gap: 16px;
+        padding: 8px 14px;
+        flex-direction: unset;
+    }
+
+    .ar-header-row {
+        display: contents;
+    }
+
+    .ar-cat {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .ar-name-col {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .ar-mark-col {
+        grid-column: 3;
+        grid-row: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ar-mark-link {
+        transition: none;
+    }
+}
