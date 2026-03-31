@@ -26,12 +26,9 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await Expect(heading).ToContainTextAsync("Karlar", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(heading).ToContainTextAsync("Opinn flokkur", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        ILocator breadcrumb = page.Locator("nav.breadcrumb");
-        await Expect(breadcrumb).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-
-        ILocator recordTables = page.Locator(".record-section table");
-        await Expect(recordTables.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(recordTables).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator recordCards = page.Locator(".record-section .rc-card");
+        await Expect(recordCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(recordCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -47,9 +44,9 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        ILocator recordTables = page.Locator(".record-section table");
-        await Expect(recordTables.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(recordTables).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator recordCards = page.Locator(".record-section .rc-card");
+        await Expect(recordCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(recordCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -72,13 +69,13 @@ public class RecordsPageTests(PlaywrightFixture fixture)
             new Regex("era=current-era"),
             new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        ILocator recordTables = page.Locator(".record-section table");
-        await Expect(recordTables.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(recordTables).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator recordCards = page.Locator(".record-section .rc-card");
+        await Expect(recordCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(recordCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
-    public async Task Breadcrumb_IncludesEraTitle_WhenHistoricalEra()
+    public async Task PageTitle_IncludesEraTitle_WhenHistoricalEra()
     {
         // Arrange
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
@@ -86,10 +83,9 @@ public class RecordsPageTests(PlaywrightFixture fixture)
 
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/records/m/open?equipmentType=equipped&era=historical-era");
-        ILocator breadcrumb = page.Locator("nav.breadcrumb");
-        await Expect(breadcrumb).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(page.Locator("h1")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        await Expect(breadcrumb).ToContainTextAsync("Historical Era", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("Historical Era"), new PageAssertionsToHaveTitleOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }
