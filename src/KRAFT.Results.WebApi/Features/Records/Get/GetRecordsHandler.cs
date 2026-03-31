@@ -72,11 +72,9 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Slug : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.DateOfBirth!.Value.Year : (int?)null,
-                r.Attempt != null ? r.Attempt.Participation.Team!.TitleShort : null,
                 r.Attempt != null ? r.Attempt.Participation.Weight : (decimal?)null,
                 r.Weight,
                 r.Date,
-                r.Attempt != null ? r.Attempt.Participation.Meet.Title + " " + r.Attempt.Participation.Meet.StartDate.Year : null,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Slug : null,
                 r.WeightCategory.MinWeight,
                 r.IsStandard))
@@ -109,11 +107,9 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                                 record.Athlete,
                                 record.AthleteSlug,
                                 record.BirthYear,
-                                record.Club,
                                 record.BodyWeight,
                                 record.Weight,
                                 record.Date,
-                                record.Meet,
                                 record.MeetSlug,
                                 record.Athlete is null);
                         }
@@ -125,10 +121,8 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                             null,
                             null,
                             null,
-                            null,
                             0m,
                             default,
-                            null,
                             null,
                             false);
                     })
@@ -151,11 +145,9 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
         string? Athlete,
         string? AthleteSlug,
         int? BirthYear,
-        string? Club,
         decimal? BodyWeight,
         decimal Weight,
         DateOnly Date,
-        string? Meet,
         string? MeetSlug,
         decimal MinWeight,
         bool IsStandard);

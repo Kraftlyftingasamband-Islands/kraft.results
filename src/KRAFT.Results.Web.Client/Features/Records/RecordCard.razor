@@ -1,0 +1,68 @@
+@using KRAFT.Results.Contracts.Records
+
+@if (Record.IsStandard)
+{
+    <div class="rc-card rc-standard">
+        <div class="rc-header-row">
+            <div class="rc-category">@Record.WeightCategory</div>
+            <div class="rc-name-col">
+                <span class="rc-standard-text">Íslenski staðallinn</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="rc-card">
+        <div class="rc-header-row">
+            <a class="rc-category rc-category-link" href="@($"/records/{Record.Id}/history")">@Record.WeightCategory</a>
+            <div class="rc-name-col">
+                @if (Record.AthleteSlug is not null)
+                {
+                    <a class="rc-name" href="@($"/athletes/{Record.AthleteSlug}")">@(Record.Athlete ?? "-")</a>
+                }
+                else
+                {
+                    <span class="rc-name-plain">@(Record.Athlete ?? "-")</span>
+                }
+                <span class="rc-meta">@_meta</span>
+            </div>
+            <div class="rc-mark-col">
+                @if (Record.MeetSlug is not null)
+                {
+                    <a class="rc-mark rc-mark-link" href="@($"/meets/{Record.MeetSlug}")">@Record.Weight.ToString("F1")</a>
+                }
+                else
+                {
+                    <span class="rc-mark">@Record.Weight.ToString("F1")</span>
+                }
+            </div>
+        </div>
+</div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public RecordEntry Record { get; set; } = null!;
+
+    private string _meta = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        List<string> parts = [];
+
+        if (Record.BirthYear.HasValue)
+        {
+            parts.Add(Record.BirthYear.Value.ToString());
+        }
+
+        if (Record.BodyWeight.HasValue)
+        {
+            parts.Add($"{Record.BodyWeight.Value:F1} kg");
+        }
+
+        parts.Add(Record.Date.ToString("dd.MM.yyyy"));
+
+        _meta = string.Join(" \u00b7 ", parts);
+    }
+}
