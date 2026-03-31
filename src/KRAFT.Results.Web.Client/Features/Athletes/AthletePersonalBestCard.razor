@@ -30,20 +30,12 @@
 
     protected override void OnParametersSet()
     {
-        _disciplineLabel = Best.Discipline switch
-        {
-            Discipline.Squat => Constants.Squat,
-            Discipline.Bench => Constants.Bench,
-            Discipline.Deadlift => Constants.Deadlift,
-            _ => Constants.Total,
-        };
+        _disciplineLabel = Best.Discipline.ToDisplayName() is { Length: > 0 } name
+            ? name
+            : Constants.Total;
 
-        _badgeText = Best.Discipline switch
-        {
-            Discipline.Squat => "H",
-            Discipline.Bench => "B",
-            Discipline.Deadlift => "R",
-            _ => "S",
-        };
+        _badgeText = Best.Discipline.ToAbbreviation() is { Length: > 0 } abbr
+            ? abbr
+            : "S";
     }
 }
