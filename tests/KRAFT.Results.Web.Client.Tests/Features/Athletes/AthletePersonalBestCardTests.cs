@@ -105,5 +105,32 @@ public sealed class AthletePersonalBestCardTests : IDisposable
         cut.Find("a.apb-card-link").GetAttribute("href").ShouldBe("/meets/spring-open-2024");
     }
 
+    [Theory]
+    [InlineData(Discipline.Squat)]
+    [InlineData(Discipline.Bench)]
+    [InlineData(Discipline.Deadlift)]
+    [InlineData(Discipline.None)]
+    public void ShowsDisciplineIcon_InBadge(Discipline discipline)
+    {
+        // Arrange
+        AthletePersonalBest best = new(
+            IsClassic: false,
+            IsSingleLift: false,
+            Discipline: discipline,
+            Weight: 100.0m,
+            WeightCategory: "83 kg",
+            BodyWeight: 82.50m,
+            MeetSlug: "test-meet",
+            MeetType: Constants.Powerlifting,
+            Date: new DateOnly(2024, 3, 15));
+
+        // Act
+        IRenderedComponent<AthletePersonalBestCard> cut = _context.Render<AthletePersonalBestCard>(
+            parameters => parameters.Add(p => p.Best, best));
+
+        // Assert
+        cut.Find(".apb-badge svg").ShouldNotBeNull();
+    }
+
     public void Dispose() => _context.Dispose();
 }
