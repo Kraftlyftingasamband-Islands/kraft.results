@@ -13,7 +13,7 @@
 
             List<AthleteRecord> matchingRecords = MatchingRecords(best);
             string recordSuffix = matchingRecords.Count > 0
-                ? " — " + string.Join(", ", matchingRecords.Select(r => $"Íslandsmet ({TranslateAgeCategory(r.AgeCategory)})"))
+                ? " — " + string.Join(", ", matchingRecords.Select(r => BuildStarTooltip(r)))
                 : string.Empty;
             string ariaLabel = $"{disciplineLabel} — {best.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg{recordSuffix}";
 
@@ -34,8 +34,11 @@
                     @if (matchingRecords.Count > 0)
                     {
                         <div class="pbg-stars" aria-hidden="true">
-                            <span class="pbg-star"
-                                  data-tooltip="@BuildRecordTooltip(matchingRecords)">★</span>
+                            @foreach (AthleteRecord record in matchingRecords)
+                            {
+                                <span class="pbg-star"
+                                      data-tooltip="@BuildStarTooltip(record)">★</span>
+                            }
                         </div>
                     }
                     <span class="pbg-weight">@best.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="pbg-unit">kg</span></span>
@@ -62,21 +65,16 @@
             : best.Discipline.ToDisplayName();
     }
 
-    private static string BuildRecordTooltip(List<AthleteRecord> records)
-    {
-        if (records.Count == 1)
-        {
-            return $"Íslandsmet · {TranslateAgeCategory(records[0].AgeCategory)} · {records[0].WeightCategory}";
-        }
-
-        string details = string.Join(", ", records.Select(r => $"{TranslateAgeCategory(r.AgeCategory)} ({r.WeightCategory})"));
-        return $"Íslandsmet · {details}";
-    }
-
     private static string TranslateAgeCategory(string ageCategory)
     {
         string translated = ageCategory.ToAgeCategoryLabel();
         return translated.Length > 0 ? translated : ageCategory;
+    }
+
+    private static string BuildStarTooltip(AthleteRecord record)
+    {
+        string tooltip = $"Íslandsmet · {TranslateAgeCategory(record.AgeCategory)} · {record.WeightCategory}";
+        return record.IsSingleLift ? $"{tooltip} · {Constants.SingeLift}" : tooltip;
     }
 
     private List<AthleteRecord> MatchingRecords(AthletePersonalBest best)
