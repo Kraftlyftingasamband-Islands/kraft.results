@@ -80,11 +80,14 @@
     private List<AthleteRecord> MatchingRecords(AthletePersonalBest best)
     {
         string type = DisciplineType(best);
-        return Records.Where(r =>
-            r.Weight == best.Weight &&
-            r.IsClassic == best.IsClassic &&
-            r.IsSingleLift == best.IsSingleLift &&
-            r.Type == type)
+        return Records
+            .Where(r =>
+                r.Weight == best.Weight &&
+                r.IsClassic == best.IsClassic &&
+                r.IsSingleLift == best.IsSingleLift &&
+                r.Type == type)
+            .GroupBy(r => (r.AgeCategory, r.WeightCategory))
+            .Select(g => g.First())
             .ToList();
     }
 }
