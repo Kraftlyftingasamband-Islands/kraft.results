@@ -11,9 +11,15 @@
                 ? name
                 : Constants.Total;
 
+            List<AthleteRecord> matchingRecords = MatchingRecords(best);
+            string recordSuffix = matchingRecords.Count > 0
+                ? " — " + string.Join(", ", matchingRecords.Select(r => $"Íslandsmet ({r.AgeCategory})"))
+                : string.Empty;
+            string ariaLabel = $"{disciplineLabel} — {best.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg{recordSuffix}";
+
             <a class="pbg-row @(best.Discipline == Discipline.None ? "pbg-row--total" : "")"
-               href="@($"/meets/{best.MeetSlug}")"
-               aria-label="@disciplineLabel — @best.Weight.ToString("F1", CultureInfo.InvariantCulture) kg">
+               href="@SlugSanitizer.SlugHref("/meets/", best.MeetSlug)"
+               aria-label="@ariaLabel">
                 <div class="pbg-left">
                     <span class="pbg-discipline">
                         @if (best.IsSingleLift)
@@ -22,6 +28,15 @@
                         }
                         @disciplineLabel
                     </span>
+                    @if (matchingRecords.Count > 0)
+                    {
+                        <span class="pbg-records">
+                            @foreach (AthleteRecord record in matchingRecords)
+                            {
+                                <span class="pbg-record-badge">ÍM · @record.AgeCategory</span>
+                            }
+                        </span>
+                    }
                     <span class="pbg-meta">@best.Date.ToString("dd.MM.yyyy") · @best.BodyWeight.ToString("F1", CultureInfo.InvariantCulture) kg</span>
                 </div>
                 <span class="pbg-weight">@best.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="pbg-unit">kg</span></span>
@@ -36,4 +51,25 @@
 
     [Parameter, EditorRequired]
     public IReadOnlyList<AthletePersonalBest> PersonalBests { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<AthleteRecord> Records { get; set; } = [];
+
+    private static string DisciplineType(AthletePersonalBest best)
+    {
+        return best.Discipline == Discipline.None
+            ? Constants.Total
+            : best.Discipline.ToDisplayName();
+    }
+
+    private List<AthleteRecord> MatchingRecords(AthletePersonalBest best)
+    {
+        string type = DisciplineType(best);
+        return Records.Where(r =>
+            r.Weight == best.Weight &&
+            r.IsClassic == best.IsClassic &&
+            r.IsSingleLift == best.IsSingleLift &&
+            r.Type == type)
+            .ToList();
+    }
 }

@@ -86,6 +86,27 @@
     flex-shrink: 0;
 }
 
+.pbg-records {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-block-start: 3px;
+}
+
+.pbg-record-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--color-accent, #92700c);
+    color: var(--color-white);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    padding: 2px 5px;
+    flex-shrink: 0;
+}
+
 .pbg-meta {
     font-size: 12px;
     color: var(--color-text-muted);
