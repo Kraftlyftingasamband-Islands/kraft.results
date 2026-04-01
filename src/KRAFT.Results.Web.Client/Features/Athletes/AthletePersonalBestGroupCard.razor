@@ -37,7 +37,7 @@
                             @foreach (AthleteRecord record in matchingRecords)
                             {
                                 <span class="pbg-star"
-                                      title="@($"Íslandsmet · {record.AgeCategory} · {record.WeightCategory}")">★</span>
+                                      data-tooltip="@($"Íslandsmet · {record.AgeCategory} · {record.WeightCategory}")">★</span>
                             }
                         </div>
                     }
