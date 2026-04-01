@@ -8,6 +8,15 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
+@if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+        <a href="/athletes">Til baka í keppendur</a>
+    </div>
+}
+else
+{
 <div class="page-header">
     <h1>@Athlete?.Name</h1>
     <AuthorizeView Roles="Admin">
@@ -136,11 +145,13 @@
                OnConfirm="HandleDelete"
                ErrorMessage="@_deleteErrorMessage"
                IsLoading="_isDeleting" />
+}
 
 @code {
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
     private string? _deleteErrorMessage;
+    private string? _errorMessage;
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -196,10 +207,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
-        PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
-        Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
-        Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
-        ShowClubs = !string.IsNullOrWhiteSpace(Athlete?.Club);
+        try
+        {
+            Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
+            PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
+            Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
+            Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
+            ShowClubs = !string.IsNullOrWhiteSpace(Athlete?.Club);
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að sækja keppanda. Reyndu aftur síðar.";
+        }
     }
 }

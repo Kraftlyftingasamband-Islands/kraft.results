@@ -21,9 +21,15 @@
 
 @if (_isLoading)
 {
-    <div class="spinner-container" role="status">
-        <div class="spinner"></div>
+    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
+        <div class="spinner" aria-hidden="true"></div>
         <span class="visually-hidden">Sæki keppendur...</span>
+    </div>
+}
+else if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
     </div>
 }
 else
@@ -76,6 +82,7 @@ else
     private IReadOnlyCollection<AthleteSummary> _athletes = [];
     private string _searchTerm = string.Empty;
     private bool _isLoading = true;
+    private string? _errorMessage;
     private bool _shouldFocusSearch;
     private ElementReference _searchInput;
 
@@ -94,11 +101,21 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
-        _athletes = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
-        ApplyFilter();
-        _isLoading = false;
-        _shouldFocusSearch = true;
+        try
+        {
+            await base.OnInitializedAsync();
+            _athletes = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
+            ApplyFilter();
+            _shouldFocusSearch = true;
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að sækja keppendur. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
