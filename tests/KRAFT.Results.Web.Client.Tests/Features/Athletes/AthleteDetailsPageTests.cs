@@ -123,7 +123,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             List<string> stars = cut.FindAll(".pbg-star")
-                .Select(e => e.GetAttribute("title") ?? string.Empty)
+                .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
                 .ToList();
 
             stars.Count.ShouldBe(1);
@@ -183,7 +183,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             List<string> stars = cut.FindAll(".pbg-star")
-                .Select(e => e.GetAttribute("title") ?? string.Empty)
+                .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
                 .ToList();
 
             stars.Count.ShouldBe(2);
