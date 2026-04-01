@@ -76,9 +76,13 @@
         string tooltip = $"Íslandsmet · {TranslateAgeCategory(record.AgeCategory)} · {record.WeightCategory}";
         if (record.IsWithinPowerlifting)
         {
-            tooltip += " (kraftlyftingar)";
+            return $"{tooltip} (kraftlyftingar)";
         }
-        return record.IsSingleLift ? $"{tooltip} (stök grein)" : tooltip;
+        if (record.IsSingleLift || record.IsStandaloneDiscipline)
+        {
+            return $"{tooltip} (stök grein)";
+        }
+        return tooltip;
     }
 
     private List<AthleteRecord> MatchingRecords(AthletePersonalBest best)

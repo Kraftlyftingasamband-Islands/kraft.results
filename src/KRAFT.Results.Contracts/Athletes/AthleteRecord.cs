@@ -5,6 +5,7 @@ public sealed record class AthleteRecord(
     bool IsClassic,
     bool IsSingleLift,
     bool IsWithinPowerlifting,
+    bool IsStandaloneDiscipline,
     string WeightCategory,
     string AgeCategory,
     string Type,
