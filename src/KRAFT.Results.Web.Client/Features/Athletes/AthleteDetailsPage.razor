@@ -59,19 +59,14 @@
 @if (Records.Count > 0)
 {
     <h3>Núverandi íslandsmet (@Records.Count)</h3>
-    @foreach (IGrouping<bool, AthleteRecord> group in Records.GroupBy(x => x.IsClassic))
-    {
-        <h4>@DisplayNames.EquipmentType(group.Key) (@group.Count())</h4>
-        <div class="card-list">
-            @foreach (AthleteRecord record in group)
-            {
-                <AthleteRecordCard Record="record" />
-            }
-        </div>
-        <br />
-    }
-
-    <br />
+    <div class="pb-group-container">
+        @foreach (IGrouping<bool, AthleteRecord> group in Records.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
+        {
+            <AthleteRecordGroupCard
+                Title="@($"Íslandsmet {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()} ({group.Count()})")"
+                Records="@group.ToList()" />
+        }
+    </div>
 }
 
 @if (Participations.Count > 0)

@@ -1,0 +1,36 @@
+@using System.Globalization
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+
+<div class="arg-card">
+    <h3 class="arg-header">@Title</h3>
+    <div class="arg-rows">
+        @foreach (AthleteRecord record in Records)
+        {
+            <a class="arg-row"
+               href="@($"/meets/{record.MeetSlug}")"
+               aria-label="@($"{record.WeightCategory} — {record.Type} — {record.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg")">
+                <span class="arg-cat">@record.WeightCategory</span>
+                <div class="arg-info">
+                    <span class="arg-type">
+                        @if (record.IsSingleLift)
+                        {
+                            <span class="arg-sl-badge">@Constants.SingeLift</span>
+                        }
+                        @record.Type
+                    </span>
+                    <span class="arg-meta">@record.AgeCategory · @record.Date.ToString("dd.MM.yyyy")</span>
+                </div>
+                <span class="arg-weight">@record.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="arg-unit">kg</span></span>
+            </a>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AthleteRecord> Records { get; set; } = [];
+}
