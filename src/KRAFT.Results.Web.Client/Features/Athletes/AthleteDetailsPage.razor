@@ -46,7 +46,7 @@ else
     @if (ShowClubs)
     {
         <span class="meta-separator">&middot;</span>
-        <NavLink class="nav-link" href="@($"/teams/{Athlete?.ClubSlug}")">
+        <NavLink class="nav-link" href="@SlugSanitizer.SlugHref("/teams/", Athlete?.ClubSlug ?? string.Empty)">
             @Athlete?.Club
         </NavLink>
     }
@@ -78,7 +78,8 @@ else
         {
             <AthletePersonalBestGroupCard
                 Title="@($"Besti árangur {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()}")"
-                PersonalBests="@group.ToList()" />
+                PersonalBests="@group.ToList()"
+                Records="@Records" />
         }
     </div>
 }

@@ -81,6 +81,163 @@ public sealed class AthleteDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void PersonalBestGroupCard_ShowsRecordBadge_WhenMatchingRecordExists()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.Squat,
+                Weight: 200.0m,
+                WeightCategory: "93 kg",
+                BodyWeight: 90.5m,
+                MeetSlug: "test-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10)),
+        ];
+
+        List<AthleteRecord> records =
+        [
+            new(
+                Date: new DateOnly(2024, 5, 10),
+                IsClassic: true,
+                IsSingleLift: false,
+                WeightCategory: "93 kg",
+                AgeCategory: "Open",
+                Type: Constants.Squat,
+                Weight: 200.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+        ];
+
+        RegisterHttpClient(records: records, personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            List<string> badges = cut.FindAll(".pbg-record-badge")
+                .Select(e => e.TextContent)
+                .ToList();
+
+            badges.Count.ShouldBe(1);
+            badges[0].ShouldBe("ÍM · Open");
+        });
+    }
+
+    [Fact]
+    public void PersonalBestGroupCard_ShowsMultipleRecordBadges_WhenMultipleAgeCategoriesMatch()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.None,
+                Weight: 600.0m,
+                WeightCategory: "93 kg",
+                BodyWeight: 90.5m,
+                MeetSlug: "test-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10)),
+        ];
+
+        List<AthleteRecord> records =
+        [
+            new(
+                Date: new DateOnly(2024, 5, 10),
+                IsClassic: true,
+                IsSingleLift: false,
+                WeightCategory: "93 kg",
+                AgeCategory: "Open",
+                Type: Constants.Total,
+                Weight: 600.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+            new(
+                Date: new DateOnly(2024, 5, 10),
+                IsClassic: true,
+                IsSingleLift: false,
+                WeightCategory: "93 kg",
+                AgeCategory: "Junior",
+                Type: Constants.Total,
+                Weight: 600.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+        ];
+
+        RegisterHttpClient(records: records, personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            List<string> badges = cut.FindAll(".pbg-record-badge")
+                .Select(e => e.TextContent)
+                .ToList();
+
+            badges.Count.ShouldBe(2);
+            badges.ShouldContain("ÍM · Open");
+            badges.ShouldContain("ÍM · Junior");
+        });
+    }
+
+    [Fact]
+    public void PersonalBestGroupCard_DoesNotShowRecordBadge_WhenNoMatchingRecord()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.Squat,
+                Weight: 200.0m,
+                WeightCategory: "93 kg",
+                BodyWeight: 90.5m,
+                MeetSlug: "test-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10)),
+        ];
+
+        List<AthleteRecord> records =
+        [
+            new(
+                Date: new DateOnly(2024, 5, 10),
+                IsClassic: true,
+                IsSingleLift: false,
+                WeightCategory: "93 kg",
+                AgeCategory: "Open",
+                Type: Constants.Bench,
+                Weight: 150.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+        ];
+
+        RegisterHttpClient(records: records, personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".pbg-card").Count.ShouldBeGreaterThan(0);
+            cut.FindAll(".pbg-record-badge").Count.ShouldBe(0);
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
