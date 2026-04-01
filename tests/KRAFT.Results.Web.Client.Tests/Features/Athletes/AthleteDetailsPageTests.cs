@@ -132,7 +132,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
     }
 
     [Fact]
-    public void PersonalBestGroupCard_ShowsSingleStarWithCombinedTooltip_WhenMultipleAgeCategoriesMatch()
+    public void PersonalBestGroupCard_ShowsMultipleRecordStars_WhenMultipleAgeCategoriesMatch()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -186,8 +186,9 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
                 .ToList();
 
-            stars.Count.ShouldBe(1);
-            stars[0].ShouldBe("Íslandsmet · Opinn flokkur (93 kg), Unglingaflokkur (93 kg)");
+            stars.Count.ShouldBe(2);
+            stars.ShouldContain("Íslandsmet · Opinn flokkur · 93 kg");
+            stars.ShouldContain("Íslandsmet · Unglingaflokkur · 93 kg");
         });
     }
 
