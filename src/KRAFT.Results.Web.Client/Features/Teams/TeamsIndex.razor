@@ -19,6 +19,13 @@
     </AuthorizeView>
 </div>
 
+@if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+    </div>
+}
+
 <div class="card-grid">
     @foreach (TeamSummary team in Teams)
     {
@@ -36,9 +43,17 @@
 
 @code {
     private IReadOnlyCollection<TeamSummary> Teams = [];
+    private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        Teams = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
+        try
+        {
+            Teams = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp við að sækja félög. Reyndu aftur síðar.";
+        }
     }
 }

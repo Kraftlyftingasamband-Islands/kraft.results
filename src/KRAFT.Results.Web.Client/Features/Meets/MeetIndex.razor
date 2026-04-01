@@ -18,6 +18,13 @@
     </AuthorizeView>
 </div>
 
+@if (_errorMessage is not null)
+{
+    <div role="alert" class="error-message">
+        <p>@_errorMessage</p>
+    </div>
+}
+
 @foreach (var group in Meets.GroupBy(x => x.StartDate.ToString("MMMM", CultureInfo.CurrentCulture)))
 {
     <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
@@ -48,6 +55,7 @@
     public int Year { get; set; }
 
     private int _loadedYear;
+    private string? _errorMessage;
     private IReadOnlyCollection<MeetSummary> Meets = [];
 
     protected override async Task OnParametersSetAsync()
@@ -60,7 +68,16 @@
         if (Year != _loadedYear)
         {
             _loadedYear = Year;
-            Meets = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<MeetSummary>>($"/meets?year={Year}") ?? [];
+            _errorMessage = null;
+
+            try
+            {
+                Meets = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<MeetSummary>>($"/meets?year={Year}") ?? [];
+            }
+            catch (HttpRequestException)
+            {
+                _errorMessage = "Villa kom upp við að sækja mót. Reyndu aftur síðar.";
+            }
         }
     }
 }
