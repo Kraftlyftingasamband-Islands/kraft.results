@@ -74,6 +74,10 @@
     private static string BuildStarTooltip(AthleteRecord record)
     {
         string tooltip = $"Íslandsmet · {TranslateAgeCategory(record.AgeCategory)} · {record.WeightCategory}";
+        if (record.IsWithinPowerlifting)
+        {
+            tooltip += " (í kraftlyftingum)";
+        }
         return record.IsSingleLift ? $"{tooltip} · {Constants.SingeLift}" : tooltip;
     }
 
@@ -86,8 +90,6 @@
                 r.IsClassic == best.IsClassic &&
                 r.IsSingleLift == best.IsSingleLift &&
                 r.Type == type)
-            .GroupBy(r => (r.AgeCategory, r.WeightCategory))
-            .Select(g => g.First())
             .ToList();
     }
 }
