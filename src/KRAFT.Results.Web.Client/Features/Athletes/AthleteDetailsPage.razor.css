@@ -77,3 +77,20 @@
     margin-inline: auto;
     container-type: inline-size;
 }
+
+.pb-group-container {
+    display: flex;
+    gap: 16px;
+    margin-block-end: 1.5rem;
+}
+
+.pb-group-container > * {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .pb-group-container {
+        flex-direction: column;
+    }
+}

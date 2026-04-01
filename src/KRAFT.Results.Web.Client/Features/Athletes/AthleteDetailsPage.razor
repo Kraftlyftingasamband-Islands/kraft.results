@@ -46,18 +46,14 @@
 
 @if (PersonalBests.Count > 0)
 {
-    @foreach (IGrouping<bool, AthletePersonalBest> group in PersonalBests.GroupBy(x => x.IsClassic))
-    {
-        <h3>Besti árangur @(DisplayNames.EquipmentType(group.Key).ToLowerInvariant())</h3>
-
-        <div class="card-list">
-            @foreach (AthletePersonalBest best in group)
-            {
-                <AthletePersonalBestCard Best="best" />
-            }
-        </div>
-        <br />
-    }
+    <div class="pb-group-container">
+        @foreach (IGrouping<bool, AthletePersonalBest> group in PersonalBests.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
+        {
+            <AthletePersonalBestGroupCard
+                Title="@($"Besti árangur {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()}")"
+                PersonalBests="@group.ToList()" />
+        }
+    </div>
 }
 
 @if (Records.Count > 0)
