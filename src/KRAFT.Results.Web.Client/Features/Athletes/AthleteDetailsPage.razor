@@ -3,7 +3,6 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Client.Components
-@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 
 @inject HttpClient HttpClient
@@ -44,8 +43,27 @@
     }
 </div>
 
+@if (PersonalBests.Count > 0 || Records.Count > 0 || Participations.Count > 0)
+{
+    <nav class="section-nav" aria-label="Efnisyfirlit">
+        @if (PersonalBests.Count > 0)
+        {
+            <a class="section-nav-link" href="@($"/athletes/{Slug}#bestaragangur")">Besti árangur</a>
+        }
+        @if (Records.Count > 0)
+        {
+            <a class="section-nav-link" href="@($"/athletes/{Slug}#islandsmet")">Íslandsmet</a>
+        }
+        @if (Participations.Count > 0)
+        {
+            <a class="section-nav-link" href="@($"/athletes/{Slug}#ferill")">Ferill</a>
+        }
+    </nav>
+}
+
 @if (PersonalBests.Count > 0)
 {
+    <h3 id="bestaragangur">Besti árangur</h3>
     <div class="pb-group-container">
         @foreach (IGrouping<bool, AthletePersonalBest> group in PersonalBests.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
         {
@@ -58,7 +76,7 @@
 
 @if (Records.Count > 0)
 {
-    <h3>Núverandi íslandsmet (@Records.Count)</h3>
+    <h3 id="islandsmet">Núverandi íslandsmet (@Records.Count)</h3>
     <div class="pb-group-container">
         @foreach (IGrouping<bool, AthleteRecord> group in Records.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
         {
@@ -71,24 +89,42 @@
 
 @if (Participations.Count > 0)
 {
-    <h3>Ferill (@Participations.Count mót)</h3>
+    <h3 id="ferill">Ferill (@Participations.Count)</h3>
 
-    <br />
-
+    int groupIndex = 0;
     @foreach (IGrouping<string, AthleteParticipation> meetType in Participations.GroupBy(x => x.MeetType))
     {
-        <h4>@meetType.Key</h4>
-
-        <div class="card-list">
-            @foreach (AthleteParticipation p in meetType)
-            {
-                <AthleteParticipationCard
-                    Participation="p"
-                    MeetType="@meetType.Key"
-                    ShowClub="@ShowClubs"
-                    ShowIpfPoints="@true" />
-            }
-        </div>
+        if (groupIndex == 0)
+        {
+            <details class="career-group" open>
+                <summary class="career-group-summary">@meetType.Key</summary>
+                <div class="card-list">
+                    @foreach (AthleteParticipation p in meetType)
+                    {
+                        <AthleteParticipationCard
+                            Participation="p"
+                            MeetType="@meetType.Key"
+                            ShowIpfPoints="@true" />
+                    }
+                </div>
+            </details>
+        }
+        else
+        {
+            <details class="career-group">
+                <summary class="career-group-summary">@meetType.Key</summary>
+                <div class="card-list">
+                    @foreach (AthleteParticipation p in meetType)
+                    {
+                        <AthleteParticipationCard
+                            Participation="p"
+                            MeetType="@meetType.Key"
+                            ShowIpfPoints="@true" />
+                    }
+                </div>
+            </details>
+        }
+        groupIndex++;
     }
 }
 
@@ -164,6 +200,6 @@
         PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
         Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
         Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
-        ShowClubs = Participations.Any(x => !string.IsNullOrWhiteSpace(x.Club));
+        ShowClubs = !string.IsNullOrWhiteSpace(Athlete?.Club);
     }
 }

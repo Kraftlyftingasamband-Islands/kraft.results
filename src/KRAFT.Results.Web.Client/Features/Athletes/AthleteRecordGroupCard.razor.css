@@ -23,6 +23,23 @@
 .arg-rows {
     display: flex;
     flex-direction: column;
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+.arg-rows::-webkit-scrollbar {
+    width: 4px;
+}
+
+.arg-rows::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+}
+
+.arg-rows::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .arg-row {

@@ -19,13 +19,11 @@ public sealed class AthleteParticipationCardTests : IDisposable
         IRenderedComponent<AthleteParticipationCard> cut1 = _context.Render<AthleteParticipationCard>(
             p => p.Add(c => c.Participation, MakeParticipation(rank: 1))
                   .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, false)
                   .Add(c => c.ShowIpfPoints, true));
 
         IRenderedComponent<AthleteParticipationCard> cut2 = _context.Render<AthleteParticipationCard>(
             p => p.Add(c => c.Participation, MakeParticipation(rank: 2))
                   .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, false)
                   .Add(c => c.ShowIpfPoints, true));
 
         // Assert
@@ -40,7 +38,6 @@ public sealed class AthleteParticipationCardTests : IDisposable
         IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
             p => p.Add(c => c.Participation, MakeParticipation(rank: 1, isDisqualified: true))
                   .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, false)
                   .Add(c => c.ShowIpfPoints, true));
 
         // Assert
@@ -54,7 +51,6 @@ public sealed class AthleteParticipationCardTests : IDisposable
         IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
             p => p.Add(c => c.Participation, MakeParticipation(isDisqualified: true))
                   .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, false)
                   .Add(c => c.ShowIpfPoints, true));
 
         // Assert
@@ -68,7 +64,6 @@ public sealed class AthleteParticipationCardTests : IDisposable
         IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
             p => p.Add(c => c.Participation, MakeParticipation())
                   .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, false)
                   .Add(c => c.ShowIpfPoints, true));
 
         // Assert
@@ -101,40 +96,10 @@ public sealed class AthleteParticipationCardTests : IDisposable
         IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
             p => p.Add(c => c.Participation, benchParticipation)
                   .Add(c => c.MeetType, Constants.Bench)
-                  .Add(c => c.ShowClub, false)
                   .Add(c => c.ShowIpfPoints, true));
 
         // Assert
         cut.FindAll(".ap-lift-pill").Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void ShowsClub_WhenShowClubIsTrue()
-    {
-        // Arrange & Act
-        IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
-            p => p.Add(c => c.Participation, MakeParticipation(club: "IR", clubSlug: "ir"))
-                  .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, true)
-                  .Add(c => c.ShowIpfPoints, true));
-
-        // Assert
-        cut.FindAll(".ap-club").Count.ShouldBe(1);
-        cut.Find(".ap-club").TextContent.ShouldContain("IR");
-    }
-
-    [Fact]
-    public void HidesClub_WhenShowClubIsFalse()
-    {
-        // Arrange & Act
-        IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
-            p => p.Add(c => c.Participation, MakeParticipation(club: "IR", clubSlug: "ir"))
-                  .Add(c => c.MeetType, Constants.Powerlifting)
-                  .Add(c => c.ShowClub, false)
-                  .Add(c => c.ShowIpfPoints, true));
-
-        // Assert
-        cut.FindAll(".ap-club").Count.ShouldBe(0);
     }
 
     public void Dispose() => _context.Dispose();

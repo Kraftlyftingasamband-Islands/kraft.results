@@ -67,18 +67,6 @@
     color: var(--color-text-muted);
 }
 
-.ap-club {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--color-primary);
-    text-decoration: none;
-    transition: color var(--transition-fast) ease;
-}
-
-.ap-club:hover {
-    color: var(--color-primary-dark);
-}
-
 .ap-lifts {
     display: flex;
     gap: 6px;
@@ -128,8 +116,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ap-meet,
-    .ap-club {
+    .ap-meet {
         transition: none;
     }
 }
