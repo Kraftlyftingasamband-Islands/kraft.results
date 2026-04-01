@@ -1,0 +1,39 @@
+@using System.Globalization
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+
+<div class="pbg-card">
+    <h3 class="pbg-header">@Title</h3>
+    <div class="pbg-rows">
+        @foreach (AthletePersonalBest best in PersonalBests)
+        {
+            string disciplineLabel = best.Discipline.ToDisplayName() is { Length: > 0 } name
+                ? name
+                : Constants.Total;
+
+            <a class="pbg-row @(best.Discipline == Discipline.None ? "pbg-row--total" : "")"
+               href="@($"/meets/{best.MeetSlug}")"
+               aria-label="@disciplineLabel — @best.Weight.ToString("F1", CultureInfo.InvariantCulture) kg">
+                <div class="pbg-left">
+                    <span class="pbg-discipline">
+                        @if (best.IsSingleLift)
+                        {
+                            <span class="pbg-sl-badge">@Constants.SingeLift</span>
+                        }
+                        @disciplineLabel
+                    </span>
+                    <span class="pbg-meta">@best.Date.ToString("dd.MM.yyyy") · @best.BodyWeight.ToString("F1", CultureInfo.InvariantCulture) kg</span>
+                </div>
+                <span class="pbg-weight">@best.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="pbg-unit">kg</span></span>
+            </a>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AthletePersonalBest> PersonalBests { get; set; } = [];
+}

@@ -8,10 +8,6 @@
         <div class="ap-name-col">
             <NavLink class="ap-meet" href="@($"/meets/{Participation.MeetSlug}")">@Participation.Meet</NavLink>
             <span class="ap-meta">@_metaLine</span>
-            @if (ShowClub && !string.IsNullOrWhiteSpace(Participation.Club) && !string.IsNullOrWhiteSpace(Participation.ClubSlug))
-            {
-                <NavLink class="ap-club" href="@($"/teams/{Participation.ClubSlug}")">@Participation.Club</NavLink>
-            }
         </div>
     </div>
     @if (!Participation.IsDisqualified)
@@ -55,9 +51,6 @@
 
     [Parameter, EditorRequired]
     public string MeetType { get; set; } = string.Empty;
-
-    [Parameter, EditorRequired]
-    public bool ShowClub { get; set; }
 
     [Parameter, EditorRequired]
     public bool ShowIpfPoints { get; set; }
