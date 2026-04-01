@@ -38,6 +38,7 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
             x.IsClassic,
             x.IsSingleLift,
             IsWithinPowerlifting: (x.RecordCategoryId == RecordCategory.BenchSingle || x.RecordCategoryId == RecordCategory.DeadliftSingle) && !x.IsSingleLift,
+            IsStandaloneDiscipline: x.RecordCategoryId == RecordCategory.Bench || x.RecordCategoryId == RecordCategory.Deadlift,
             x.WeightCategory,
             x.AgeCategory,
             MapRecordType(x.RecordCategoryId),
