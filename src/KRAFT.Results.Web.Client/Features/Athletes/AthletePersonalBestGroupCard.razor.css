@@ -118,8 +118,9 @@
 .pbg-star::after {
     content: attr(data-tooltip);
     position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
+    top: 50%;
+    right: calc(100% + 8px);
+    transform: translateY(-50%) translateX(4px);
     background: #1c1c2e;
     color: #fff;
     font-size: 11px;
@@ -130,7 +131,6 @@
     border-radius: var(--radius-sm);
     pointer-events: none;
     opacity: 0;
-    transform: translateY(-3px);
     transition: opacity 120ms ease, transform 120ms ease;
     z-index: 10;
     font-family: inherit;
@@ -140,7 +140,7 @@
 
 .pbg-star:hover::after {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-50%) translateX(0);
 }
 
 .pbg-star:hover {
