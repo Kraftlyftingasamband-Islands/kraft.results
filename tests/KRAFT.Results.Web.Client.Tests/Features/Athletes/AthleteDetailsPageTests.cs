@@ -82,7 +82,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
     }
 
     [Fact]
-    public void PersonalBestGroupCard_ShowsRecordBadge_WhenMatchingRecordExists()
+    public void PersonalBestGroupCard_ShowsRecordStar_WhenMatchingRecordExists()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -122,17 +122,17 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> badges = cut.FindAll(".pbg-record-badge")
-                .Select(e => e.TextContent)
+            List<string> stars = cut.FindAll(".pbg-star")
+                .Select(e => e.GetAttribute("title") ?? string.Empty)
                 .ToList();
 
-            badges.Count.ShouldBe(1);
-            badges[0].ShouldBe("ÍM · Open");
+            stars.Count.ShouldBe(1);
+            stars[0].ShouldBe("Íslandsmet · Open · 93 kg");
         });
     }
 
     [Fact]
-    public void PersonalBestGroupCard_ShowsMultipleRecordBadges_WhenMultipleAgeCategoriesMatch()
+    public void PersonalBestGroupCard_ShowsMultipleRecordStars_WhenMultipleAgeCategoriesMatch()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -182,18 +182,18 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> badges = cut.FindAll(".pbg-record-badge")
-                .Select(e => e.TextContent)
+            List<string> stars = cut.FindAll(".pbg-star")
+                .Select(e => e.GetAttribute("title") ?? string.Empty)
                 .ToList();
 
-            badges.Count.ShouldBe(2);
-            badges.ShouldContain("ÍM · Open");
-            badges.ShouldContain("ÍM · Junior");
+            stars.Count.ShouldBe(2);
+            stars.ShouldContain("Íslandsmet · Open · 93 kg");
+            stars.ShouldContain("Íslandsmet · Junior · 93 kg");
         });
     }
 
     [Fact]
-    public void PersonalBestGroupCard_DoesNotShowRecordBadge_WhenNoMatchingRecord()
+    public void PersonalBestGroupCard_DoesNotShowRecordStar_WhenNoMatchingRecord()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -234,7 +234,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             cut.FindAll(".pbg-card").Count.ShouldBeGreaterThan(0);
-            cut.FindAll(".pbg-record-badge").Count.ShouldBe(0);
+            cut.FindAll(".pbg-star").Count.ShouldBe(0);
         });
     }
 

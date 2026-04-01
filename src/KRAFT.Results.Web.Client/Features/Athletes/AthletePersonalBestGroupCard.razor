@@ -28,18 +28,21 @@
                         }
                         @disciplineLabel
                     </span>
-                    @if (matchingRecords.Count > 0)
-                    {
-                        <span class="pbg-records">
-                            @foreach (AthleteRecord record in matchingRecords)
-                            {
-                                <span class="pbg-record-badge">ÍM · @record.AgeCategory</span>
-                            }
-                        </span>
-                    }
                     <span class="pbg-meta">@best.Date.ToString("dd.MM.yyyy") · @best.BodyWeight.ToString("F1", CultureInfo.InvariantCulture) kg</span>
                 </div>
-                <span class="pbg-weight">@best.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="pbg-unit">kg</span></span>
+                <div class="pbg-right">
+                    @if (matchingRecords.Count > 0)
+                    {
+                        <div class="pbg-stars" aria-hidden="true">
+                            @foreach (AthleteRecord record in matchingRecords)
+                            {
+                                <span class="pbg-star"
+                                      title="@($"Íslandsmet · {record.AgeCategory} · {record.WeightCategory}")">★</span>
+                            }
+                        </div>
+                    }
+                    <span class="pbg-weight">@best.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="pbg-unit">kg</span></span>
+                </div>
             </a>
         }
     </div>
