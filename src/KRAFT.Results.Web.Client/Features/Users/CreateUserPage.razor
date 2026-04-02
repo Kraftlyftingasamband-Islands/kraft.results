@@ -70,16 +70,7 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
-                @if (_isLoading)
-                {
-                    <span>Augnablik...</span>
-                }
-                else
-                {
-                    <span>Stofna notanda</span>
-                }
-            </button>
+            <SubmitButton Label="Stofna notanda" IsLoading="@_isLoading" />
 
             <a href="/users" class="btn-cancel">Til baka</a>
         </div>
