@@ -1,0 +1,21 @@
+<button type="submit" class="btn-primary" disabled="@IsLoading" aria-busy="@IsLoading">
+    @if (IsLoading)
+    {
+        <span>@LoadingLabel</span>
+    }
+    else
+    {
+        <span>@Label</span>
+    }
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string LoadingLabel { get; set; } = "Augnablik...";
+}

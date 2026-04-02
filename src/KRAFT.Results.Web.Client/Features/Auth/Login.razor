@@ -40,16 +40,7 @@
                            disabled="@_isLoading" />
             </div>
 
-            <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
-                @if (_isLoading)
-                {
-                    <span>Augnablik...</span>
-                }
-                else
-                {
-                    <span>Innskr&#225;</span>
-                }
-            </button>
+            <SubmitButton Label="Innskrá" IsLoading="@_isLoading" />
 
             @if (!string.IsNullOrEmpty(_errorMessage))
             {

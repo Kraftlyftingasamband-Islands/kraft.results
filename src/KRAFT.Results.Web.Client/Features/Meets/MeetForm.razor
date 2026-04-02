@@ -52,16 +52,7 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-primary" disabled="@IsLoading" aria-busy="@IsLoading">
-                @if (IsLoading)
-                {
-                    <span>Augnablik...</span>
-                }
-                else
-                {
-                    <span>@SubmitLabel</span>
-                }
-            </button>
+            <SubmitButton Label="@SubmitLabel" IsLoading="@IsLoading" />
 
             <a href="@BackUrl" class="btn-cancel">Til baka</a>
         </div>

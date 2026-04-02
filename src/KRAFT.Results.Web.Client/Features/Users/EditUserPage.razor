@@ -88,16 +88,7 @@ else if (_model is not null)
 
             <div class="form-actions">
                 <div class="form-actions-primary">
-                    <button type="submit" class="btn-primary" disabled="@_isLoading" aria-busy="@_isLoading">
-                        @if (_isLoading)
-                        {
-                            <span>Augnablik...</span>
-                        }
-                        else
-                        {
-                            <span>Vista breytingar</span>
-                        }
-                    </button>
+                    <SubmitButton Label="Vista breytingar" IsLoading="@_isLoading" />
                     <a href="/users" class="btn-cancel">Til baka</a>
                 </div>
 
