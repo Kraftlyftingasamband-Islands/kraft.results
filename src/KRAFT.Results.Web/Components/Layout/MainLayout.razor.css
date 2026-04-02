@@ -4,6 +4,13 @@
     flex-direction: column;
 }
 
+.page-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
 main {
     flex: 1;
     background-color: var(--color-bg);

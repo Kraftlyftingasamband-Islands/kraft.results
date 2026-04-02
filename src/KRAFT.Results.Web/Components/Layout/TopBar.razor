@@ -1,0 +1,81 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@code {
+    private bool _isOpen;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _handler;
+    private DotNetObjectReference<TopBar>? _dotNetRef;
+
+    private void ToggleDropdown() => _isOpen = !_isOpen;
+
+    [JSInvokable]
+    public void CloseFromJs()
+    {
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/TopBar.razor.js");
+            _handler = await _module.InvokeAsync<IJSObjectReference>("initialize", _dotNetRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_handler is not null)
+        {
+            await _handler.InvokeVoidAsync("dispose");
+            await _handler.DisposeAsync();
+        }
+
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+        }
+
+        _dotNetRef?.Dispose();
+    }
+}
+
+<div class="top-bar">
+    <AuthorizeView>
+        <Authorized>
+            <div id="user-dropdown-wrapper" class="user-dropdown-wrapper">
+                <button class="user-button"
+                        @onclick="ToggleDropdown"
+                        aria-haspopup="true"
+                        aria-expanded="@_isOpen.ToString().ToLower()"
+                        aria-controls="user-dropdown">
+                    <span class="bi bi-person-icon" aria-hidden="true"></span>
+                    <span class="user-name">@(string.IsNullOrWhiteSpace(context.User.Identity?.Name) ? "Notandi" : context.User.Identity.Name)</span>
+                    <span class="bi bi-chevron-icon @(_isOpen ? "is-open" : "")" aria-hidden="true"></span>
+                </button>
+
+                @if (_isOpen)
+                {
+                    <div id="user-dropdown" class="user-dropdown" role="menu">
+                        <a class="dropdown-item" href="profile" role="menuitem">
+                            <span class="bi bi-dropdown-person" aria-hidden="true"></span> Profill
+                        </a>
+                        <a class="dropdown-item" href="change-password" role="menuitem">
+                            <span class="bi bi-dropdown-key" aria-hidden="true"></span> Breyta lykilorði
+                        </a>
+                        <div class="dropdown-separator"></div>
+                        <a class="dropdown-item" href="logout" role="menuitem">
+                            <span class="bi bi-dropdown-logout" aria-hidden="true"></span> Útskrá
+                        </a>
+                    </div>
+                }
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <a class="login-link" href="login">Innskrá</a>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
