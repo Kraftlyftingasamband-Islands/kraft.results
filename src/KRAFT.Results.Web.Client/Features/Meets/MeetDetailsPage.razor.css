@@ -146,18 +146,6 @@
     margin-block-end: 1.5rem;
 }
 
-/* ===== Error ===== */
-
-.error-message {
-    padding: 0.75rem;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius-sm);
-    color: var(--color-danger);
-    font-size: 0.875rem;
-    text-align: center;
-}
-
 /* ===== Team standings ===== */
 
 .standings-container {
