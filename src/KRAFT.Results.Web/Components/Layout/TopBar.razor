@@ -110,7 +110,10 @@
             </div>
         </Authorized>
         <NotAuthorized>
-            <a class="login-link" href="login" @onclick="NavigateToLogin" @onclick:preventDefault>Innskrá</a>
+            <a class="login-link" href="login" @onclick="NavigateToLogin" @onclick:preventDefault>
+                <span class="bi bi-person-icon" aria-hidden="true"></span>
+                <span>Innskrá</span>
+            </a>
         </NotAuthorized>
     </AuthorizeView>
 </div>
