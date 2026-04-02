@@ -74,7 +74,7 @@
                         aria-expanded="@_isOpen.ToString().ToLower()"
                         aria-controls="user-dropdown">
                     <span class="bi bi-person-icon" aria-hidden="true"></span>
-                    <span class="user-name">@(string.IsNullOrWhiteSpace(context.User.Identity?.Name) ? "Notandi" : context.User.Identity.Name)</span>
+                    <span class="user-name">@(context.User.FindFirst("name")?.Value ?? context.User.Identity?.Name ?? "Notandi")</span>
                     <span class="bi bi-chevron-icon @(_isOpen ? "is-open" : "")" aria-hidden="true"></span>
                 </button>
 
