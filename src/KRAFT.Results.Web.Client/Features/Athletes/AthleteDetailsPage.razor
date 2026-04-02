@@ -10,10 +10,7 @@
 
 @if (_isLoading)
 {
-    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
-        <div class="spinner" aria-hidden="true"></div>
-        <span class="visually-hidden">Sæki keppanda...</span>
-    </div>
+    <LoadingSpinner Label="Sæki keppanda..." />
 }
 else if (_errorMessage is not null)
 {

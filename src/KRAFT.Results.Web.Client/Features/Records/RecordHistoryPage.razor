@@ -21,10 +21,7 @@
 
 @if (_isLoading)
 {
-    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
-        <div class="spinner" aria-hidden="true"></div>
-        <span class="visually-hidden">Sæki sögu...</span>
-    </div>
+    <LoadingSpinner Label="Sæki sögu..." />
 }
 else if (_hasError)
 {
