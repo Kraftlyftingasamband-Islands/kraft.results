@@ -1,0 +1,84 @@
+@inject IJSRuntime JSRuntime
+
+<dialog id="@Id" role="dialog" aria-labelledby="@($"{Id}-title")" @oncancel="HandleCancel">
+    <div class="edit-dialog-content">
+        <h2 id="@($"{Id}-title")" class="edit-dialog-title">Breyta líkamsþyngd</h2>
+        <p class="edit-dialog-context">@AthleteName</p>
+
+        <div class="edit-dialog-field">
+            <label for="@($"{Id}-input")">Líkamsþyngd (kg)</label>
+            <input id="@($"{Id}-input")"
+                   type="number"
+                   step="0.01"
+                   inputmode="decimal"
+                   @bind="Weight"
+                   @bind:event="oninput"
+                   autofocus />
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="edit-dialog-error" role="alert">@ErrorMessage</div>
+        }
+
+        <div class="edit-dialog-actions">
+            <button class="btn-save"
+                    @onclick="HandleSave"
+                    disabled="@(Weight <= 0 || IsLoading)"
+                    aria-busy="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>Augnablik...</span>
+                }
+                else
+                {
+                    <span>Vista</span>
+                }
+            </button>
+            <button class="btn-cancel" @onclick="HandleCancel" disabled="@IsLoading">Hætta við</button>
+        </div>
+    </div>
+</dialog>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string AthleteName { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public decimal CurrentWeight { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback<decimal> OnSave { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    private decimal Weight { get; set; }
+
+    public async Task ShowAsync()
+    {
+        Weight = CurrentWeight;
+        await JSRuntime.InvokeVoidAsync("Kraftresults.showDialog", Id);
+    }
+
+    public async Task CloseAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("Kraftresults.closeDialog", Id);
+    }
+
+    private async Task HandleSave()
+    {
+        await OnSave.InvokeAsync(Weight);
+    }
+
+    private async Task HandleCancel()
+    {
+        await CloseAsync();
+    }
+}

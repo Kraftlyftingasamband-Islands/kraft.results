@@ -66,6 +66,40 @@
     margin-block-start: 2px;
 }
 
+.btn-edit-weight {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 2px;
+    margin-inline-start: 4px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    opacity: 0;
+    transition: opacity var(--transition-fast) ease, color var(--transition-fast) ease;
+    vertical-align: middle;
+}
+
+.btn-edit-weight svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-edit-weight:hover {
+    color: var(--color-primary);
+}
+
+.btn-edit-weight:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.p-card:hover .btn-edit-weight {
+    opacity: 1;
+}
+
 .p-club {
     font-size: 12px;
     font-weight: 700;
@@ -148,6 +182,13 @@
     letter-spacing: 0.05em;
     font-weight: 600;
     margin-block-end: 2px;
+}
+
+/* ===== Mobile: always show edit button ===== */
+@container (max-width: 959px) {
+    .btn-edit-weight {
+        opacity: 1;
+    }
 }
 
 /* ===== Medium: disciplines side-by-side ===== */

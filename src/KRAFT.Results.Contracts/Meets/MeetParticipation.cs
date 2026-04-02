@@ -1,6 +1,8 @@
 ﻿namespace KRAFT.Results.Contracts.Meets;
 
 public sealed record class MeetParticipation(
+    int ParticipationId,
+    int MeetId,
     int Rank,
     string Athlete,
     string AthleteSlug,

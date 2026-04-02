@@ -12,6 +12,8 @@ internal static class MeetErrors
 
     internal const string ParticipationNotFoundCode = "Meets.ParticipationNotFound";
 
+    internal const string InvalidBodyWeightCode = "Meets.InvalidBodyWeight";
+
     internal const string AthleteAlreadyRegisteredCode = "Meets.AthleteAlreadyRegistered";
 
     internal static readonly Error EmptyTitle = new(
@@ -41,6 +43,10 @@ internal static class MeetErrors
     internal static readonly Error ParticipationNotFound = new(
         ParticipationNotFoundCode,
         "Participation not found.");
+
+    internal static readonly Error InvalidBodyWeight = new(
+        "Meets.InvalidBodyWeight",
+        "Body weight must be greater than zero.");
 
     internal static readonly Error AthleteAlreadyRegistered = new(
         AthleteAlreadyRegisteredCode,

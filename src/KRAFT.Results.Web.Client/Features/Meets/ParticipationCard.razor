@@ -1,6 +1,9 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject HttpClient HttpClient
 
 <div class="p-card @(Participation.Disqualified ? "p-card-dq" : null)"
      style="@($"--grid-template: {DesktopGridTemplate}")">
@@ -11,7 +14,21 @@
         </div>
         <div class="p-name-col">
             <NavLink class="p-name" href="@($"/athletes/{Participation.AthleteSlug}")">@Participation.Athlete</NavLink>
-            <span class="p-meta">@_metaLine</span>
+            <span class="p-meta">
+                @_metaLine
+                <AuthorizeView Roles="Admin">
+                    <button class="btn-edit-weight"
+                            aria-label="Breyta líkamsþyngd"
+                            @onclick="ShowEditDialog">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                        </svg>
+                    </button>
+                </AuthorizeView>
+            </span>
         </div>
         @if (ShowClub)
         {
@@ -67,7 +84,21 @@
     </div>
 </div>
 
+<AuthorizeView Roles="Admin">
+    <EditBodyWeightDialog @ref="_editDialog"
+                          Id="@($"edit-weight-{Participation.ParticipationId}")"
+                          AthleteName="@Participation.Athlete"
+                          CurrentWeight="Participation.BodyWeight"
+                          OnSave="HandleSaveWeight"
+                          ErrorMessage="@_editErrorMessage"
+                          IsLoading="_isSaving" />
+</AuthorizeView>
+
 @code {
+    private EditBodyWeightDialog _editDialog = null!;
+    private bool _isSaving;
+    private string? _editErrorMessage;
+
     [Parameter, EditorRequired]
     public MeetParticipation Participation { get; init; } = null!;
 
@@ -82,6 +113,9 @@
 
     [Parameter, EditorRequired]
     public string DesktopGridTemplate { get; init; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnBodyWeightUpdated { get; set; }
 
     private string _recordContext = string.Empty;
     private string _metaLine = string.Empty;
@@ -125,5 +159,42 @@
             .GroupBy(a => a.Discipline)
             .OrderBy(g => (byte)g.Key)
             .ToList();
+    }
+
+    private async Task ShowEditDialog()
+    {
+        _editErrorMessage = null;
+        await _editDialog.ShowAsync();
+    }
+
+    private async Task HandleSaveWeight(decimal newWeight)
+    {
+        try
+        {
+            _isSaving = true;
+            _editErrorMessage = null;
+
+            UpdateBodyWeightCommand command = new(newWeight);
+            HttpResponseMessage response = await HttpClient.PatchAsJsonAsync(
+                $"/meets/{Participation.MeetId}/participations/{Participation.ParticipationId}",
+                command);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _editErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            await _editDialog.CloseAsync();
+            await OnBodyWeightUpdated.InvokeAsync();
+        }
+        catch (HttpRequestException)
+        {
+            _editErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 }

@@ -11,6 +11,7 @@ using KRAFT.Results.WebApi.Features.Meets.GetTeamPoints;
 using KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
 using KRAFT.Results.WebApi.Features.Meets.RemoveParticipant;
 using KRAFT.Results.WebApi.Features.Meets.Update;
+using KRAFT.Results.WebApi.Features.Meets.UpdateBodyWeight;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -31,6 +32,7 @@ internal static class MeetEndpoints
         group.MapGetMeetPendingRecordsEndpoint();
         group.MapApprovePendingRecordEndpoint();
         group.MapUpdateMeetEndpoint();
+        group.MapUpdateBodyWeightEndpoint();
         group.MapRecordAttemptEndpoint();
         group.MapRemoveParticipantEndpoint();
         group.MapDeleteMeetEndpoint();
