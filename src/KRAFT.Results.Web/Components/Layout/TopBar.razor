@@ -1,4 +1,5 @@
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
 @implements IAsyncDisposable
 
 @code {
@@ -7,6 +8,17 @@
     private IJSObjectReference? _module;
     private IJSObjectReference? _handler;
     private DotNetObjectReference<TopBar>? _dotNetRef;
+
+    protected override void OnInitialized()
+    {
+        AuthStateProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+
+    private void OnAuthStateChanged(Task<AuthenticationState> _)
+    {
+        _isOpen = false;
+        InvokeAsync(StateHasChanged);
+    }
 
     private void ToggleDropdown() => _isOpen = !_isOpen;
 
@@ -48,6 +60,7 @@
         }
 
         _dotNetRef?.Dispose();
+        AuthStateProvider.AuthenticationStateChanged -= OnAuthStateChanged;
     }
 }
 
