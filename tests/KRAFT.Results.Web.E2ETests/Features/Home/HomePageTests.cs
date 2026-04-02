@@ -47,15 +47,15 @@ public class HomePageTests(PlaywrightFixture fixture)
         await Expect(nav).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        ILocator loginLink = nav.GetByText("Innskrá");
-        await Expect(loginLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
-
         await Expect(nav).ToContainTextAsync("Forsíða", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(nav).ToContainTextAsync("Mótaskrá", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(nav).ToContainTextAsync("Keppendur", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(nav).ToContainTextAsync("Stigatöflur", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(nav).ToContainTextAsync("Met", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(nav).ToContainTextAsync("Félög", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
-        await Expect(nav).ToContainTextAsync("Innskrá", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
+        // Login link moved to top bar on desktop
+        ILocator loginLink = page.Locator(".top-bar").GetByText("Innskrá");
+        await Expect(loginLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

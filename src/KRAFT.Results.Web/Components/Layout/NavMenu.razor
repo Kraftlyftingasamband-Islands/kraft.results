@@ -115,7 +115,7 @@
 
                 <div class="nav-item mobile-only nav-user-label">
                     <span class="nav-link">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> @(string.IsNullOrWhiteSpace(context.User.Identity?.Name) ? "Notandi" : context.User.Identity.Name)
+                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> @(context.User.FindFirst("name")?.Value ?? context.User.Identity?.Name ?? "Notandi")
                     </span>
                 </div>
 

@@ -67,7 +67,7 @@ public sealed class JwtAuthenticationStateProvider : AuthenticationStateProvider
             }
         }
 
-        ClaimsIdentity identity = new(claims, "jwt", nameType: "name", roleType: ClaimTypes.Role);
+        ClaimsIdentity identity = new(claims, "jwt");
         ClaimsPrincipal user = new(identity);
         AuthenticationState state = new(user);
 
