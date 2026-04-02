@@ -118,7 +118,7 @@ else if (_model is not null)
                     }
                     @if (!string.IsNullOrEmpty(_deleteErrorMessage))
                     {
-                        <div class="error-message" role="alert">@_deleteErrorMessage</div>
+                        <ErrorMessage Message="@_deleteErrorMessage" />
                     }
                 </div>
             </div>
