@@ -16,6 +16,11 @@
     <div class="login-card">
         <h1 class="login-title">KRAFT.Results</h1>
 
+        @if (!string.IsNullOrEmpty(_infoMessage))
+        {
+            <p class="success-message" role="status">@_infoMessage</p>
+        }
+
         <EditForm Model="_model" OnValidSubmit="HandleLogin" FormName="login">
             <DataAnnotationsValidator />
 
@@ -54,9 +59,13 @@
     [SupplyParameterFromQuery(Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery(Name = "reason")]
+    public string? Reason { get; set; }
+
     private readonly LoginModel _model = new();
     private bool _isLoading;
     private string? _errorMessage;
+    private string? _infoMessage;
 
     private bool HasError => !string.IsNullOrEmpty(_errorMessage);
 
@@ -67,6 +76,12 @@
         if (authState.User.Identity?.IsAuthenticated == true)
         {
             NavigationManager.NavigateTo(ReturnUrl ?? "/");
+            return;
+        }
+
+        if (Reason == "password-changed")
+        {
+            _infoMessage = "Lykilorði hefur verið breytt. Skráðu þig inn með nýja lykilorðinu.";
         }
     }
 
