@@ -491,3 +491,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Superpowers plans and specs
+docs/plans/
+docs/specs/
