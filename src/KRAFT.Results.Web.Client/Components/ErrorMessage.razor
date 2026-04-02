@@ -1,0 +1,24 @@
+@if (OnRetry.HasDelegate)
+{
+    <div role="alert" class="error-state">
+        <p>@Message</p>
+        <button class="retry-btn" @onclick="OnRetry">Reyna aftur</button>
+    </div>
+}
+else
+{
+    <div id="@Id" role="alert" class="error-message">
+        <p>@Message</p>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    [Parameter]
+    public string? Id { get; set; }
+}
