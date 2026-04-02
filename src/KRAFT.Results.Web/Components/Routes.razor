@@ -10,7 +10,11 @@
                 }
                 else
                 {
-                    <p>Access denied. You do not have permission to view this page.</p>
+                    <div class="error-state">
+                        <h3>Aðgangur bannaður</h3>
+                        <p>Þú hefur ekki heimild til að skoða þessa síðu.</p>
+                        <a href="/">Til baka á forsíðu</a>
+                    </div>
                 }
             </NotAuthorized>
         </AuthorizeRouteView>
