@@ -14,6 +14,8 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
             .Where(meet => meet.Slug == slug)
             .SelectMany(meet => meet.Participations.Select(p => new
             {
+                p.ParticipationId,
+                p.MeetId,
                 p.Place,
                 Athlete = p.Athlete.Firstname + " " + p.Athlete.Lastname,
                 AthleteSlug = p.Athlete.Slug,
@@ -49,6 +51,8 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 string ageCategorySlug = r.HasAgeCategory ? r.AgeCategorySlug ?? string.Empty : string.Empty;
 
                 return new MeetParticipation(
+                    r.ParticipationId,
+                    r.MeetId,
                     r.Place,
                     r.Athlete,
                     r.AthleteSlug,

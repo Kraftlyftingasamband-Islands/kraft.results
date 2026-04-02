@@ -104,6 +104,13 @@ internal sealed class Participation
         };
     }
 
+    internal void UpdateBodyWeight(decimal bodyWeight, string modifiedBy)
+    {
+        Weight = bodyWeight;
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = modifiedBy;
+    }
+
     internal void RecalculateTotals()
     {
         decimal bestSquat = BestGoodLift(Discipline.Squat);

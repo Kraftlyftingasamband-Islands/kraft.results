@@ -11,6 +11,7 @@ using KRAFT.Results.WebApi.Features.Meets.GetTeamPoints;
 using KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
 using KRAFT.Results.WebApi.Features.Meets.RemoveParticipant;
 using KRAFT.Results.WebApi.Features.Meets.Update;
+using KRAFT.Results.WebApi.Features.Meets.UpdateBodyWeight;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -28,6 +29,7 @@ internal static class MeetServices
         services.AddScoped<GetMeetPendingRecordsHandler>();
         services.AddScoped<ApprovePendingRecordHandler>();
         services.AddScoped<UpdateMeetHandler>();
+        services.AddScoped<UpdateBodyWeightHandler>();
         services.AddScoped<RecordAttemptHandler>();
         services.AddScoped<RemoveParticipantHandler>();
         services.AddScoped<DeleteMeetHandler>();
