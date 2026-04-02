@@ -125,7 +125,7 @@ else if (_model is not null)
 
             @if (!string.IsNullOrEmpty(_errorMessage))
             {
-                <div id="edit-error" class="error-message" role="alert">@_errorMessage</div>
+                <ErrorMessage Id="edit-error" Message="@_errorMessage" />
             }
         </EditForm>
     </div>

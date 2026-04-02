@@ -117,7 +117,7 @@
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <div id="athlete-form-error" class="error-message" role="alert">@ErrorMessage</div>
+            <ErrorMessage Id="athlete-form-error" Message="@ErrorMessage" />
         }
     </EditForm>
 </div>

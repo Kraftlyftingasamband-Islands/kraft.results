@@ -20,9 +20,7 @@
 
 @if (_errorMessage is not null)
 {
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-    </div>
+    <ErrorMessage Message="@_errorMessage" />
 }
 
 @if (_isLoading)

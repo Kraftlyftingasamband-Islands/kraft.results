@@ -86,7 +86,7 @@
 
         @if (!string.IsNullOrEmpty(_errorMessage))
         {
-            <div id="create-error" class="error-message" role="alert">@_errorMessage</div>
+            <ErrorMessage Id="create-error" Message="@_errorMessage" />
         }
     </EditForm>
 </div>
