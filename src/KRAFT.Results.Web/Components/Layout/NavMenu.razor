@@ -1,4 +1,5 @@
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 
 @code {
@@ -9,6 +10,25 @@
 
     private void ToggleNav() => _isOpen = !_isOpen;
     private void CloseNav() => _isOpen = false;
+
+    private void NavigateToLogin()
+    {
+        string relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        string returnUrl = string.Concat("/", relativePath);
+        if (returnUrl.StartsWith("/login", StringComparison.OrdinalIgnoreCase))
+        {
+            NavigationManager.NavigateTo("login");
+            return;
+        }
+        string encodedReturnUrl = Uri.EscapeDataString(returnUrl);
+        NavigationManager.NavigateTo($"login?returnUrl={encodedReturnUrl}");
+    }
+
+    private void NavigateToLoginAndClose()
+    {
+        CloseNav();
+        NavigateToLogin();
+    }
 
     [JSInvokable]
     public void CloseFromJs()
@@ -141,9 +161,9 @@
                 <div class="nav-separator mobile-only"></div>
 
                 <div class="nav-item mobile-only">
-                    <NavLink class="nav-link" href="login" @onclick="CloseNav">
+                    <a class="nav-link" href="login" @onclick="NavigateToLoginAndClose" @onclick:preventDefault>
                         <span class="bi bi-login-nav-menu" aria-hidden="true"></span> Innskrá
-                    </NavLink>
+                    </a>
                 </div>
             </NotAuthorized>
         </AuthorizeView>
