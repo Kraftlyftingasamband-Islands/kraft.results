@@ -3,6 +3,7 @@
 
 @code {
     private bool _isOpen;
+    private bool _wasOpen;
     private IJSObjectReference? _module;
     private IJSObjectReference? _handler;
     private DotNetObjectReference<TopBar>? _dotNetRef;
@@ -24,6 +25,13 @@
             _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/TopBar.razor.js");
             _handler = await _module.InvokeAsync<IJSObjectReference>("initialize", _dotNetRef);
         }
+
+        if (_isOpen && !_wasOpen && _module is not null)
+        {
+            await _module.InvokeVoidAsync("focusFirstDropdownItem");
+        }
+
+        _wasOpen = _isOpen;
     }
 
     public async ValueTask DisposeAsync()
@@ -59,15 +67,15 @@
 
                 @if (_isOpen)
                 {
-                    <div id="user-dropdown" class="user-dropdown" role="menu">
-                        <a class="dropdown-item" href="profile" role="menuitem">
+                    <div id="user-dropdown" class="user-dropdown">
+                        <a class="dropdown-item" href="profile">
                             <span class="bi bi-dropdown-person" aria-hidden="true"></span> Profill
                         </a>
-                        <a class="dropdown-item" href="change-password" role="menuitem">
+                        <a class="dropdown-item" href="change-password">
                             <span class="bi bi-dropdown-key" aria-hidden="true"></span> Breyta lykilorði
                         </a>
                         <div class="dropdown-separator"></div>
-                        <a class="dropdown-item" href="logout" role="menuitem">
+                        <a class="dropdown-item" href="logout">
                             <span class="bi bi-dropdown-logout" aria-hidden="true"></span> Útskrá
                         </a>
                     </div>

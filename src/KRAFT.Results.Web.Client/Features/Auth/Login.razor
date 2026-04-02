@@ -69,13 +69,18 @@
 
     private bool HasError => !string.IsNullOrEmpty(_errorMessage);
 
+    private string SafeReturnUrl =>
+        !string.IsNullOrEmpty(ReturnUrl) && ReturnUrl.StartsWith('/') && !ReturnUrl.StartsWith("//", StringComparison.Ordinal)
+            ? ReturnUrl
+            : "/";
+
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthStateProvider.GetAuthenticationStateAsync();
 
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+            NavigationManager.NavigateTo(SafeReturnUrl);
             return;
         }
 
@@ -117,7 +122,7 @@
 
             await TokenStorage.SetTokenAsync(authResponse.AccessToken);
             AuthStateProvider.MarkUserAsAuthenticated(authResponse.AccessToken);
-            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+            NavigationManager.NavigateTo(SafeReturnUrl);
         }
         catch (HttpRequestException)
         {
