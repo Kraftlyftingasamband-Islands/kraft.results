@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 
 using KRAFT.Results.WebApi;
 using KRAFT.Results.WebApi.Features;
@@ -9,6 +11,7 @@ using KRAFT.Results.WebApi.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -63,6 +66,26 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
+int authRateLimitPermitLimit = builder.Configuration.GetValue("RateLimiting:Auth:PermitLimit", 5);
+TimeSpan authRateLimitWindow = builder.Configuration.GetValue("RateLimiting:Auth:WindowMinutes", 1) * TimeSpan.FromMinutes(1);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext =>
+    {
+        string partitionKey = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+            ?? "anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = authRateLimitPermitLimit,
+            Window = authRateLimitWindow,
+        });
+    });
+});
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IHttpContextService, HttpContextService>();
 builder.Services.AddFeatures();
@@ -94,6 +117,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapFeatureEndpoints();
 

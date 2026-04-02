@@ -36,7 +36,8 @@ internal static class ChangePasswordEndpoint
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .ProducesProblem(StatusCodes.Status500InternalServerError)
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .RequireRateLimiting("auth");
 
         return endpoints;
     }

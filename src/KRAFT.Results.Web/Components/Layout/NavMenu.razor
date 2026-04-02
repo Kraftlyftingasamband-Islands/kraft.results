@@ -55,8 +55,7 @@
 </button>
 
 <div id="main-nav"
-     class="nav-scrollable @(_isOpen ? "is-open" : "")"
-     aria-hidden="@(!_isOpen).ToString().ToLower()">
+     class="nav-scrollable @(_isOpen ? "is-open" : "")">
     <nav class="nav" aria-label="Main navigation">
         <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="CloseNav">

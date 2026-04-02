@@ -16,6 +16,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("RateLimiting:Auth:PermitLimit", "10000");
         builder.ConfigureServices(ReplaceDbContext);
     }
 
