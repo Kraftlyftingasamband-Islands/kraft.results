@@ -1,6 +1,7 @@
 @page "/meets/{year:int?}"
 
 @using System.Globalization
+@using System.Linq
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
 
@@ -29,10 +30,10 @@
 }
 else
 {
-    @foreach (var group in Meets.GroupBy(x => x.StartDate.ToString("MMMM", CultureInfo.CurrentCulture)))
+    @foreach (IGrouping<string, MeetSummary> group in Meets.GroupBy(x => x.StartDate.ToString("MMMM", CultureInfo.CurrentCulture)))
     {
         <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
-        @foreach (var meet in group)
+        @foreach (MeetSummary meet in group)
         {
             <article class="meet-item">
                 <div class="date-box">
