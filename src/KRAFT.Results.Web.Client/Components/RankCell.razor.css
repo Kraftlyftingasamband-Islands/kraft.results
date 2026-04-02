@@ -36,15 +36,3 @@ td {
     background: linear-gradient(135deg, #cd7f32, #a0522d);
     box-shadow: 0 0 3px rgba(160, 82, 45, 0.5);
 }
-
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
