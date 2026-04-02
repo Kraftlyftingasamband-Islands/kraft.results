@@ -100,14 +100,18 @@
             </NavLink>
         </div>
 
-        <AuthorizeView>
+        <AuthorizeView Roles="Admin">
             <Authorized>
                 <div class="nav-item">
                     <NavLink class="nav-link" href="users" @onclick="CloseNav">
                         <span class="bi bi-gear-nav-menu" aria-hidden="true"></span> Notendur
                     </NavLink>
                 </div>
+            </Authorized>
+        </AuthorizeView>
 
+        <AuthorizeView>
+            <Authorized>
                 <div class="nav-separator"></div>
 
                 <div class="nav-item">
