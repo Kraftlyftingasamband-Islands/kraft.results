@@ -24,7 +24,7 @@
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
-    <div class="error-message" role="alert">@_errorMessage</div>
+    <ErrorMessage Message="@_errorMessage" />
 }
 else if (_isLoading)
 {
