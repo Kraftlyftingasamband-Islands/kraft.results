@@ -30,9 +30,16 @@ IResourceBuilder<SqlServerServerResource> sql = builder
 
 IResourceBuilder<SqlServerDatabaseResource> db = sql.AddDatabase("kraft-db");
 
+string? rateLimitPermit = builder.Configuration.GetValue<string>("RateLimiting:Auth:PermitLimit");
+
 IResourceBuilder<ProjectResource> api = builder.AddProject<Projects.KRAFT_Results_WebApi>("api")
     .WithReference(db)
     .WaitFor(db);
+
+if (rateLimitPermit is not null)
+{
+    api = api.WithEnvironment("RateLimiting__Auth__PermitLimit", rateLimitPermit);
+}
 
 builder.AddProject<Projects.KRAFT_Results_Web>("web")
     .WithReference(api)
