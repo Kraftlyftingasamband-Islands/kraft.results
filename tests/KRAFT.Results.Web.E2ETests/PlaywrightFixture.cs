@@ -81,6 +81,7 @@ public sealed class PlaywrightFixture : IAsyncLifetime
             "--SqlServer:ContainerName=kraft-sql-e2etest",
             "--SqlServer:Port=11433",
             "--SqlServer:Persistent=false",
+            "--RateLimiting:Auth:PermitLimit=1000",
         ];
 
         IDistributedApplicationTestingBuilder builder =
