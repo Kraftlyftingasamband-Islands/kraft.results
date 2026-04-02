@@ -71,6 +71,37 @@ internal sealed class User
         return user;
     }
 
+    internal Result ChangePassword(string currentPassword, string newPassword, string confirmNewPassword)
+    {
+        if (newPassword != confirmNewPassword)
+        {
+            return UserErrors.PasswordsDoNotMatch;
+        }
+
+        Result<Password> hashedNewPassword = ValueObjects.Password.Hash(newPassword);
+
+        if (hashedNewPassword.IsFailure)
+        {
+            return Result.Failure(hashedNewPassword.Error);
+        }
+
+        if (!Password.IsHashed)
+        {
+            Password = ValueObjects.Password.Hash(Password);
+        }
+
+        if (!Password.Verify(currentPassword))
+        {
+            return UserErrors.IncorrectCurrentPassword;
+        }
+
+        Password = hashedNewPassword.FromResult();
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = Username;
+
+        return Result.Success();
+    }
+
     internal Result Update(User modifier, string firstName, string lastName, Email email)
     {
         if (string.IsNullOrWhiteSpace(firstName))
