@@ -1,0 +1,41 @@
+<div class="page-header">
+    @if (TitleContent is not null)
+    {
+        @TitleContent
+    }
+    else if (Title is not null)
+    {
+        <h3>@Title</h3>
+    }
+
+    @if (ActionHref is not null)
+    {
+        <AuthorizeView Roles="@ActionRole">
+            <Authorized>
+                <a href="@ActionHref" class="btn-action">
+                    <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+                    </svg>
+                    @ActionLabel
+                </a>
+            </Authorized>
+        </AuthorizeView>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public RenderFragment? TitleContent { get; set; }
+
+    [Parameter]
+    public string? ActionHref { get; set; }
+
+    [Parameter]
+    public string? ActionLabel { get; set; }
+
+    [Parameter]
+    public string ActionRole { get; set; } = "Admin";
+}
