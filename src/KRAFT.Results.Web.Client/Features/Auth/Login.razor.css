@@ -27,47 +27,9 @@
     margin-block-end: 2rem;
 }
 
-.form-field {
-    margin-block-end: 1.25rem;
-}
-
-.form-label {
-    display: block;
-    font-family: var(--font-body);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    margin-block-end: 0.25rem;
-}
-
-::deep .form-input {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-body);
-    font-size: 1rem;
-    color: var(--color-text);
-    background: var(--color-white);
-    transition: border-color var(--transition-fast) ease;
-}
-
-::deep .form-input:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
 @media (max-width: 640px) {
     .login-card {
         margin-inline: 1rem;
         padding: 1.5rem;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    ::deep .form-input {
-        transition: none;
     }
 }

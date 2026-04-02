@@ -44,9 +44,3 @@
     height: 0.875rem;
     flex-shrink: 0;
 }
-
-@media (prefers-reduced-motion: reduce) {
-    .btn-edit {
-        transition: none;
-    }
-}
