@@ -96,21 +96,6 @@ td {
     height: 1rem;
 }
 
-.spinner {
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid transparent;
-    border-block-start-color: currentColor;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .row-fading {
     opacity: 0;
     transition: opacity 300ms ease;
@@ -140,13 +125,4 @@ td {
     .row-fading {
         transition: none;
     }
-
-    .spinner {
-        animation: pulse 1s ease-in-out infinite;
-    }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
 }
