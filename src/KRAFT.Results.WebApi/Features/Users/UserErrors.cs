@@ -13,6 +13,8 @@ internal static class UserErrors
     internal const string CannotChangeOwnRoleCode = "Users.CannotChangeOwnRole";
     internal const string RoleNotFoundCode = "Users.RoleNotFound";
     internal const string RolesRequiredCode = "Users.RolesRequired";
+    internal const string IncorrectCurrentPasswordCode = "Users.IncorrectCurrentPassword";
+    internal const string PasswordsDoNotMatchCode = "Users.PasswordsDoNotMatch";
 
     internal static readonly Error InvalidUsernameOrPassword = new(
         Code: InvalidUsernameOrPasswordCode,
@@ -65,4 +67,12 @@ internal static class UserErrors
     internal static readonly Error RolesRequired = new(
         Code: RolesRequiredCode,
         Description: "At least one role must be specified.");
+
+    internal static readonly Error IncorrectCurrentPassword = new(
+        Code: IncorrectCurrentPasswordCode,
+        Description: "The current password is incorrect.");
+
+    internal static readonly Error PasswordsDoNotMatch = new(
+        Code: PasswordsDoNotMatchCode,
+        Description: "The new password and confirmation do not match.");
 }

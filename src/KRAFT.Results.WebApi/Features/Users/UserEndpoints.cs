@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Users.ChangeRole;
+﻿using KRAFT.Results.WebApi.Features.Users.ChangePassword;
+using KRAFT.Results.WebApi.Features.Users.ChangeRole;
 using KRAFT.Results.WebApi.Features.Users.Create;
 using KRAFT.Results.WebApi.Features.Users.Delete;
 using KRAFT.Results.WebApi.Features.Users.Get;
@@ -22,6 +23,7 @@ internal static class UserEndpoints
         group.MapGetUserEditDetailsEndpoint();
         group.MapUpdateUserEndpoint();
         group.MapChangeUserRoleEndpoint();
+        group.MapChangePasswordEndpoint();
 
         return endpoints;
     }

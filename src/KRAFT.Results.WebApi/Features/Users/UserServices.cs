@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Users.ChangeRole;
+﻿using KRAFT.Results.WebApi.Features.Users.ChangePassword;
+using KRAFT.Results.WebApi.Features.Users.ChangeRole;
 using KRAFT.Results.WebApi.Features.Users.Create;
 using KRAFT.Results.WebApi.Features.Users.Delete;
 using KRAFT.Results.WebApi.Features.Users.Get;
@@ -21,6 +22,7 @@ internal static class UserServices
         services.AddScoped<GetUserEditDetailsHandler>();
         services.AddScoped<UpdateUserHandler>();
         services.AddScoped<ChangeUserRoleHandler>();
+        services.AddScoped<ChangePasswordHandler>();
 
         services.AddOptions<JwtOptions>()
             .Configure<IConfiguration>((options, configuration)
