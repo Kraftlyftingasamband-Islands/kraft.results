@@ -1,7 +1,5 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
-using KRAFT.Results.WebApi.ValueObjects;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Meets.GetParticipations;
@@ -28,7 +26,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 ClubSlug = p.Team != null ? p.Team.Slug : string.Empty,
                 p.Weight,
                 p.Total,
-                IpfPoints = IpfPoints.Create(p.Meet.IsRaw, p.Athlete.Gender, p.Meet.MeetType.Title, p.Weight, p.Total),
+                IpfPoints = p.Ipfpoints ?? 0m,
                 p.Disqualified,
                 GenderDisplay = p.Athlete.Gender == "f" ? "Konur" : "Karlar",
                 Attempts = p.Attempts
