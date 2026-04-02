@@ -12,11 +12,13 @@ public sealed class GetUsersTest
     private const string Path = "/users";
 
     private readonly HttpClient _authorizedHttpClient;
+    private readonly HttpClient _nonAdminHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
 
     public GetUsersTest(IntegrationTestFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+        _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
 
@@ -54,6 +56,18 @@ public sealed class GetUsersTest
 
         // Assert
         response!.ShouldContain(x => x.Email == Constants.TestUser.Email);
+    }
+
+    [Fact]
+    public async Task ReturnsForbidden_WhenUserIsNotAdmin()
+    {
+        // Arrange
+
+        // Act
+        HttpResponseMessage response = await _nonAdminHttpClient.GetAsync(Path, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]

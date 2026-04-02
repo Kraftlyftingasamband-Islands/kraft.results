@@ -2,7 +2,7 @@
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
 
 @using KRAFT.Results.Contracts.Users
 
