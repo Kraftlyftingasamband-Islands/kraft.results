@@ -3,20 +3,6 @@
     margin-block-end: 1rem;
 }
 
-.admin-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.btn-danger {
-    background: var(--color-danger);
-}
-
-.btn-danger:hover {
-    background: #b91c1c;
-}
-
 .athlete-meta {
     display: flex;
     align-items: center;
@@ -125,10 +111,4 @@
 
 .career-group .card-list {
     margin-block-start: 0.25rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .career-group-summary::before {
-        transition: none;
-    }
 }
