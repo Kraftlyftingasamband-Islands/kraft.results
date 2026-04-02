@@ -58,10 +58,7 @@
 }
 else if (_hasError)
 {
-    <div class="error-state" role="alert">
-        <p>Villa kom upp. Reyndu aftur.</p>
-        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
-    </div>
+    <ErrorMessage Message="Villa kom upp. Reyndu aftur." OnRetry="LoadDataAsync" />
 }
 else if (_response is not null && _response.Items.Count > 0)
 {
@@ -93,9 +90,7 @@ else if (_response is not null && _response.Items.Count > 0)
 }
 else
 {
-    <div class="empty-state">
-        Engar niðurstöður fundust.
-    </div>
+    <EmptyState Message="Engar niðurstöður fundust." />
 }
 
 @code {

@@ -26,10 +26,7 @@
 }
 else if (_hasError)
 {
-    <div class="error-state" role="alert">
-        <p>Villa kom upp. Reyndu aftur.</p>
-        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
-    </div>
+    <ErrorMessage Message="Villa kom upp. Reyndu aftur." OnRetry="LoadDataAsync" />
 }
 else if (_groups is not null && _groups.Count > 0)
 {
@@ -46,9 +43,7 @@ else if (_groups is not null && _groups.Count > 0)
 }
 else
 {
-    <div class="empty-state">
-        Engin met fundust.
-    </div>
+    <EmptyState Message="Engin met fundust." />
 }
 
 @code {
