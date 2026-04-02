@@ -26,22 +26,33 @@
     </div>
 }
 
-<div class="card-grid">
-    @foreach (TeamSummary team in Teams)
-    {
-        <Card>
-            <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
-            <div class="team-name">@team.Title</div>
-            <div class="team-short">@team.ShortTitle</div>
-            <div class="team-count">
-                <span class="count-value">@team.AthleteCount</span>
-                <span class="count-label">meðlimir</span>
-            </div>
-        </Card>
-    }
-</div>
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="visually-hidden">Sæki félög...</span>
+    </div>
+}
+else
+{
+    <div class="card-grid">
+        @foreach (TeamSummary team in Teams)
+        {
+            <Card>
+                <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
+                <div class="team-name">@team.Title</div>
+                <div class="team-short">@team.ShortTitle</div>
+                <div class="team-count">
+                    <span class="count-value">@team.AthleteCount</span>
+                    <span class="count-label">meðlimir</span>
+                </div>
+            </Card>
+        }
+    </div>
+}
 
 @code {
+    private bool _isLoading = true;
     private IReadOnlyCollection<TeamSummary> Teams = [];
     private string? _errorMessage;
 
@@ -54,6 +65,10 @@
         catch (HttpRequestException)
         {
             _errorMessage = "Villa kom upp við að sækja félög. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }

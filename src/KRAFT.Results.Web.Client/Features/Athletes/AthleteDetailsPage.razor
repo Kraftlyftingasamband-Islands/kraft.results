@@ -8,7 +8,14 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-@if (_errorMessage is not null)
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="visually-hidden">Sæki keppanda...</span>
+    </div>
+}
+else if (_errorMessage is not null)
 {
     <div role="alert" class="error-message">
         <p>@_errorMessage</p>
@@ -151,6 +158,7 @@ else
 @code {
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
+    private bool _isLoading = true;
     private string? _deleteErrorMessage;
     private string? _errorMessage;
 
@@ -219,6 +227,10 @@ else
         catch (HttpRequestException)
         {
             _errorMessage = "Villa kom upp við að sækja keppanda. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }

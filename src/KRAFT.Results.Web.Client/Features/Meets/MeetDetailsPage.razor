@@ -11,14 +11,22 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-@if (_errorMessage is not null)
+@if (_isLoading)
+{
+    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="visually-hidden">Sæki mót...</span>
+    </div>
+}
+else if (_errorMessage is not null)
 {
     <div role="alert" class="error-message">
         <p>@_errorMessage</p>
         <a href="/meets">Til baka í mótslista</a>
     </div>
 }
-
+else
+{
 <div class="page-header">
     <h1>@Meet?.Title</h1>
     <AuthorizeView Roles="Admin">
@@ -197,6 +205,7 @@
         }
     </div>
 }
+}
 
 <ConfirmDialog @ref="_deleteDialog"
                Id="delete-meet-dialog"
@@ -210,6 +219,7 @@
 @code {
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
+    private bool _isLoading = true;
     private string? _deleteErrorMessage;
     private List<PendingRecordEntry> _pendingRecords = [];
 
@@ -338,6 +348,10 @@
         catch (HttpRequestException)
         {
             _errorMessage = "Villa kom upp við að sækja mót. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }
