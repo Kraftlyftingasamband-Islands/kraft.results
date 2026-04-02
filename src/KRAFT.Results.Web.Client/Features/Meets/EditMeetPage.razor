@@ -15,7 +15,10 @@
 
 @if (_isInitializing)
 {
-    <p>Hleð...</p>
+    <div class="spinner-container" role="status" aria-live="polite" aria-atomic="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="visually-hidden">Sæki mót...</span>
+    </div>
 }
 else if (_initialValues is not null)
 {
