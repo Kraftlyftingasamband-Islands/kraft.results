@@ -111,24 +111,36 @@
 
         <AuthorizeView>
             <Authorized>
-                <div class="nav-separator"></div>
+                <div class="nav-separator mobile-only"></div>
 
-                <div class="nav-item">
+                <div class="nav-item mobile-only nav-user-label">
+                    <span class="nav-link">
+                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> @(string.IsNullOrWhiteSpace(context.User.Identity?.Name) ? "Notandi" : context.User.Identity.Name)
+                    </span>
+                </div>
+
+                <div class="nav-item mobile-only">
+                    <NavLink class="nav-link" href="profile" @onclick="CloseNav">
+                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Profill
+                    </NavLink>
+                </div>
+
+                <div class="nav-item mobile-only">
                     <NavLink class="nav-link" href="change-password" @onclick="CloseNav">
                         <span class="bi bi-key-nav-menu" aria-hidden="true"></span> Breyta lykilorði
                     </NavLink>
                 </div>
 
-                <div class="nav-item">
+                <div class="nav-item mobile-only">
                     <NavLink class="nav-link" href="logout" @onclick="CloseNav">
                         <span class="bi bi-logout-nav-menu" aria-hidden="true"></span> Útskrá
                     </NavLink>
                 </div>
             </Authorized>
             <NotAuthorized>
-                <div class="nav-separator"></div>
+                <div class="nav-separator mobile-only"></div>
 
-                <div class="nav-item">
+                <div class="nav-item mobile-only">
                     <NavLink class="nav-link" href="login" @onclick="CloseNav">
                         <span class="bi bi-login-nav-menu" aria-hidden="true"></span> Innskrá
                     </NavLink>

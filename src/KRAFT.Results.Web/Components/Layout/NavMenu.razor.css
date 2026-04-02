@@ -162,7 +162,21 @@
     letter-spacing: 0.03em;
 }
 
+.nav-user-label ::deep .nav-link {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.8125rem;
+    cursor: default;
+}
+
+.nav-user-label ::deep .nav-link:hover {
+    background: none;
+}
+
 @media (min-width: 641px) {
+    .mobile-only {
+        display: none;
+    }
+
     .navbar-toggler {
         display: none;
     }
