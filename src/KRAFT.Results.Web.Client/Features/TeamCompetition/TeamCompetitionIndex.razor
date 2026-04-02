@@ -17,10 +17,7 @@
 }
 else if (_hasError)
 {
-    <div class="error-state" role="alert">
-        <p>Villa kom upp. Reyndu aftur.</p>
-        <button class="retry-btn" @onclick="LoadDataAsync">Reyna aftur</button>
-    </div>
+    <ErrorMessage Message="Villa kom upp. Reyndu aftur." OnRetry="LoadDataAsync" />
 }
 else if (_response is not null)
 {
@@ -76,7 +73,7 @@ else if (_response is not null)
         }
         else
         {
-            <div class="empty-state">Engin gögn fundust fyrir þetta ar.</div>
+            <EmptyState Message="Engin gögn fundust fyrir þetta ar." />
         }
     }
 }
