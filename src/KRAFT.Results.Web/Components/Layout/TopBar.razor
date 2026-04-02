@@ -1,5 +1,6 @@
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 
 @code {
@@ -12,6 +13,19 @@
     protected override void OnInitialized()
     {
         AuthStateProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+
+    private void NavigateToLogin()
+    {
+        string relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        string returnUrl = string.Concat("/", relativePath);
+        if (returnUrl.StartsWith("/login", StringComparison.OrdinalIgnoreCase))
+        {
+            NavigationManager.NavigateTo("login");
+            return;
+        }
+        string encodedReturnUrl = Uri.EscapeDataString(returnUrl);
+        NavigationManager.NavigateTo($"login?returnUrl={encodedReturnUrl}");
     }
 
     private void OnAuthStateChanged(Task<AuthenticationState> _)
@@ -96,7 +110,7 @@
             </div>
         </Authorized>
         <NotAuthorized>
-            <a class="login-link" href="login">Innskrá</a>
+            <a class="login-link" href="login" @onclick="NavigateToLogin" @onclick:preventDefault>Innskrá</a>
         </NotAuthorized>
     </AuthorizeView>
 </div>
