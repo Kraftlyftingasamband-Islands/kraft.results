@@ -3,8 +3,9 @@
 @code {
     protected override void OnInitialized()
     {
-        string currentUri = NavigationManager.Uri;
-        string encodedReturnUrl = Uri.EscapeDataString(currentUri);
+        string relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        string returnUrl = string.Concat("/", relativePath);
+        string encodedReturnUrl = Uri.EscapeDataString(returnUrl);
         NavigationManager.NavigateTo($"/login?returnUrl={encodedReturnUrl}", forceLoad: false);
     }
 }

@@ -7,8 +7,9 @@ export function initialize(dotNetRef) {
     };
 
     const onClick = (e) => {
-        const dropdown = document.getElementById('user-dropdown-wrapper');
-        if (dropdown && !dropdown.contains(e.target)) {
+        const wrapper = document.getElementById('user-dropdown-wrapper');
+        const dropdownMenu = document.getElementById('user-dropdown');
+        if (wrapper && dropdownMenu && !wrapper.contains(e.target)) {
             dotNetRef.invokeMethodAsync('CloseFromJs');
             focusTrigger();
         }
