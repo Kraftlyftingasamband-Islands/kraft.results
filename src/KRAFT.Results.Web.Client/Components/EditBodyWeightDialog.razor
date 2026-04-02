@@ -10,7 +10,9 @@
             <input id="@($"{Id}-input")"
                    type="number"
                    step="0.01"
+                   min="0.01"
                    inputmode="decimal"
+                   aria-describedby="@(!string.IsNullOrEmpty(ErrorMessage) ? $"{Id}-error" : null)"
                    @bind="Weight"
                    @bind:event="oninput"
                    autofocus />
@@ -18,7 +20,7 @@
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <div class="edit-dialog-error" role="alert">@ErrorMessage</div>
+            <div id="@($"{Id}-error")" class="edit-dialog-error" role="alert">@ErrorMessage</div>
         }
 
         <div class="edit-dialog-actions">
