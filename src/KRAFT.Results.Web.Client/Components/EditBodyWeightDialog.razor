@@ -7,8 +7,9 @@
         <p class="edit-dialog-context">@AthleteName</p>
 
         <div class="edit-dialog-field">
-            <label for="@($"{Id}-input")">Líkamsþyngd (kg)</label>
+            <label class="form-label" for="@($"{Id}-input")">Líkamsþyngd (kg)</label>
             <input id="@($"{Id}-input")"
+                   class="form-input"
                    type="text"
                    inputmode="decimal"
                    aria-describedby="@(!string.IsNullOrEmpty(ErrorMessage) ? $"{Id}-error" : null)"
@@ -24,7 +25,7 @@
         }
 
         <div class="edit-dialog-actions">
-            <button class="btn-save"
+            <button class="btn-action"
                     @onclick="HandleSave"
                     disabled="@(Weight <= 0 || IsLoading)"
                     aria-busy="@IsLoading">
@@ -37,7 +38,7 @@
                     <span>Vista</span>
                 }
             </button>
-            <button class="btn-cancel" @onclick="HandleCancel" disabled="@IsLoading">Hætta við</button>
+            <button class="edit-dialog-cancel" @onclick="HandleCancel" disabled="@IsLoading">Hætta við</button>
         </div>
     </div>
 </dialog>
