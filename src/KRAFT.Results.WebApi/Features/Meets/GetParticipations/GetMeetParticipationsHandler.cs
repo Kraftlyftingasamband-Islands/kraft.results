@@ -1,11 +1,15 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.WebApi.ValueObjects;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Meets.GetParticipations;
 
 internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
 {
+    private static readonly int[] BenchMeetTypes = [2, 5];
+
     public async Task<List<MeetParticipation>> Handle(string slug, CancellationToken cancellationToken)
     {
         var rows = await dbContext.Set<Meet>()
@@ -26,7 +30,9 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 ClubSlug = p.Team != null ? p.Team.Slug : string.Empty,
                 p.Weight,
                 p.Total,
-                IpfPoints = p.Ipfpoints ?? 0m,
+                p.Benchpress,
+                IsRaw = meet.IsRaw,
+                MeetTypeId = meet.MeetType.MeetTypeId,
                 p.Disqualified,
                 GenderDisplay = p.Athlete.Gender == "f" ? "Konur" : "Karlar",
                 Attempts = p.Attempts
@@ -48,6 +54,8 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                     : string.Empty;
                 string ageCategorySlug = r.HasAgeCategory ? r.AgeCategorySlug ?? string.Empty : string.Empty;
 
+                decimal ipfPoints = CalculateIpfPoints(r.Disqualified, r.MeetTypeId, r.IsRaw, r.Gender, r.Weight, r.Total, r.Benchpress);
+
                 return new MeetParticipation(
                     r.ParticipationId,
                     r.MeetId,
@@ -63,7 +71,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                     r.ClubSlug,
                     r.Weight,
                     r.Total,
-                    r.IpfPoints,
+                    ipfPoints,
                     r.Disqualified,
                     r.Attempts);
             })
@@ -74,5 +82,46 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
             .ThenBy(p => p.Rank)
             .ThenBy(p => p.Athlete, StringComparer.Ordinal)
             .ToList();
+    }
+
+    private static decimal CalculateIpfPoints(
+        bool disqualified,
+        int meetTypeId,
+        bool isRaw,
+        Gender gender,
+        decimal bodyWeight,
+        decimal total,
+        decimal benchpress)
+    {
+        if (disqualified)
+        {
+            return 0m;
+        }
+
+        string ipfType;
+        decimal liftWeight;
+
+        if (BenchMeetTypes.Contains(meetTypeId))
+        {
+            ipfType = "Benchpress";
+            liftWeight = benchpress;
+        }
+        else if (meetTypeId == 1)
+        {
+            ipfType = "Powerlifting";
+            liftWeight = total;
+        }
+        else
+        {
+            return 0m;
+        }
+
+        if (liftWeight <= 0)
+        {
+            return 0m;
+        }
+
+        IpfPoints ipfPoints = IpfPoints.Create(isRaw, gender, ipfType, bodyWeight, liftWeight);
+        return ipfPoints.Value;
     }
 }
