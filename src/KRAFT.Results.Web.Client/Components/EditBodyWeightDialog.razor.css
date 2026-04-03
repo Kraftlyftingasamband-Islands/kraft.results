@@ -3,7 +3,7 @@ dialog {
     border-radius: var(--radius-md);
     padding: 0;
     box-shadow: var(--shadow-lg);
-    max-width: 28rem;
+    max-width: 20rem;
     width: 90vw;
 }
 
@@ -77,8 +77,28 @@ dialog::backdrop {
     cursor: not-allowed;
 }
 
+.btn-spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: var(--color-white);
+    border-radius: 50%;
+    animation: btn-spin 0.7s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes btn-spin {
+    to { transform: rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .edit-dialog-cancel {
         transition: none;
+    }
+
+    .btn-spinner {
+        animation: none;
+        opacity: 0.6;
     }
 }

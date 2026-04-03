@@ -2,7 +2,7 @@
 @using System.Globalization
 
 <dialog id="@Id" role="dialog" aria-labelledby="@($"{Id}-title")" @oncancel="HandleCancel">
-    <div class="edit-dialog-content">
+    <form class="edit-dialog-content" @onsubmit="HandleSave">
         <h2 id="@($"{Id}-title")" class="edit-dialog-title">Breyta líkamsþyngd</h2>
         <p class="edit-dialog-context">@AthleteName</p>
 
@@ -12,6 +12,7 @@
                    class="form-input"
                    type="text"
                    inputmode="decimal"
+                   autocomplete="off"
                    aria-describedby="@(!string.IsNullOrEmpty(ErrorMessage) ? $"{Id}-error" : null)"
                    @bind="Weight"
                    @bind:culture="CultureInfo.CurrentCulture"
@@ -25,22 +26,22 @@
         }
 
         <div class="edit-dialog-actions">
-            <button class="btn-action"
-                    @onclick="HandleSave"
+            <button type="submit"
+                    class="btn-action"
                     disabled="@(Weight <= 0 || IsLoading)"
                     aria-busy="@IsLoading">
                 @if (IsLoading)
                 {
-                    <LoadingSpinner />
+                    <span class="btn-spinner" aria-hidden="true"></span>
                 }
                 else
                 {
                     <span>Vista</span>
                 }
             </button>
-            <button class="edit-dialog-cancel" @onclick="HandleCancel" disabled="@IsLoading">Hætta við</button>
+            <button type="button" class="edit-dialog-cancel" @onclick="HandleCancel" disabled="@IsLoading">Hætta við</button>
         </div>
-    </div>
+    </form>
 </dialog>
 
 @code {
