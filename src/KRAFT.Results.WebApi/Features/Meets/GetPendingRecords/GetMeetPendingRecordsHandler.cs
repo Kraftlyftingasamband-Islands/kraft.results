@@ -40,6 +40,7 @@ internal sealed class GetMeetPendingRecordsHandler(ResultsDbContext dbContext)
 
         List<AttemptCandidate> goodAttempts = await dbContext.Set<Attempt>()
             .Where(a => a.Good)
+            .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.Slug == slug)
             .Where(a => a.Discipline != Discipline.None)
             .Select(a => new AttemptCandidate(
