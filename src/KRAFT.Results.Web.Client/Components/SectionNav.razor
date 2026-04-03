@@ -1,0 +1,13 @@
+<nav class="section-nav" aria-label="Efnisyfirlit">
+    @foreach (SectionNavLink link in Links)
+    {
+        <a class="section-nav-link" href="@link.Href">@link.Label</a>
+    }
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<SectionNavLink> Links { get; set; } = [];
+
+    public sealed record class SectionNavLink(string Label, string Href);
+}
