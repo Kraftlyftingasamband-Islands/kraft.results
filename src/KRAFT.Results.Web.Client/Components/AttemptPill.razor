@@ -1,10 +1,14 @@
 @using KRAFT.Results.Contracts.Meets
 
-<span class="@_classes" tabindex="@(Attempt.IsRecord && Attempt.IsGood ? "0" : null)">
+<span class="@_classes" tabindex="@_tabIndex">
     @_value
     @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
     {
         <span class="tip" role="tooltip">@RecordContext</span>
+    }
+    else if (Attempt.IsPendingRecord && Attempt.IsGood)
+    {
+        <span class="tip" role="tooltip">Met til staðfestingar</span>
     }
 </span>
 
@@ -17,12 +21,14 @@
 
     private string _classes = string.Empty;
     private string _value = "–";
+    private string? _tabIndex;
 
     protected override void OnParametersSet()
     {
         if (Attempt.Weight == 0)
         {
             _classes = "pill pill-skipped";
+            _tabIndex = null;
             return;
         }
 
@@ -31,14 +37,22 @@
         if (Attempt.IsGood && Attempt.IsRecord)
         {
             _classes = "pill pill-record";
+            _tabIndex = "0";
+        }
+        else if (Attempt.IsGood && Attempt.IsPendingRecord)
+        {
+            _classes = "pill pill-pending";
+            _tabIndex = "0";
         }
         else if (Attempt.IsGood)
         {
             _classes = "pill pill-good";
+            _tabIndex = null;
         }
         else
         {
             _classes = "pill pill-bad";
+            _tabIndex = null;
         }
     }
 }
