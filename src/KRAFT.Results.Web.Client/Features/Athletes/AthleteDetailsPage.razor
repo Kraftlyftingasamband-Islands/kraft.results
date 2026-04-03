@@ -58,20 +58,7 @@ else
 
 @if (PersonalBests.Count > 0 || Records.Count > 0 || Participations.Count > 0)
 {
-    <nav class="section-nav" aria-label="Efnisyfirlit">
-        @if (PersonalBests.Count > 0)
-        {
-            <a class="section-nav-link" href="@($"/athletes/{Slug}#bestaragangur")">Besti árangur</a>
-        }
-        @if (Records.Count > 0)
-        {
-            <a class="section-nav-link" href="@($"/athletes/{Slug}#islandsmet")">Íslandsmet</a>
-        }
-        @if (Participations.Count > 0)
-        {
-            <a class="section-nav-link" href="@($"/athletes/{Slug}#ferill")">Ferill</a>
-        }
-    </nav>
+    <SectionNav Links="@_navLinks" />
 }
 
 @if (PersonalBests.Count > 0)
@@ -167,6 +154,7 @@ else
     private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
     private IReadOnlyList<AthleteRecord> Records = [];
     private IReadOnlyList<AthleteParticipation> Participations = [];
+    private IReadOnlyList<SectionNav.SectionNavLink> _navLinks = [];
 
     private async Task ShowDeleteDialog()
     {
@@ -220,6 +208,12 @@ else
             Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
             Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
             ShowClubs = !string.IsNullOrWhiteSpace(Athlete?.Club);
+
+            List<SectionNav.SectionNavLink> navLinks = [];
+            if (PersonalBests.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Besti árangur", $"/athletes/{Slug}#bestaragangur")); }
+            if (Records.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Íslandsmet", $"/athletes/{Slug}#islandsmet")); }
+            if (Participations.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Ferill", $"/athletes/{Slug}#ferill")); }
+            _navLinks = navLinks;
         }
         catch (HttpRequestException)
         {
