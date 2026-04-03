@@ -1,14 +1,14 @@
 @using KRAFT.Results.Contracts.Meets
 
-<span class="@_classes" tabindex="@_tabIndex">
+<span class="@_classes" tabindex="@_tabIndex" role="@_role" aria-label="@_ariaLabel" aria-describedby="@_tooltipId">
     @_value
     @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
     {
-        <span class="tip" role="tooltip">@RecordContext</span>
+        <span id="@_tooltipId" class="tip" role="tooltip">@RecordContext</span>
     }
     else if (Attempt.IsPendingRecord && Attempt.IsGood)
     {
-        <span class="tip" role="tooltip">Met til staðfestingar</span>
+        <span id="@_tooltipId" class="tip" role="tooltip">Met til staðfestingar</span>
     }
 </span>
 
@@ -22,6 +22,9 @@
     private string _classes = string.Empty;
     private string _value = "–";
     private string? _tabIndex;
+    private string? _role;
+    private string? _ariaLabel;
+    private string? _tooltipId;
 
     protected override void OnParametersSet()
     {
@@ -29,6 +32,9 @@
         {
             _classes = "pill pill-skipped";
             _tabIndex = null;
+            _role = null;
+            _ariaLabel = null;
+            _tooltipId = null;
             return;
         }
 
@@ -38,21 +44,33 @@
         {
             _classes = "pill pill-record";
             _tabIndex = "0";
+            _role = "img";
+            _ariaLabel = $"{_value} kg \u2013 Met";
+            _tooltipId = $"tip-{Guid.NewGuid():N}";
         }
         else if (Attempt.IsGood && Attempt.IsPendingRecord)
         {
             _classes = "pill pill-pending";
             _tabIndex = "0";
+            _role = "img";
+            _ariaLabel = $"{_value} kg \u2013 Met til sta\u00f0festingar";
+            _tooltipId = $"tip-{Guid.NewGuid():N}";
         }
         else if (Attempt.IsGood)
         {
             _classes = "pill pill-good";
             _tabIndex = null;
+            _role = null;
+            _ariaLabel = null;
+            _tooltipId = null;
         }
         else
         {
             _classes = "pill pill-bad";
             _tabIndex = null;
+            _role = null;
+            _ariaLabel = null;
+            _tooltipId = null;
         }
     }
 }

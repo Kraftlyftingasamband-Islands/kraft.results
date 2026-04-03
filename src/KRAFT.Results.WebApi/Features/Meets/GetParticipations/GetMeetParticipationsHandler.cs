@@ -182,8 +182,23 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
             return [];
         }
 
+        List<AttemptCandidate> goodAttempts = await dbContext.Set<Attempt>()
+            .Where(a => a.Good)
+            .Where(a => a.Weight > 0)
+            .Where(a => a.Participation.Meet.Slug == slug)
+            .Where(a => a.Discipline != Discipline.None)
+            .Select(a => new AttemptCandidate(
+                a.AttemptId,
+                a.Discipline,
+                a.Weight,
+                a.Participation.AgeCategoryId,
+                a.Participation.WeightCategoryId))
+            .ToListAsync(cancellationToken);
+
+        HashSet<int> meetAttemptIds = goodAttempts.Select(a => a.AttemptId).ToHashSet();
+
         HashSet<int> attemptIdsWithRecords = (await dbContext.Set<Record>()
-            .Where(r => r.AttemptId != null)
+            .Where(r => r.AttemptId != null && meetAttemptIds.Contains(r.AttemptId!.Value))
             .Select(r => r.AttemptId!.Value)
             .ToListAsync(cancellationToken))
             .ToHashSet();
@@ -210,19 +225,6 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                     r => (r.AgeCategoryId, r.WeightCategoryId, r.RecordCategoryId, r.IsRaw),
                     r => r.MaxWeight,
                     cancellationToken);
-
-        List<AttemptCandidate> goodAttempts = await dbContext.Set<Attempt>()
-            .Where(a => a.Good)
-            .Where(a => a.Weight > 0)
-            .Where(a => a.Participation.Meet.Slug == slug)
-            .Where(a => a.Discipline != Discipline.None)
-            .Select(a => new AttemptCandidate(
-                a.AttemptId,
-                a.Discipline,
-                a.Weight,
-                a.Participation.AgeCategoryId,
-                a.Participation.WeightCategoryId))
-            .ToListAsync(cancellationToken);
 
         HashSet<int> pendingIds = [];
 
