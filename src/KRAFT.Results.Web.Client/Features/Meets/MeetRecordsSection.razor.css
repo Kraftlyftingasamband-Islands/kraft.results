@@ -33,23 +33,6 @@
 .mr-rows {
     display: flex;
     flex-direction: column;
-    max-height: 400px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border) transparent;
-}
-
-.mr-rows::-webkit-scrollbar {
-    width: 4px;
-}
-
-.mr-rows::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 2px;
-}
-
-.mr-rows::-webkit-scrollbar-track {
-    background: transparent;
 }
 
 .mr-row {
