@@ -64,9 +64,25 @@ else
                         OnRecordApproved="HandleRecordApproved" />
 </AuthorizeView>
 
+<nav class="section-nav" aria-label="Efnisyfirlit">
+    @if (ShowIpfPointLeaders)
+    {
+        <a class="section-nav-link" href="@($"/meets/{Slug}#stigahaestu")">Stigahæstu keppendur</a>
+    }
+    <a class="section-nav-link" href="@($"/meets/{Slug}#urslit")">Úrslit</a>
+    @if (ShowTeamStandings)
+    {
+        <a class="section-nav-link" href="@($"/meets/{Slug}#lidakeppni")">Liðakeppni</a>
+    }
+    @if (_meetRecords.Count > 0)
+    {
+        <a class="section-nav-link" href="@($"/meets/{Slug}#met")">Met</a>
+    }
+</nav>
+
 @if (ShowIpfPointLeaders)
 {
-    <h2>Stigahæstu keppendur</h2>
+    <h2 id="stigahaestu">Stigahæstu keppendur</h2>
     <div class="leaders-section">
         <div class="leaders-grid">
             @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
@@ -95,7 +111,7 @@ else
     <br />
 }
 
-<h2>Úrslit</h2>
+<h2 id="urslit">Úrslit</h2>
 
 <div class="results-container">
     @foreach (var genderAgeAgeCategory in Participations
@@ -154,7 +170,7 @@ else
 
 @if (ShowTeamStandings)
 {
-    <h2>Liðakeppni</h2>
+    <h2 id="lidakeppni">Liðakeppni</h2>
 
     <div class="standings-container">
         @if (IsPreGenderSplit)
