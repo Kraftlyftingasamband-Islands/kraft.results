@@ -80,6 +80,26 @@ public sealed class GetMeetPendingRecordsTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task DoesNotInclude_AttemptsWithZeroWeight()
+    {
+        // Arrange
+        string slug = Constants.TestMeetSlug;
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.GetAsync(
+            $"{BasePath}/{slug}/pending-records",
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        List<PendingRecordEntry>? records = await response.Content
+            .ReadFromJsonAsync<List<PendingRecordEntry>>(CancellationToken.None);
+        records.ShouldNotBeNull();
+        records.ShouldNotContain(r => r.AttemptId == Constants.PendingRecords.ZeroWeightAttemptId);
+        records.ShouldAllBe(r => r.Weight > 0);
+    }
+
+    [Fact]
     public async Task ReturnsNotFound_WhenMeetDoesNotExist()
     {
         // Arrange & Act

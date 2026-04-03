@@ -347,7 +347,8 @@ else
             {
                 try
                 {
-                    _pendingRecords = await HttpClient.GetFromJsonAsync<List<PendingRecordEntry>>($"/meets/{Slug}/pending-records") ?? [];
+                    List<PendingRecordEntry> allPendingRecords = await HttpClient.GetFromJsonAsync<List<PendingRecordEntry>>($"/meets/{Slug}/pending-records") ?? [];
+                    _pendingRecords = allPendingRecords.Where(r => r.Weight > 0).ToList();
                 }
                 catch (HttpRequestException)
                 {

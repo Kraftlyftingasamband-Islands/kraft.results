@@ -216,6 +216,11 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
             VALUES (@FemaleTestMeetParticipationId, 1, 3, 110.0, 1, 'seed', 'seed');
 
+            -- Attempt 7: zero-weight good bench attempt (should be excluded from pending records)
+            -- Uses bench (DisciplineId=2) in a raw slot with no existing record, so only Weight check filters it
+            INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES (1, 2, 1, 0.0, 1, 'seed', 'seed');
+
             -- Male athlete 2 (non-IS country to avoid ranking interference)
             INSERT INTO Athletes (Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
             VALUES ('Bob', 'Test', '1988-05-10', 'm', 2, 'bob-test');
