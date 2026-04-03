@@ -14,6 +14,10 @@ window.Kraftresults = {
             dialog.showModal();
         }
     },
+    selectInput: function (id) {
+        const el = document.getElementById(id);
+        if (el) { el.select(); }
+    },
     closeDialog: function (id) {
         const dialog = document.getElementById(id);
         if (dialog && dialog.open) {
