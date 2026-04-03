@@ -1,33 +1,28 @@
 @using System.Globalization
-@using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
 
 <section class="mr-section">
     <h2>Met sett á mótinu (@Records.Count)</h2>
 
     <div class="mr-container">
-        @foreach (IGrouping<bool, MeetRecordEntry> group in Records.GroupBy(r => r.IsClassic).OrderByDescending(g => g.Key))
-        {
-            <div class="mr-card">
-                <h3 class="mr-header">@DisplayNames.EquipmentType(group.Key)</h3>
-                <div class="mr-rows">
-                    @foreach (MeetRecordEntry record in group)
-                    {
-                        <a class="mr-row"
-                           href="@($"/athletes/{record.AthleteSlug}")"
-                           aria-label="@($"{record.WeightCategory} — {record.Discipline} — {record.AthleteName} — {record.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg")">
-                            <span class="mr-cat">@record.WeightCategory</span>
-                            <div class="mr-info">
-                                <span class="mr-type">@record.Discipline</span>
-                                <span class="mr-meta">@record.AgeCategory</span>
-                            </div>
-                            <span class="mr-name">@record.AthleteName</span>
-                            <span class="mr-weight">@record.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="mr-unit">kg</span></span>
-                        </a>
-                    }
-                </div>
+        <div class="mr-card">
+            <div class="mr-rows">
+                @foreach (MeetRecordEntry record in Records)
+                {
+                    <a class="mr-row"
+                       href="@($"/athletes/{record.AthleteSlug}")"
+                       aria-label="@($"{record.WeightCategory} — {record.Discipline} — {record.AthleteName} — {record.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg")">
+                        <span class="mr-cat">@record.WeightCategory</span>
+                        <div class="mr-info">
+                            <span class="mr-type">@record.Discipline</span>
+                            <span class="mr-meta">@record.AgeCategory</span>
+                        </div>
+                        <span class="mr-name">@record.AthleteName</span>
+                        <span class="mr-weight">@record.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="mr-unit">kg</span></span>
+                    </a>
+                }
             </div>
-        }
+        </div>
     </div>
 </section>
 
