@@ -139,4 +139,33 @@ public sealed class GetMeetParticipationsTests
         MeetParticipation placed = participations.First(p => p.Athlete == "Bob Test");
         placed.Disqualified.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task NonDisqualifiedParticipant_IpfPointsAreCalculatedFromTotal()
+    {
+        // Arrange
+
+        // Act
+        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(Path, CancellationToken.None);
+
+        // Assert
+        participations.ShouldNotBeNull();
+        MeetParticipation participation = participations.First(p => p.Athlete == "Delta Test");
+        participation.IpfPoints.ShouldBeGreaterThan(78m);
+        participation.IpfPoints.ShouldBeLessThan(83m);
+    }
+
+    [Fact]
+    public async Task DisqualifiedParticipant_IpfPointsAreZero()
+    {
+        // Arrange
+
+        // Act
+        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(Path, CancellationToken.None);
+
+        // Assert
+        participations.ShouldNotBeNull();
+        MeetParticipation participation = participations.Single(p => p.Athlete == "Anna Test");
+        participation.IpfPoints.ShouldBe(0m);
+    }
 }
