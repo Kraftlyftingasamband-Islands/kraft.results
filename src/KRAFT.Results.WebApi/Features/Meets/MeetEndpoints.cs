@@ -7,6 +7,7 @@ using KRAFT.Results.WebApi.Features.Meets.GetDetails;
 using KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
 using KRAFT.Results.WebApi.Features.Meets.GetParticipations;
 using KRAFT.Results.WebApi.Features.Meets.GetPendingRecords;
+using KRAFT.Results.WebApi.Features.Meets.GetRecords;
 using KRAFT.Results.WebApi.Features.Meets.GetTeamPoints;
 using KRAFT.Results.WebApi.Features.Meets.RecordAttempt;
 using KRAFT.Results.WebApi.Features.Meets.RemoveParticipant;
@@ -30,6 +31,7 @@ internal static class MeetEndpoints
         group.MapGetMeetParticipationsEndpoint();
         group.MapGetMeetTeamPointsEndpoint();
         group.MapGetMeetPendingRecordsEndpoint();
+        group.MapGetMeetRecordsEndpoint();
         group.MapApprovePendingRecordEndpoint();
         group.MapUpdateMeetEndpoint();
         group.MapUpdateBodyWeightEndpoint();

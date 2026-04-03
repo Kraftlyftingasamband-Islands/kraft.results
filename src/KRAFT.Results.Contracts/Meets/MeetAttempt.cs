@@ -2,4 +2,4 @@
 
 namespace KRAFT.Results.Contracts.Meets;
 
-public sealed record class MeetAttempt(Discipline Discipline, short Round, decimal Weight, bool IsGood, bool IsRecord);
+public sealed record class MeetAttempt(Discipline Discipline, short Round, decimal Weight, bool IsGood, bool IsRecord, bool IsPendingRecord);

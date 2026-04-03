@@ -61,8 +61,15 @@
     border-top-color: #111827;
 }
 
+.pill-pending {
+    background: #d97706;
+    color: #ffffff;
+}
+
 .pill-record:hover .tip,
-.pill-record:focus .tip {
+.pill-record:focus .tip,
+.pill-pending:hover .tip,
+.pill-pending:focus .tip {
     display: block;
 }
 

@@ -203,6 +203,11 @@ else
         }
     </div>
 }
+
+@if (_meetRecords.Count > 0)
+{
+    <MeetRecordsSection Records="_meetRecords" />
+}
 }
 
 <ConfirmDialog @ref="_deleteDialog"
@@ -220,6 +225,7 @@ else
     private bool _isLoading = true;
     private string? _deleteErrorMessage;
     private List<PendingRecordEntry> _pendingRecords = [];
+    private IReadOnlyList<MeetRecordEntry> _meetRecords = [];
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -250,6 +256,18 @@ else
         }
     }
 
+    private async Task ReloadMeetRecords()
+    {
+        try
+        {
+            _meetRecords = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetRecordEntry>>($"/meets/{Slug}/records") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _meetRecords = [];
+        }
+    }
+
     private async Task ReloadParticipations()
     {
         try
@@ -268,9 +286,11 @@ else
         await _deleteDialog.ShowAsync();
     }
 
-    private void HandleRecordApproved(int attemptId)
+    private async Task HandleRecordApproved(int attemptId)
     {
         _pendingRecords = _pendingRecords.Where(r => r.AttemptId != attemptId).ToList();
+        await ReloadMeetRecords();
+        await ReloadParticipations();
     }
 
     private async Task HandleDelete()
@@ -341,6 +361,8 @@ else
                         || _teamPointsResponse.Combined.Count > 0);
                 IsPreGenderSplit = Meet.StartDate.Year < 2015;
             }
+
+            await ReloadMeetRecords();
 
             AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             if (authState.User.IsInRole("Admin"))
