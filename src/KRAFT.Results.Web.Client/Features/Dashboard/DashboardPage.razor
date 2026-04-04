@@ -97,7 +97,7 @@ else if (_dashboard is not null)
                 <div class="ranking-list">
                     @foreach (RankingEntry entry in _dashboard.TopRankingsMen)
                     {
-                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" ShowFooter="false" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar"IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
                     }
                 </div>
             </div>
@@ -106,7 +106,7 @@ else if (_dashboard is not null)
                 <div class="ranking-list">
                     @foreach (RankingEntry entry in _dashboard.TopRankingsWomen)
                     {
-                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" ShowFooter="false" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar"IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
                     }
                 </div>
             </div>

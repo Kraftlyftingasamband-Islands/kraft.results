@@ -101,39 +101,6 @@ a.r-ipf:hover {
     color: var(--color-primary-dark);
 }
 
-/* ── Footer row ── */
-
-.r-footer-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding-block-start: 6px;
-    border-block-start: 1px solid var(--color-border);
-}
-
-.r-meet-link {
-    font-size: 13px;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-    transition: color var(--transition-fast) ease;
-}
-
-.r-meet-link:hover {
-    color: var(--color-primary);
-}
-
-.r-meet-date {
-    font-size: 12px;
-    color: var(--color-text-muted);
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-}
-
 /* ===== Desktop: flatten to grid row ===== */
 
 @container (min-width: 680px) {
@@ -150,13 +117,6 @@ a.r-ipf:hover {
 
     .r-header-row {
         display: contents;
-    }
-
-    .r-footer-row {
-        grid-column: 1 / -1;
-        border-block-start: none;
-        padding-block-start: 0;
-        padding-block-end: 2px;
     }
 
     .r-rank {
@@ -180,14 +140,10 @@ a.r-ipf:hover {
         font-size: 15px;
     }
 
-    .r-meet-link {
-        padding-block-start: 2px;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .r-name,
-    .r-meet-link {
+    .r-name {
         transition: none;
     }
 }

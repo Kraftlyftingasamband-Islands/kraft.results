@@ -103,7 +103,6 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 p.Weight,
                 p.Meet.IsRaw,
                 p.Athlete.Gender.Value,
-                p.Meet.Title,
                 p.Meet.Slug,
                 DateOnly.FromDateTime(p.Meet.StartDate)))
             .ToListAsync(cancellationToken);
@@ -130,7 +129,6 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 x.r.BodyWeight,
                 x.IpfPoints,
                 0m,
-                x.r.MeetTitle,
                 x.r.MeetSlug,
                 x.r.IsRaw,
                 x.r.MeetDate))
@@ -216,7 +214,6 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         decimal BodyWeight,
         bool IsRaw,
         string Gender,
-        string MeetTitle,
         string MeetSlug,
         DateOnly MeetDate);
 

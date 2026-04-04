@@ -10,7 +10,6 @@ public sealed record class RankingEntry(
     decimal BodyWeight,
     decimal? IpfPoints,
     decimal Wilks,
-    string MeetTitle,
     string MeetSlug,
     bool IsClassic,
     DateOnly MeetDate);
