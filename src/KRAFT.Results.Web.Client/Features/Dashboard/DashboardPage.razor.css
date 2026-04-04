@@ -282,33 +282,6 @@
     color: var(--color-text-muted);
 }
 
-/* Team competition */
-.team-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.team-item:last-child {
-    border-bottom: none;
-}
-
-.team-name {
-    flex: 1;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-primary);
-}
-
-.team-points {
-    font-family: var(--font-heading);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: var(--color-primary);
-}
-
 /* Responsive */
 @media (max-width: 640px) {
     .stat-bar {
