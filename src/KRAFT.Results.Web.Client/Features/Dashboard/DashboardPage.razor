@@ -187,17 +187,21 @@ else if (_dashboard is not null)
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Karlar</div>
-                    @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsMen)
-                    {
-                        <StandingsCard Standing="team" />
-                    }
+                    <div class="team-list">
+                        @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsMen)
+                        {
+                            <StandingsCard Standing="team" />
+                        }
+                    </div>
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Konur</div>
-                    @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsWomen)
-                    {
-                        <StandingsCard Standing="team" />
-                    }
+                    <div class="team-list">
+                        @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsWomen)
+                        {
+                            <StandingsCard Standing="team" />
+                        }
+                    </div>
                 </div>
             </div>
         </div>
