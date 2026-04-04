@@ -22,13 +22,6 @@
             </div>
         }
     </div>
-    @if (ShowFooter)
-    {
-        <div class="r-footer-row">
-            <NavLink class="r-meet-link" href="@($"/meets/{Entry.MeetSlug}")">@Entry.MeetTitle</NavLink>
-            <span class="r-meet-date">@Entry.MeetDate.ToString("dd.MM.yyyy")</span>
-        </div>
-    }
 </div>
 
 @code {
@@ -37,9 +30,6 @@
 
     [Parameter]
     public string DisciplineLabel { get; set; } = string.Empty;
-
-    [Parameter]
-    public bool ShowFooter { get; set; } = true;
 
     [Parameter]
     public string? IpfPointsHref { get; set; }
