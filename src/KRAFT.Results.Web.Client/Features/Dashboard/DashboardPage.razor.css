@@ -282,6 +282,11 @@
     color: var(--color-text-muted);
 }
 
+/* Team competition cards */
+.split-col :global(.sc-card) {
+    margin: 0.25rem 0.75rem;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
     .stat-bar {

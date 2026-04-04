@@ -22,7 +22,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         DashboardSeasonStats stats = await GetSeasonStatsAsync(currentYear, cancellationToken);
 
         List<MeetSummary> recentMeets = await dbContext.Set<Meet>()
-            .Where(m => m.PublishedResults)
+            .Where(m => m.PublishedResults && m.StartDate <= today)
             .OrderByDescending(m => m.StartDate)
             .Take(3)
             .Select(m => new MeetSummary(m.Slug, m.Title, m.Location, DateOnly.FromDateTime(m.StartDate)))
