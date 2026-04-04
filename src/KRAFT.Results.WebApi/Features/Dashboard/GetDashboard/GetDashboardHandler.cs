@@ -63,6 +63,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
 
         int athletes = await dbContext.Set<Participation>()
             .Where(p => p.Meet.PublishedResults && p.Meet.StartDate.Year == year)
+            .Where(p => !p.Disqualified && p.Total > 0)
             .Select(p => p.AthleteId)
             .Distinct()
             .CountAsync(cancellationToken);
