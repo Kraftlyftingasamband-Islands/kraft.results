@@ -283,8 +283,11 @@
 }
 
 /* Team competition cards */
-.split-col :global(.sc-card) {
-    margin: 0.25rem 0.75rem;
+.team-list {
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 /* Responsive */
