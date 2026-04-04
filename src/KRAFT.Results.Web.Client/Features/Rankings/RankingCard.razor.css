@@ -92,6 +92,15 @@
     line-height: 1;
 }
 
+a.r-ipf {
+    text-decoration: none;
+    transition: color var(--transition-fast) ease;
+}
+
+a.r-ipf:hover {
+    color: var(--color-primary-dark);
+}
+
 /* ── Footer row ── */
 
 .r-footer-row {

@@ -11,14 +11,24 @@
         {
             <div class="r-ipf-col">
                 <span class="r-ipf-label">IPF stig</span>
-                <span class="r-ipf">@Entry.IpfPoints.Value.ToString("F2")</span>
+                @if (IpfPointsHref is not null)
+                {
+                    <NavLink class="r-ipf" href="@IpfPointsHref">@Entry.IpfPoints.Value.ToString("F2")</NavLink>
+                }
+                else
+                {
+                    <span class="r-ipf">@Entry.IpfPoints.Value.ToString("F2")</span>
+                }
             </div>
         }
     </div>
-    <div class="r-footer-row">
-        <NavLink class="r-meet-link" href="@($"/meets/{Entry.MeetSlug}")">@Entry.MeetTitle</NavLink>
-        <span class="r-meet-date">@Entry.MeetDate.ToString("dd.MM.yyyy")</span>
-    </div>
+    @if (ShowFooter)
+    {
+        <div class="r-footer-row">
+            <NavLink class="r-meet-link" href="@($"/meets/{Entry.MeetSlug}")">@Entry.MeetTitle</NavLink>
+            <span class="r-meet-date">@Entry.MeetDate.ToString("dd.MM.yyyy")</span>
+        </div>
+    }
 </div>
 
 @code {
@@ -27,6 +37,12 @@
 
     [Parameter]
     public string DisciplineLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool ShowFooter { get; set; } = true;
+
+    [Parameter]
+    public string? IpfPointsHref { get; set; }
 
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;

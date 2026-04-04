@@ -1,5 +1,6 @@
 using KRAFT.Results.Contracts.Dashboard;
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.Contracts.Rankings;
 using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Meets;
@@ -35,8 +36,8 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .Select(m => new MeetSummary(m.Slug, m.Title, m.Location, DateOnly.FromDateTime(m.StartDate)))
             .ToListAsync(cancellationToken);
 
-        List<DashboardRankingEntry> rankingsMen = await GetTopRankingsAsync("m", currentYear, cancellationToken);
-        List<DashboardRankingEntry> rankingsWomen = await GetTopRankingsAsync("f", currentYear, cancellationToken);
+        List<RankingEntry> rankingsMen = await GetTopRankingsAsync("m", currentYear, cancellationToken);
+        List<RankingEntry> rankingsWomen = await GetTopRankingsAsync("f", currentYear, cancellationToken);
 
         List<DashboardRecordEntry> recordsMen = await GetRecentRecordsAsync("m", cancellationToken);
         List<DashboardRecordEntry> recordsWomen = await GetRecentRecordsAsync("f", cancellationToken);
@@ -82,7 +83,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         return new DashboardSeasonStats(meets, athletes, records, clubs);
     }
 
-    private async Task<List<DashboardRankingEntry>> GetTopRankingsAsync(
+    private async Task<List<RankingEntry>> GetTopRankingsAsync(
         string gender, int year, CancellationToken cancellationToken)
     {
         List<RawRankingRow> rows = await dbContext.Set<Participation>()
@@ -100,7 +101,11 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 p.Total,
                 p.WeightCategory.Title,
                 p.Weight,
-                p.Meet.IsRaw))
+                p.Meet.IsRaw,
+                p.Athlete.Gender.Value,
+                p.Meet.Title,
+                p.Meet.Slug,
+                DateOnly.FromDateTime(p.Meet.StartDate)))
             .ToListAsync(cancellationToken);
 
         Gender parsedGender = Gender.Parse(gender);
@@ -115,11 +120,20 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .Select(g => g.OrderByDescending(x => x.IpfPoints).First())
             .OrderByDescending(x => x.IpfPoints)
             .Take(3)
-            .Select(x => new DashboardRankingEntry(
-                x.r.AthleteSlug,
+            .Select((x, i) => new RankingEntry(
+                i + 1,
                 x.r.AthleteName,
+                x.r.AthleteSlug,
+                x.r.Gender,
+                x.r.Total,
                 x.r.WeightCategory,
-                x.IpfPoints))
+                x.r.BodyWeight,
+                x.IpfPoints,
+                0m,
+                x.r.MeetTitle,
+                x.r.MeetSlug,
+                x.r.IsRaw,
+                x.r.MeetDate))
             .ToList();
     }
 
@@ -200,7 +214,11 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         decimal Total,
         string WeightCategory,
         decimal BodyWeight,
-        bool IsRaw);
+        bool IsRaw,
+        string Gender,
+        string MeetTitle,
+        string MeetSlug,
+        DateOnly MeetDate);
 
     private sealed record RawRecordRow(
         RecordCategory RecordCategoryId,

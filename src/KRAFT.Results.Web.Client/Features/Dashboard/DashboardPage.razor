@@ -3,8 +3,9 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Dashboard
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Contracts.Rankings
 @using KRAFT.Results.Contracts.TeamCompetition
-@using KRAFT.Results.Web.Client.Components
+@using KRAFT.Results.Web.Client.Features.Rankings
 @using KRAFT.Results.Web.Client.Features.TeamCompetition
 
 @inject HttpClient HttpClient
@@ -93,31 +94,21 @@ else if (_dashboard is not null)
         <div class="split-columns">
             <div class="split-col">
                 <div class="split-col-header">Karlar</div>
-                @foreach ((DashboardRankingEntry entry, int index) in _dashboard.TopRankingsMen.Select((e, i) => (e, i)))
-                {
-                    <div class="ranking-item">
-                        <span class="rank-num rank-num--@RankClass(index + 1)">@(index + 1)</span>
-                        <div class="rank-info">
-                            <NavLink class="rank-athlete" href="@($"/athletes/{entry.AthleteSlug}")">@entry.AthleteName</NavLink>
-                            <div class="rank-cat">@entry.WeightCategory</div>
-                        </div>
-                        <span class="rank-score">@entry.IpfPoints.ToString("F2")</span>
-                    </div>
-                }
+                <div class="ranking-list">
+                    @foreach (RankingEntry entry in _dashboard.TopRankingsMen)
+                    {
+                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" ShowFooter="false" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                    }
+                </div>
             </div>
             <div class="split-col">
                 <div class="split-col-header">Konur</div>
-                @foreach ((DashboardRankingEntry entry, int index) in _dashboard.TopRankingsWomen.Select((e, i) => (e, i)))
-                {
-                    <div class="ranking-item">
-                        <span class="rank-num rank-num--@RankClass(index + 1)">@(index + 1)</span>
-                        <div class="rank-info">
-                            <NavLink class="rank-athlete" href="@($"/athletes/{entry.AthleteSlug}")">@entry.AthleteName</NavLink>
-                            <div class="rank-cat">@entry.WeightCategory</div>
-                        </div>
-                        <span class="rank-score">@entry.IpfPoints.ToString("F2")</span>
-                    </div>
-                }
+                <div class="ranking-list">
+                    @foreach (RankingEntry entry in _dashboard.TopRankingsWomen)
+                    {
+                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" ShowFooter="false" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -230,11 +221,4 @@ else if (_dashboard is not null)
         }
     }
 
-    private static string RankClass(int rank) => rank switch
-    {
-        1 => "gold",
-        2 => "silver",
-        3 => "bronze",
-        _ => "default",
-    };
 }

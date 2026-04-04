@@ -152,54 +152,10 @@
 }
 
 /* Rankings */
-.ranking-item {
+.ranking-list {
+    padding: 0.25rem 0.75rem;
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.ranking-item:last-child {
-    border-bottom: none;
-}
-
-.rank-num {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 1rem;
-    width: 1.25rem;
-    flex-shrink: 0;
-}
-
-.rank-num--gold   { color: #b8860b; }
-.rank-num--silver { color: #6b7280; }
-.rank-num--bronze { color: #9a5b2a; }
-.rank-num--default { color: var(--color-text-muted); }
-
-.rank-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.rank-athlete {
-    font-size: 0.875rem;
-    font-weight: 600;
-    display: block;
-    color: var(--color-primary);
-}
-
-.rank-cat {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-}
-
-.rank-score {
-    font-family: var(--font-heading);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: var(--color-primary);
-    flex-shrink: 0;
+    flex-direction: column;
 }
 
 /* Records */
