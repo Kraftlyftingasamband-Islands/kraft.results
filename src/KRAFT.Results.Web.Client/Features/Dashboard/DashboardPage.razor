@@ -3,7 +3,9 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Dashboard
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Contracts.TeamCompetition
 @using KRAFT.Results.Web.Client.Components
+@using KRAFT.Results.Web.Client.Features.TeamCompetition
 
 @inject HttpClient HttpClient
 
@@ -185,24 +187,16 @@ else if (_dashboard is not null)
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Karlar</div>
-                    @foreach ((DashboardTeamEntry team, int index) in _dashboard.TeamStandingsMen.Select((t, i) => (t, i)))
+                    @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsMen)
                     {
-                        <div class="team-item">
-                            <span class="rank-num rank-num--@RankClass(index + 1)">@(index + 1)</span>
-                            <NavLink class="team-name" href="@($"/teams/{team.TeamSlug}")">@team.TeamName</NavLink>
-                            <span class="team-points">@team.Points stig</span>
-                        </div>
+                        <StandingsCard Standing="team" />
                     }
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Konur</div>
-                    @foreach ((DashboardTeamEntry team, int index) in _dashboard.TeamStandingsWomen.Select((t, i) => (t, i)))
+                    @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsWomen)
                     {
-                        <div class="team-item">
-                            <span class="rank-num rank-num--@RankClass(index + 1)">@(index + 1)</span>
-                            <NavLink class="team-name" href="@($"/teams/{team.TeamSlug}")">@team.TeamName</NavLink>
-                            <span class="team-points">@team.Points stig</span>
-                        </div>
+                        <StandingsCard Standing="team" />
                     }
                 </div>
             </div>

@@ -1,4 +1,5 @@
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.Contracts.TeamCompetition;
 
 namespace KRAFT.Results.Contracts.Dashboard;
 
@@ -10,5 +11,5 @@ public sealed record DashboardSummary(
     IReadOnlyList<DashboardRankingEntry> TopRankingsWomen,
     IReadOnlyList<DashboardRecordEntry> RecentRecordsMen,
     IReadOnlyList<DashboardRecordEntry> RecentRecordsWomen,
-    IReadOnlyList<DashboardTeamEntry> TeamStandingsMen,
-    IReadOnlyList<DashboardTeamEntry> TeamStandingsWomen);
+    IReadOnlyList<TeamCompetitionStanding> TeamStandingsMen,
+    IReadOnlyList<TeamCompetitionStanding> TeamStandingsWomen);

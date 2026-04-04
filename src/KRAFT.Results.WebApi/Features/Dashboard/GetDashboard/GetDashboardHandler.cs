@@ -1,5 +1,6 @@
 using KRAFT.Results.Contracts.Dashboard;
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
@@ -40,7 +41,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         List<DashboardRecordEntry> recordsMen = await GetRecentRecordsAsync("m", cancellationToken);
         List<DashboardRecordEntry> recordsWomen = await GetRecentRecordsAsync("f", cancellationToken);
 
-        (List<DashboardTeamEntry> teamsMen, List<DashboardTeamEntry> teamsWomen) =
+        (List<TeamCompetitionStanding> teamsMen, List<TeamCompetitionStanding> teamsWomen) =
             await GetTeamStandingsAsync(currentYear, cancellationToken);
 
         return new DashboardSummary(
@@ -157,7 +158,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .ToList();
     }
 
-    private async Task<(List<DashboardTeamEntry> Men, List<DashboardTeamEntry> Women)> GetTeamStandingsAsync(
+    private async Task<(List<TeamCompetitionStanding> Men, List<TeamCompetitionStanding> Women)> GetTeamStandingsAsync(
         int year, CancellationToken cancellationToken)
     {
         int bestN = TeamStandingsBuilder.GetBestN(year);
@@ -179,16 +180,14 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 p.TeamPoints!.Value))
             .ToListAsync(cancellationToken);
 
-        List<DashboardTeamEntry> men = TeamStandingsBuilder
+        List<TeamCompetitionStanding> men = TeamStandingsBuilder
             .BuildStandings(rows.Where(r => r.Gender == "m"), bestN)
             .Take(3)
-            .Select(s => new DashboardTeamEntry(s.TeamSlug ?? string.Empty, s.TeamName, s.TotalPoints))
             .ToList();
 
-        List<DashboardTeamEntry> women = TeamStandingsBuilder
+        List<TeamCompetitionStanding> women = TeamStandingsBuilder
             .BuildStandings(rows.Where(r => r.Gender == "f"), bestN)
             .Take(3)
-            .Select(s => new DashboardTeamEntry(s.TeamSlug ?? string.Empty, s.TeamName, s.TotalPoints))
             .ToList();
 
         return (men, women);
