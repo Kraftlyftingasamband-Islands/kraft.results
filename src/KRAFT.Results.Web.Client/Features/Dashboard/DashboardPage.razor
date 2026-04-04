@@ -10,24 +10,24 @@
 
 @inject HttpClient HttpClient
 
-<PageTitle>Fors&#xed;&#xf0;a &#x2014; KRAFT Results</PageTitle>
+<PageTitle>Forsíða — KRAFT Results</PageTitle>
 
 @if (_isLoading)
 {
-    <LoadingSpinner Label="S&#xe6;ki fors&#xed;&#xf0;u..." />
+    <LoadingSpinner Label="Sæki forsíðu..." />
 }
 else if (_hasError)
 {
-    <ErrorMessage Message="Villa kom upp vi&#xf0; a&#xf0; s&#xe6;kja g&#xf6;gn. Reyndu aftur s&#xed;&#xf0;ar." />
+    <ErrorMessage Message="Villa kom upp við að sækja gögn. Reyndu aftur síðar." />
 }
 else if (_dashboard is not null)
 {
-    <section class="season-stats" aria-label="T&#xf6;lur &#xe1;rsins @_year">
-        <h2 class="section-label">T&#xf6;lur &#xe1;rsins @_year</h2>
+    <section class="season-stats" aria-label="Tölur ársins @_year">
+        <h2 class="section-label">Tölur ársins @_year</h2>
         <div class="stat-bar">
             <div class="stat-card">
                 <span class="stat-number">@_dashboard.SeasonStats.Meets</span>
-                <span class="stat-label">M&#xf3;t</span>
+                <span class="stat-label">Mót</span>
             </div>
             <div class="stat-card">
                 <span class="stat-number">@_dashboard.SeasonStats.Athletes</span>
@@ -39,35 +39,35 @@ else if (_dashboard is not null)
             </div>
             <div class="stat-card">
                 <span class="stat-number">@_dashboard.SeasonStats.Clubs</span>
-                <span class="stat-label">F&#xe9;l&#xf6;g</span>
+                <span class="stat-label">Félög</span>
             </div>
         </div>
     </section>
 
     <div class="widget">
         <div class="widget-header">
-            <h2 class="widget-title">M&#xf3;t</h2>
-            <NavLink class="widget-link" href="/meets">M&#xf3;taskr&#xe1; &#x2192;</NavLink>
+            <h2 class="widget-title">Mót</h2>
+            <NavLink class="widget-link" href="/meets">Mótaskrá →</NavLink>
         </div>
         <div class="split-columns">
             <div class="split-col">
-                <div class="split-col-header">S&#xed;&#xf0;ustu m&#xf3;t</div>
+                <div class="split-col-header">Síðustu mót</div>
                 @foreach (MeetSummary meet in _dashboard.RecentMeets)
                 {
                     <article class="meet-item">
                         <div class="date-box date-box--recent">@meet.StartDate.Day.ToString("D2")</div>
                         <div>
                             <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
-                            <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) &#xb7; @meet.Location</div>
+                            <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
                         </div>
                     </article>
                 }
             </div>
             <div class="split-col">
-                <div class="split-col-header">N&#xe6;stu m&#xf3;t</div>
+                <div class="split-col-header">Næstu mót</div>
                 @if (_dashboard.UpcomingMeets.Count == 0)
                 {
-                    <p class="empty-col">Engin m&#xf3;t skr&#xe1;&#xf0; &#xed; dagatal</p>
+                    <p class="empty-col">Engin mót skráð í dagatal</p>
                 }
                 else
                 {
@@ -77,7 +77,7 @@ else if (_dashboard is not null)
                             <div class="date-box date-box--upcoming">@meet.StartDate.Day.ToString("D2")</div>
                             <div>
                                 <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
-                                <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) &#xb7; @meet.Location</div>
+                                <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
                             </div>
                         </article>
                     }
@@ -88,8 +88,8 @@ else if (_dashboard is not null)
 
     <div class="widget">
         <div class="widget-header">
-            <h2 class="widget-title">Stigatafla @_year &#x2014; Klass&#xed;k</h2>
-            <NavLink class="widget-link" href="/rankings">Allt &#x2192;</NavLink>
+            <h2 class="widget-title">Stigatafla @_year — Klassík</h2>
+            <NavLink class="widget-link" href="/rankings">Allt →</NavLink>
         </div>
         <div class="split-columns">
             <div class="split-col">
@@ -97,7 +97,7 @@ else if (_dashboard is not null)
                 <div class="ranking-list">
                     @foreach (RankingEntry entry in _dashboard.TopRankingsMen)
                     {
-                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar"IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
                     }
                 </div>
             </div>
@@ -106,7 +106,7 @@ else if (_dashboard is not null)
                 <div class="ranking-list">
                     @foreach (RankingEntry entry in _dashboard.TopRankingsWomen)
                     {
-                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar"IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
                     }
                 </div>
             </div>
@@ -115,8 +115,8 @@ else if (_dashboard is not null)
 
     <div class="widget">
         <div class="widget-header">
-            <h2 class="widget-title">N&#xfd; met</h2>
-            <NavLink class="widget-link" href="/records">Allt &#x2192;</NavLink>
+            <h2 class="widget-title">Ný met</h2>
+            <NavLink class="widget-link" href="/records">Allt →</NavLink>
         </div>
         <div class="split-columns">
             <div class="split-col">
@@ -172,8 +172,8 @@ else if (_dashboard is not null)
     {
         <div class="widget">
             <div class="widget-header">
-                <h2 class="widget-title">Li&#xf0;akeppni @_year</h2>
-                <NavLink class="widget-link" href="/team-competition">Allt &#x2192;</NavLink>
+                <h2 class="widget-title">Liðakeppni @_year</h2>
+                <NavLink class="widget-link" href="/team-competition">Allt →</NavLink>
             </div>
             <div class="split-columns">
                 <div class="split-col">
