@@ -85,6 +85,22 @@ tbody tr:nth-child(even) {
     padding-top: 1.1rem;
 }
 
+.widget-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
+@media (min-width: 1100px) {
+    .widget-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .widget-grid .widget {
+        margin-bottom: 0;
+    }
+}
+
 h1:focus {
     outline: none;
 }
