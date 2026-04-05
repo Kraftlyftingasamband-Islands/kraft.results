@@ -152,10 +152,17 @@
 
             <div class="field field-submit">
                 <button type="submit"
-                        class="btn-action @(IsFormValid ? "btn-ready" : "")"
-                        disabled="@(!IsFormValid)"
+                        class="btn-action @(IsFormValid && !_isSubmitting ? "btn-ready" : "")"
+                        disabled="@(!IsFormValid || _isSubmitting)"
                         title="@(IsFormValid ? "" : SubmitHint)">
-                    Bæta við
+                    @if (_isSubmitting)
+                    {
+                        <span class="btn-spinner" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <span>Bæta við</span>
+                    }
                 </button>
             </div>
         </div>
@@ -170,6 +177,7 @@
 @code {
     private const int MinSearchLength = 2;
 
+    private bool _isSubmitting;
     private bool _suppressNextSubmit;
     private bool _focusBodyWeightAfterRender;
     private ElementReference _bodyWeightInput;
@@ -482,6 +490,7 @@
         }
 
         _errorMessage = null;
+        _isSubmitting = true;
 
         try
         {
@@ -516,6 +525,10 @@
         catch (HttpRequestException)
         {
             _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isSubmitting = false;
         }
     }
 
