@@ -119,6 +119,22 @@
     font-size: 0.8125rem;
 }
 
+::deep .btn-action:disabled {
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+::deep .btn-action.btn-ready {
+    background: var(--color-success);
+    color: var(--color-white);
+}
+
+::deep .btn-action.btn-ready:hover {
+    background: #15803d;
+}
+
 .form-error {
     margin-block-start: 0.5rem;
     padding: 0.5rem 0.75rem;
