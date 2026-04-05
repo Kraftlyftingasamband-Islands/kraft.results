@@ -1,4 +1,4 @@
-using KRAFT.Results.WebApi.Abstractions;
+﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
