@@ -152,12 +152,14 @@
 
             <div class="field field-submit">
                 <button type="submit"
-                        class="btn-action @(IsFormValid && !_isSubmitting ? "btn-ready" : "")"
+                        class="btn-action submit-btn @(IsFormValid && !_isSubmitting ? "btn-ready" : "")"
                         disabled="@(!IsFormValid || _isSubmitting)"
+                        aria-busy="@_isSubmitting.ToString().ToLowerInvariant()"
                         title="@(IsFormValid ? "" : SubmitHint)">
                     @if (_isSubmitting)
                     {
                         <span class="btn-spinner" aria-hidden="true"></span>
+                        <span class="visually-hidden">Hleður...</span>
                     }
                     else
                     {

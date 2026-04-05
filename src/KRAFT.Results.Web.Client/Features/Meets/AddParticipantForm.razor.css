@@ -45,6 +45,11 @@
     align-self: flex-end;
 }
 
+.submit-btn {
+    min-width: 6.5rem;
+    justify-content: center;
+}
+
 .athlete-typeahead {
     position: relative;
 }
