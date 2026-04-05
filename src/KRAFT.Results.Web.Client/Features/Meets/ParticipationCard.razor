@@ -101,6 +101,11 @@
                                              RecordContext="@(attempt?.IsRecord == true && attempt.IsGood ? _recordContext : null)"
                                              OnClick="() => StartEdit(d, r, attempt)" />
                             }
+
+                            @if (_attemptErrors.TryGetValue((d, r), out string? err))
+                            {
+                                <span class="attempt-error">@err</span>
+                            }
                         }
                     </div>
                 </div>
@@ -191,6 +196,7 @@
     private readonly Dictionary<(Discipline, short), string> _editValues = [];
     private (Discipline, short)? _pendingSelect;
     private readonly Dictionary<(Discipline, short), (decimal Weight, bool Good)> _savedAttempts = [];
+    private readonly Dictionary<(Discipline, short), string> _attemptErrors = [];
     private MeetParticipation? _lastParticipation;
     private MeetParticipation? _freshParticipation;
 
@@ -380,6 +386,7 @@
             await SaveAttempt(d, r);
         }
 
+        _attemptErrors.Remove((discipline, round));
         _editingAttempt[(discipline, round)] = true;
         _pendingSelect = (discipline, round);
 
@@ -412,6 +419,7 @@
 
         if (!decimal.TryParse(value, CultureInfo.CurrentCulture, out decimal weight) || weight == 0)
         {
+            _attemptErrors[(discipline, round)] = "Ógilt gildi";
             return;
         }
 
@@ -419,9 +427,11 @@
 
         if (!IsAttemptOrderValid(discipline, round, absoluteWeight))
         {
+            _attemptErrors[(discipline, round)] = "Röng röð";
             return;
         }
 
+        _attemptErrors.Remove((discipline, round));
         _savedAttempts[(discipline, round)] = (absoluteWeight, weight > 0);
 
         try
