@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Photos;
 using KRAFT.Results.WebApi.Features.Users;
@@ -64,7 +65,25 @@ internal sealed class Meet
 
     public ICollection<Photo> Photos { get; } = [];
 
-    internal static Result<Meet> Create(User creator, MeetType type, string title, DateOnly startDate)
+    internal static Result<Meet> Create(
+        User creator,
+        MeetType type,
+        string title,
+        DateOnly startDate,
+        DateOnly? endDate = null,
+        bool calcPlaces = true,
+        string? text = null,
+        string? location = null,
+        bool publishedResults = true,
+        int resultModeId = 1,
+        bool publishedInCalendar = true,
+        bool isInTeamCompetition = false,
+        bool showWilks = true,
+        bool showTeamPoints = true,
+        bool showBodyWeight = true,
+        bool showTeams = false,
+        bool recordsPossible = true,
+        bool isRaw = false)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -81,14 +100,46 @@ internal sealed class Meet
             return MeetErrors.InvalidStartDate(startDate);
         }
 
-        DateTime date = startDate.ToDateTime(TimeOnly.MinValue);
+        DateOnly resolvedEndDate = endDate ?? startDate;
+
+        if (resolvedEndDate < startDate)
+        {
+            return MeetErrors.EndDateBeforeStartDate;
+        }
+
+        if (!IsValidResultMode(resultModeId))
+        {
+            return MeetErrors.InvalidResultMode;
+        }
+
+        string? normalizedLocation = NormalizeOptionalString(location);
+
+        if (normalizedLocation is not null && normalizedLocation.Length > LocationMaxLength)
+        {
+            return MeetErrors.LocationTooLong;
+        }
+
+        DateTime startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
 
         Meet meet = new()
         {
             MeetType = type,
             Title = title,
-            StartDate = date,
-            EndDate = date,
+            StartDate = startDateTime,
+            EndDate = resolvedEndDate.ToDateTime(TimeOnly.MinValue),
+            CalcPlaces = calcPlaces,
+            Text = NormalizeOptionalString(text),
+            Location = normalizedLocation,
+            PublishedResults = publishedResults,
+            ResultModeId = resultModeId,
+            PublishedInCalendar = publishedInCalendar,
+            IsInTeamCompetition = isInTeamCompetition,
+            ShowWilks = showWilks,
+            ShowTeamPoints = showTeamPoints,
+            ShowBodyWeight = showBodyWeight,
+            ShowTeams = showTeams,
+            RecordsPossible = recordsPossible,
+            IsRaw = isRaw,
             Slug = ValueObjects.Slug.Create($"{title} {startDate.Year}"),
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
@@ -97,7 +148,25 @@ internal sealed class Meet
         return meet;
     }
 
-    internal Result Update(User modifier, MeetType type, string title, DateOnly startDate)
+    internal Result Update(
+        User modifier,
+        MeetType type,
+        string title,
+        DateOnly startDate,
+        DateOnly? endDate = null,
+        bool calcPlaces = true,
+        string? text = null,
+        string? location = null,
+        bool publishedResults = true,
+        int resultModeId = 1,
+        bool publishedInCalendar = true,
+        bool isInTeamCompetition = false,
+        bool showWilks = true,
+        bool showTeamPoints = true,
+        bool showBodyWeight = true,
+        bool showTeams = false,
+        bool recordsPossible = true,
+        bool isRaw = false)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -114,15 +183,53 @@ internal sealed class Meet
             return MeetErrors.InvalidStartDate(startDate);
         }
 
-        DateTime date = startDate.ToDateTime(TimeOnly.MinValue);
+        DateOnly resolvedEndDate = endDate ?? startDate;
+
+        if (resolvedEndDate < startDate)
+        {
+            return MeetErrors.EndDateBeforeStartDate;
+        }
+
+        if (!IsValidResultMode(resultModeId))
+        {
+            return MeetErrors.InvalidResultMode;
+        }
+
+        string? normalizedLocation = NormalizeOptionalString(location);
+
+        if (normalizedLocation is not null && normalizedLocation.Length > LocationMaxLength)
+        {
+            return MeetErrors.LocationTooLong;
+        }
+
+        DateTime startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
 
         Title = title;
-        StartDate = date;
-        EndDate = date;
+        StartDate = startDateTime;
+        EndDate = resolvedEndDate.ToDateTime(TimeOnly.MinValue);
         MeetType = type;
+        CalcPlaces = calcPlaces;
+        Text = NormalizeOptionalString(text);
+        Location = normalizedLocation;
+        PublishedResults = publishedResults;
+        ResultModeId = resultModeId;
+        PublishedInCalendar = publishedInCalendar;
+        IsInTeamCompetition = isInTeamCompetition;
+        ShowWilks = showWilks;
+        ShowTeamPoints = showTeamPoints;
+        ShowBodyWeight = showBodyWeight;
+        ShowTeams = showTeams;
+        RecordsPossible = recordsPossible;
+        IsRaw = isRaw;
         ModifiedOn = DateTime.UtcNow;
         ModifiedBy = modifier.Username;
 
         return Result.Success();
     }
+
+    private static bool IsValidResultMode(int resultModeId) =>
+        resultModeId != (int)ResultMode.None && Enum.IsDefined(typeof(ResultMode), resultModeId);
+
+    private static string? NormalizeOptionalString(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 }

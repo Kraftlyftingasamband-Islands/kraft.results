@@ -117,4 +117,138 @@ public sealed class CreateMeetTests(IntegrationTestFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenEndDateIsBeforeStartDate()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(new DateOnly(2025, 6, 15))
+            .WithEndDate(new DateOnly(2025, 6, 14))
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.EndDateBeforeStartDate");
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenResultModeIsInvalid()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithResultModeId(99)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.InvalidResultMode");
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenResultModeIsZero()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithResultModeId(0)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.InvalidResultMode");
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenLocationIsTooLong()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithLocation(new string('A', 51))
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.LocationTooLong");
+    }
+
+    [Fact]
+    public async Task ReturnsCreated_WhenEndDateIsNull()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithEndDate(null)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task ReturnsCreated_WhenEndDateEqualsStartDate()
+    {
+        // Arrange
+        DateOnly date = new(2025, 6, 15);
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(date)
+            .WithEndDate(date)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task ReturnsCreated_WhenAllSettingsFieldsAreProvided()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(new DateOnly(2025, 6, 15))
+            .WithEndDate(new DateOnly(2025, 6, 16))
+            .WithCalcPlaces(false)
+            .WithText("Some description")
+            .WithLocation("Reykjavik")
+            .WithPublishedResults(false)
+            .WithResultModeId(2)
+            .WithPublishedInCalendar(false)
+            .WithIsInTeamCompetition(true)
+            .WithShowWilks(false)
+            .WithShowTeamPoints(false)
+            .WithShowBodyWeight(false)
+            .WithShowTeams(true)
+            .WithRecordsPossible(false)
+            .WithIsRaw(true)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
 }

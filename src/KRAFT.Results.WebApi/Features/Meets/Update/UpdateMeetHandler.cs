@@ -55,7 +55,25 @@ internal sealed class UpdateMeetHandler
             return Result.Failure(MeetErrors.MeetTypeNotFound);
         }
 
-        Result result = meet.Update(modifier, type, command.Title, command.StartDate);
+        Result result = meet.Update(
+            modifier,
+            type,
+            command.Title,
+            command.StartDate,
+            command.EndDate,
+            command.CalcPlaces,
+            command.Text,
+            command.Location,
+            command.PublishedResults,
+            command.ResultModeId,
+            command.PublishedInCalendar,
+            command.IsInTeamCompetition,
+            command.ShowWilks,
+            command.ShowTeamPoints,
+            command.ShowBodyWeight,
+            command.ShowTeams,
+            command.RecordsPossible,
+            command.IsRaw);
 
         if (result.IsFailure)
         {

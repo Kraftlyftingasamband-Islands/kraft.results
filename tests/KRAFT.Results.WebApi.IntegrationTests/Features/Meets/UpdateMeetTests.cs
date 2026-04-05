@@ -124,6 +124,114 @@ public sealed class UpdateMeetTests(IntegrationTestFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task ReturnsBadRequest_WhenEndDateIsBeforeStartDate()
+    {
+        // Arrange
+        string slug = await CreateMeetAsync();
+        UpdateMeetCommand command = new UpdateMeetCommandBuilder()
+            .WithStartDate(new DateOnly(2025, 6, 15))
+            .WithEndDate(new DateOnly(2025, 6, 14))
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.EndDateBeforeStartDate");
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenResultModeIsInvalid()
+    {
+        // Arrange
+        string slug = await CreateMeetAsync();
+        UpdateMeetCommand command = new UpdateMeetCommandBuilder()
+            .WithResultModeId(99)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.InvalidResultMode");
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenResultModeIsZero()
+    {
+        // Arrange
+        string slug = await CreateMeetAsync();
+        UpdateMeetCommand command = new UpdateMeetCommandBuilder()
+            .WithResultModeId(0)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.InvalidResultMode");
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenLocationIsTooLong()
+    {
+        // Arrange
+        string slug = await CreateMeetAsync();
+        UpdateMeetCommand command = new UpdateMeetCommandBuilder()
+            .WithLocation(new string('A', 51))
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.LocationTooLong");
+    }
+
+    [Fact]
+    public async Task ReturnsOk_WhenAllSettingsFieldsAreProvided()
+    {
+        // Arrange
+        string slug = await CreateMeetAsync();
+        UpdateMeetCommand command = new UpdateMeetCommandBuilder()
+            .WithTitle("Updated With Settings")
+            .WithStartDate(new DateOnly(2025, 6, 15))
+            .WithEndDate(new DateOnly(2025, 6, 16))
+            .WithCalcPlaces(false)
+            .WithText("Some description")
+            .WithLocation("Reykjavik")
+            .WithPublishedResults(false)
+            .WithResultModeId(2)
+            .WithPublishedInCalendar(false)
+            .WithIsInTeamCompetition(true)
+            .WithShowWilks(false)
+            .WithShowTeamPoints(false)
+            .WithShowBodyWeight(false)
+            .WithShowTeams(true)
+            .WithRecordsPossible(false)
+            .WithIsRaw(true)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
     private async Task<string> CreateMeetAsync()
     {
         CreateMeetCommand createCommand = new CreateMeetCommandBuilder().Build();
