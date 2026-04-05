@@ -104,8 +104,8 @@
             </div>
 
             <div class="field field-age-category">
-                <label class="form-label">Aldursflokkur</label>
-                <select class="form-input age-category-select"
+                <label class="form-label" for="age-category-select">Aldursflokkur</label>
+                <select id="age-category-select" class="form-input age-category-select"
                         disabled="@(string.IsNullOrEmpty(_selectedAthleteSlug) || _eligibleAgeCategorySlugs.Count <= 1)"
                         @onchange="(e) => _selectedAgeCategorySlug = e.Value?.ToString() ?? string.Empty">
                     @if (_eligibleAgeCategorySlugs.Count == 0)
