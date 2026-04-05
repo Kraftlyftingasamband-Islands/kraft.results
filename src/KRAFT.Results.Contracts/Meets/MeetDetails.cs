@@ -1,6 +1,7 @@
 ﻿namespace KRAFT.Results.Contracts.Meets;
 
 public sealed record class MeetDetails(
+    int MeetId,
     string Title,
     string Slug,
     string Location,
