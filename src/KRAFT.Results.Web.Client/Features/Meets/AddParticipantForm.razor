@@ -59,9 +59,8 @@
                        inputmode="decimal"
                        autocomplete="off"
                        disabled="@(string.IsNullOrEmpty(_selectedAthleteSlug))"
-                       @bind="_bodyWeight"
-                       @bind:culture="CultureInfo.InvariantCulture"
-                       @bind:event="oninput" />
+                       value="@_bodyWeightText"
+                       @oninput="(e) => _bodyWeightText = e.Value?.ToString() ?? string.Empty" />
             </div>
 
             <div class="field field-team">
@@ -173,7 +172,7 @@
     private List<AthleteSummary> _filteredAthletes = [];
     private string _searchText = string.Empty;
     private string _selectedAthleteSlug = string.Empty;
-    private decimal _bodyWeight;
+    private string _bodyWeightText = string.Empty;
     private bool _showDropdown;
     private int _highlightedAthleteIndex;
     private bool _preventDefaultOnAthleteInput;
@@ -208,7 +207,9 @@
     public EventCallback OnParticipantAdded { get; set; }
 
     private bool IsFormValid =>
-        !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0;
+        !string.IsNullOrEmpty(_selectedAthleteSlug)
+        && decimal.TryParse(_bodyWeightText, System.Globalization.NumberStyles.Number, CultureInfo.CurrentCulture, out decimal _bw)
+        && _bw > 0;
 
     private string SubmitHint
     {
@@ -221,7 +222,7 @@
                 missing.Add("veldu keppanda");
             }
 
-            if (_bodyWeight <= 0)
+            if (!decimal.TryParse(_bodyWeightText, System.Globalization.NumberStyles.Number, CultureInfo.CurrentCulture, out decimal _bwHint) || _bwHint <= 0)
             {
                 missing.Add("sláðu inn þyngd");
             }
@@ -436,7 +437,8 @@
 
         try
         {
-            AddParticipantCommand command = new(_selectedAthleteSlug, _bodyWeight, _selectedTeamId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
+            decimal.TryParse(_bodyWeightText, System.Globalization.NumberStyles.Number, CultureInfo.CurrentCulture, out decimal parsedBodyWeight);
+            AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedTeamId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
                 $"/meets/{MeetId}/participants", command);
 
@@ -478,7 +480,7 @@
                 continue;
             }
 
-            if (!decimal.TryParse(entry.Value, CultureInfo.InvariantCulture, out decimal weight) || weight == 0)
+            if (!decimal.TryParse(entry.Value, CultureInfo.CurrentCulture, out decimal weight) || weight == 0)
             {
                 continue;
             }
@@ -494,7 +496,7 @@
     {
         _searchText = string.Empty;
         _selectedAthleteSlug = string.Empty;
-        _bodyWeight = 0;
+        _bodyWeightText = string.Empty;
         _errorMessage = null;
         _teamSearchText = string.Empty;
         _selectedTeamId = null;
