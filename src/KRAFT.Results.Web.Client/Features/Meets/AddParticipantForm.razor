@@ -130,7 +130,7 @@
 
             <div class="field field-submit">
                 <button type="submit"
-                        class="btn-action"
+                        class="btn-action @(IsFormValid ? "btn-ready" : "")"
                         disabled="@(!IsFormValid)"
                         title="@(IsFormValid ? "" : SubmitHint)">
                     Bæta við
