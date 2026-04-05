@@ -73,6 +73,7 @@ internal sealed class MeetConfiguration : IEntityTypeConfiguration<Meet>
             .HasColumnType("datetime");
 
         builder.Property(e => e.Text)
+            .HasMaxLength(Meet.TextMaxLength)
             .HasDefaultValue(string.Empty, "DF_Meets_Text");
 
         builder.Property(e => e.Title)

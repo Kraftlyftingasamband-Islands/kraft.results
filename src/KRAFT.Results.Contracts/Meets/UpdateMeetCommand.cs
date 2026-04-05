@@ -9,6 +9,7 @@ public sealed record class UpdateMeetCommand(
     int? MeetTypeId,
     DateOnly? EndDate = null,
     bool CalcPlaces = true,
+    [MaxLength(4000, ErrorMessage = "Texti má ekki vera lengri en 4000 stafir")]
     string? Text = null,
     [MaxLength(50, ErrorMessage = "Staðsetning má ekki vera lengri en 50 stafir")]
     string? Location = null,

@@ -183,6 +183,25 @@ public sealed class UpdateMeetTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task ReturnsBadRequest_WhenTextIsTooLong()
+    {
+        // Arrange
+        string slug = await CreateMeetAsync();
+        UpdateMeetCommand command = new UpdateMeetCommandBuilder()
+            .WithText(new string('A', 4001))
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe("Meets.TextTooLong");
+    }
+
+    [Fact]
     public async Task ReturnsBadRequest_WhenLocationIsTooLong()
     {
         // Arrange
