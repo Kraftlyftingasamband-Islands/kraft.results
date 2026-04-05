@@ -1,3 +1,3 @@
-﻿namespace KRAFT.Results.Contracts.Athletes;
+namespace KRAFT.Results.Contracts.Athletes;
 
-public sealed record class AthleteSummary(string? Slug, string Name, int? YearOfBirth, DateOnly? DateOfBirth, string? Gender);
+public sealed record class AthleteSummary(string? Slug, string Name, int? YearOfBirth, string? Gender, IReadOnlyList<string> EligibleAgeCategorySlugs);
