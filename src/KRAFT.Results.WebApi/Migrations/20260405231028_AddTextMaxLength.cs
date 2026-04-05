@@ -14,8 +14,8 @@ namespace KRAFT.Results.WebApi.Migrations
                 name: "Text",
                 schema: "dbo",
                 table: "Meets",
-                type: "nvarchar(4000)",
-                maxLength: 4000,
+                type: "nvarchar(max)",
+                maxLength: 8000,
                 nullable: true,
                 defaultValue: "",
                 oldClrType: typeof(string),
@@ -37,8 +37,8 @@ namespace KRAFT.Results.WebApi.Migrations
                 nullable: true,
                 defaultValue: "",
                 oldClrType: typeof(string),
-                oldType: "nvarchar(4000)",
-                oldMaxLength: 4000,
+                oldType: "nvarchar(max)",
+                oldMaxLength: 8000,
                 oldNullable: true,
                 oldDefaultValue: "")
                 .Annotation("Relational:DefaultConstraintName", "DF_Meets_Text")

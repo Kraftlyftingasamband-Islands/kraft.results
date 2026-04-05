@@ -10,7 +10,7 @@ internal sealed class Meet
 {
     internal const int TitleMaxLength = 100;
     internal const int LocationMaxLength = 50;
-    internal const int TextMaxLength = 4000;
+    internal const int TextMaxLength = 8000;
     internal const int StartDateMinimumYear = 1900;
 
     // For EF core
