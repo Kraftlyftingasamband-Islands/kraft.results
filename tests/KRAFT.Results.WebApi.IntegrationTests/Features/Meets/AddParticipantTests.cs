@@ -13,6 +13,8 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     private const int ExistingMeetId = 2;
     private const int MeetWithExistingParticipationId = 1;
     private const int NonExistentMeetId = 99999;
+    private const int MeetForTeamTest = 5;
+    private const int ExistingTeamId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
@@ -149,6 +151,24 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task ReturnsCreated_WhenTeamIdProvided()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(Constants.TestAthleteSlug)
+            .WithBodyWeight(82.5m)
+            .WithTeamId(ExistingTeamId)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{MeetForTeamTest}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     [Fact]

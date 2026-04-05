@@ -98,7 +98,8 @@ internal sealed class AddParticipantHandler
             meetId,
             weightCategory.WeightCategoryId,
             ageCategory!.AgeCategoryId,
-            command.BodyWeight);
+            command.BodyWeight,
+            command.TeamId);
 
         if (participationResult.IsFailure)
         {
