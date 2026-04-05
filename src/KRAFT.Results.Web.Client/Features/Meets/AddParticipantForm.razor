@@ -19,6 +19,7 @@
                            placeholder="Leita..."
                            role="combobox"
                            aria-autocomplete="list"
+                           aria-controls="athlete-listbox"
                            aria-expanded="@_showDropdown.ToString().ToLowerInvariant()"
                            aria-activedescendant="@(_showDropdown && _filteredAthletes.Count > 0 ? $"athlete-option-{_highlightedAthleteIndex}" : "")"
                            value="@_searchText"
@@ -29,18 +30,19 @@
                            @onkeydown:preventDefault="@_preventDefaultOnAthleteInput" />
                     @if (_showDropdown && _filteredAthletes.Count > 0)
                     {
-                        <ul class="typeahead-dropdown" role="listbox">
-                            @foreach (AthleteSummary athlete in _filteredAthletes)
+                        <ul id="athlete-listbox" class="typeahead-dropdown" role="listbox">
+                            @for (int i = 0; i < _filteredAthletes.Count; i++)
                             {
-                                <li id="athlete-option-@(_filteredAthletes.IndexOf(athlete))"
+                                int index = i;
+                                <li id="athlete-option-@index"
                                     role="option"
-                                    aria-selected="@((_filteredAthletes.IndexOf(athlete) == _highlightedAthleteIndex).ToString().ToLowerInvariant())"
-                                    class="@(_filteredAthletes.IndexOf(athlete) == _highlightedAthleteIndex ? "highlighted" : "")"
-                                    @onmousedown="() => SelectAthlete(athlete)">
-                                    @athlete.Name
-                                    @if (athlete.YearOfBirth is not null)
+                                    aria-selected="@((index == _highlightedAthleteIndex).ToString().ToLowerInvariant())"
+                                    class="@(index == _highlightedAthleteIndex ? "highlighted" : "")"
+                                    @onmousedown="() => SelectAthlete(_filteredAthletes[index])">
+                                    @_filteredAthletes[index].Name
+                                    @if (_filteredAthletes[index].YearOfBirth is not null)
                                     {
-                                        <span class="typeahead-year">@athlete.YearOfBirth</span>
+                                        <span class="typeahead-year">@_filteredAthletes[index].YearOfBirth</span>
                                     }
                                 </li>
                             }
@@ -71,6 +73,7 @@
                            placeholder="Leita..."
                            role="combobox"
                            aria-autocomplete="list"
+                           aria-controls="team-listbox"
                            aria-expanded="@_showTeamDropdown.ToString().ToLowerInvariant()"
                            aria-activedescendant="@(_showTeamDropdown && _filteredTeams.Count > 0 ? $"team-option-{_highlightedTeamIndex}" : "")"
                            value="@_teamSearchText"
@@ -81,15 +84,16 @@
                            @onkeydown:preventDefault="@_preventDefaultOnTeamInput" />
                     @if (_showTeamDropdown && _filteredTeams.Count > 0)
                     {
-                        <ul class="typeahead-dropdown" role="listbox">
-                            @foreach (TeamOption team in _filteredTeams)
+                        <ul id="team-listbox" class="typeahead-dropdown" role="listbox">
+                            @for (int i = 0; i < _filteredTeams.Count; i++)
                             {
-                                <li id="team-option-@(_filteredTeams.IndexOf(team))"
+                                int index = i;
+                                <li id="team-option-@index"
                                     role="option"
-                                    aria-selected="@((_filteredTeams.IndexOf(team) == _highlightedTeamIndex).ToString().ToLowerInvariant())"
-                                    class="@(_filteredTeams.IndexOf(team) == _highlightedTeamIndex ? "highlighted" : "")"
-                                    @onmousedown="() => SelectTeam(team)">
-                                    @team.Title
+                                    aria-selected="@((index == _highlightedTeamIndex).ToString().ToLowerInvariant())"
+                                    class="@(index == _highlightedTeamIndex ? "highlighted" : "")"
+                                    @onmousedown="() => SelectTeam(_filteredTeams[index])">
+                                    @_filteredTeams[index].Title
                                 </li>
                             }
                         </ul>
@@ -127,7 +131,8 @@
             <div class="field field-submit">
                 <button type="submit"
                         class="btn-action"
-                        disabled="@(!IsFormValid)">
+                        disabled="@(!IsFormValid)"
+                        title="@(IsFormValid ? "" : SubmitHint)">
                     Bæta við
                 </button>
             </div>
@@ -171,6 +176,37 @@
 
     private bool IsFormValid =>
         !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0 && _selectedTeamId is not null;
+
+    private string SubmitHint
+    {
+        get
+        {
+            List<string> missing = [];
+
+            if (string.IsNullOrEmpty(_selectedAthleteSlug))
+            {
+                missing.Add("veldu keppanda");
+            }
+
+            if (_bodyWeight <= 0)
+            {
+                missing.Add("sláðu inn þyngd");
+            }
+
+            if (_selectedTeamId is null)
+            {
+                missing.Add("veldu lið");
+            }
+
+            if (missing.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            string hint = string.Join(", ", missing);
+            return char.ToUpper(hint[0]) + hint[1..];
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

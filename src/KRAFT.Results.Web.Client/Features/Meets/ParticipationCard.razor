@@ -83,6 +83,7 @@
                                 <input type="text"
                                        inputmode="decimal"
                                        class="inline-attempt-input"
+                                       aria-label="@($"{disc.ToDisplayName()} lota {r}")"
                                        value="@_editValues.GetValueOrDefault((d, r), string.Empty)"
                                        @oninput="(e) => _editValues[(d, r)] = e.Value?.ToString() ?? string.Empty"
                                        @onblur="() => SaveAttempt(d, r)"
@@ -90,13 +91,13 @@
                             }
                             else if (attempt is not null && attempt.Weight > 0)
                             {
-                                <span class="@GetPillClass(attempt)" @onclick="() => StartEdit(d, r, attempt)">
+                                <button class="@GetPillClass(attempt)" @onclick="() => StartEdit(d, r, attempt)">
                                     @($"{attempt.Weight:F1}")
-                                </span>
+                                </button>
                             }
                             else
                             {
-                                <span class="pill pill-empty" @onclick="() => StartEdit(d, r, null)">–</span>
+                                <button class="pill pill-empty" @onclick="() => StartEdit(d, r, null)">–</button>
                             }
                         }
                     </div>

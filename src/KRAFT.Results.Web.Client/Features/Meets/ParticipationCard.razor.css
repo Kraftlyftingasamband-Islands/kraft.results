@@ -220,6 +220,11 @@
     opacity: 1;
 }
 
+.p-card:focus-within .btn-edit-weight,
+.p-card:focus-within .btn-remove-participant {
+    opacity: 1;
+}
+
 /* Inline attempt editing */
 .inline-attempt-input {
     width: 52px;
@@ -236,6 +241,15 @@
 .inline-attempt-input:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 1px;
+}
+
+button.pill-clickable,
+button.pill-empty {
+    border: none;
+    background: inherit;
+    font: inherit;
+    padding: 0 5px;
+    line-height: inherit;
 }
 
 .pill-clickable {
