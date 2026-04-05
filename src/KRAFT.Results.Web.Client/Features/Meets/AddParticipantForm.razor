@@ -54,6 +54,7 @@
             <div class="field field-bodyweight">
                 <label class="form-label" for="bodyweight-input">Þyngd (kg)</label>
                 <input id="bodyweight-input"
+                       @ref="_bodyWeightInput"
                        class="form-input"
                        type="text"
                        inputmode="decimal"
@@ -170,6 +171,7 @@
     private const int MinSearchLength = 2;
 
     private bool _suppressNextSubmit;
+    private ElementReference _bodyWeightInput;
     private List<AthleteSummary> _filteredAthletes = [];
     private string _searchText = string.Empty;
     private string _selectedAthleteSlug = string.Empty;
@@ -322,7 +324,7 @@
         _selectedAgeCategorySlug = athlete.EligibleAgeCategorySlugs.Count > 0 ? athlete.EligibleAgeCategorySlugs[0] : string.Empty;
     }
 
-    private void HandleAthleteKeyDown(KeyboardEventArgs e)
+    private async Task HandleAthleteKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "ArrowDown")
         {
@@ -352,6 +354,7 @@
             if (_showDropdown && _filteredAthletes.Count > 0)
             {
                 SelectAthlete(_filteredAthletes[_highlightedAthleteIndex]);
+                await _bodyWeightInput.FocusAsync();
             }
 
             _preventDefaultOnAthleteInput = false;
