@@ -24,13 +24,13 @@
 }
 
 .pill-record {
-    background: #059669;
+    background: #047857;
     color: #ffffff;
 }
 
 .pill-skipped {
     background: #f3f4f6;
-    color: #9ca3af;
+    color: #6b7280;
 }
 
 .tip {
@@ -62,7 +62,7 @@
 }
 
 .pill-pending {
-    background: #b45309;
+    background: #92400e;
     color: #ffffff;
 }
 
