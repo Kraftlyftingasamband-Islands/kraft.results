@@ -171,6 +171,7 @@
     private const int MinSearchLength = 2;
 
     private bool _suppressNextSubmit;
+    private bool _focusBodyWeightAfterRender;
     private ElementReference _bodyWeightInput;
     private List<AthleteSummary> _filteredAthletes = [];
     private string _searchText = string.Empty;
@@ -237,6 +238,15 @@
 
             string hint = string.Join(", ", missing);
             return char.ToUpper(hint[0]) + hint[1..];
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusBodyWeightAfterRender)
+        {
+            _focusBodyWeightAfterRender = false;
+            await _bodyWeightInput.FocusAsync();
         }
     }
 
@@ -324,7 +334,7 @@
         _selectedAgeCategorySlug = athlete.EligibleAgeCategorySlugs.Count > 0 ? athlete.EligibleAgeCategorySlugs[0] : string.Empty;
     }
 
-    private async Task HandleAthleteKeyDown(KeyboardEventArgs e)
+    private void HandleAthleteKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "ArrowDown")
         {
@@ -354,7 +364,7 @@
             if (_showDropdown && _filteredAthletes.Count > 0)
             {
                 SelectAthlete(_filteredAthletes[_highlightedAthleteIndex]);
-                await _bodyWeightInput.FocusAsync();
+                _focusBodyWeightAfterRender = true;
             }
 
             _preventDefaultOnAthleteInput = false;
