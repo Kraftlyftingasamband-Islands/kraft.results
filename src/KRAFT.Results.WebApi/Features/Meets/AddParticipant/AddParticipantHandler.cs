@@ -4,6 +4,7 @@ using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.EraWeightCategories;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
 using KRAFT.Results.WebApi.Services;
@@ -53,6 +54,18 @@ internal sealed class AddParticipantHandler
         {
             _logger.LogWarning("Meet with Id {MeetId} was not found", meetId);
             return new Result<int>(MeetErrors.MeetNotFound);
+        }
+
+        if (command.TeamId is not null)
+        {
+            bool teamExists = await _dbContext.Set<Team>()
+                .AnyAsync(t => t.TeamId == command.TeamId, cancellationToken);
+
+            if (!teamExists)
+            {
+                _logger.LogWarning("Team with Id {TeamId} was not found", command.TeamId);
+                return new Result<int>(TeamErrors.TeamNotFound);
+            }
         }
 
         bool alreadyRegistered = await _dbContext.Set<Participation>()

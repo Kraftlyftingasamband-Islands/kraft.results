@@ -11,7 +11,20 @@ public sealed class GetTeamOptionsTests(IntegrationTestFixture fixture)
 {
     private const string Path = "/teams/options";
 
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+
+    [Fact]
+    public async Task ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        // Arrange
+
+        // Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
 
     [Fact]
     public async Task ReturnsOk()
@@ -19,7 +32,7 @@ public sealed class GetTeamOptionsTests(IntegrationTestFixture fixture)
         // Arrange
 
         // Act
-        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.GetAsync(Path, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -31,7 +44,7 @@ public sealed class GetTeamOptionsTests(IntegrationTestFixture fixture)
         // Arrange
 
         // Act
-        IReadOnlyList<TeamOption>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
+        IReadOnlyList<TeamOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -43,7 +56,7 @@ public sealed class GetTeamOptionsTests(IntegrationTestFixture fixture)
         // Arrange
 
         // Act
-        IReadOnlyList<TeamOption>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
+        IReadOnlyList<TeamOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
 
         // Assert
         response!.ShouldContain(x => x.Id > 0 && !string.IsNullOrEmpty(x.Title));
@@ -55,7 +68,7 @@ public sealed class GetTeamOptionsTests(IntegrationTestFixture fixture)
         // Arrange
 
         // Act
-        IReadOnlyList<TeamOption>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
+        IReadOnlyList<TeamOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
 
         // Assert
         List<string> titles = response!.Select(x => x.Title).ToList();

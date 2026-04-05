@@ -22,7 +22,8 @@ internal static class GetTeamOptionsEndpoint
         .WithSummary("Gets team options")
         .WithDescription("Gets a list of all teams as id/title pairs for dropdowns")
         .Produces<IReadOnlyList<TeamOption>>()
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization();
 
         return endpoints;
     }
