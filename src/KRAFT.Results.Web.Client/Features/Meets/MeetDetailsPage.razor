@@ -283,6 +283,14 @@ else
         try
         {
             Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
+
+            Dictionary<Discipline, bool> attemptWeights = Participations
+                .SelectMany(p => p.Attempts)
+                .GroupBy(a => a.Discipline)
+                .ToDictionary(g => g.Key, g => g.Any(a => a.Weight > 0));
+
+            IncludedDisciplines = Meet!.Disciplines
+                .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
         }
         catch (HttpRequestException)
         {
@@ -353,10 +361,13 @@ else
                 return;
             }
 
-            IncludedDisciplines = Participations
-                .SelectMany(participation => participation.Attempts)
-                .GroupBy(attempt => attempt.Discipline)
-                .ToDictionary(group => group.Key, group => group.Any(attempt => attempt.Weight > 0));
+            Dictionary<Discipline, bool> attemptWeights = Participations
+                .SelectMany(p => p.Attempts)
+                .GroupBy(a => a.Discipline)
+                .ToDictionary(g => g.Key, g => g.Any(a => a.Weight > 0));
+
+            IncludedDisciplines = Meet!.Disciplines
+                .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
 
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
             ShowClubs = Participations.Any(p => !string.IsNullOrWhiteSpace(p.Club));
