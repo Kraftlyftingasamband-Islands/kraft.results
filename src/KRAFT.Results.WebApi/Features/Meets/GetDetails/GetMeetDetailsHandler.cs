@@ -11,6 +11,7 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
         dbContext.Set<Meet>()
             .Where(x => x.Slug == slug)
             .Select(x => new MeetDetails(
+                EF.Property<int>(x, "MeetId"),
                 x.Title,
                 x.Slug,
                 x.Location ?? string.Empty,
