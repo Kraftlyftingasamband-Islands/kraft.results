@@ -225,6 +225,31 @@
     opacity: 1;
 }
 
+/* Age category dropdown */
+.age-category-select {
+    display: inline-flex;
+    font-family: var(--font-body);
+    font-size: 11px;
+    padding: 1px 4px;
+    margin-inline-start: 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    color: var(--color-text);
+    cursor: pointer;
+    vertical-align: middle;
+    opacity: 0;
+    transition: opacity var(--transition-fast) ease;
+}
+
+.p-card:hover .age-category-select {
+    opacity: 1;
+}
+
+.p-card:focus-within .age-category-select {
+    opacity: 1;
+}
+
 /* Inline attempt editing */
 .inline-attempt-input {
     width: 52px;
@@ -243,24 +268,6 @@
     outline-offset: 1px;
 }
 
-button.pill-clickable,
-button.pill-empty {
-    border: none;
-    background: inherit;
-    font: inherit;
-    padding: 0 5px;
-    line-height: inherit;
-}
-
-.pill-clickable {
-    cursor: pointer;
-}
-
-.pill-empty {
-    cursor: pointer;
-    color: var(--color-text-muted);
-    font-size: 12px;
-}
 
 /* ===== Mobile: always show edit button ===== */
 @container (max-width: 959px) {
@@ -269,6 +276,10 @@ button.pill-empty {
     }
 
     .btn-remove-participant {
+        opacity: 1;
+    }
+
+    .age-category-select {
         opacity: 1;
     }
 }
