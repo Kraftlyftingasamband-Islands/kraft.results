@@ -63,9 +63,7 @@
     <div class="p-attempts">
         @if (IsAdmin)
         {
-            @foreach (Discipline disc in IncludedDisciplines
-                .Where(kv => kv.Value)
-                .Select(kv => kv.Key)
+            @foreach (Discipline disc in IncludedDisciplines.Keys
                 .OrderBy(d => (byte)d))
             {
                 <div class="p-disc-col">

@@ -1,4 +1,6 @@
-﻿namespace KRAFT.Results.Contracts.Meets;
+﻿using KRAFT.Results.Contracts;
+
+namespace KRAFT.Results.Contracts.Meets;
 
 public sealed record class MeetDetails(
     int MeetId,
@@ -20,4 +22,5 @@ public sealed record class MeetDetails(
     bool PublishedResults,
     bool RecordsPossible,
     bool IsClassic,
-    bool ShowTeamPoints);
+    bool ShowTeamPoints,
+    IReadOnlyList<Discipline> Disciplines);
