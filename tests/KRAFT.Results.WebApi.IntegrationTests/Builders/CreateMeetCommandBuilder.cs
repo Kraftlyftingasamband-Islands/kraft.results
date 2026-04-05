@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Meets;
+﻿using KRAFT.Results.Contracts.Meets;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
