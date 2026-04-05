@@ -19,6 +19,18 @@ internal sealed class AgeCategory
 
     public ICollection<Record> Records { get; } = [];
 
+    internal static IReadOnlyList<string> ResolveEligibleSlugs(DateOnly? dateOfBirth, DateOnly meetDate)
+    {
+        string primary = ResolveSlug(dateOfBirth, meetDate);
+        return primary switch
+        {
+            "subjunior" => ["subjunior", "junior", "open"],
+            "junior" => ["junior", "open"],
+            "masters1" or "masters2" or "masters3" or "masters4" => [primary, "open"],
+            _ => ["open"],
+        };
+    }
+
     internal static string ResolveSlug(DateOnly? dateOfBirth, DateOnly meetDate)
     {
         if (dateOfBirth is null)

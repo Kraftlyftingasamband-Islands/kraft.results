@@ -1,6 +1,7 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Records;
@@ -28,6 +29,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 Athlete = p.Athlete.Firstname + " " + p.Athlete.Lastname,
                 AthleteSlug = p.Athlete.Slug,
                 p.Athlete.Gender,
+                AthleteDoB = p.Athlete.DateOfBirth,
                 YearOfBirth = p.Athlete.DateOfBirth != null ? p.Athlete.DateOfBirth.Value.Year : 0,
                 HasAgeCategory = p.AgeCategory != null && p.AgeCategory.TitleShort != null,
                 AgeCategorySlug = p.AgeCategory != null && p.AgeCategory.TitleShort != null ? p.AgeCategory.Slug : null,
@@ -87,6 +89,10 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                         a.IsRecord,
                         pendingAttemptIds.Contains(a.AttemptId)));
 
+                IReadOnlyList<string> eligibleSlugs = AgeCategory.ResolveEligibleSlugs(
+                    r.AthleteDoB,
+                    DateOnly.FromDateTime(r.MeetStartDate));
+
                 return new MeetParticipation(
                     r.ParticipationId,
                     r.MeetId,
@@ -104,7 +110,8 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                     r.Total,
                     ipfPoints,
                     r.Disqualified,
-                    attempts);
+                    attempts,
+                    eligibleSlugs);
             })
             .ToList();
 

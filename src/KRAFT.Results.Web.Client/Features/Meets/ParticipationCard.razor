@@ -5,6 +5,7 @@
 @using System.Globalization
 
 @inject HttpClient HttpClient
+@inject IJSRuntime JS
 
 <div class="p-card @(Participation.Disqualified ? "p-card-dq" : null)"
      style="@($"--grid-template: {DesktopGridTemplate}")">
@@ -43,6 +44,17 @@
                                 <line x1="14" x2="14" y1="11" y2="17"/>
                             </svg>
                         </button>
+                        @if (Participation.EligibleAgeCategorySlugs.Count > 1)
+                        {
+                            <select class="age-category-select"
+                                    value="@Participation.AgeCategorySlug"
+                                    @onchange="HandleAgeCategoryChange">
+                                @foreach (string slug in Participation.EligibleAgeCategorySlugs)
+                                {
+                                    <option value="@slug">@slug.ToAgeCategoryLabel()</option>
+                                }
+                            </select>
+                        }
                     }
                 </AuthorizeView>
             </span>
@@ -76,26 +88,26 @@
                             MeetAttempt? attempt = Participation.Attempts
                                 .FirstOrDefault(a => a.Discipline == d && a.Round == r);
 
+                            MeetAttempt displayAttempt = attempt ?? new MeetAttempt(d, r, 0, false, false, false);
+
                             @if (_editingAttempt.GetValueOrDefault((d, r)))
                             {
                                 <input type="text"
                                        inputmode="decimal"
                                        class="inline-attempt-input"
+                                       id="@GetInputId(d, r)"
                                        aria-label="@($"{disc.ToDisplayName()} lota {r}")"
                                        value="@_editValues.GetValueOrDefault((d, r), string.Empty)"
                                        @oninput="(e) => _editValues[(d, r)] = e.Value?.ToString() ?? string.Empty"
                                        @onblur="() => SaveAttempt(d, r)"
-                                       @onkeydown="(e) => HandleAttemptKeyDown(e, d, r)" />
-                            }
-                            else if (attempt is not null && attempt.Weight > 0)
-                            {
-                                <button class="@GetPillClass(attempt)" @onclick="() => StartEdit(d, r, attempt)">
-                                    @($"{attempt.Weight:F1}")
-                                </button>
+                                       @onkeydown="(e) => HandleAttemptKeyDown(e, d, r)"
+                                       @onkeydown:stopPropagation />
                             }
                             else
                             {
-                                <button class="pill pill-empty" @onclick="() => StartEdit(d, r, null)">–</button>
+                                <AttemptPill Attempt="displayAttempt"
+                                             RecordContext="@(attempt?.IsRecord == true && attempt.IsGood ? _recordContext : null)"
+                                             OnClick="() => StartEdit(d, r, attempt)" />
                             }
                         }
                     </div>
@@ -135,9 +147,9 @@
     <div class="p-footer-row">
         <div class="p-total">
             <span class="p-footer-label">Samtala</span>
-            @if (!Participation.Disqualified && Participation.Total > 0)
+            @if (!Participation.Disqualified && LocalTotal > 0)
             {
-                @($"{Participation.Total:F1}")
+                @($"{LocalTotal:F1}")
             }
             else if (!Participation.Disqualified)
             {
@@ -185,6 +197,7 @@
     private string? _removeErrorMessage;
     private readonly Dictionary<(Discipline, short), bool> _editingAttempt = [];
     private readonly Dictionary<(Discipline, short), string> _editValues = [];
+    private (Discipline, short)? _pendingSelect;
 
     [Parameter, EditorRequired]
     public MeetParticipation Participation { get; init; } = null!;
@@ -214,6 +227,51 @@
     private string _metaLine = string.Empty;
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;
+
+    private decimal LocalTotal
+    {
+        get
+        {
+            if (Participation.Disqualified)
+            {
+                return 0m;
+            }
+
+            decimal total = 0m;
+
+            foreach (Discipline disc in IncludedDisciplines.Keys)
+            {
+                decimal best = Participation.Attempts
+                    .Where(a => a.Discipline == disc && a.IsGood && a.Weight > 0)
+                    .Select(a => a.Weight)
+                    .DefaultIfEmpty(0m)
+                    .Max();
+
+                for (short r = 1; r <= 3; r++)
+                {
+                    if (_editingAttempt.GetValueOrDefault((disc, r))
+                        && decimal.TryParse(
+                            _editValues.GetValueOrDefault((disc, r), string.Empty),
+                            CultureInfo.InvariantCulture,
+                            out decimal editWeight)
+                        && editWeight > 0
+                        && editWeight > best)
+                    {
+                        best = editWeight;
+                    }
+                }
+
+                if (IncludedDisciplines.Count > 1 && best == 0)
+                {
+                    return 0m;
+                }
+
+                total += best;
+            }
+
+            return total;
+        }
+    }
 
     protected override void OnParametersSet()
     {
@@ -320,9 +378,42 @@
         }
     }
 
-    private void StartEdit(Discipline discipline, short round, MeetAttempt? attempt)
+    private async Task HandleAgeCategoryChange(ChangeEventArgs e)
     {
+        string? slug = e.Value?.ToString();
+        if (string.IsNullOrEmpty(slug) || slug == Participation.AgeCategorySlug)
+        {
+            return;
+        }
+
+        try
+        {
+            UpdateAgeCategoryCommand command = new(slug);
+            await HttpClient.PatchAsJsonAsync(
+                $"/meets/{Participation.MeetId}/participations/{Participation.ParticipationId}/age-category",
+                command);
+            await OnBodyWeightUpdated.InvokeAsync();
+        }
+        catch (HttpRequestException)
+        {
+            // Silently fail
+        }
+    }
+
+    private async Task StartEdit(Discipline discipline, short round, MeetAttempt? attempt)
+    {
+        List<(Discipline, short)> currentlyEditing = _editingAttempt
+            .Where(kv => kv.Value)
+            .Select(kv => kv.Key)
+            .ToList();
+
+        foreach ((Discipline d, short r) in currentlyEditing)
+        {
+            await SaveAttempt(d, r);
+        }
+
         _editingAttempt[(discipline, round)] = true;
+        _pendingSelect = (discipline, round);
 
         if (attempt is not null && attempt.Weight > 0)
         {
@@ -337,6 +428,11 @@
 
     private async Task SaveAttempt(Discipline discipline, short round)
     {
+        if (!_editingAttempt.GetValueOrDefault((discipline, round)))
+        {
+            return;
+        }
+
         _editingAttempt[(discipline, round)] = false;
 
         string value = _editValues.GetValueOrDefault((discipline, round), string.Empty);
@@ -368,33 +464,82 @@
 
     private async Task HandleAttemptKeyDown(KeyboardEventArgs e, Discipline discipline, short round)
     {
-        if (e.Key == "Enter")
+        if (e.Key == "Enter" || (e.Key == "Tab" && !e.ShiftKey))
         {
             await SaveAttempt(discipline, round);
+            (Discipline nextDisc, short nextRound)? next = GetNextCell(discipline, round);
+            if (next.HasValue)
+            {
+                MeetAttempt? nextAttempt = Participation.Attempts
+                    .FirstOrDefault(a => a.Discipline == next.Value.nextDisc && a.Round == next.Value.nextRound);
+                await StartEdit(next.Value.nextDisc, next.Value.nextRound, nextAttempt);
+            }
+        }
+        else if (e.Key == "Tab" && e.ShiftKey)
+        {
+            await SaveAttempt(discipline, round);
+            (Discipline prevDisc, short prevRound)? prev = GetPreviousCell(discipline, round);
+            if (prev.HasValue)
+            {
+                MeetAttempt? prevAttempt = Participation.Attempts
+                    .FirstOrDefault(a => a.Discipline == prev.Value.prevDisc && a.Round == prev.Value.prevRound);
+                await StartEdit(prev.Value.prevDisc, prev.Value.prevRound, prevAttempt);
+            }
         }
         else if (e.Key == "Escape")
         {
+            _editValues[(discipline, round)] = string.Empty;
             _editingAttempt[(discipline, round)] = false;
         }
     }
 
-    private static string GetPillClass(MeetAttempt attempt)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (attempt.IsGood && attempt.IsRecord)
+        if (_pendingSelect.HasValue)
         {
-            return "pill pill-record pill-clickable";
+            (Discipline d, short r) = _pendingSelect.Value;
+            _pendingSelect = null;
+            await JS.InvokeVoidAsync("Kraftresults.setupAttemptInput", GetInputId(d, r));
         }
-
-        if (attempt.IsGood && attempt.IsPendingRecord)
-        {
-            return "pill pill-pending pill-clickable";
-        }
-
-        if (attempt.IsGood)
-        {
-            return "pill pill-good pill-clickable";
-        }
-
-        return "pill pill-bad pill-clickable";
     }
+
+    private (Discipline, short)? GetPreviousCell(Discipline discipline, short round)
+    {
+        List<Discipline> disciplines = [.. IncludedDisciplines.Keys.OrderBy(d => (byte)d)];
+
+        if (round > 1)
+        {
+            return (discipline, (short)(round - 1));
+        }
+
+        int discIndex = disciplines.IndexOf(discipline);
+        if (discIndex > 0)
+        {
+            return (disciplines[discIndex - 1], 3);
+        }
+
+        return null;
+    }
+
+    private (Discipline, short)? GetNextCell(Discipline discipline, short round)
+    {
+        List<Discipline> disciplines = [.. IncludedDisciplines.Keys.OrderBy(d => (byte)d)];
+
+        if (round < 3)
+        {
+            return (discipline, (short)(round + 1));
+        }
+
+        int discIndex = disciplines.IndexOf(discipline);
+        if (discIndex < disciplines.Count - 1)
+        {
+            return (disciplines[discIndex + 1], 1);
+        }
+
+        return null;
+    }
+
+    private string GetInputId(Discipline discipline, short round) =>
+        $"attempt-input-{Participation.ParticipationId}-{(int)discipline}-{round}";
+
 }

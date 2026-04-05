@@ -16,6 +16,8 @@ internal static class MeetErrors
 
     internal const string AthleteAlreadyRegisteredCode = "Meets.AthleteAlreadyRegistered";
 
+    internal const string AgeCategoryNotFoundCode = "Meets.AgeCategoryNotFound";
+
     internal const string NoMatchingWeightCategoryCode = "Meets.NoMatchingWeightCategory";
 
     internal static readonly Error EmptyTitle = new(
@@ -37,6 +39,10 @@ internal static class MeetErrors
     internal static readonly Error MeetHasParticipations = new(
         MeetHasParticipationsCode,
         "Cannot delete a meet that has participations.");
+
+    internal static readonly Error AgeCategoryNotFound = new(
+        AgeCategoryNotFoundCode,
+        "Age category not found.");
 
     internal static readonly Error WeightCategoryNotFound = new(
         "Meets.WeightCategoryNotFound",

@@ -111,6 +111,13 @@ internal sealed class Participation
         };
     }
 
+    internal void UpdateAgeCategory(int ageCategoryId, string modifiedBy)
+    {
+        AgeCategoryId = ageCategoryId;
+        ModifiedOn = DateTime.UtcNow;
+        ModifiedBy = modifiedBy;
+    }
+
     internal void UpdateBodyWeight(decimal bodyWeight, string modifiedBy)
     {
         Weight = bodyWeight;

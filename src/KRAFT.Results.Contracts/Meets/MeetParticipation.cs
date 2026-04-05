@@ -17,4 +17,5 @@ public sealed record class MeetParticipation(
     decimal Total,
     decimal IpfPoints,
     bool Disqualified,
-    IEnumerable<MeetAttempt> Attempts);
+    IEnumerable<MeetAttempt> Attempts,
+    IReadOnlyList<string> EligibleAgeCategorySlugs);
