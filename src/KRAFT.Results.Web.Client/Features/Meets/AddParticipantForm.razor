@@ -1,6 +1,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Contracts.Teams
 @using System.Globalization
 
 @inject HttpClient HttpClient
@@ -16,16 +17,26 @@
                            type="text"
                            autocomplete="off"
                            placeholder="Leita..."
+                           role="combobox"
+                           aria-autocomplete="list"
+                           aria-expanded="@_showDropdown.ToString().ToLowerInvariant()"
+                           aria-activedescendant="@(_showDropdown && _filteredAthletes.Count > 0 ? $"athlete-option-{_highlightedAthleteIndex}" : "")"
                            value="@_searchText"
                            @oninput="HandleSearchInput"
                            @onfocus="() => _showDropdown = true"
-                           @onblur="HandleBlur" />
+                           @onblur="HandleBlur"
+                           @onkeydown="HandleAthleteKeyDown"
+                           @onkeydown:preventDefault="@_preventDefaultOnAthleteInput" />
                     @if (_showDropdown && _filteredAthletes.Count > 0)
                     {
-                        <ul class="typeahead-dropdown">
+                        <ul class="typeahead-dropdown" role="listbox">
                             @foreach (AthleteSummary athlete in _filteredAthletes)
                             {
-                                <li @onmousedown="() => SelectAthlete(athlete)">
+                                <li id="athlete-option-@(_filteredAthletes.IndexOf(athlete))"
+                                    role="option"
+                                    aria-selected="@((_filteredAthletes.IndexOf(athlete) == _highlightedAthleteIndex).ToString().ToLowerInvariant())"
+                                    class="@(_filteredAthletes.IndexOf(athlete) == _highlightedAthleteIndex ? "highlighted" : "")"
+                                    @onmousedown="() => SelectAthlete(athlete)">
                                     @athlete.Name
                                     @if (athlete.YearOfBirth is not null)
                                     {
@@ -48,6 +59,42 @@
                        @bind="_bodyWeight"
                        @bind:culture="CultureInfo.InvariantCulture"
                        @bind:event="oninput" />
+            </div>
+
+            <div class="field field-team">
+                <label class="form-label" for="team-input">Lið</label>
+                <div class="team-typeahead">
+                    <input id="team-input"
+                           class="form-input"
+                           type="text"
+                           autocomplete="off"
+                           placeholder="Leita..."
+                           role="combobox"
+                           aria-autocomplete="list"
+                           aria-expanded="@_showTeamDropdown.ToString().ToLowerInvariant()"
+                           aria-activedescendant="@(_showTeamDropdown && _filteredTeams.Count > 0 ? $"team-option-{_highlightedTeamIndex}" : "")"
+                           value="@_teamSearchText"
+                           @oninput="HandleTeamSearchInput"
+                           @onfocus="() => _showTeamDropdown = true"
+                           @onblur="HandleTeamBlur"
+                           @onkeydown="HandleTeamKeyDown"
+                           @onkeydown:preventDefault="@_preventDefaultOnTeamInput" />
+                    @if (_showTeamDropdown && _filteredTeams.Count > 0)
+                    {
+                        <ul class="typeahead-dropdown" role="listbox">
+                            @foreach (TeamOption team in _filteredTeams)
+                            {
+                                <li id="team-option-@(_filteredTeams.IndexOf(team))"
+                                    role="option"
+                                    aria-selected="@((_filteredTeams.IndexOf(team) == _highlightedTeamIndex).ToString().ToLowerInvariant())"
+                                    class="@(_filteredTeams.IndexOf(team) == _highlightedTeamIndex ? "highlighted" : "")"
+                                    @onmousedown="() => SelectTeam(team)">
+                                    @team.Title
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
             </div>
 
             @foreach (Discipline disc in IncludedDisciplines
@@ -100,8 +147,18 @@
     private string _selectedAthleteSlug = string.Empty;
     private decimal _bodyWeight;
     private bool _showDropdown;
+    private int _highlightedAthleteIndex;
+    private bool _preventDefaultOnAthleteInput;
     private string? _errorMessage;
     private Dictionary<(Discipline, short), string> _attemptValues = [];
+
+    private List<TeamOption> _teams = [];
+    private List<TeamOption> _filteredTeams = [];
+    private string _teamSearchText = string.Empty;
+    private int? _selectedTeamId;
+    private bool _showTeamDropdown;
+    private int _highlightedTeamIndex;
+    private bool _preventDefaultOnTeamInput;
 
     [Parameter, EditorRequired]
     public int MeetId { get; set; }
@@ -113,7 +170,7 @@
     public EventCallback OnParticipantAdded { get; set; }
 
     private bool IsFormValid =>
-        !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0;
+        !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0 && _selectedTeamId is not null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -124,6 +181,15 @@
         catch (HttpRequestException)
         {
             _athletes = [];
+        }
+
+        try
+        {
+            _teams = await HttpClient.GetFromJsonAsync<List<TeamOption>>("/teams/options") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _teams = [];
         }
 
         InitializeAttemptValues();
@@ -158,6 +224,7 @@
         _selectedAthleteSlug = string.Empty;
         FilterAthletes();
         _showDropdown = true;
+        _highlightedAthleteIndex = 0;
     }
 
     private void FilterAthletes()
@@ -176,16 +243,116 @@
 
     private void SelectAthlete(AthleteSummary athlete)
     {
+        _errorMessage = null;
         _selectedAthleteSlug = athlete.Slug ?? string.Empty;
         _searchText = athlete.Name;
         _showDropdown = false;
         _filteredAthletes = [];
     }
 
+    private void HandleAthleteKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowDown")
+        {
+            _highlightedAthleteIndex = Math.Min(_highlightedAthleteIndex + 1, _filteredAthletes.Count - 1);
+            _preventDefaultOnAthleteInput = true;
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            _highlightedAthleteIndex = Math.Max(_highlightedAthleteIndex - 1, 0);
+            _preventDefaultOnAthleteInput = true;
+        }
+        else if (e.Key == "Enter")
+        {
+            if (_showDropdown && _filteredAthletes.Count > 0)
+            {
+                SelectAthlete(_filteredAthletes[_highlightedAthleteIndex]);
+            }
+            _preventDefaultOnAthleteInput = true;
+        }
+        else if (e.Key == "Escape")
+        {
+            _showDropdown = false;
+            _preventDefaultOnAthleteInput = true;
+        }
+        else
+        {
+            _preventDefaultOnAthleteInput = false;
+        }
+    }
+
     private async Task HandleBlur()
     {
         await Task.Delay(200);
         _showDropdown = false;
+    }
+
+    private void HandleTeamSearchInput(ChangeEventArgs e)
+    {
+        _teamSearchText = e.Value?.ToString() ?? string.Empty;
+        _selectedTeamId = null;
+        FilterTeams();
+        _showTeamDropdown = true;
+        _highlightedTeamIndex = 0;
+    }
+
+    private void FilterTeams()
+    {
+        if (string.IsNullOrWhiteSpace(_teamSearchText))
+        {
+            _filteredTeams = [];
+            return;
+        }
+
+        _filteredTeams = _teams
+            .Where(t => t.Title.Contains(_teamSearchText, StringComparison.OrdinalIgnoreCase))
+            .Take(10)
+            .ToList();
+    }
+
+    private void SelectTeam(TeamOption team)
+    {
+        _selectedTeamId = team.Id;
+        _teamSearchText = team.Title;
+        _showTeamDropdown = false;
+        _filteredTeams = [];
+    }
+
+    private async Task HandleTeamBlur()
+    {
+        await Task.Delay(200);
+        _showTeamDropdown = false;
+    }
+
+    private void HandleTeamKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "ArrowDown")
+        {
+            _highlightedTeamIndex = Math.Min(_highlightedTeamIndex + 1, _filteredTeams.Count - 1);
+            _preventDefaultOnTeamInput = true;
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            _highlightedTeamIndex = Math.Max(_highlightedTeamIndex - 1, 0);
+            _preventDefaultOnTeamInput = true;
+        }
+        else if (e.Key == "Enter")
+        {
+            if (_showTeamDropdown && _filteredTeams.Count > 0)
+            {
+                SelectTeam(_filteredTeams[_highlightedTeamIndex]);
+            }
+            _preventDefaultOnTeamInput = true;
+        }
+        else if (e.Key == "Escape")
+        {
+            _showTeamDropdown = false;
+            _preventDefaultOnTeamInput = true;
+        }
+        else
+        {
+            _preventDefaultOnTeamInput = false;
+        }
     }
 
     private async Task HandleSubmit()
@@ -199,7 +366,7 @@
 
         try
         {
-            AddParticipantCommand command = new(_selectedAthleteSlug, _bodyWeight);
+            AddParticipantCommand command = new(_selectedAthleteSlug, _bodyWeight, _selectedTeamId);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
                 $"/meets/{MeetId}/participants", command);
 
@@ -259,6 +426,8 @@
         _selectedAthleteSlug = string.Empty;
         _bodyWeight = 0;
         _errorMessage = null;
+        _teamSearchText = string.Empty;
+        _selectedTeamId = null;
         InitializeAttemptValues();
     }
 }

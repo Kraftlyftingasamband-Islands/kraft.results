@@ -32,6 +32,10 @@
     width: 100px;
 }
 
+.field-team {
+    flex: 0 0 180px;
+}
+
 .field-discipline {
     flex: 0 0 auto;
 }
@@ -45,12 +49,16 @@
     position: relative;
 }
 
+.team-typeahead {
+    position: relative;
+}
+
 .typeahead-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    z-index: 10;
+    z-index: 20;
     max-height: 200px;
     overflow-y: auto;
     margin: 0;
@@ -73,6 +81,12 @@
 
 .typeahead-dropdown li:hover {
     background: var(--color-primary-light);
+}
+
+.typeahead-dropdown li.highlighted {
+    background: var(--color-primary-light);
+    border-left: 3px solid var(--color-primary);
+    padding-left: calc(0.75rem - 3px);
 }
 
 .typeahead-year {
