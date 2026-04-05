@@ -178,7 +178,7 @@ public sealed class CreateMeetTests(IntegrationTestFixture fixture)
     {
         // Arrange
         CreateMeetCommand command = new CreateMeetCommandBuilder()
-            .WithText(new string('A', 4001))
+            .WithText(new string('A', 8001))
             .Build();
 
         // Act

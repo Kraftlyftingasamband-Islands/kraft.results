@@ -508,8 +508,8 @@ namespace KRAFT.Results.WebApi.Migrations
 
                     b.Property<string>("Text")
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("", "DF_Meets_Text");
 
                     b.Property<string>("Title")

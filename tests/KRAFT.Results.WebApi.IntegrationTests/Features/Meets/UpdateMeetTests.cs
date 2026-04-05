@@ -188,7 +188,7 @@ public sealed class UpdateMeetTests(IntegrationTestFixture fixture)
         // Arrange
         string slug = await CreateMeetAsync();
         UpdateMeetCommand command = new UpdateMeetCommandBuilder()
-            .WithText(new string('A', 4001))
+            .WithText(new string('A', 8001))
             .Build();
 
         // Act
