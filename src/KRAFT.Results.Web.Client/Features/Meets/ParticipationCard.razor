@@ -104,15 +104,27 @@
         }
         else
         {
-            @foreach (IGrouping<Discipline, MeetAttempt> disciplineGroup in _visibleDisciplineGroups)
+            @foreach (Discipline disc in IncludedDisciplines.Keys.OrderBy(d => (byte)d))
             {
                 <div class="p-disc-col">
-                    <span class="p-disc-label">@disciplineGroup.Key.ToDisplayName()</span>
+                    <span class="p-disc-label">@disc.ToDisplayName()</span>
                     <div class="p-pills">
-                        @foreach (MeetAttempt attempt in disciplineGroup.OrderBy(a => a.Round))
+                        @for (short round = 1; round <= 3; round++)
                         {
-                            <AttemptPill Attempt="attempt"
-                                         RecordContext="@(attempt.IsRecord && attempt.IsGood ? _recordContext : null)" />
+                            short r = round;
+                            Discipline d = disc;
+                            MeetAttempt? attempt = Participation.Attempts
+                                .FirstOrDefault(a => a.Discipline == d && a.Round == r);
+
+                            @if (attempt is not null)
+                            {
+                                <AttemptPill Attempt="attempt"
+                                             RecordContext="@(attempt.IsRecord && attempt.IsGood ? _recordContext : null)" />
+                            }
+                            else
+                            {
+                                <span class="pill pill-bad">–</span>
+                            }
                         }
                     </div>
                 </div>
@@ -202,7 +214,6 @@
     private string _metaLine = string.Empty;
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;
-    private List<IGrouping<Discipline, MeetAttempt>> _visibleDisciplineGroups = [];
 
     protected override void OnParametersSet()
     {
@@ -235,11 +246,6 @@
             };
         }
 
-        _visibleDisciplineGroups = Participation.Attempts
-            .Where(a => IncludedDisciplines.GetValueOrDefault(a.Discipline))
-            .GroupBy(a => a.Discipline)
-            .OrderBy(g => (byte)g.Key)
-            .ToList();
     }
 
     private async Task ShowEditDialog()
