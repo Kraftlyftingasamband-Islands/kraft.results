@@ -7,7 +7,7 @@
 @inject HttpClient HttpClient
 
 <div class="add-participant-form">
-    <form @onsubmit="HandleSubmit">
+    <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
         <div class="form-row">
             <div class="field field-athlete">
                 <label class="form-label" for="athlete-input">Keppandi</label>
@@ -27,7 +27,7 @@
                            @onfocus="() => _showDropdown = true"
                            @onblur="HandleBlur"
                            @onkeydown="HandleAthleteKeyDown"
-                           @onkeydown:preventDefault="@(_preventDefaultOnAthleteInput || (_showDropdown && _filteredAthletes.Count > 0))" />
+                           @onkeydown:preventDefault="@_preventDefaultOnAthleteInput" />
                     @if (_showDropdown && _filteredAthletes.Count > 0)
                     {
                         <ul id="athlete-listbox" class="typeahead-dropdown" role="listbox">
@@ -82,7 +82,7 @@
                            @onfocus="() => _showTeamDropdown = true"
                            @onblur="HandleTeamBlur"
                            @onkeydown="HandleTeamKeyDown"
-                           @onkeydown:preventDefault="@(_preventDefaultOnTeamInput || (_showTeamDropdown && _filteredTeams.Count > 0))" />
+                           @onkeydown:preventDefault="@_preventDefaultOnTeamInput" />
                     @if (_showTeamDropdown && _filteredTeams.Count > 0)
                     {
                         <ul id="team-listbox" class="typeahead-dropdown" role="listbox">
@@ -432,7 +432,7 @@
 
     private async Task HandleSubmit()
     {
-        if (!IsFormValid)
+        if (!IsFormValid || _showDropdown || _showTeamDropdown)
         {
             return;
         }
