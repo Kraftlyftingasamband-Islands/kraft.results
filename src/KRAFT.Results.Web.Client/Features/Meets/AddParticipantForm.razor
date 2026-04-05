@@ -1,0 +1,264 @@
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Contracts.Meets
+@using System.Globalization
+
+@inject HttpClient HttpClient
+
+<div class="add-participant-form">
+    <form @onsubmit="HandleSubmit">
+        <div class="form-row">
+            <div class="field field-athlete">
+                <label class="form-label" for="athlete-input">Keppandi</label>
+                <div class="athlete-typeahead">
+                    <input id="athlete-input"
+                           class="form-input"
+                           type="text"
+                           autocomplete="off"
+                           placeholder="Leita..."
+                           value="@_searchText"
+                           @oninput="HandleSearchInput"
+                           @onfocus="() => _showDropdown = true"
+                           @onblur="HandleBlur" />
+                    @if (_showDropdown && _filteredAthletes.Count > 0)
+                    {
+                        <ul class="typeahead-dropdown">
+                            @foreach (AthleteSummary athlete in _filteredAthletes)
+                            {
+                                <li @onmousedown="() => SelectAthlete(athlete)">
+                                    @athlete.Name
+                                    @if (athlete.YearOfBirth is not null)
+                                    {
+                                        <span class="typeahead-year">@athlete.YearOfBirth</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            <div class="field field-bodyweight">
+                <label class="form-label" for="bodyweight-input">Þyngd (kg)</label>
+                <input id="bodyweight-input"
+                       class="form-input"
+                       type="text"
+                       inputmode="decimal"
+                       autocomplete="off"
+                       @bind="_bodyWeight"
+                       @bind:culture="CultureInfo.InvariantCulture"
+                       @bind:event="oninput" />
+            </div>
+
+            @foreach (Discipline disc in IncludedDisciplines
+                .Where(kv => kv.Value)
+                .Select(kv => kv.Key)
+                .OrderBy(d => (byte)d))
+            {
+                <div class="field field-discipline">
+                    <span class="form-label">@disc.ToDisplayName()</span>
+                    <div class="attempt-inputs">
+                        @for (short round = 1; round <= 3; round++)
+                        {
+                            short r = round;
+                            Discipline d = disc;
+                            <div class="attempt-slot">
+                                <label class="attempt-round-label" for="@($"attempt-{(int)d}-{r}")">@r</label>
+                                <input id="@($"attempt-{(int)d}-{r}")"
+                                       class="form-input attempt-input"
+                                       type="text"
+                                       inputmode="decimal"
+                                       autocomplete="off"
+                                       value="@GetAttemptValue(d, r)"
+                                       @onchange="(e) => SetAttemptValue(d, r, e.Value?.ToString())" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="field field-submit">
+                <button type="submit"
+                        class="btn-action"
+                        disabled="@(!IsFormValid)">
+                    Bæta við
+                </button>
+            </div>
+        </div>
+
+        @if (_errorMessage is not null)
+        {
+            <div class="form-error" role="alert">@_errorMessage</div>
+        }
+    </form>
+</div>
+
+@code {
+    private List<AthleteSummary> _athletes = [];
+    private List<AthleteSummary> _filteredAthletes = [];
+    private string _searchText = string.Empty;
+    private string _selectedAthleteSlug = string.Empty;
+    private decimal _bodyWeight;
+    private bool _showDropdown;
+    private string? _errorMessage;
+    private Dictionary<(Discipline, short), string> _attemptValues = [];
+
+    [Parameter, EditorRequired]
+    public int MeetId { get; set; }
+
+    [Parameter, EditorRequired]
+    public Dictionary<Discipline, bool> IncludedDisciplines { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnParticipantAdded { get; set; }
+
+    private bool IsFormValid =>
+        !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _athletes = await HttpClient.GetFromJsonAsync<List<AthleteSummary>>("/athletes") ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            _athletes = [];
+        }
+
+        InitializeAttemptValues();
+    }
+
+    private void InitializeAttemptValues()
+    {
+        _attemptValues = [];
+
+        foreach (Discipline disc in IncludedDisciplines.Where(kv => kv.Value).Select(kv => kv.Key))
+        {
+            for (short round = 1; round <= 3; round++)
+            {
+                _attemptValues[(disc, round)] = string.Empty;
+            }
+        }
+    }
+
+    private string GetAttemptValue(Discipline discipline, short round)
+    {
+        return _attemptValues.GetValueOrDefault((discipline, round), string.Empty);
+    }
+
+    private void SetAttemptValue(Discipline discipline, short round, string? value)
+    {
+        _attemptValues[(discipline, round)] = value ?? string.Empty;
+    }
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        _searchText = e.Value?.ToString() ?? string.Empty;
+        _selectedAthleteSlug = string.Empty;
+        FilterAthletes();
+        _showDropdown = true;
+    }
+
+    private void FilterAthletes()
+    {
+        if (string.IsNullOrWhiteSpace(_searchText))
+        {
+            _filteredAthletes = [];
+            return;
+        }
+
+        _filteredAthletes = _athletes
+            .Where(a => a.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+            .Take(10)
+            .ToList();
+    }
+
+    private void SelectAthlete(AthleteSummary athlete)
+    {
+        _selectedAthleteSlug = athlete.Slug ?? string.Empty;
+        _searchText = athlete.Name;
+        _showDropdown = false;
+        _filteredAthletes = [];
+    }
+
+    private async Task HandleBlur()
+    {
+        await Task.Delay(200);
+        _showDropdown = false;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!IsFormValid)
+        {
+            return;
+        }
+
+        _errorMessage = null;
+
+        try
+        {
+            AddParticipantCommand command = new(_selectedAthleteSlug, _bodyWeight);
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
+                $"/meets/{MeetId}/participants", command);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _errorMessage = "Keppandi er þegar skráður í þetta mót";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            AddParticipantResponse? result = await response.Content
+                .ReadFromJsonAsync<AddParticipantResponse>();
+
+            if (result is not null)
+            {
+                await SaveAttempts(result.ParticipationId);
+            }
+
+            ResetForm();
+            await OnParticipantAdded.InvokeAsync();
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+    }
+
+    private async Task SaveAttempts(int participationId)
+    {
+        foreach (KeyValuePair<(Discipline Discipline, short Round), string> entry in _attemptValues)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Value))
+            {
+                continue;
+            }
+
+            if (!decimal.TryParse(entry.Value, CultureInfo.InvariantCulture, out decimal weight) || weight == 0)
+            {
+                continue;
+            }
+
+            RecordAttemptCommand attemptCommand = new(Math.Abs(weight), weight > 0);
+            await HttpClient.PutAsJsonAsync(
+                $"/meets/{MeetId}/participants/{participationId}/attempts/{(int)entry.Key.Discipline}/{entry.Key.Round}",
+                attemptCommand);
+        }
+    }
+
+    private void ResetForm()
+    {
+        _searchText = string.Empty;
+        _selectedAthleteSlug = string.Empty;
+        _bodyWeight = 0;
+        _errorMessage = null;
+        InitializeAttemptValues();
+    }
+}
