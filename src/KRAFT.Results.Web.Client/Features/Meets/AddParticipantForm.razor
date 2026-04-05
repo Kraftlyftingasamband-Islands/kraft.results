@@ -178,7 +178,7 @@
     public EventCallback OnParticipantAdded { get; set; }
 
     private bool IsFormValid =>
-        !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0 && _selectedTeamId is not null;
+        !string.IsNullOrEmpty(_selectedAthleteSlug) && _bodyWeight > 0;
 
     private string SubmitHint
     {
@@ -194,11 +194,6 @@
             if (_bodyWeight <= 0)
             {
                 missing.Add("sláðu inn þyngd");
-            }
-
-            if (_selectedTeamId is null)
-            {
-                missing.Add("veldu lið");
             }
 
             if (missing.Count == 0)
