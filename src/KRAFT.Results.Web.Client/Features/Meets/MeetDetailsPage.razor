@@ -64,6 +64,7 @@ else
                         OnRecordApproved="HandleRecordApproved" />
     <AddParticipantForm MeetId="Meet!.MeetId"
                         IncludedDisciplines="IncludedDisciplines"
+                        RegisteredAthletes="@Participations.Select(p => p.AthleteSlug).ToHashSet()"
                         OnParticipantAdded="ReloadParticipations" />
 </AuthorizeView>
 
