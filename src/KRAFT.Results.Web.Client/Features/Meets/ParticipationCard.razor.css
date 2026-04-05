@@ -243,6 +243,13 @@
     outline-offset: 1px;
 }
 
+.attempt-error {
+    font-size: 0.65rem;
+    color: #dc2626;
+    display: block;
+    margin-top: 2px;
+}
+
 
 /* ===== Mobile: always show edit button ===== */
 @container (max-width: 959px) {
