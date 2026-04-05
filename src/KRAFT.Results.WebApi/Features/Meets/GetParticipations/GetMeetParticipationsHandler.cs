@@ -43,6 +43,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 RecordsPossible = meet.RecordsPossible,
                 MeetStartDate = meet.StartDate,
                 MeetTypeId = meet.MeetType.MeetTypeId,
+                MeetTypeTitle = meet.MeetType.Title,
                 p.Disqualified,
                 GenderDisplay = p.Athlete.Gender == "f" ? "Konur" : "Karlar",
                 Attempts = p.Attempts
@@ -89,6 +90,9 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                         a.IsRecord,
                         pendingAttemptIds.Contains(a.AttemptId)));
 
+                IReadOnlyList<Discipline> disciplines = ResolveDisciplines(r.MeetTypeId, r.MeetTypeTitle);
+                decimal displayTotal = r.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
+
                 IReadOnlyList<string> eligibleSlugs = AgeCategory.ResolveEligibleSlugs(
                     r.AthleteDoB,
                     DateOnly.FromDateTime(r.MeetStartDate));
@@ -107,7 +111,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                     r.Club,
                     r.ClubSlug,
                     r.Weight,
-                    r.Total,
+                    displayTotal,
                     ipfPoints,
                     r.Disqualified,
                     attempts,
@@ -129,6 +133,46 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
         Discipline.Deadlift => RecordCategory.Deadlift,
         _ => RecordCategory.None,
     };
+
+    private static IReadOnlyList<Discipline> ResolveDisciplines(int meetTypeId, string meetTypeTitle)
+    {
+        if (BenchMeetTypes.Contains(meetTypeId))
+        {
+            return [Discipline.Bench];
+        }
+
+        if (meetTypeTitle.Contains("réttst", StringComparison.OrdinalIgnoreCase)
+            || meetTypeTitle.Contains("rettst", StringComparison.OrdinalIgnoreCase)
+            || meetTypeTitle.Contains("deadlift", StringComparison.OrdinalIgnoreCase))
+        {
+            return [Discipline.Deadlift];
+        }
+
+        return [Discipline.Squat, Discipline.Bench, Discipline.Deadlift];
+    }
+
+    private static decimal ComputeDisplayTotal(IReadOnlyList<Discipline> disciplines, IEnumerable<MeetAttempt> attempts)
+    {
+        decimal total = 0m;
+
+        foreach (Discipline disc in disciplines)
+        {
+            decimal best = attempts
+                .Where(a => a.Discipline == disc && a.IsGood)
+                .Select(a => a.Weight)
+                .DefaultIfEmpty(0m)
+                .Max();
+
+            if (disciplines.Count > 1 && best == 0)
+            {
+                return 0m;
+            }
+
+            total += best;
+        }
+
+        return total;
+    }
 
     private static decimal CalculateIpfPoints(
         bool disqualified,

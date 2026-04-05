@@ -80,6 +80,15 @@ internal sealed class AddParticipantHandler
         DateOnly meetDate = DateOnly.FromDateTime(meet.StartDate);
         string ageSlug = AgeCategory.ResolveSlug(athlete.DateOfBirth, meetDate);
 
+        if (!string.IsNullOrEmpty(command.AgeCategorySlug))
+        {
+            IReadOnlyList<string> eligibleSlugs = AgeCategory.ResolveEligibleSlugs(athlete.DateOfBirth, meetDate);
+            if (eligibleSlugs.Contains(command.AgeCategorySlug))
+            {
+                ageSlug = command.AgeCategorySlug;
+            }
+        }
+
         List<WeightCategory> eligibleCategories = await _dbContext.Set<EraWeightCategory>()
             .Where(ewc => (ewc.FromDate == null || ewc.FromDate <= meet.StartDate)
                        && (ewc.ToDate == null || ewc.ToDate >= meet.StartDate))

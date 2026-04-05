@@ -21,6 +21,8 @@ internal sealed class GetAthletesHandler
         .Select(x => new AthleteSummary(
             x.Slug,
             $"{x.Firstname} {x.Lastname}",
-            x.DateOfBirth != null && x.DateOfBirth.Value.Year > 1 ? x.DateOfBirth.Value.Year : null))
+            x.DateOfBirth != null && x.DateOfBirth.Value.Year > 1 ? x.DateOfBirth.Value.Year : null,
+            x.DateOfBirth != null && x.DateOfBirth.Value.Year > 1 ? x.DateOfBirth : null,
+            x.Gender == "f" ? "f" : "m"))
         .ToListAsync(cancellationToken);
 }

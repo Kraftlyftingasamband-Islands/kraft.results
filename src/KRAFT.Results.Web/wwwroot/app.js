@@ -18,6 +18,16 @@ window.Kraftresults = {
         const el = document.getElementById(id);
         if (el) { el.select(); }
     },
+    setupAttemptInput: function (id) {
+        const el = document.getElementById(id);
+        if (!el) { return; }
+        el.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab' || e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+        el.select();
+    },
     closeDialog: function (id) {
         const dialog = document.getElementById(id);
         if (dialog && dialog.open) {

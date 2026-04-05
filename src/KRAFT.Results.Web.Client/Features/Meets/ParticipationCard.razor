@@ -44,17 +44,6 @@
                                 <line x1="14" x2="14" y1="11" y2="17"/>
                             </svg>
                         </button>
-                        @if (Participation.EligibleAgeCategorySlugs.Count > 1)
-                        {
-                            <select class="age-category-select"
-                                    value="@Participation.AgeCategorySlug"
-                                    @onchange="HandleAgeCategoryChange">
-                                @foreach (string slug in Participation.EligibleAgeCategorySlugs)
-                                {
-                                    <option value="@slug">@slug.ToAgeCategoryLabel()</option>
-                                }
-                            </select>
-                        }
                     }
                 </AuthorizeView>
             </span>
@@ -88,7 +77,10 @@
                             MeetAttempt? attempt = Participation.Attempts
                                 .FirstOrDefault(a => a.Discipline == d && a.Round == r);
 
-                            MeetAttempt displayAttempt = attempt ?? new MeetAttempt(d, r, 0, false, false, false);
+                            MeetAttempt displayAttempt = attempt
+                                ?? (_savedAttempts.TryGetValue((d, r), out (decimal W, bool G) saved)
+                                    ? new MeetAttempt(d, r, saved.W, saved.G, false, false)
+                                    : new MeetAttempt(d, r, 0, false, false, false));
 
                             @if (_editingAttempt.GetValueOrDefault((d, r)))
                             {
@@ -147,9 +139,9 @@
     <div class="p-footer-row">
         <div class="p-total">
             <span class="p-footer-label">Samtala</span>
-            @if (!Participation.Disqualified && LocalTotal > 0)
+            @if (!Participation.Disqualified && DisplayTotal > 0)
             {
-                @($"{LocalTotal:F1}")
+                @($"{DisplayTotal:F1}")
             }
             else if (!Participation.Disqualified)
             {
@@ -160,9 +152,9 @@
         {
             <div class="p-ipf">
                 <span class="p-footer-label">IPF stig</span>
-                @if (!Participation.Disqualified && Participation.IpfPoints > 0)
+                @if (!Participation.Disqualified && DisplayIpfPoints > 0)
                 {
-                    @($"{Participation.IpfPoints:F2}")
+                    @($"{DisplayIpfPoints:F2}")
                 }
             </div>
         }
@@ -198,6 +190,9 @@
     private readonly Dictionary<(Discipline, short), bool> _editingAttempt = [];
     private readonly Dictionary<(Discipline, short), string> _editValues = [];
     private (Discipline, short)? _pendingSelect;
+    private readonly Dictionary<(Discipline, short), (decimal Weight, bool Good)> _savedAttempts = [];
+    private MeetParticipation? _lastParticipation;
+    private MeetParticipation? _freshParticipation;
 
     [Parameter, EditorRequired]
     public MeetParticipation Participation { get; init; } = null!;
@@ -228,58 +223,26 @@
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;
 
-    private decimal LocalTotal
-    {
-        get
-        {
-            if (Participation.Disqualified)
-            {
-                return 0m;
-            }
+    private decimal DisplayTotal => _freshParticipation?.Total ?? Participation.Total;
 
-            decimal total = 0m;
-
-            foreach (Discipline disc in IncludedDisciplines.Keys)
-            {
-                decimal best = Participation.Attempts
-                    .Where(a => a.Discipline == disc && a.IsGood && a.Weight > 0)
-                    .Select(a => a.Weight)
-                    .DefaultIfEmpty(0m)
-                    .Max();
-
-                for (short r = 1; r <= 3; r++)
-                {
-                    if (_editingAttempt.GetValueOrDefault((disc, r))
-                        && decimal.TryParse(
-                            _editValues.GetValueOrDefault((disc, r), string.Empty),
-                            CultureInfo.InvariantCulture,
-                            out decimal editWeight)
-                        && editWeight > 0
-                        && editWeight > best)
-                    {
-                        best = editWeight;
-                    }
-                }
-
-                if (IncludedDisciplines.Count > 1 && best == 0)
-                {
-                    return 0m;
-                }
-
-                total += best;
-            }
-
-            return total;
-        }
-    }
+    private decimal DisplayIpfPoints => _freshParticipation?.IpfPoints ?? Participation.IpfPoints;
 
     protected override void OnParametersSet()
     {
+        if (!ReferenceEquals(_lastParticipation, Participation))
+        {
+            _savedAttempts.Clear();
+            if (_lastParticipation?.ParticipationId != Participation.ParticipationId)
+            {
+                _freshParticipation = null;
+            }
+
+            _lastParticipation = Participation;
+        }
+
         _recordContext = $"Met: {Participation.Gender} · {Participation.AgeCategory} · {Participation.WeightCategory} kg";
 
-        List<string> metaParts = [Participation.YearOfBirth.ToString()];
-        metaParts.Add($"{Participation.BodyWeight:F2} kg");
-        _metaLine = string.Join(" · ", metaParts);
+        RebuildMetaLine();
 
         if (Participation.Disqualified)
         {
@@ -304,6 +267,32 @@
             };
         }
 
+    }
+
+    private void RebuildMetaLine()
+    {
+        decimal bodyWeight = _freshParticipation?.BodyWeight ?? Participation.BodyWeight;
+        List<string> metaParts = [Participation.YearOfBirth.ToString()];
+        metaParts.Add($"{bodyWeight:F2} kg");
+        _metaLine = string.Join(" · ", metaParts);
+    }
+
+    private async Task RefreshParticipation()
+    {
+        try
+        {
+            MeetParticipation? fresh = await HttpClient.GetFromJsonAsync<MeetParticipation>(
+                $"/meets/{Participation.MeetId}/participations/{Participation.ParticipationId}");
+            if (fresh is not null)
+            {
+                _freshParticipation = fresh;
+                RebuildMetaLine();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // Ignore — stale data is acceptable
+        }
     }
 
     private async Task ShowEditDialog()
@@ -331,6 +320,7 @@
             }
 
             await _editDialog.CloseAsync();
+            await RefreshParticipation();
             await OnBodyWeightUpdated.InvokeAsync();
         }
         catch (HttpRequestException)
@@ -378,28 +368,6 @@
         }
     }
 
-    private async Task HandleAgeCategoryChange(ChangeEventArgs e)
-    {
-        string? slug = e.Value?.ToString();
-        if (string.IsNullOrEmpty(slug) || slug == Participation.AgeCategorySlug)
-        {
-            return;
-        }
-
-        try
-        {
-            UpdateAgeCategoryCommand command = new(slug);
-            await HttpClient.PatchAsJsonAsync(
-                $"/meets/{Participation.MeetId}/participations/{Participation.ParticipationId}/age-category",
-                command);
-            await OnBodyWeightUpdated.InvokeAsync();
-        }
-        catch (HttpRequestException)
-        {
-            // Silently fail
-        }
-    }
-
     private async Task StartEdit(Discipline discipline, short round, MeetAttempt? attempt)
     {
         List<(Discipline, short)> currentlyEditing = _editingAttempt
@@ -418,7 +386,7 @@
         if (attempt is not null && attempt.Weight > 0)
         {
             decimal signedWeight = attempt.IsGood ? attempt.Weight : -attempt.Weight;
-            _editValues[(discipline, round)] = signedWeight.ToString("F1", CultureInfo.InvariantCulture);
+            _editValues[(discipline, round)] = signedWeight.ToString("F1", CultureInfo.CurrentCulture);
         }
         else
         {
@@ -442,24 +410,76 @@
             return;
         }
 
-        if (!decimal.TryParse(value, CultureInfo.InvariantCulture, out decimal weight) || weight == 0)
+        if (!decimal.TryParse(value, CultureInfo.CurrentCulture, out decimal weight) || weight == 0)
         {
             return;
         }
 
+        decimal absoluteWeight = Math.Abs(weight);
+
+        if (!IsAttemptOrderValid(discipline, round, absoluteWeight))
+        {
+            return;
+        }
+
+        _savedAttempts[(discipline, round)] = (absoluteWeight, weight > 0);
+
         try
         {
-            RecordAttemptCommand command = new(Math.Abs(weight), weight > 0);
+            RecordAttemptCommand command = new(absoluteWeight, weight > 0);
             await HttpClient.PutAsJsonAsync(
                 $"/meets/{Participation.MeetId}/participants/{Participation.ParticipationId}/attempts/{(int)discipline}/{round}",
                 command);
 
+            await RefreshParticipation();
             await OnBodyWeightUpdated.InvokeAsync();
         }
         catch (HttpRequestException)
         {
-            // Silently fail — the user can retry by clicking again
+            _savedAttempts.Remove((discipline, round));
         }
+    }
+
+    private decimal GetEffectiveAttemptWeight(Discipline discipline, short round)
+    {
+        if (_savedAttempts.TryGetValue((discipline, round), out (decimal W, bool G) saved))
+        {
+            return saved.W;
+        }
+
+        MeetAttempt? attempt = Participation.Attempts
+            .FirstOrDefault(a => a.Discipline == discipline && a.Round == round);
+        return attempt?.Weight ?? 0m;
+    }
+
+    private bool IsAttemptOrderValid(Discipline discipline, short round, decimal absoluteWeight)
+    {
+        for (short r = 1; r <= 3; r++)
+        {
+            if (r == round)
+            {
+                continue;
+            }
+
+            decimal existing = GetEffectiveAttemptWeight(discipline, r);
+
+            if (existing == 0)
+            {
+                continue;
+            }
+
+            if (r < round && existing > absoluteWeight)
+            {
+                return false;
+            }
+
+            if (r > round && existing < absoluteWeight)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task HandleAttemptKeyDown(KeyboardEventArgs e, Discipline discipline, short round)

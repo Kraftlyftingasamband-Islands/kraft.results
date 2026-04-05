@@ -1,16 +1,33 @@
 @using KRAFT.Results.Contracts.Meets
 
-<span class="@_classes" tabindex="@_tabIndex" role="@_role" aria-label="@_ariaLabel" aria-describedby="@_tooltipId">
-    @_value
-    @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
-    {
-        <span id="@_tooltipId" class="tip" role="tooltip">@RecordContext</span>
-    }
-    else if (Attempt.IsPendingRecord && Attempt.IsGood)
-    {
-        <span id="@_tooltipId" class="tip" role="tooltip">Met til staðfestingar</span>
-    }
-</span>
+@if (OnClick.HasDelegate)
+{
+    <button class="@_classes pill-clickable" tabindex="0" aria-label="@_ariaLabel" aria-describedby="@_tooltipId" @onclick="OnClick" @onmousedown:preventDefault>
+        @_value
+        @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
+        {
+            <span id="@_tooltipId" class="tip" role="tooltip">@RecordContext</span>
+        }
+        else if (Attempt.IsPendingRecord && Attempt.IsGood)
+        {
+            <span id="@_tooltipId" class="tip" role="tooltip">Met til staðfestingar</span>
+        }
+    </button>
+}
+else
+{
+    <span class="@_classes" tabindex="@_tabIndex" role="@_role" aria-label="@_ariaLabel" aria-describedby="@_tooltipId">
+        @_value
+        @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
+        {
+            <span id="@_tooltipId" class="tip" role="tooltip">@RecordContext</span>
+        }
+        else if (Attempt.IsPendingRecord && Attempt.IsGood)
+        {
+            <span id="@_tooltipId" class="tip" role="tooltip">Met til staðfestingar</span>
+        }
+    </span>
+}
 
 @code {
     [Parameter, EditorRequired]
@@ -18,6 +35,9 @@
 
     [Parameter]
     public string? RecordContext { get; init; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
 
     private string _classes = string.Empty;
     private string _value = "–";
