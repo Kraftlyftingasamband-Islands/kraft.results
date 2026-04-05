@@ -172,6 +172,9 @@
     public Dictionary<Discipline, bool> IncludedDisciplines { get; set; } = new();
 
     [Parameter]
+    public IReadOnlyCollection<string> RegisteredAthletes { get; set; } = [];
+
+    [Parameter]
     public EventCallback OnParticipantAdded { get; set; }
 
     private bool IsFormValid =>
@@ -272,6 +275,7 @@
         }
 
         _filteredAthletes = _athletes
+            .Where(a => !RegisteredAthletes.Contains(a.Slug ?? string.Empty, StringComparer.OrdinalIgnoreCase))
             .Where(a => a.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
             .Take(10)
             .ToList();
