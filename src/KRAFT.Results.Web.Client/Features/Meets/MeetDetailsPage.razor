@@ -64,6 +64,7 @@ else
                         OnRecordApproved="HandleRecordApproved" />
     <AddParticipantForm MeetId="Meet!.MeetId"
                         IncludedDisciplines="IncludedDisciplines"
+                        MeetStartDate="Meet!.StartDate"
                         RegisteredAthletes="@Participations.Select(p => p.AthleteSlug).ToHashSet()"
                         OnParticipantAdded="ReloadParticipations" />
 </AuthorizeView>
@@ -290,6 +291,8 @@ else
 
             IncludedDisciplines = Meet!.Disciplines
                 .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
+
+            ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
         }
         catch (HttpRequestException)
         {

@@ -135,6 +135,14 @@
     background: #15803d;
 }
 
+.field-age-category {
+    flex: 0 0 auto;
+}
+
+.age-category-select {
+    min-width: 120px;
+}
+
 .form-error {
     margin-block-start: 0.5rem;
     padding: 0.5rem 0.75rem;

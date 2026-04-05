@@ -27,5 +27,5 @@ internal sealed class AddParticipantCommandBuilder
     }
 
     public AddParticipantCommand Build() =>
-        new(_athleteSlug, _bodyWeight, _teamId);
+        new(_athleteSlug, _bodyWeight, _teamId, null);
 }

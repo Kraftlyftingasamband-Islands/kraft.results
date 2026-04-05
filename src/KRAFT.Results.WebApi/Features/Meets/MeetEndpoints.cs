@@ -5,6 +5,7 @@ using KRAFT.Results.WebApi.Features.Meets.Delete;
 using KRAFT.Results.WebApi.Features.Meets.Get;
 using KRAFT.Results.WebApi.Features.Meets.GetDetails;
 using KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
+using KRAFT.Results.WebApi.Features.Meets.GetParticipation;
 using KRAFT.Results.WebApi.Features.Meets.GetParticipations;
 using KRAFT.Results.WebApi.Features.Meets.GetPendingRecords;
 using KRAFT.Results.WebApi.Features.Meets.GetRecords;
@@ -29,6 +30,7 @@ internal static class MeetEndpoints
         group.MapGetMeetTypesEndpoint();
         group.MapGetMeetsEndpoint();
         group.MapGetMeetDetailsEndpoint();
+        group.MapGetMeetParticipationEndpoint();
         group.MapGetMeetParticipationsEndpoint();
         group.MapGetMeetTeamPointsEndpoint();
         group.MapGetMeetPendingRecordsEndpoint();

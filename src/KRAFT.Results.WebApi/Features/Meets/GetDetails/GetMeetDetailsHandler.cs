@@ -8,6 +8,8 @@ namespace KRAFT.Results.WebApi.Features.Meets.GetDetails;
 
 internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
 {
+    private static readonly int[] BenchMeetTypeIds = [2, 5];
+
     public async Task<MeetDetails?> Handle(string slug, CancellationToken cancellationToken)
     {
         var raw = await dbContext.Set<Meet>()
@@ -63,12 +65,12 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
             raw.RecordsPossible,
             raw.IsRaw,
             raw.ShowTeamPoints,
-            ResolveDisciplines(raw.MeetTypeTitle));
+            ResolveDisciplines(raw.MeetTypeId, raw.MeetTypeTitle));
     }
 
-    private static IReadOnlyList<Discipline> ResolveDisciplines(string meetTypeTitle)
+    private static IReadOnlyList<Discipline> ResolveDisciplines(int meetTypeId, string meetTypeTitle)
     {
-        if (meetTypeTitle.Contains("bekk", StringComparison.OrdinalIgnoreCase))
+        if (BenchMeetTypeIds.Contains(meetTypeId))
         {
             return [Discipline.Bench];
         }

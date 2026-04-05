@@ -66,6 +66,17 @@
     color: #ffffff;
 }
 
+button.pill-clickable {
+    border: none;
+    font: inherit;
+    padding: 0 5px;
+    line-height: inherit;
+}
+
+.pill-clickable {
+    cursor: pointer;
+}
+
 .pill-record:hover .tip,
 .pill-record:focus .tip,
 .pill-pending:hover .tip,
