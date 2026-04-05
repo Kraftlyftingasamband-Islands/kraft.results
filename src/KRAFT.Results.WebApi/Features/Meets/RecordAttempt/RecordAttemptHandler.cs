@@ -58,6 +58,19 @@ internal sealed class RecordAttemptHandler
             return MeetErrors.ParticipationNotFound;
         }
 
+        foreach (Attempt existingAttempt in participation.Attempts.Where(a => a.Discipline == discipline))
+        {
+            if (existingAttempt.Round < round && existingAttempt.Weight > command.Weight)
+            {
+                return MeetErrors.AttemptOutOfOrder;
+            }
+
+            if (existingAttempt.Round > round && existingAttempt.Weight < command.Weight)
+            {
+                return MeetErrors.AttemptOutOfOrder;
+            }
+        }
+
         Result<User> userResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 
         if (userResult.IsFailure)
