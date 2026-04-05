@@ -71,7 +71,7 @@ internal sealed class Participation
 
     public WeightCategory WeightCategory { get; private set; } = null!;
 
-    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, decimal bodyWeight)
+    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, int ageCategoryId, decimal bodyWeight)
     {
         if (athleteId <= 0)
         {
@@ -88,6 +88,11 @@ internal sealed class Participation
             return ParticipationErrors.WeightCategoryIdMustBePositive;
         }
 
+        if (ageCategoryId <= 0)
+        {
+            return ParticipationErrors.AgeCategoryIdMustBePositive;
+        }
+
         if (bodyWeight < 0)
         {
             return ParticipationErrors.BodyWeightMustNotBeNegative;
@@ -98,6 +103,7 @@ internal sealed class Participation
             AthleteId = athleteId,
             MeetId = meetId,
             WeightCategoryId = weightCategoryId,
+            AgeCategoryId = ageCategoryId,
             Weight = bodyWeight,
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,

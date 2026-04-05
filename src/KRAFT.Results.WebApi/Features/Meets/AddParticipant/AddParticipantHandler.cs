@@ -1,6 +1,8 @@
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.EraWeightCategories;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
@@ -34,19 +36,69 @@ internal sealed class AddParticipantHandler
 
         User creator = creatorResult.FromResult();
 
-        Result? validationError = await ValidateAsync(meetId, command.AthleteId, command.WeightCategoryId, cancellationToken);
+        Athlete? athlete = await _dbContext.Set<Athlete>()
+            .FirstOrDefaultAsync(a => a.Slug == command.AthleteSlug, cancellationToken);
 
-        if (validationError is not null)
+        if (athlete is null)
         {
-            return new Result<int>(validationError.Error);
+            _logger.LogWarning("Athlete with slug {AthleteSlug} was not found", command.AthleteSlug);
+            return new Result<int>(AthleteErrors.AthleteNotFound);
+        }
+
+        Meet? meet = await _dbContext.Set<Meet>()
+            .Where(m => EF.Property<int>(m, "MeetId") == meetId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (meet is null)
+        {
+            _logger.LogWarning("Meet with Id {MeetId} was not found", meetId);
+            return new Result<int>(MeetErrors.MeetNotFound);
+        }
+
+        bool alreadyRegistered = await _dbContext.Set<Participation>()
+            .AnyAsync(p => p.MeetId == meetId && p.AthleteId == athlete.AthleteId, cancellationToken);
+
+        if (alreadyRegistered)
+        {
+            _logger.LogWarning("Athlete {AthleteId} is already registered in meet {MeetId}", athlete.AthleteId, meetId);
+            return new Result<int>(MeetErrors.AthleteAlreadyRegistered);
+        }
+
+        DateOnly meetDate = DateOnly.FromDateTime(meet.StartDate);
+        string ageSlug = AgeCategory.ResolveSlug(athlete.DateOfBirth, meetDate);
+
+        List<WeightCategory> eligibleCategories = await _dbContext.Set<EraWeightCategory>()
+            .Where(ewc => (ewc.FromDate == null || ewc.FromDate <= meet.StartDate)
+                       && (ewc.ToDate == null || ewc.ToDate >= meet.StartDate))
+            .Select(ewc => ewc.WeightCategory)
+            .Where(wc => wc.Gender == athlete.Gender)
+            .Where(wc => !wc.JuniorsOnly || ageSlug == "subjunior" || ageSlug == "junior")
+            .ToListAsync(cancellationToken);
+
+        WeightCategory? weightCategory = WeightCategory.FindBestFit(eligibleCategories, command.BodyWeight);
+
+        if (weightCategory is null)
+        {
+            _logger.LogWarning("No matching weight category for body weight {BodyWeight}", command.BodyWeight);
+            return new Result<int>(MeetErrors.NoMatchingWeightCategory);
+        }
+
+        AgeCategory? ageCategory = await _dbContext.Set<AgeCategory>()
+            .FirstOrDefaultAsync(ac => ac.Slug == ageSlug, cancellationToken);
+
+        if (ageCategory is null)
+        {
+            ageCategory = await _dbContext.Set<AgeCategory>()
+                .FirstOrDefaultAsync(ac => ac.Slug == "open", cancellationToken);
         }
 
         Result<Participation> participationResult = Participation.Create(
             creator,
-            command.AthleteId,
+            athlete.AthleteId,
             meetId,
-            command.WeightCategoryId,
-            command.BodyWeight ?? 0);
+            weightCategory.WeightCategoryId,
+            ageCategory!.AgeCategoryId,
+            command.BodyWeight);
 
         if (participationResult.IsFailure)
         {
@@ -59,51 +111,8 @@ internal sealed class AddParticipantHandler
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Added athlete {AthleteId} to meet {MeetId} with participation {ParticipationId}", command.AthleteId, meetId, participation.ParticipationId);
+        _logger.LogInformation("Added athlete {AthleteSlug} to meet {MeetId} with participation {ParticipationId}", command.AthleteSlug, meetId, participation.ParticipationId);
 
         return participation.ParticipationId;
-    }
-
-    private async Task<Result?> ValidateAsync(int meetId, int athleteId, int weightCategoryId, CancellationToken cancellationToken)
-    {
-        var existence = await _dbContext.Set<Meet>()
-            .Where(m => EF.Property<int>(m, "MeetId") == meetId)
-            .Select(m => new
-            {
-                MeetExists = true,
-                AthleteExists = _dbContext.Set<Athlete>()
-                    .Any(a => a.AthleteId == athleteId),
-                WeightCategoryExists = _dbContext.Set<WeightCategory>()
-                    .Any(w => w.WeightCategoryId == weightCategoryId),
-                AlreadyRegistered = _dbContext.Set<Participation>()
-                    .Any(p => p.MeetId == meetId && p.AthleteId == athleteId),
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (existence is null)
-        {
-            _logger.LogWarning("Meet with Id {MeetId} was not found", meetId);
-            return Result.Failure(MeetErrors.MeetNotFound);
-        }
-
-        if (!existence.AthleteExists)
-        {
-            _logger.LogWarning("Athlete with Id {AthleteId} was not found", athleteId);
-            return Result.Failure(AthleteErrors.AthleteNotFound);
-        }
-
-        if (!existence.WeightCategoryExists)
-        {
-            _logger.LogWarning("Weight category with Id {WeightCategoryId} was not found", weightCategoryId);
-            return Result.Failure(MeetErrors.WeightCategoryNotFound);
-        }
-
-        if (existence.AlreadyRegistered)
-        {
-            _logger.LogWarning("Athlete {AthleteId} is already registered in meet {MeetId}", athleteId, meetId);
-            return Result.Failure(MeetErrors.AthleteAlreadyRegistered);
-        }
-
-        return null;
     }
 }

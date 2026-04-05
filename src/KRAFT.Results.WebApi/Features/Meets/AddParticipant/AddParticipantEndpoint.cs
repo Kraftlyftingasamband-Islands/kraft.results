@@ -29,6 +29,7 @@ internal static class AddParticipantEndpoint
                     MeetErrors.MeetNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     AthleteErrors.AthleteNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     MeetErrors.AthleteAlreadyRegisteredCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    MeetErrors.NoMatchingWeightCategoryCode => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
