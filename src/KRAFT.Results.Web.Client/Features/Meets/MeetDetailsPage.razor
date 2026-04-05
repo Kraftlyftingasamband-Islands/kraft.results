@@ -128,9 +128,9 @@ else
                     {
                         <span>Félag</span>
                     }
-                    @foreach (KeyValuePair<Discipline, bool> disc in IncludedDisciplines.Where(kv => kv.Value).OrderBy(kv => (byte)kv.Key))
+                    @foreach (Discipline disc in IncludedDisciplines.Keys.OrderBy(d => (byte)d))
                     {
-                        <span class="col-header-center">@disc.Key.ToDisplayName()</span>
+                        <span class="col-header-center">@disc.ToDisplayName()</span>
                     }
                     <span class="col-header-right">@Constants.Total</span>
                     @if (ShowIpfPoints)
@@ -255,9 +255,8 @@ else
     {
         get
         {
-            string discPart = string.Join(" ", IncludedDisciplines
-                .Where(kv => kv.Value)
-                .OrderBy(kv => (byte)kv.Key)
+            string discPart = string.Join(" ", IncludedDisciplines.Keys
+                .OrderBy(d => (byte)d)
                 .Select(_ => "1fr"));
             string clubPart = ShowClubs ? "58px " : string.Empty;
             return ShowIpfPoints
