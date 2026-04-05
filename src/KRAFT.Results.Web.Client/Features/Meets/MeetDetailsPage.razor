@@ -62,6 +62,9 @@ else
     <MeetPendingRecords PendingRecords="_pendingRecords"
                         MeetSlug="@Slug"
                         OnRecordApproved="HandleRecordApproved" />
+    <AddParticipantForm MeetId="Meet!.MeetId"
+                        IncludedDisciplines="IncludedDisciplines"
+                        OnParticipantAdded="ReloadParticipations" />
 </AuthorizeView>
 
 <SectionNav Links="_navLinks" />
@@ -146,6 +149,8 @@ else
                                        ShowClub="ShowClubs"
                                        IncludedDisciplines="IncludedDisciplines"
                                        DesktopGridTemplate="@ResultsGridTemplate"
+                                       IsAdmin="_isAdmin"
+                                       OnParticipantRemoved="ReloadParticipations"
                                        OnBodyWeightUpdated="ReloadParticipations" />
                 }
             }
@@ -226,6 +231,7 @@ else
     private bool _isDeleting;
     private bool _isLoading = true;
     private string? _deleteErrorMessage;
+    private bool _isAdmin;
     private List<PendingRecordEntry> _pendingRecords = [];
     private IReadOnlyList<MeetRecordEntry> _meetRecords = [];
     private IReadOnlyList<SectionNav.SectionNavLink> _navLinks = [];
@@ -375,7 +381,8 @@ else
             _navLinks = navLinks;
 
             AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            if (authState.User.IsInRole("Admin"))
+            _isAdmin = authState.User.IsInRole("Admin");
+            if (_isAdmin)
             {
                 try
                 {
