@@ -1,4 +1,5 @@
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.WebApi.Features.AgeCategories;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -46,41 +47,9 @@ internal sealed class GetAthletesHandler
 
     private static IReadOnlyList<string> ResolveEligibleSlugs(DateOnly? dateOfBirth, DateOnly? meetDate)
     {
-        string primary = ResolveSlug(dateOfBirth, meetDate);
-        return primary switch
-        {
-            "subjunior" => ["subjunior", "junior", "open"],
-            "junior" => ["junior", "open"],
-            "masters1" or "masters2" or "masters3" or "masters4" => [primary, "open"],
-            _ => ["open"],
-        };
-    }
-
-    private static string ResolveSlug(DateOnly? dateOfBirth, DateOnly? meetDate)
-    {
-        if (dateOfBirth is null || meetDate is null)
-        {
-            return "open";
-        }
-
-        int age = meetDate.Value.Year - dateOfBirth.Value.Year;
-
-        if (dateOfBirth.Value.Month > meetDate.Value.Month ||
-            (dateOfBirth.Value.Month == meetDate.Value.Month && dateOfBirth.Value.Day > meetDate.Value.Day))
-        {
-            age--;
-        }
-
-        return age switch
-        {
-            <= 18 => "subjunior",
-            <= 23 => "junior",
-            >= 40 and <= 49 => "masters1",
-            >= 50 and <= 59 => "masters2",
-            >= 60 and <= 69 => "masters3",
-            >= 70 => "masters4",
-            _ => "open",
-        };
+        return meetDate.HasValue
+            ? AgeCategory.ResolveEligibleSlugs(dateOfBirth, meetDate.Value)
+            : ["open"];
     }
 
     private sealed record AthleteRow(string? Slug, string Name, int? YearOfBirth, DateOnly? DateOfBirth, string Gender);

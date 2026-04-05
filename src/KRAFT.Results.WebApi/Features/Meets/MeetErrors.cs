@@ -64,6 +64,10 @@ internal static class MeetErrors
         NoMatchingWeightCategoryCode,
         "No matching weight category found for the given body weight.");
 
+    internal static readonly Error AttemptOutOfOrder = new(
+        "Meets.AttemptOutOfOrder",
+        "Attempt weight must not decrease from a previous round or increase beyond a later round.");
+
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
         $"Start date '{startDate:yyyy-MM-dd}' is invalid. The year must be 1900 or later.");
