@@ -4,28 +4,21 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class AddParticipantCommandBuilder
 {
-    private int _athleteId = 1;
-    private int _weightCategoryId = 1;
-    private decimal? _bodyWeight = 80.5m;
+    private string _athleteSlug = Constants.TestAthleteSlug;
+    private decimal _bodyWeight = 80.5m;
 
-    public AddParticipantCommandBuilder WithAthleteId(int athleteId)
+    public AddParticipantCommandBuilder WithAthleteSlug(string slug)
     {
-        _athleteId = athleteId;
+        _athleteSlug = slug;
         return this;
     }
 
-    public AddParticipantCommandBuilder WithWeightCategoryId(int weightCategoryId)
-    {
-        _weightCategoryId = weightCategoryId;
-        return this;
-    }
-
-    public AddParticipantCommandBuilder WithBodyWeight(decimal? bodyWeight)
+    public AddParticipantCommandBuilder WithBodyWeight(decimal bodyWeight)
     {
         _bodyWeight = bodyWeight;
         return this;
     }
 
     public AddParticipantCommand Build() =>
-        new(_athleteId, _weightCategoryId, _bodyWeight);
+        new(_athleteSlug, _bodyWeight);
 }

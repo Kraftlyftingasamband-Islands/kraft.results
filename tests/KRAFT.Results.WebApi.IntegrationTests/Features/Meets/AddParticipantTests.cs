@@ -11,12 +11,8 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 public sealed class AddParticipantTests(IntegrationTestFixture fixture)
 {
     private const int ExistingMeetId = 2;
-    private const int ExistingAthleteId = 1;
-    private const int ExistingWeightCategoryId = 1;
     private const int MeetWithExistingParticipationId = 1;
     private const int NonExistentMeetId = 99999;
-    private const int NonExistentAthleteId = 99999;
-    private const int NonExistentWeightCategoryId = 99999;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
@@ -26,8 +22,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
-            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
             .WithBodyWeight(82.5m)
             .Build();
 
@@ -45,9 +40,8 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
-            .WithWeightCategoryId(ExistingWeightCategoryId)
-            .WithBodyWeight(null)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
+            .WithBodyWeight(80.5m)
             .Build();
 
         // Act
@@ -80,7 +74,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
             .Build();
 
         // Act
@@ -92,11 +86,11 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenAthleteDoesNotExist()
+    public async Task ReturnsNotFound_WhenAthleteSlugDoesNotExist()
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(NonExistentAthleteId)
+            .WithAthleteSlug("nonexistent-athlete")
             .Build();
 
         // Act
@@ -112,8 +106,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
-            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
             .Build();
 
         // Act
@@ -125,12 +118,12 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenWeightCategoryDoesNotExist()
+    public async Task ReturnsBadRequest_WhenBodyWeightDoesNotFitAnyWeightCategory()
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
-            .WithWeightCategoryId(NonExistentWeightCategoryId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
+            .WithBodyWeight(999m)
             .Build();
 
         // Act
@@ -147,8 +140,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
         // Arrange
         HttpClient noNameClaimHttpClient = fixture.CreateNoNameClaimHttpClient();
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
-            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
             .Build();
 
         // Act
@@ -164,8 +156,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(ExistingAthleteId)
-            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
             .WithBodyWeight(-1m)
             .Build();
 
