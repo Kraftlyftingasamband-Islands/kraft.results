@@ -23,7 +23,8 @@ internal static class GetMeetParticipationEndpoint
         .WithDescription("Gets a single participation by meetId and participationId, with computed total and IPF points.")
         .Produces<MeetParticipation>()
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         return endpoints;
     }

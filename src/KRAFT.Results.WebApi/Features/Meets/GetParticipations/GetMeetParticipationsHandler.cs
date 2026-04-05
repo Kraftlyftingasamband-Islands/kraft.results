@@ -93,10 +93,6 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 IReadOnlyList<Discipline> disciplines = ResolveDisciplines(r.MeetTypeId, r.MeetTypeTitle);
                 decimal displayTotal = r.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
 
-                IReadOnlyList<string> eligibleSlugs = AgeCategory.ResolveEligibleSlugs(
-                    r.AthleteDoB,
-                    DateOnly.FromDateTime(r.MeetStartDate));
-
                 return new MeetParticipation(
                     r.ParticipationId,
                     r.MeetId,
@@ -114,8 +110,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                     displayTotal,
                     ipfPoints,
                     r.Disqualified,
-                    attempts,
-                    eligibleSlugs);
+                    attempts);
             })
             .ToList();
 

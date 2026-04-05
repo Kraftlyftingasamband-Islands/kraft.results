@@ -1,7 +1,6 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Enums;
-using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.ValueObjects;
 
@@ -29,7 +28,6 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                     Athlete = p.Athlete.Firstname + " " + p.Athlete.Lastname,
                     AthleteSlug = p.Athlete.Slug,
                     p.Athlete.Gender,
-                    AthleteDoB = p.Athlete.DateOfBirth,
                     YearOfBirth = p.Athlete.DateOfBirth != null ? p.Athlete.DateOfBirth.Value.Year : 0,
                     HasAgeCategory = p.AgeCategory != null && p.AgeCategory.TitleShort != null,
                     AgeCategorySlug = p.AgeCategory != null && p.AgeCategory.TitleShort != null ? p.AgeCategory.Slug : null,
@@ -44,7 +42,6 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                     MeetTypeTitle = meet.MeetType.Title,
                     p.Disqualified,
                     GenderDisplay = p.Athlete.Gender == "f" ? "Konur" : "Karlar",
-                    MeetStartDate = meet.StartDate,
                     Attempts = p.Attempts
                         .Where(a => a.Round < 4)
                         .Select(a => new
@@ -83,10 +80,6 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
         IReadOnlyList<Discipline> disciplines = ResolveDisciplines(row.MeetTypeId, row.MeetTypeTitle);
         decimal displayTotal = row.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
 
-        IReadOnlyList<string> eligibleSlugs = AgeCategory.ResolveEligibleSlugs(
-            row.AthleteDoB,
-            DateOnly.FromDateTime(row.MeetStartDate));
-
         return new MeetParticipation(
             row.ParticipationId,
             row.MeetId,
@@ -104,8 +97,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
             displayTotal,
             ipfPoints,
             row.Disqualified,
-            attempts,
-            eligibleSlugs);
+            attempts);
     }
 
     private static IReadOnlyList<Discipline> ResolveDisciplines(int meetTypeId, string meetTypeTitle)
