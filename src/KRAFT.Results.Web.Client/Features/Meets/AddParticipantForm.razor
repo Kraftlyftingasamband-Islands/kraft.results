@@ -27,7 +27,7 @@
                            @onfocus="() => _showDropdown = true"
                            @onblur="HandleBlur"
                            @onkeydown="HandleAthleteKeyDown"
-                           @onkeydown:preventDefault="@_preventDefaultOnAthleteInput" />
+                           @onkeydown:preventDefault="@(_preventDefaultOnAthleteInput || (_showDropdown && _filteredAthletes.Count > 0))" />
                     @if (_showDropdown && _filteredAthletes.Count > 0)
                     {
                         <ul id="athlete-listbox" class="typeahead-dropdown" role="listbox">
@@ -82,7 +82,7 @@
                            @onfocus="() => _showTeamDropdown = true"
                            @onblur="HandleTeamBlur"
                            @onkeydown="HandleTeamKeyDown"
-                           @onkeydown:preventDefault="@_preventDefaultOnTeamInput" />
+                           @onkeydown:preventDefault="@(_preventDefaultOnTeamInput || (_showTeamDropdown && _filteredTeams.Count > 0))" />
                     @if (_showTeamDropdown && _filteredTeams.Count > 0)
                     {
                         <ul id="team-listbox" class="typeahead-dropdown" role="listbox">
