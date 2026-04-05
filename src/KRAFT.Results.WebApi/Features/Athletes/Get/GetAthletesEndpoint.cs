@@ -12,9 +12,10 @@ internal static class GetAthletesEndpoint
     {
         endpoints.MapGet("/", static async (
             [FromServices] GetAthletesHandler handler,
+            [FromQuery] string? search,
             CancellationToken cancellationToken) =>
         {
-            IReadOnlyList<AthleteSummary> result = await handler.Handle(cancellationToken);
+            IReadOnlyList<AthleteSummary> result = await handler.Handle(search, cancellationToken);
 
             return result;
         })
@@ -22,7 +23,8 @@ internal static class GetAthletesEndpoint
         .WithSummary("Gets athletes")
         .WithDescription("Gets a list of all athletes")
         .Produces<IReadOnlyList<AthleteSummary>>()
-        .ProducesProblem(StatusCodes.Status500InternalServerError);
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         return endpoints;
     }

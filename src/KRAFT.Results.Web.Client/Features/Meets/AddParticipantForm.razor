@@ -168,7 +168,8 @@
 </div>
 
 @code {
-    private List<AthleteSummary> _athletes = [];
+    private const int MinSearchLength = 2;
+
     private List<AthleteSummary> _filteredAthletes = [];
     private string _searchText = string.Empty;
     private string _selectedAthleteSlug = string.Empty;
@@ -239,15 +240,6 @@
     {
         try
         {
-            _athletes = await HttpClient.GetFromJsonAsync<List<AthleteSummary>>("/athletes") ?? [];
-        }
-        catch (HttpRequestException)
-        {
-            _athletes = [];
-        }
-
-        try
-        {
             _teams = await HttpClient.GetFromJsonAsync<List<TeamOption>>("/teams/options") ?? [];
         }
         catch (HttpRequestException)
@@ -281,28 +273,39 @@
         _attemptValues[(discipline, round)] = value ?? string.Empty;
     }
 
-    private void HandleSearchInput(ChangeEventArgs e)
+    private async Task HandleSearchInput(ChangeEventArgs e)
     {
         _searchText = e.Value?.ToString() ?? string.Empty;
         _selectedAthleteSlug = string.Empty;
-        FilterAthletes();
-        _showDropdown = true;
         _highlightedAthleteIndex = 0;
-    }
 
-    private void FilterAthletes()
-    {
-        if (string.IsNullOrWhiteSpace(_searchText))
+        if (_searchText.Length < MinSearchLength)
         {
             _filteredAthletes = [];
+            _showDropdown = false;
             return;
         }
 
-        _filteredAthletes = _athletes
-            .Where(a => !RegisteredAthletes.Contains(a.Slug ?? string.Empty, StringComparer.OrdinalIgnoreCase))
-            .Where(a => a.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
-            .Take(10)
-            .ToList();
+        await SearchAthletes(_searchText);
+        _showDropdown = true;
+    }
+
+    private async Task SearchAthletes(string search)
+    {
+        try
+        {
+            List<AthleteSummary> results = await HttpClient
+                .GetFromJsonAsync<List<AthleteSummary>>($"/athletes?search={Uri.EscapeDataString(search)}") ?? [];
+
+            _filteredAthletes = results
+                .Where(a => !RegisteredAthletes.Contains(a.Slug ?? string.Empty, StringComparer.OrdinalIgnoreCase))
+                .Take(10)
+                .ToList();
+        }
+        catch (HttpRequestException)
+        {
+            _filteredAthletes = [];
+        }
     }
 
     private void SelectAthlete(AthleteSummary athlete)
