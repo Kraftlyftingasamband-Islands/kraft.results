@@ -13,9 +13,10 @@ internal static class GetAthletesEndpoint
         endpoints.MapGet("/", static async (
             [FromServices] GetAthletesHandler handler,
             [FromQuery] string? search,
+            [FromQuery] DateOnly? meetDate,
             CancellationToken cancellationToken) =>
         {
-            IReadOnlyList<AthleteSummary> result = await handler.Handle(search, cancellationToken);
+            IReadOnlyList<AthleteSummary> result = await handler.Handle(search, meetDate, cancellationToken);
 
             return result;
         })

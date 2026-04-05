@@ -87,9 +87,9 @@ public sealed class AthletesIndexTests : IDisposable
         // Arrange
         List<AthleteSummary> athletes =
         [
-            new("jon-jonsson", "Jon Jonsson", 1990, null, null),
-            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, null),
-            new("gudrun-sigurdardottir", "Gudrun Sigurdardottir", 1992, null, null),
+            new("jon-jonsson", "Jon Jonsson", 1990, null, []),
+            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, []),
+            new("gudrun-sigurdardottir", "Gudrun Sigurdardottir", 1992, null, []),
         ];
         RegisterHttpClient(athletes);
 
@@ -116,8 +116,8 @@ public sealed class AthletesIndexTests : IDisposable
         // Arrange
         List<AthleteSummary> athletes =
         [
-            new("jon-jonsson", "Jon Jonsson", 1990, null, null),
-            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, null),
+            new("jon-jonsson", "Jon Jonsson", 1990, null, []),
+            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, []),
         ];
         RegisterHttpClient(athletes);
 
@@ -144,8 +144,8 @@ public sealed class AthletesIndexTests : IDisposable
         // Arrange
         List<AthleteSummary> athletes =
         [
-            new("jon-jonsson", "Jon Jonsson", 1990, null, null),
-            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, null),
+            new("jon-jonsson", "Jon Jonsson", 1990, null, []),
+            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, []),
         ];
         RegisterHttpClient(athletes);
 
@@ -172,9 +172,9 @@ public sealed class AthletesIndexTests : IDisposable
         // Arrange
         List<AthleteSummary> athletes =
         [
-            new("jon-jonsson", "Jon Jonsson", 1990, null, null),
-            new("jonas-karlsson", "Jonas Karlsson", 1985, null, null),
-            new("anna-karlsdottir", "Anna Karlsdottir", 1992, null, null),
+            new("jon-jonsson", "Jon Jonsson", 1990, null, []),
+            new("jonas-karlsson", "Jonas Karlsson", 1985, null, []),
+            new("anna-karlsdottir", "Anna Karlsdottir", 1992, null, []),
         ];
         RegisterHttpClient(athletes);
 
@@ -200,8 +200,8 @@ public sealed class AthletesIndexTests : IDisposable
         // Arrange
         List<AthleteSummary> athletes =
         [
-            new("jon-jonsson", "Jon Jonsson", 1990, null, null),
-            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, null),
+            new("jon-jonsson", "Jon Jonsson", 1990, null, []),
+            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, []),
         ];
         RegisterHttpClient(athletes);
 
@@ -230,7 +230,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Arrange
         List<AthleteSummary> athletes =
         [
-            new("jon-jonsson", "Jon Jonsson", 1990, null, null),
+            new("jon-jonsson", "Jon Jonsson", 1990, null, []),
         ];
         RegisterHttpClient(athletes);
 
