@@ -7,6 +7,20 @@ internal sealed class UpdateMeetCommandBuilder
     private string _title = Guid.NewGuid().ToString();
     private DateOnly _startDate = DateOnly.FromDateTime(DateTime.UtcNow);
     private int? _meetTypeId;
+    private DateOnly? _endDate;
+    private bool _calcPlaces = true;
+    private string? _text;
+    private string? _location;
+    private bool _publishedResults = true;
+    private int _resultModeId = 1;
+    private bool _publishedInCalendar = true;
+    private bool _isInTeamCompetition;
+    private bool _showWilks = true;
+    private bool _showTeamPoints = true;
+    private bool _showBodyWeight = true;
+    private bool _showTeams;
+    private bool _recordsPossible = true;
+    private bool _isRaw;
 
     public UpdateMeetCommandBuilder WithTitle(string title)
     {
@@ -26,6 +40,107 @@ internal sealed class UpdateMeetCommandBuilder
         return this;
     }
 
+    public UpdateMeetCommandBuilder WithEndDate(DateOnly? endDate)
+    {
+        _endDate = endDate;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithCalcPlaces(bool calcPlaces)
+    {
+        _calcPlaces = calcPlaces;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithText(string? text)
+    {
+        _text = text;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithLocation(string? location)
+    {
+        _location = location;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithPublishedResults(bool publishedResults)
+    {
+        _publishedResults = publishedResults;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithResultModeId(int resultModeId)
+    {
+        _resultModeId = resultModeId;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithPublishedInCalendar(bool publishedInCalendar)
+    {
+        _publishedInCalendar = publishedInCalendar;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithIsInTeamCompetition(bool isInTeamCompetition)
+    {
+        _isInTeamCompetition = isInTeamCompetition;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithShowWilks(bool showWilks)
+    {
+        _showWilks = showWilks;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithShowTeamPoints(bool showTeamPoints)
+    {
+        _showTeamPoints = showTeamPoints;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithShowBodyWeight(bool showBodyWeight)
+    {
+        _showBodyWeight = showBodyWeight;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithShowTeams(bool showTeams)
+    {
+        _showTeams = showTeams;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithRecordsPossible(bool recordsPossible)
+    {
+        _recordsPossible = recordsPossible;
+        return this;
+    }
+
+    public UpdateMeetCommandBuilder WithIsRaw(bool isRaw)
+    {
+        _isRaw = isRaw;
+        return this;
+    }
+
     public UpdateMeetCommand Build() =>
-        new(_title, _startDate, _meetTypeId);
+        new(
+            _title,
+            _startDate,
+            _meetTypeId,
+            _endDate,
+            _calcPlaces,
+            _text,
+            _location,
+            _publishedResults,
+            _resultModeId,
+            _publishedInCalendar,
+            _isInTeamCompetition,
+            _showWilks,
+            _showTeamPoints,
+            _showBodyWeight,
+            _showTeams,
+            _recordsPossible,
+            _isRaw);
 }
