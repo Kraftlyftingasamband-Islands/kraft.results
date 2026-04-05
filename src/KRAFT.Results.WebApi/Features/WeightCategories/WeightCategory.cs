@@ -28,4 +28,19 @@ internal sealed class WeightCategory
     public ICollection<Participation> Participations { get; } = [];
 
     public ICollection<Record> Records { get; } = [];
+
+    internal static WeightCategory? FindBestFit(IEnumerable<WeightCategory> eligible, decimal bodyWeight)
+    {
+        WeightCategory? best = null;
+
+        foreach (WeightCategory category in eligible)
+        {
+            if (category.MaxWeight >= bodyWeight && (best is null || category.MaxWeight < best.MaxWeight))
+            {
+                best = category;
+            }
+        }
+
+        return best;
+    }
 }

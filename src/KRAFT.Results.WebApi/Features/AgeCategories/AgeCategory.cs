@@ -18,4 +18,31 @@ internal sealed class AgeCategory
     public ICollection<Participation> Participations { get; } = [];
 
     public ICollection<Record> Records { get; } = [];
+
+    internal static string ResolveSlug(DateOnly? dateOfBirth, DateOnly meetDate)
+    {
+        if (dateOfBirth is null)
+        {
+            return "open";
+        }
+
+        int age = meetDate.Year - dateOfBirth.Value.Year;
+
+        if (dateOfBirth.Value.Month > meetDate.Month ||
+            (dateOfBirth.Value.Month == meetDate.Month && dateOfBirth.Value.Day > meetDate.Day))
+        {
+            age--;
+        }
+
+        return age switch
+        {
+            <= 18 => "subjunior",
+            <= 23 => "junior",
+            >= 40 and <= 49 => "masters1",
+            >= 50 and <= 59 => "masters2",
+            >= 60 and <= 69 => "masters3",
+            >= 70 => "masters4",
+            _ => "open",
+        };
+    }
 }

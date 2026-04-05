@@ -16,6 +16,8 @@ internal static class MeetErrors
 
     internal const string AthleteAlreadyRegisteredCode = "Meets.AthleteAlreadyRegistered";
 
+    internal const string NoMatchingWeightCategoryCode = "Meets.NoMatchingWeightCategory";
+
     internal static readonly Error EmptyTitle = new(
         "Meets.TitleIsEmpty",
         "Title cannot be empty.");
@@ -51,6 +53,10 @@ internal static class MeetErrors
     internal static readonly Error AthleteAlreadyRegistered = new(
         AthleteAlreadyRegisteredCode,
         "Athlete is already registered in this meet.");
+
+    internal static readonly Error NoMatchingWeightCategory = new(
+        NoMatchingWeightCategoryCode,
+        "No matching weight category found for the given body weight.");
 
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
