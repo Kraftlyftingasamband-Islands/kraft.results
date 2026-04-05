@@ -419,8 +419,12 @@
             if (_showTeamDropdown && _filteredTeams.Count > 0)
             {
                 SelectTeam(_filteredTeams[_highlightedTeamIndex]);
+                _preventDefaultOnTeamInput = false;
             }
-            _preventDefaultOnTeamInput = true;
+            else
+            {
+                _preventDefaultOnTeamInput = true;
+            }
         }
         else if (e.Key == "Escape")
         {
