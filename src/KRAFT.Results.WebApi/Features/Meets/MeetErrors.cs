@@ -80,6 +80,10 @@ internal static class MeetErrors
         "Meets.LocationTooLong",
         $"Location cannot exceed {Meet.LocationMaxLength} characters.");
 
+    internal static readonly Error TextTooLong = new(
+        "Meets.TextTooLong",
+        $"Text cannot exceed {Meet.TextMaxLength} characters.");
+
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
         $"Start date '{startDate:yyyy-MM-dd}' is invalid. The year must be 1900 or later.");

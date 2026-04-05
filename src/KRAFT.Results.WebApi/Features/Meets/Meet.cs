@@ -10,6 +10,7 @@ internal sealed class Meet
 {
     internal const int TitleMaxLength = 100;
     internal const int LocationMaxLength = 50;
+    internal const int TextMaxLength = 4000;
     internal const int StartDateMinimumYear = 1900;
 
     // For EF core
@@ -119,6 +120,13 @@ internal sealed class Meet
             return MeetErrors.LocationTooLong;
         }
 
+        string? normalizedText = NormalizeOptionalString(text);
+
+        if (normalizedText is not null && normalizedText.Length > TextMaxLength)
+        {
+            return MeetErrors.TextTooLong;
+        }
+
         DateTime startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
 
         Meet meet = new()
@@ -128,7 +136,7 @@ internal sealed class Meet
             StartDate = startDateTime,
             EndDate = resolvedEndDate.ToDateTime(TimeOnly.MinValue),
             CalcPlaces = calcPlaces,
-            Text = NormalizeOptionalString(text),
+            Text = normalizedText,
             Location = normalizedLocation,
             PublishedResults = publishedResults,
             ResultModeId = resultModeId,
@@ -202,6 +210,13 @@ internal sealed class Meet
             return MeetErrors.LocationTooLong;
         }
 
+        string? normalizedText = NormalizeOptionalString(text);
+
+        if (normalizedText is not null && normalizedText.Length > TextMaxLength)
+        {
+            return MeetErrors.TextTooLong;
+        }
+
         DateTime startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
 
         Title = title;
@@ -209,7 +224,7 @@ internal sealed class Meet
         EndDate = resolvedEndDate.ToDateTime(TimeOnly.MinValue);
         MeetType = type;
         CalcPlaces = calcPlaces;
-        Text = NormalizeOptionalString(text);
+        Text = normalizedText;
         Location = normalizedLocation;
         PublishedResults = publishedResults;
         ResultModeId = resultModeId;
