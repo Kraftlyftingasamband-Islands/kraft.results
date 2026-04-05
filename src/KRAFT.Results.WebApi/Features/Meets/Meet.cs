@@ -8,6 +8,7 @@ namespace KRAFT.Results.WebApi.Features.Meets;
 internal sealed class Meet
 {
     internal const int TitleMaxLength = 100;
+    internal const int LocationMaxLength = 50;
     internal const int StartDateMinimumYear = 1900;
 
     // For EF core

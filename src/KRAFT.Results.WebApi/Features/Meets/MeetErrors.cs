@@ -68,6 +68,18 @@ internal static class MeetErrors
         "Meets.AttemptOutOfOrder",
         "Attempt weight must not decrease from a previous round or increase beyond a later round.");
 
+    internal static readonly Error EndDateBeforeStartDate = new(
+        "Meets.EndDateBeforeStartDate",
+        "End date cannot be before start date.");
+
+    internal static readonly Error InvalidResultMode = new(
+        "Meets.InvalidResultMode",
+        "Result mode is invalid.");
+
+    internal static readonly Error LocationTooLong = new(
+        "Meets.LocationTooLong",
+        $"Location cannot exceed {Meet.LocationMaxLength} characters.");
+
     internal static Error InvalidStartDate(DateOnly startDate) => new(
         "Meets.InvalidStartDate",
         $"Start date '{startDate:yyyy-MM-dd}' is invalid. The year must be 1900 or later.");
