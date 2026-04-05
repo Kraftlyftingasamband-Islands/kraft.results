@@ -312,7 +312,6 @@
 
     private void SelectAthlete(AthleteSummary athlete)
     {
-        _suppressNextSubmit = true;
         _errorMessage = null;
         _selectedAthleteSlug = athlete.Slug ?? string.Empty;
         _searchText = athlete.Name;
@@ -340,12 +339,22 @@
             if (_showDropdown && _filteredAthletes.Count > 0)
             {
                 SelectAthlete(_filteredAthletes[_highlightedAthleteIndex]);
+                _suppressNextSubmit = true;
                 _preventDefaultOnAthleteInput = false;
             }
             else
             {
                 _preventDefaultOnAthleteInput = true;
             }
+        }
+        else if (e.Key == "Tab")
+        {
+            if (_showDropdown && _filteredAthletes.Count > 0)
+            {
+                SelectAthlete(_filteredAthletes[_highlightedAthleteIndex]);
+            }
+
+            _preventDefaultOnAthleteInput = false;
         }
         else if (e.Key == "Escape")
         {
@@ -389,7 +398,6 @@
 
     private void SelectTeam(TeamOption team)
     {
-        _suppressNextSubmit = true;
         _selectedTeamId = team.Id;
         _teamSearchText = team.Title;
         _showTeamDropdown = false;
@@ -419,12 +427,22 @@
             if (_showTeamDropdown && _filteredTeams.Count > 0)
             {
                 SelectTeam(_filteredTeams[_highlightedTeamIndex]);
+                _suppressNextSubmit = true;
                 _preventDefaultOnTeamInput = false;
             }
             else
             {
                 _preventDefaultOnTeamInput = true;
             }
+        }
+        else if (e.Key == "Tab")
+        {
+            if (_showTeamDropdown && _filteredTeams.Count > 0)
+            {
+                SelectTeam(_filteredTeams[_highlightedTeamIndex]);
+            }
+
+            _preventDefaultOnTeamInput = false;
         }
         else if (e.Key == "Escape")
         {
