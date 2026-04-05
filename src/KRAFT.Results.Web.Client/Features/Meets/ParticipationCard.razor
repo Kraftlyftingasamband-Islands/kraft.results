@@ -2,6 +2,7 @@
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
 
 @inject HttpClient HttpClient
 
@@ -27,6 +28,22 @@
                             <path d="m15 5 4 4"/>
                         </svg>
                     </button>
+                    @if (IsAdmin)
+                    {
+                        <button class="btn-remove-participant"
+                                aria-label="Fjarlægja keppanda"
+                                @onclick="ShowRemoveDialog">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"/>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                <line x1="10" x2="10" y1="11" y2="17"/>
+                                <line x1="14" x2="14" y1="11" y2="17"/>
+                            </svg>
+                        </button>
+                    }
                 </AuthorizeView>
             </span>
         </div>
@@ -44,18 +61,63 @@
     </div>
 
     <div class="p-attempts">
-        @foreach (IGrouping<Discipline, MeetAttempt> disciplineGroup in _visibleDisciplineGroups)
+        @if (IsAdmin)
         {
-            <div class="p-disc-col">
-                <span class="p-disc-label">@disciplineGroup.Key.ToDisplayName()</span>
-                <div class="p-pills">
-                    @foreach (MeetAttempt attempt in disciplineGroup.OrderBy(a => a.Round))
-                    {
-                        <AttemptPill Attempt="attempt"
-                                     RecordContext="@(attempt.IsRecord && attempt.IsGood ? _recordContext : null)" />
-                    }
+            @foreach (Discipline disc in IncludedDisciplines
+                .Where(kv => kv.Value)
+                .Select(kv => kv.Key)
+                .OrderBy(d => (byte)d))
+            {
+                <div class="p-disc-col">
+                    <span class="p-disc-label">@disc.ToDisplayName()</span>
+                    <div class="p-pills">
+                        @for (short round = 1; round <= 3; round++)
+                        {
+                            short r = round;
+                            Discipline d = disc;
+                            MeetAttempt? attempt = Participation.Attempts
+                                .FirstOrDefault(a => a.Discipline == d && a.Round == r);
+
+                            @if (_editingAttempt.GetValueOrDefault((d, r)))
+                            {
+                                <input type="text"
+                                       inputmode="decimal"
+                                       class="inline-attempt-input"
+                                       value="@_editValues.GetValueOrDefault((d, r), string.Empty)"
+                                       @oninput="(e) => _editValues[(d, r)] = e.Value?.ToString() ?? string.Empty"
+                                       @onblur="() => SaveAttempt(d, r)"
+                                       @onkeydown="(e) => HandleAttemptKeyDown(e, d, r)" />
+                            }
+                            else if (attempt is not null && attempt.Weight > 0)
+                            {
+                                <span class="@GetPillClass(attempt)" @onclick="() => StartEdit(d, r, attempt)">
+                                    @($"{attempt.Weight:F1}")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="pill pill-empty" @onclick="() => StartEdit(d, r, null)">–</span>
+                            }
+                        }
+                    </div>
                 </div>
-            </div>
+            }
+        }
+        else
+        {
+            @foreach (IGrouping<Discipline, MeetAttempt> disciplineGroup in _visibleDisciplineGroups)
+            {
+                <div class="p-disc-col">
+                    <span class="p-disc-label">@disciplineGroup.Key.ToDisplayName()</span>
+                    <div class="p-pills">
+                        @foreach (MeetAttempt attempt in disciplineGroup.OrderBy(a => a.Round))
+                        {
+                            <AttemptPill Attempt="attempt"
+                                         RecordContext="@(attempt.IsRecord && attempt.IsGood ? _recordContext : null)" />
+                        }
+                    </div>
+                </div>
+            }
         }
     </div>
 
@@ -94,10 +156,24 @@
                           IsLoading="_isSaving" />
 </AuthorizeView>
 
+<ConfirmDialog @ref="_removeDialog"
+               Id="@($"remove-participant-{Participation.ParticipationId}")"
+               Title="Fjarlægja keppanda"
+               Message="@($"Ertu viss um að þú viljir fjarlægja {Participation.Athlete} úr þessu móti?")"
+               ConfirmLabel="Fjarlægja"
+               OnConfirm="HandleRemoveParticipant"
+               ErrorMessage="@_removeErrorMessage"
+               IsLoading="_isRemoving" />
+
 @code {
     private EditBodyWeightDialog _editDialog = null!;
+    private ConfirmDialog _removeDialog = null!;
     private bool _isSaving;
+    private bool _isRemoving;
     private string? _editErrorMessage;
+    private string? _removeErrorMessage;
+    private readonly Dictionary<(Discipline, short), bool> _editingAttempt = [];
+    private readonly Dictionary<(Discipline, short), string> _editValues = [];
 
     [Parameter, EditorRequired]
     public MeetParticipation Participation { get; init; } = null!;
@@ -113,6 +189,12 @@
 
     [Parameter, EditorRequired]
     public string DesktopGridTemplate { get; init; } = string.Empty;
+
+    [Parameter]
+    public bool IsAdmin { get; set; }
+
+    [Parameter]
+    public EventCallback OnParticipantRemoved { get; set; }
 
     [Parameter]
     public EventCallback OnBodyWeightUpdated { get; set; }
@@ -196,5 +278,118 @@
         {
             _isSaving = false;
         }
+    }
+
+    private async Task ShowRemoveDialog()
+    {
+        _removeErrorMessage = null;
+        await _removeDialog.ShowAsync();
+    }
+
+    private async Task HandleRemoveParticipant()
+    {
+        try
+        {
+            _isRemoving = true;
+            _removeErrorMessage = null;
+
+            HttpResponseMessage response = await HttpClient.DeleteAsync(
+                $"/meets/{Participation.MeetId}/participants/{Participation.ParticipationId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _removeErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+                return;
+            }
+
+            await _removeDialog.CloseAsync();
+            await OnParticipantRemoved.InvokeAsync();
+        }
+        catch (HttpRequestException)
+        {
+            _removeErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isRemoving = false;
+        }
+    }
+
+    private void StartEdit(Discipline discipline, short round, MeetAttempt? attempt)
+    {
+        _editingAttempt[(discipline, round)] = true;
+
+        if (attempt is not null && attempt.Weight > 0)
+        {
+            decimal signedWeight = attempt.IsGood ? attempt.Weight : -attempt.Weight;
+            _editValues[(discipline, round)] = signedWeight.ToString("F1", CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            _editValues[(discipline, round)] = string.Empty;
+        }
+    }
+
+    private async Task SaveAttempt(Discipline discipline, short round)
+    {
+        _editingAttempt[(discipline, round)] = false;
+
+        string value = _editValues.GetValueOrDefault((discipline, round), string.Empty);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        if (!decimal.TryParse(value, CultureInfo.InvariantCulture, out decimal weight) || weight == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            RecordAttemptCommand command = new(Math.Abs(weight), weight > 0);
+            await HttpClient.PutAsJsonAsync(
+                $"/meets/{Participation.MeetId}/participants/{Participation.ParticipationId}/attempts/{(int)discipline}/{round}",
+                command);
+
+            await OnBodyWeightUpdated.InvokeAsync();
+        }
+        catch (HttpRequestException)
+        {
+            // Silently fail — the user can retry by clicking again
+        }
+    }
+
+    private async Task HandleAttemptKeyDown(KeyboardEventArgs e, Discipline discipline, short round)
+    {
+        if (e.Key == "Enter")
+        {
+            await SaveAttempt(discipline, round);
+        }
+        else if (e.Key == "Escape")
+        {
+            _editingAttempt[(discipline, round)] = false;
+        }
+    }
+
+    private static string GetPillClass(MeetAttempt attempt)
+    {
+        if (attempt.IsGood && attempt.IsRecord)
+        {
+            return "pill pill-record pill-clickable";
+        }
+
+        if (attempt.IsGood && attempt.IsPendingRecord)
+        {
+            return "pill pill-pending pill-clickable";
+        }
+
+        if (attempt.IsGood)
+        {
+            return "pill pill-good pill-clickable";
+        }
+
+        return "pill pill-bad pill-clickable";
     }
 }

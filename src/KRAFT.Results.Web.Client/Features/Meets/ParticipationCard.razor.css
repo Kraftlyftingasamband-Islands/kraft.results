@@ -185,9 +185,76 @@
     margin-block-end: 2px;
 }
 
+/* Remove participant button */
+.btn-remove-participant {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 6px;
+    margin-inline-start: 2px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    opacity: 0;
+    transition: opacity var(--transition-fast) ease, color var(--transition-fast) ease;
+    vertical-align: middle;
+}
+
+.btn-remove-participant svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-remove-participant:hover {
+    color: var(--color-danger);
+}
+
+.btn-remove-participant:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+}
+
+.p-card:hover .btn-remove-participant {
+    opacity: 1;
+}
+
+/* Inline attempt editing */
+.inline-attempt-input {
+    width: 52px;
+    padding: 2px 4px;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 12px;
+    text-align: center;
+    color: var(--color-text);
+    background: var(--color-white);
+}
+
+.inline-attempt-input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+}
+
+.pill-clickable {
+    cursor: pointer;
+}
+
+.pill-empty {
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
 /* ===== Mobile: always show edit button ===== */
 @container (max-width: 959px) {
     .btn-edit-weight {
+        opacity: 1;
+    }
+
+    .btn-remove-participant {
         opacity: 1;
     }
 }
