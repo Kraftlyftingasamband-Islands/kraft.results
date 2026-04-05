@@ -16,7 +16,7 @@ public sealed class GetAthletesTests(IntegrationTestFixture fixture)
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
 
     [Fact]
-    public async Task ReturnsUnauthorized_WhenNotAuthenticated()
+    public async Task ReturnsOk_WhenNotAuthenticated()
     {
         // Arrange
 
@@ -24,7 +24,7 @@ public sealed class GetAthletesTests(IntegrationTestFixture fixture)
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(Path, CancellationToken.None);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]

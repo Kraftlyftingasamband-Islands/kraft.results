@@ -24,8 +24,7 @@ internal static class GetAthletesEndpoint
         .WithSummary("Gets athletes")
         .WithDescription("Gets a list of all athletes")
         .Produces<IReadOnlyList<AthleteSummary>>()
-        .ProducesProblem(StatusCodes.Status500InternalServerError)
-        .RequireAuthorization(policy => policy.RequireRole("Admin"));
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return endpoints;
     }
