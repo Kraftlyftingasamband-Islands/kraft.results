@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -6,6 +5,7 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -263,12 +263,12 @@ public sealed class RecordAttemptTests
             athleteCommand,
             CancellationToken.None);
 
-        string athleteLocation = athleteResponse.Headers.Location!.ToString();
-        string[] segments = athleteLocation.Split('/');
-        int athleteId = int.Parse(segments[^1], CultureInfo.InvariantCulture);
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
 
         AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
-            .WithAthleteId(athleteId)
+            .WithAthleteSlug(athleteSlug)
             .Build();
 
         HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(

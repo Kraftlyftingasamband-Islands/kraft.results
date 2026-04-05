@@ -14,7 +14,6 @@ public sealed class RemoveParticipantTests(IntegrationTestFixture fixture)
     private const int NonExistentMeetId = 99999;
     private const int NonExistentParticipationId = 99999;
     private const int ExistingMeetId = 4;
-    private const int ExistingWeightCategoryId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
@@ -84,8 +83,7 @@ public sealed class RemoveParticipantTests(IntegrationTestFixture fixture)
     private async Task<int> AddParticipantAsync(int meetId)
     {
         AddParticipantCommand command = new AddParticipantCommandBuilder()
-            .WithAthleteId(1)
-            .WithWeightCategoryId(ExistingWeightCategoryId)
+            .WithAthleteSlug(Constants.TestAthleteSlug)
             .WithBodyWeight(82.5m)
             .Build();
 
