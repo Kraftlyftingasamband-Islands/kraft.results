@@ -169,6 +169,7 @@
 @code {
     private const int MinSearchLength = 2;
 
+    private bool _suppressNextSubmit;
     private List<AthleteSummary> _filteredAthletes = [];
     private string _searchText = string.Empty;
     private string _selectedAthleteSlug = string.Empty;
@@ -311,6 +312,7 @@
 
     private void SelectAthlete(AthleteSummary athlete)
     {
+        _suppressNextSubmit = true;
         _errorMessage = null;
         _selectedAthleteSlug = athlete.Slug ?? string.Empty;
         _searchText = athlete.Name;
@@ -387,6 +389,7 @@
 
     private void SelectTeam(TeamOption team)
     {
+        _suppressNextSubmit = true;
         _selectedTeamId = team.Id;
         _teamSearchText = team.Title;
         _showTeamDropdown = false;
@@ -432,7 +435,13 @@
 
     private async Task HandleSubmit()
     {
-        if (!IsFormValid || _showDropdown || _showTeamDropdown)
+        if (_suppressNextSubmit)
+        {
+            _suppressNextSubmit = false;
+            return;
+        }
+
+        if (!IsFormValid)
         {
             return;
         }
