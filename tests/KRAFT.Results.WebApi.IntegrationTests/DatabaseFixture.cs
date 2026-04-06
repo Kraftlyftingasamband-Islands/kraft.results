@@ -352,6 +352,13 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
 
+            -- Body weight validation test meets (MeetId=7, MeetId=8)
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('BW Exceeds Max Meet', 'bw-exceeds-max-meet', '2025-11-01', '2025-11-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
+
+            INSERT INTO Meets (Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ('BW Just Above Max Meet', 'bw-just-above-max-meet', '2025-11-02', '2025-11-02', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
+
             -- Roles
             INSERT INTO Roles (RoleId, RoleName)
             VALUES (1, 'Admin'), (2, 'Editor'), (3, 'User');
