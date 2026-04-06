@@ -68,7 +68,7 @@ internal sealed class AddParticipantHandler
             }
         }
 
-        if (command.BodyWeight < 0)
+        if (command.BodyWeight <= 0)
         {
             return new Result<int>(ParticipationErrors.BodyWeightMustNotBeNegative);
         }

@@ -22,5 +22,5 @@ internal static class ParticipationErrors
 
     internal static Error BodyWeightMustNotBeNegative => new(
         "Participations.BodyWeightMustNotBeNegative",
-        "Body weight must not be negative.");
+        "Body weight must be greater than zero.");
 }
