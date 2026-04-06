@@ -78,6 +78,11 @@ internal sealed class AddParticipantHandler
             return new Result<int>(ParticipationErrors.BodyWeightTooHigh);
         }
 
+        if (command.AgeCategorySlug is not null && command.AgeCategorySlug.Length > AgeCategory.SlugMaxLength)
+        {
+            return new Result<int>(MeetErrors.AgeCategorySlugTooLong);
+        }
+
         bool alreadyRegistered = await _dbContext.Set<Participation>()
             .AnyAsync(p => p.MeetId == meetId && p.AthleteId == athlete.AthleteId, cancellationToken);
 

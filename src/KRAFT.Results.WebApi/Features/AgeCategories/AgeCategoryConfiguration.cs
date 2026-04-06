@@ -14,7 +14,7 @@ internal sealed class AgeCategoryConfiguration : IEntityTypeConfiguration<AgeCat
             .HasColumnType("datetime");
 
         builder.Property(e => e.Slug)
-            .HasMaxLength(50);
+            .HasMaxLength(AgeCategory.SlugMaxLength);
 
         builder.Property(e => e.Title)
             .HasMaxLength(50);
