@@ -147,6 +147,39 @@ public sealed class UpdateBodyWeightTests
     }
 
     [Fact]
+    public async Task ReturnsBadRequest_WhenBodyWeightExceedsMaximum()
+    {
+        // Arrange
+        UpdateBodyWeightCommand command = new(401m);
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
+            Path(SeedMeetId, 1),
+            command,
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task ReturnsNoContent_WhenBodyWeightIsAtMaximum()
+    {
+        // Arrange
+        int participationId = await AddParticipantToSeedMeet();
+        UpdateBodyWeightCommand command = new(400.0m);
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
+            Path(SeedMeetId, participationId),
+            command,
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
     public async Task ReturnsForbidden_WhenNotAdmin()
     {
         // Arrange

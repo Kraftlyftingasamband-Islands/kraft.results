@@ -68,6 +68,16 @@ internal sealed class AddParticipantHandler
             }
         }
 
+        if (command.BodyWeight <= 0)
+        {
+            return new Result<int>(ParticipationErrors.BodyWeightMustBePositive);
+        }
+
+        if (command.BodyWeight > Participation.MaxBodyWeight)
+        {
+            return new Result<int>(ParticipationErrors.BodyWeightTooHigh);
+        }
+
         bool alreadyRegistered = await _dbContext.Set<Participation>()
             .AnyAsync(p => p.MeetId == meetId && p.AthleteId == athlete.AthleteId, cancellationToken);
 
