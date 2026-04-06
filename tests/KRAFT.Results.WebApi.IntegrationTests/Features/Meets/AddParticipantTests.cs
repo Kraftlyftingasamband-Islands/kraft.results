@@ -14,6 +14,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     private const int MeetWithExistingParticipationId = 1;
     private const int NonExistentMeetId = 99999;
     private const int MeetForTeamTest = 5;
+    private const int NegativeBodyWeightTestMeetId = 4;
     private const int ExistingTeamId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
@@ -182,7 +183,7 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{NegativeBodyWeightTestMeetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
