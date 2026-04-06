@@ -2,7 +2,7 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.ValueObjects.GenderTests;
+namespace KRAFT.Results.WebApi.UnitTests.ValueObjects.GenderTests;
 
 public sealed class Equals
 {

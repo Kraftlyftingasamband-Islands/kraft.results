@@ -2,15 +2,15 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.ValueObjects.EmailTests;
+namespace KRAFT.Results.WebApi.UnitTests.ValueObjects.GenderTests;
 
 public sealed class GetHashCode
 {
     [Fact]
     public void ReturnsSameHashCode_WhenSameValue()
     {
-        Email a = Email.Create("test@example.com").FromResult();
-        Email b = Email.Create("test@example.com").FromResult();
+        Gender a = Gender.Male;
+        Gender b = Gender.Parse("m");
 
         a.GetHashCode().ShouldBe(b.GetHashCode());
     }

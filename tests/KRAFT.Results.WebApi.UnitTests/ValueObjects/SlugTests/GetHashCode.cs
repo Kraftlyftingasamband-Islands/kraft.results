@@ -2,15 +2,15 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.ValueObjects.GenderTests;
+namespace KRAFT.Results.WebApi.UnitTests.ValueObjects.SlugTests;
 
 public sealed class GetHashCode
 {
     [Fact]
     public void ReturnsSameHashCode_WhenSameValue()
     {
-        Gender a = Gender.Male;
-        Gender b = Gender.Parse("m");
+        Slug a = Slug.Create("hello-world");
+        Slug b = Slug.Create("hello-world");
 
         a.GetHashCode().ShouldBe(b.GetHashCode());
     }

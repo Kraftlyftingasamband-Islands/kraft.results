@@ -20,6 +20,6 @@
     <Project Path="tests/KRAFT.Results.Web.E2ETests/KRAFT.Results.Web.E2ETests.csproj" />
     <Project Path="tests/KRAFT.Results.Web.Client.Tests/KRAFT.Results.Web.Client.Tests.csproj" />
     <Project Path="tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj" />
-    <Project Path="tests/KRAFT.Results.WebApi.Tests/KRAFT.Results.WebApi.Tests.csproj" />
+    <Project Path="tests/KRAFT.Results.WebApi.UnitTests/KRAFT.Results.WebApi.UnitTests.csproj" />
   </Folder>
 </Solution>

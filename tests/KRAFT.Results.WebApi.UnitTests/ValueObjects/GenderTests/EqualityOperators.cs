@@ -2,15 +2,15 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.ValueObjects.SlugTests;
+namespace KRAFT.Results.WebApi.UnitTests.ValueObjects.GenderTests;
 
 public sealed class EqualityOperators
 {
     [Fact]
     public void EqualOperator_ReturnsTrue_WhenSameValue()
     {
-        Slug a = Slug.Create("hello-world");
-        Slug b = Slug.Create("hello-world");
+        Gender a = Gender.Male;
+        Gender b = Gender.Parse("m");
 
         (a == b).ShouldBeTrue();
     }
@@ -18,9 +18,6 @@ public sealed class EqualityOperators
     [Fact]
     public void InequalityOperator_ReturnsTrue_WhenDifferentValue()
     {
-        Slug a = Slug.Create("hello");
-        Slug b = Slug.Create("world");
-
-        (a != b).ShouldBeTrue();
+        (Gender.Male != Gender.Female).ShouldBeTrue();
     }
 }
