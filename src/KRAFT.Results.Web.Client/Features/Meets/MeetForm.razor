@@ -92,11 +92,6 @@
                 <fieldset class="form-section">
                     <legend class="form-section-title">Keppnisstillingar</legend>
 
-                    <ToggleSwitch @bind-Value="_model.CalcPlaces"
-                                  Label="Sjálfvirk úrslit"
-                                  Id="calc-places"
-                                  Disabled="@IsLoading" />
-
                     <div class="form-field">
                         <label class="form-label" for="result-mode">Aldursflokkaskipting</label>
                         <InputSelect @bind-Value="_model.ResultModeId"
@@ -107,6 +102,11 @@
                             <option value="2">Opinn flokkur og aldursflokkar</option>
                         </InputSelect>
                     </div>
+
+                    <ToggleSwitch @bind-Value="_model.CalcPlaces"
+                                  Label="Sjálfvirk úrslit"
+                                  Id="calc-places"
+                                  Disabled="@IsLoading" />
 
                     <ToggleSwitch @bind-Value="_model.RecordsPossible"
                                   Label="Met möguleg"
