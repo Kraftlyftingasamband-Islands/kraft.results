@@ -189,6 +189,24 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
+    [Fact]
+    public async Task ReturnsBadRequest_WhenAgeCategorySlugIsTooLong()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(Constants.TestAthleteSlug)
+            .WithBodyWeight(82.5m)
+            .WithAgeCategorySlug(new string('a', 51))
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     [Theory]
     [InlineData(-1)]
     [InlineData(0)]

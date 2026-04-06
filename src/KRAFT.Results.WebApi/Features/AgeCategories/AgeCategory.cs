@@ -5,6 +5,8 @@ namespace KRAFT.Results.WebApi.Features.AgeCategories;
 
 internal sealed class AgeCategory
 {
+    internal const int SlugMaxLength = 50;
+
     public int AgeCategoryId { get; private set; }
 
     public string Title { get; private set; } = null!;

@@ -1,4 +1,5 @@
 using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.AgeCategories;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -57,6 +58,10 @@ internal static class MeetErrors
     internal static readonly Error NoMatchingWeightCategory = new(
         NoMatchingWeightCategoryCode,
         "No matching weight category found for the given body weight.");
+
+    internal static readonly Error AgeCategorySlugTooLong = new(
+        "Meets.AgeCategorySlugTooLong",
+        $"Age category slug cannot exceed {AgeCategory.SlugMaxLength} characters.");
 
     internal static readonly Error AttemptOutOfOrder = new(
         "Meets.AttemptOutOfOrder",
