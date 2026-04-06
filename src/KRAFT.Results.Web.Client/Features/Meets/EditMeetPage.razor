@@ -1,4 +1,4 @@
-@page "/meets/{slug}/edit"
+﻿@page "/meets/{slug}/edit"
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -58,7 +58,27 @@ else if (_errorMessage is not null)
                 return;
             }
 
-            _initialValues = new MeetFormInitialValues(meet.Title, meet.StartDate, meet.MeetTypeId);
+            DateOnly? endDate = meet.EndDate == new DateOnly(1, 1, 1) ? null : meet.EndDate;
+
+            _initialValues = new MeetFormInitialValues(
+                meet.Title,
+                meet.StartDate,
+                meet.MeetTypeId,
+                endDate,
+                meet.Location,
+                meet.Text,
+                meet.CalculatePlaces,
+                MapResultModeToId(meet.ResultMode),
+                meet.PublishedResults,
+                meet.PublishedInCalendar,
+                meet.IsInTeamCompetition,
+                meet.ShowWilks,
+                meet.ShowTeamPoints,
+                meet.ShowBodyWeight,
+                meet.ShowTeams,
+                meet.RecordsPossible,
+                // IsClassic carries the IsRaw value (naming mismatch in MeetDetails — see issue tracker)
+                meet.IsClassic);
         }
         catch (HttpRequestException)
         {
@@ -70,6 +90,15 @@ else if (_errorMessage is not null)
         }
     }
 
+    private static int MapResultModeToId(string resultMode)
+    {
+        return resultMode switch
+        {
+            "AgeCategoriesAndOpen" => 2,
+            _ => 1,
+        };
+    }
+
     private async Task HandleSubmit(MeetFormValues values)
     {
         _isLoading = true;
@@ -77,7 +106,24 @@ else if (_errorMessage is not null)
 
         try
         {
-            UpdateMeetCommand command = new(values.Title, values.StartDate, values.MeetTypeId);
+            UpdateMeetCommand command = new(
+                values.Title,
+                values.StartDate,
+                values.MeetTypeId,
+                values.EndDate,
+                values.CalcPlaces,
+                values.Text,
+                values.Location,
+                values.PublishedResults,
+                values.ResultModeId,
+                values.PublishedInCalendar,
+                values.IsInTeamCompetition,
+                values.ShowWilks,
+                values.ShowTeamPoints,
+                values.ShowBodyWeight,
+                values.ShowTeams,
+                values.RecordsPossible,
+                values.IsRaw);
             HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/meets/{Slug}", command);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
