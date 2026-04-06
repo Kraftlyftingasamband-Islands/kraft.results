@@ -2,9 +2,9 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.ValueObjects;
+namespace KRAFT.Results.WebApi.Tests.ValueObjects.IpfPointsTests;
 
-public sealed class IpfPointsEqualsTests
+public sealed class Equals
 {
     [Fact]
     public void ReturnsTrue_WhenSameInstance()

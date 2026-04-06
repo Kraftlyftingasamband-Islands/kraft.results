@@ -2,9 +2,9 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.ValueObjects;
+namespace KRAFT.Results.WebApi.Tests.ValueObjects.EmailTests;
 
-public sealed class EmailEqualityOperatorsTests
+public sealed class EqualityOperators
 {
     [Fact]
     public void EqualOperator_ReturnsTrue_WhenSameValue()

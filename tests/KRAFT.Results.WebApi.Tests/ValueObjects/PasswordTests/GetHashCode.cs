@@ -2,9 +2,9 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.ValueObjects;
+namespace KRAFT.Results.WebApi.Tests.ValueObjects.PasswordTests;
 
-public sealed class PasswordGetHashCodeTests
+public sealed class GetHashCode
 {
     [Fact]
     public void ReturnsSameHashCode_WhenSameHashedValue()
