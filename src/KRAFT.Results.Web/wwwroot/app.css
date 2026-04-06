@@ -354,15 +354,8 @@ h1:focus {
     margin-block-end: 2rem;
 }
 
-.form-section::after {
-    content: "";
-    display: table;
-    clear: both;
-}
-
 .form-section-title {
-    float: left;
-    width: 100%;
+    display: block;
     font-family: var(--font-heading);
     font-size: 0.875rem;
     font-weight: 600;
