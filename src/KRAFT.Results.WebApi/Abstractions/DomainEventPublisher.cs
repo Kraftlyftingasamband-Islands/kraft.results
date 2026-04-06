@@ -2,25 +2,21 @@
 
 namespace KRAFT.Results.WebApi.Abstractions;
 
-internal sealed class DomainEventPublisher(IServiceProvider serviceProvider) : IDomainEventPublisher
+internal sealed class DomainEventPublisher(IServiceScopeFactory serviceScopeFactory) : IDomainEventPublisher
 {
     public async Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
     {
         Type eventType = domainEvent.GetType();
         Type handlerType = typeof(IDomainEventHandler<>).MakeGenericType(eventType);
-        IEnumerable<object?> handlers = serviceProvider.GetServices(handlerType);
+
+        using IServiceScope scope = serviceScopeFactory.CreateScope();
+        IEnumerable<object?> handlers = scope.ServiceProvider.GetServices(handlerType);
 
         foreach (object? handler in handlers)
         {
-            if (handler is null)
+            if (handler is IDomainEventHandler typedHandler)
             {
-                continue;
-            }
-
-            System.Reflection.MethodInfo? method = handlerType.GetMethod("HandleAsync");
-            if (method is not null)
-            {
-                await (Task)method.Invoke(handler, [domainEvent, cancellationToken])!;
+                await typedHandler.HandleAsync(domainEvent, cancellationToken);
             }
         }
     }
