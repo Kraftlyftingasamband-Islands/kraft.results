@@ -20,7 +20,7 @@ internal static class ParticipationErrors
         "Participations.AgeCategoryIdMustBePositive",
         "Age category ID must be a positive number.");
 
-    internal static Error BodyWeightMustNotBeNegative => new(
-        "Participations.BodyWeightMustNotBeNegative",
+    internal static Error BodyWeightMustBePositive => new(
+        "Participations.BodyWeightMustBePositive",
         "Body weight must be greater than zero.");
 }

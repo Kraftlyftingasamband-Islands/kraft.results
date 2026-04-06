@@ -70,7 +70,7 @@ internal sealed class AddParticipantHandler
 
         if (command.BodyWeight <= 0)
         {
-            return new Result<int>(ParticipationErrors.BodyWeightMustNotBeNegative);
+            return new Result<int>(ParticipationErrors.BodyWeightMustBePositive);
         }
 
         bool alreadyRegistered = await _dbContext.Set<Participation>()

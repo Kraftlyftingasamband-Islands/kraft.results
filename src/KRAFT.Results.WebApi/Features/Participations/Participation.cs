@@ -95,7 +95,7 @@ internal sealed class Participation
 
         if (bodyWeight <= 0)
         {
-            return ParticipationErrors.BodyWeightMustNotBeNegative;
+            return ParticipationErrors.BodyWeightMustBePositive;
         }
 
         return new Participation
