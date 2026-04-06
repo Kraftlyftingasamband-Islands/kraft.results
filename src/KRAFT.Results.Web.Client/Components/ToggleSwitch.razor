@@ -5,7 +5,7 @@
             aria-checked="@Value.ToString().ToLowerInvariant()"
             aria-labelledby="@Id"
             class="toggle-switch @(Value ? "is-on" : "")"
-            disabled="@Disabled"
+            disabled="@(Disabled ? (object)true : null)"
             @onclick="Toggle">
         <span class="toggle-thumb"></span>
     </button>
