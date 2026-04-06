@@ -84,6 +84,43 @@
                         <ValidationMessage For="@(() => _model.Text)" />
                     </div>
                 </fieldset>
+            </div>
+
+            <div class="form-column">
+                <fieldset class="form-section">
+                    <legend class="form-section-title">Keppnisstillingar</legend>
+
+                    <ToggleSwitch @bind-Value="_model.CalcPlaces"
+                                  Label="Sjálfvirk úrslitaröðun"
+                                  Id="calc-places"
+                                  Disabled="@IsLoading" />
+
+                    <div class="form-field">
+                        <label class="form-label" for="result-mode">Niðurstöðuháttur</label>
+                        <InputSelect @bind-Value="_model.ResultModeId"
+                                     class="form-input"
+                                     id="result-mode"
+                                     disabled="@IsLoading">
+                            <option value="1">Venjuleg</option>
+                            <option value="2">Aldursflokkar og opin deild</option>
+                        </InputSelect>
+                    </div>
+
+                    <ToggleSwitch @bind-Value="_model.RecordsPossible"
+                                  Label="Met möguleg"
+                                  Id="records-possible"
+                                  Disabled="@IsLoading" />
+
+                    <ToggleSwitch @bind-Value="_model.IsRaw"
+                                  Label="Án búnaðar"
+                                  Id="is-raw"
+                                  Disabled="@IsLoading" />
+
+                    <ToggleSwitch @bind-Value="_model.IsInTeamCompetition"
+                                  Label="Í liðakeppni"
+                                  Id="is-in-team-competition"
+                                  Disabled="@IsLoading" />
+                </fieldset>
 
                 <fieldset class="form-section">
                     <legend class="form-section-title">Birtingarstillingar</legend>
@@ -120,43 +157,6 @@
                     <ToggleSwitch @bind-Value="_model.PublishedInCalendar"
                                   Label="Birta í mótaskrá"
                                   Id="published-in-calendar"
-                                  Disabled="@IsLoading" />
-                </fieldset>
-            </div>
-
-            <div class="form-column">
-                <fieldset class="form-section">
-                    <legend class="form-section-title">Keppnisstillingar</legend>
-
-                    <ToggleSwitch @bind-Value="_model.CalcPlaces"
-                                  Label="Sjálfvirk úrslitaröðun"
-                                  Id="calc-places"
-                                  Disabled="@IsLoading" />
-
-                    <div class="form-field">
-                        <label class="form-label" for="result-mode">Niðurstöðuháttur</label>
-                        <InputSelect @bind-Value="_model.ResultModeId"
-                                     class="form-input"
-                                     id="result-mode"
-                                     disabled="@IsLoading">
-                            <option value="1">Venjuleg</option>
-                            <option value="2">Aldursflokkar og opin deild</option>
-                        </InputSelect>
-                    </div>
-
-                    <ToggleSwitch @bind-Value="_model.RecordsPossible"
-                                  Label="Met möguleg"
-                                  Id="records-possible"
-                                  Disabled="@IsLoading" />
-
-                    <ToggleSwitch @bind-Value="_model.IsRaw"
-                                  Label="Án búnaðar"
-                                  Id="is-raw"
-                                  Disabled="@IsLoading" />
-
-                    <ToggleSwitch @bind-Value="_model.IsInTeamCompetition"
-                                  Label="Í liðakeppni"
-                                  Id="is-in-team-competition"
                                   Disabled="@IsLoading" />
                 </fieldset>
             </div>
