@@ -93,7 +93,7 @@ internal sealed class Participation
             return ParticipationErrors.AgeCategoryIdMustBePositive;
         }
 
-        if (bodyWeight < 0)
+        if (bodyWeight <= 0)
         {
             return ParticipationErrors.BodyWeightMustNotBeNegative;
         }

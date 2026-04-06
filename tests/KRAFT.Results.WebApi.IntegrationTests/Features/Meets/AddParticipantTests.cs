@@ -172,13 +172,15 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
-    [Fact]
-    public async Task ReturnsBadRequest_WhenBodyWeightIsNegative()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public async Task ReturnsBadRequest_WhenBodyWeightIsZeroOrNegative(decimal bodyWeight)
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(Constants.TestAthleteSlug)
-            .WithBodyWeight(-1m)
+            .WithBodyWeight(bodyWeight)
             .Build();
 
         // Act
