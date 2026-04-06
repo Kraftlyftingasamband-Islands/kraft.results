@@ -1,54 +1,159 @@
-@using System.ComponentModel.DataAnnotations
+﻿@using System.ComponentModel.DataAnnotations
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Client.Components
 
 <div class="form-card">
     <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="meet-form">
         <DataAnnotationsValidator />
 
-        <div class="form-field">
-            <label class="form-label" for="title">Nafn</label>
-            <InputText id="title"
-                       class="form-input"
-                       aria-required="true"
-                       aria-describedby="@GetAriaDescribedBy("title-error")"
-                       @bind-Value="_model.Title"
-                       disabled="@IsLoading" />
-            <div id="title-error">
-                <ValidationMessage For="@(() => _model.Title)" />
+        <div class="form-section">
+            <p class="form-section-title">Grunnupplýsingar</p>
+
+            <div class="form-field">
+                <label class="form-label" for="title">Nafn</label>
+                <InputText id="title"
+                           class="form-input"
+                           aria-required="true"
+                           aria-describedby="@GetAriaDescribedBy("title-error")"
+                           @bind-Value="_model.Title"
+                           disabled="@IsLoading" />
+                <div id="title-error">
+                    <ValidationMessage For="@(() => _model.Title)" />
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="start-date">Dagsetning</label>
+                <InputDate id="start-date"
+                           class="form-input"
+                           aria-required="true"
+                           aria-describedby="@GetAriaDescribedBy("start-date-error")"
+                           @bind-Value="_model.StartDate"
+                           disabled="@IsLoading" />
+                <div id="start-date-error">
+                    <ValidationMessage For="@(() => _model.StartDate)" />
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="meet-type">Tegund móts</label>
+                <InputSelect id="meet-type"
+                             class="form-input form-select"
+                             aria-required="true"
+                             aria-describedby="@GetAriaDescribedBy("meet-type-error")"
+                             @bind-Value="_model.MeetTypeId"
+                             disabled="@IsLoading">
+                    <option value="0">-- Veldu tegund --</option>
+                    @foreach (MeetTypeSummary meetType in MeetTypes)
+                    {
+                        <option value="@meetType.Id">@TranslateMeetType(meetType.Title)</option>
+                    }
+                </InputSelect>
+                <div id="meet-type-error">
+                    <ValidationMessage For="@(() => _model.MeetTypeId)" />
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="end-date">Lokadagsetning</label>
+                <InputDate @bind-Value="_model.EndDate"
+                           class="form-input"
+                           id="end-date"
+                           disabled="@IsLoading" />
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="location">Staðsetning</label>
+                <InputText @bind-Value="_model.Location"
+                           class="form-input"
+                           id="location"
+                           disabled="@IsLoading" />
+                <ValidationMessage For="@(() => _model.Location)" />
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="text">Texti</label>
+                <InputTextArea @bind-Value="_model.Text"
+                               class="form-textarea"
+                               id="text"
+                               rows="4"
+                               disabled="@IsLoading" />
+                <ValidationMessage For="@(() => _model.Text)" />
             </div>
         </div>
 
-        <div class="form-field">
-            <label class="form-label" for="start-date">Dagsetning</label>
-            <InputDate id="start-date"
-                       class="form-input"
-                       aria-required="true"
-                       aria-describedby="@GetAriaDescribedBy("start-date-error")"
-                       @bind-Value="_model.StartDate"
-                       disabled="@IsLoading" />
-            <div id="start-date-error">
-                <ValidationMessage For="@(() => _model.StartDate)" />
+        <div class="form-section">
+            <p class="form-section-title">Keppnisstillingar</p>
+
+            <ToggleSwitch @bind-Value="_model.CalcPlaces"
+                          Label="Reikna út úrslitastöðu"
+                          Id="calc-places"
+                          Disabled="@IsLoading" />
+
+            <div class="form-field">
+                <label class="form-label" for="result-mode">Niðurstöðuháttur</label>
+                <InputSelect @bind-Value="_model.ResultModeId"
+                             class="form-input"
+                             id="result-mode"
+                             disabled="@IsLoading">
+                    <option value="1">Venjuleg</option>
+                    <option value="2">Aldursflokkar og opin deild</option>
+                </InputSelect>
             </div>
+
+            <ToggleSwitch @bind-Value="_model.RecordsPossible"
+                          Label="Met möguleg"
+                          Id="records-possible"
+                          Disabled="@IsLoading" />
+
+            <ToggleSwitch @bind-Value="_model.IsRaw"
+                          Label="Barvigtarlyftingar"
+                          Id="is-raw"
+                          Disabled="@IsLoading" />
+
+            <ToggleSwitch @bind-Value="_model.IsInTeamCompetition"
+                          Label="Í liðakeppni"
+                          Id="is-in-team-competition"
+                          Disabled="@IsLoading" />
         </div>
 
-        <div class="form-field">
-            <label class="form-label" for="meet-type">Tegund móts</label>
-            <InputSelect id="meet-type"
-                         class="form-input form-select"
-                         aria-required="true"
-                         aria-describedby="@GetAriaDescribedBy("meet-type-error")"
-                         @bind-Value="_model.MeetTypeId"
-                         disabled="@IsLoading">
-                <option value="0">-- Veldu tegund --</option>
-                @foreach (MeetTypeSummary meetType in MeetTypes)
-                {
-                    <option value="@meetType.Id">@TranslateMeetType(meetType.Title)</option>
-                }
-            </InputSelect>
-            <div id="meet-type-error">
-                <ValidationMessage For="@(() => _model.MeetTypeId)" />
-            </div>
+        <div class="form-section">
+            <p class="form-section-title">Birtingarstillingar</p>
+
+            <ToggleSwitch @bind-Value="_model.ShowWilks"
+                          Label="Sýna Wilks/IPF stig"
+                          Id="show-wilks"
+                          Disabled="@IsLoading" />
+
+            <ToggleSwitch @bind-Value="_model.ShowTeamPoints"
+                          Label="Sýna liðsstig"
+                          Id="show-team-points"
+                          Disabled="@IsLoading" />
+
+            <ToggleSwitch @bind-Value="_model.ShowBodyWeight"
+                          Label="Sýna líkamsþyngd"
+                          Id="show-body-weight"
+                          Disabled="@IsLoading" />
+
+            <ToggleSwitch @bind-Value="_model.ShowTeams"
+                          Label="Sýna lið"
+                          Id="show-teams"
+                          Disabled="@IsLoading" />
+        </div>
+
+        <div class="form-section">
+            <p class="form-section-title">Birtingarstaða</p>
+
+            <ToggleSwitch @bind-Value="_model.PublishedResults"
+                          Label="Niðurstöður birtar"
+                          Id="published-results"
+                          Disabled="@IsLoading" />
+
+            <ToggleSwitch @bind-Value="_model.PublishedInCalendar"
+                          Label="Birt í mótadagatal"
+                          Id="published-in-calendar"
+                          Disabled="@IsLoading" />
         </div>
 
         <div class="form-actions">
@@ -103,6 +208,20 @@
             _model.Title = InitialValues.Title;
             _model.StartDate = InitialValues.StartDate;
             _model.MeetTypeId = InitialValues.MeetTypeId;
+            _model.EndDate = InitialValues.EndDate;
+            _model.Location = InitialValues.Location ?? string.Empty;
+            _model.Text = InitialValues.Text ?? string.Empty;
+            _model.CalcPlaces = InitialValues.CalcPlaces;
+            _model.ResultModeId = InitialValues.ResultModeId;
+            _model.PublishedResults = InitialValues.PublishedResults;
+            _model.PublishedInCalendar = InitialValues.PublishedInCalendar;
+            _model.IsInTeamCompetition = InitialValues.IsInTeamCompetition;
+            _model.ShowWilks = InitialValues.ShowWilks;
+            _model.ShowTeamPoints = InitialValues.ShowTeamPoints;
+            _model.ShowBodyWeight = InitialValues.ShowBodyWeight;
+            _model.ShowTeams = InitialValues.ShowTeams;
+            _model.RecordsPossible = InitialValues.RecordsPossible;
+            _model.IsRaw = InitialValues.IsRaw;
             _initialized = true;
             return;
         }
@@ -135,7 +254,21 @@
         MeetFormValues values = new(
             _model.Title,
             _model.StartDate!.Value,
-            _model.MeetTypeId);
+            _model.MeetTypeId,
+            _model.EndDate,
+            string.IsNullOrWhiteSpace(_model.Location) ? null : _model.Location,
+            string.IsNullOrWhiteSpace(_model.Text) ? null : _model.Text,
+            _model.CalcPlaces,
+            _model.ResultModeId,
+            _model.PublishedResults,
+            _model.PublishedInCalendar,
+            _model.IsInTeamCompetition,
+            _model.ShowWilks,
+            _model.ShowTeamPoints,
+            _model.ShowBodyWeight,
+            _model.ShowTeams,
+            _model.RecordsPossible,
+            _model.IsRaw);
 
         await OnSubmit.InvokeAsync(values);
     }
@@ -151,5 +284,35 @@
 
         [Range(1, int.MaxValue, ErrorMessage = "Vinsamlegast veldu tegund móts")]
         public int MeetTypeId { get; set; }
+
+        public DateOnly? EndDate { get; set; }
+
+        [MaxLength(50)]
+        public string Location { get; set; } = string.Empty;
+
+        [MaxLength(8000)]
+        public string Text { get; set; } = string.Empty;
+
+        public bool CalcPlaces { get; set; } = true;
+
+        public int ResultModeId { get; set; } = 1;
+
+        public bool PublishedResults { get; set; } = true;
+
+        public bool PublishedInCalendar { get; set; } = true;
+
+        public bool IsInTeamCompetition { get; set; }
+
+        public bool ShowWilks { get; set; } = true;
+
+        public bool ShowTeamPoints { get; set; } = true;
+
+        public bool ShowBodyWeight { get; set; } = true;
+
+        public bool ShowTeams { get; set; }
+
+        public bool RecordsPossible { get; set; } = true;
+
+        public bool IsRaw { get; set; }
     }
 }
