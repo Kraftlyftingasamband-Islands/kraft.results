@@ -100,6 +100,11 @@ internal sealed class Participation
             return ParticipationErrors.BodyWeightMustBePositive;
         }
 
+        if (bodyWeight > MaxBodyWeight)
+        {
+            return ParticipationErrors.BodyWeightTooHigh;
+        }
+
         return new Participation
         {
             AthleteId = athleteId,
