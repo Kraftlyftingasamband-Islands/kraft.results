@@ -1,17 +1,19 @@
+using KRAFT.Results.Tests.Shared;
+
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
 internal static class Constants
 {
-    internal const string TestMeetType = "Powerlifting";
-    internal const string TestAthleteFirstName = "Testie";
-    internal const string TestAthleteLastName = "McTestFace";
-    internal const string TestAthleteSlug = "testie-mctestface";
-    internal const string TestTeamSlug = "test-team";
-    internal const string TestCountryName = "Iceland";
-    internal const string TestMeetTitle = "Test Meet 2025";
-    internal const string TestMeetSlug = "test-meet-2025";
+    internal const string TestMeetType = TestSeedConstants.MeetType.Title;
+    internal const string TestAthleteFirstName = TestSeedConstants.Athlete.FirstName;
+    internal const string TestAthleteLastName = TestSeedConstants.Athlete.LastName;
+    internal const string TestAthleteSlug = TestSeedConstants.Athlete.Slug;
+    internal const string TestTeamSlug = TestSeedConstants.Team.Slug;
+    internal const string TestCountryName = TestSeedConstants.Country.Name;
+    internal const string TestMeetTitle = TestSeedConstants.Meet.Title;
+    internal const string TestMeetSlug = TestSeedConstants.Meet.Slug;
 
-    internal static readonly DateOnly TestAthleteDateOfBirth = new(1985, 7, 2);
+    internal static readonly DateOnly TestAthleteDateOfBirth = TestSeedConstants.Athlete.DateOfBirth;
 
     internal static class PendingRecords
     {
@@ -31,9 +33,9 @@ internal static class Constants
 
     internal static class TestUser
     {
-        internal const string Username = "testuser";
-        internal const string Password = "testuser";
-        internal const string Email = "test@email.com";
+        internal const string Username = TestSeedConstants.User.Username;
+        internal const string Password = TestSeedConstants.User.Password;
+        internal const string Email = TestSeedConstants.User.Email;
     }
 
     internal static class OrderingMeet
