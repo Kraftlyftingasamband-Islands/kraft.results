@@ -2,9 +2,9 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Abstractions;
+namespace KRAFT.Results.WebApi.Tests.Abstractions;
 
-public sealed class ValueObjectEqualsTests
+public sealed class Equals
 {
     [Fact]
     public void ReturnsFalse_WhenOtherIsNull()
