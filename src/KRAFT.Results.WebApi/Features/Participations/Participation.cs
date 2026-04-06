@@ -10,7 +10,7 @@ using KRAFT.Results.WebApi.Features.WeightCategories;
 
 namespace KRAFT.Results.WebApi.Features.Participations;
 
-internal sealed class Participation
+internal sealed class Participation : AggregateRoot
 {
     internal const decimal MaxBodyWeight = 400m;
 

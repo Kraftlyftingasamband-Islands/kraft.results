@@ -6,7 +6,7 @@ using KRAFT.Results.WebApi.Features.Users;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
-internal sealed class Meet
+internal sealed class Meet : AggregateRoot
 {
     internal const int TitleMaxLength = 100;
     internal const int LocationMaxLength = 50;
