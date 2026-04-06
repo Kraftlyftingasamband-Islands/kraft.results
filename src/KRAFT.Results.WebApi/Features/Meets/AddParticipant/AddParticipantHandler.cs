@@ -68,16 +68,6 @@ internal sealed class AddParticipantHandler
             }
         }
 
-        if (command.BodyWeight <= 0)
-        {
-            return new Result<int>(ParticipationErrors.BodyWeightMustBePositive);
-        }
-
-        if (command.BodyWeight > Participation.MaxBodyWeight)
-        {
-            return new Result<int>(ParticipationErrors.BodyWeightTooHigh);
-        }
-
         if (command.AgeCategorySlug is not null && command.AgeCategorySlug.Length > AgeCategory.SlugMaxLength)
         {
             return new Result<int>(MeetErrors.AgeCategorySlugTooLong);
