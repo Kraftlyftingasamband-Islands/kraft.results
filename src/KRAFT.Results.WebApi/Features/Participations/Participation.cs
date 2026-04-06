@@ -125,11 +125,23 @@ internal sealed class Participation
         ModifiedBy = modifiedBy;
     }
 
-    internal void UpdateBodyWeight(decimal bodyWeight, string modifiedBy)
+    internal Result UpdateBodyWeight(decimal bodyWeight, string modifiedBy)
     {
+        if (bodyWeight <= 0)
+        {
+            return ParticipationErrors.BodyWeightMustBePositive;
+        }
+
+        if (bodyWeight > MaxBodyWeight)
+        {
+            return ParticipationErrors.BodyWeightTooHigh;
+        }
+
         Weight = bodyWeight;
         ModifiedOn = DateTime.UtcNow;
         ModifiedBy = modifiedBy;
+
+        return Result.Success();
     }
 
     internal void RecalculateTotals()
