@@ -1,4 +1,4 @@
-using Shouldly;
+﻿using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
