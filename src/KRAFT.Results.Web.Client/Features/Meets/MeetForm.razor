@@ -49,25 +49,6 @@
                     </div>
 
                     <div class="form-field">
-                        <label class="form-label" for="meet-type">Tegund móts</label>
-                        <InputSelect id="meet-type"
-                                     class="form-input form-select"
-                                     aria-required="true"
-                                     aria-describedby="@GetAriaDescribedBy("meet-type-error")"
-                                     @bind-Value="_model.MeetTypeId"
-                                     disabled="@IsLoading">
-                            <option value="0">-- Veldu tegund --</option>
-                            @foreach (MeetTypeSummary meetType in MeetTypes)
-                            {
-                                <option value="@meetType.Id">@TranslateMeetType(meetType.Title)</option>
-                            }
-                        </InputSelect>
-                        <div id="meet-type-error">
-                            <ValidationMessage For="@(() => _model.MeetTypeId)" />
-                        </div>
-                    </div>
-
-                    <div class="form-field">
                         <label class="form-label" for="location">Staðsetning</label>
                         <InputText @bind-Value="_model.Location"
                                    class="form-input"
@@ -91,6 +72,25 @@
             <div class="form-column">
                 <fieldset class="form-section">
                     <legend class="form-section-title">Keppnisstillingar</legend>
+
+                    <div class="form-field">
+                        <label class="form-label" for="meet-type">Tegund móts</label>
+                        <InputSelect id="meet-type"
+                                     class="form-input form-select"
+                                     aria-required="true"
+                                     aria-describedby="@GetAriaDescribedBy("meet-type-error")"
+                                     @bind-Value="_model.MeetTypeId"
+                                     disabled="@IsLoading">
+                            <option value="0">-- Veldu tegund --</option>
+                            @foreach (MeetTypeSummary meetType in MeetTypes)
+                            {
+                                <option value="@meetType.Id">@TranslateMeetType(meetType.Title)</option>
+                            }
+                        </InputSelect>
+                        <div id="meet-type-error">
+                            <ValidationMessage For="@(() => _model.MeetTypeId)" />
+                        </div>
+                    </div>
 
                     <div class="form-field">
                         <label class="form-label" for="result-mode">Aldursflokkaskipting</label>
