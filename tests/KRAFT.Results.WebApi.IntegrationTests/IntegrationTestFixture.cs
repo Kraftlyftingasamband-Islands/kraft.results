@@ -1,6 +1,9 @@
-﻿using KRAFT.Results.WebApi.IntegrationTests;
+using System.Collections.Concurrent;
+
+using KRAFT.Results.WebApi.IntegrationTests;
 
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: AssemblyFixture(typeof(IntegrationTestFixture))]
@@ -9,12 +12,17 @@ namespace KRAFT.Results.WebApi.IntegrationTests;
 
 public sealed class IntegrationTestFixture : IAsyncLifetime
 {
+    private readonly ConcurrentBag<WebApplicationFactory<Program>> _childFactories = [];
+
     public DatabaseFixture Database { get; private set; } = default!;
 
     public IntegrationTestFactory Factory { get; private set; } = default!;
 
-    public HttpClient CreateAuthorizedHttpClient() =>
-        Factory.WithWebHostBuilder(builder =>
+    public int ChildFactoryCount => _childFactories.Count;
+
+    public HttpClient CreateAuthorizedHttpClient()
+    {
+        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -22,11 +30,15 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
                     .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                     TestAuthHandler.SchemeName, options => { });
             });
-        })
-        .CreateClient();
+        });
 
-    public HttpClient CreateNoNameClaimHttpClient() =>
-        Factory.WithWebHostBuilder(builder =>
+        _childFactories.Add(childFactory);
+        return childFactory.CreateClient();
+    }
+
+    public HttpClient CreateNoNameClaimHttpClient()
+    {
+        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -34,11 +46,15 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
                     .AddScheme<AuthenticationSchemeOptions, TestNoNameClaimAuthHandler>(
                     TestNoNameClaimAuthHandler.SchemeName, options => { });
             });
-        })
-        .CreateClient();
+        });
 
-    public HttpClient CreateNonAdminAuthorizedHttpClient() =>
-        Factory.WithWebHostBuilder(builder =>
+        _childFactories.Add(childFactory);
+        return childFactory.CreateClient();
+    }
+
+    public HttpClient CreateNonAdminAuthorizedHttpClient()
+    {
+        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -46,11 +62,19 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
                     .AddScheme<AuthenticationSchemeOptions, TestNonAdminAuthHandler>(
                     TestNonAdminAuthHandler.SchemeName, options => { });
             });
-        })
-        .CreateClient();
+        });
+
+        _childFactories.Add(childFactory);
+        return childFactory.CreateClient();
+    }
 
     public async ValueTask DisposeAsync()
     {
+        foreach (WebApplicationFactory<Program> childFactory in _childFactories)
+        {
+            await childFactory.DisposeAsync();
+        }
+
         if (Database is not null)
         {
             await Database.DisposeAsync();
