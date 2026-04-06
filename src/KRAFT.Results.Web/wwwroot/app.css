@@ -346,6 +346,48 @@ h1:focus {
     align-items: center;
 }
 
+/* Form section (group wrapper) */
+.form-section {
+    margin-block-end: 2rem;
+}
+
+.form-section-title {
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-block-end: 1rem;
+    padding-block-end: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Form textarea (multi-line text input) */
+.form-textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-text);
+    background: var(--color-white);
+    transition: border-color var(--transition-fast) ease;
+    resize: vertical;
+    min-height: 6rem;
+}
+
+.form-textarea:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.form-textarea:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 /* Cancel link in forms */
 .btn-cancel {
     font-family: var(--font-body);
