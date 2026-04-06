@@ -1,4 +1,4 @@
-@page "/meets/create"
+﻿@page "/meets/create"
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -44,7 +44,24 @@
 
         try
         {
-            CreateMeetCommand command = new(values.Title, values.StartDate, values.MeetTypeId);
+            CreateMeetCommand command = new(
+                values.Title,
+                values.StartDate,
+                values.MeetTypeId,
+                values.EndDate,
+                values.CalcPlaces,
+                values.Text,
+                values.Location,
+                values.PublishedResults,
+                values.ResultModeId,
+                values.PublishedInCalendar,
+                values.IsInTeamCompetition,
+                values.ShowWilks,
+                values.ShowTeamPoints,
+                values.ShowBodyWeight,
+                values.ShowTeams,
+                values.RecordsPossible,
+                values.IsRaw);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/meets", command);
 
             if (response.StatusCode == HttpStatusCode.Conflict)
