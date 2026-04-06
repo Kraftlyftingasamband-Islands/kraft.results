@@ -68,7 +68,7 @@ internal sealed class Athlete : AggregateRoot
             return AthleteErrors.DateOfBirthInFuture;
         }
 
-        return new Athlete
+        Athlete athlete = new()
         {
             Firstname = firstName,
             Lastname = lastName,
@@ -80,6 +80,10 @@ internal sealed class Athlete : AggregateRoot
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };
+
+        athlete.Raise(new AthleteCreatedEvent(athlete));
+
+        return athlete;
     }
 
     internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)

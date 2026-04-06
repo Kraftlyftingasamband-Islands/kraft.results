@@ -105,7 +105,7 @@ internal sealed class Participation : AggregateRoot
             return ParticipationErrors.BodyWeightTooHigh;
         }
 
-        return new Participation
+        Participation participation = new()
         {
             AthleteId = athleteId,
             MeetId = meetId,
@@ -116,6 +116,10 @@ internal sealed class Participation : AggregateRoot
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };
+
+        participation.Raise(new ParticipationAddedEvent(participation));
+
+        return participation;
     }
 
     internal void UpdateAgeCategory(int ageCategoryId, string modifiedBy)
@@ -148,6 +152,7 @@ internal sealed class Participation : AggregateRoot
     {
         Attempt attempt = Attempt.Create(ParticipationId, discipline, round, weight, good, createdBy);
         Attempts.Add(attempt);
+        Raise(new AttemptRecordedEvent(this));
     }
 
     internal void RecalculateTotals()
