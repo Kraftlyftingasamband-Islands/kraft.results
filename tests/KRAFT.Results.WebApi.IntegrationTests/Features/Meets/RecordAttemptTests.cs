@@ -237,6 +237,34 @@ public sealed class RecordAttemptTests
         bombedOut.ShouldNotBeNull();
     }
 
+    [Fact]
+    public async Task AttemptPersistedThroughAggregate_WhenRecordedViaParticipation()
+    {
+        // Arrange
+        int participationId = await AddParticipantToSeedMeet();
+
+        // Act
+        await RecordAttempt(participationId, Discipline.Squat, 1, 120.0m, true);
+
+        // Assert — retrieve participation and verify attempt is persisted and retrievable
+        IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
+            .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
+                $"/meets/{Constants.TestMeetSlug}/participations",
+                CancellationToken.None);
+
+        participations.ShouldNotBeNull();
+        MeetParticipation? participation = participations
+            .FirstOrDefault(p => p.ParticipationId == participationId);
+
+        participation.ShouldNotBeNull();
+        MeetAttempt? attempt = participation.Attempts
+            .FirstOrDefault(a => a.Discipline == Discipline.Squat && a.Round == 1);
+
+        attempt.ShouldNotBeNull();
+        attempt.Weight.ShouldBe(120.0m);
+        attempt.IsGood.ShouldBeTrue();
+    }
+
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>
         $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}";
 

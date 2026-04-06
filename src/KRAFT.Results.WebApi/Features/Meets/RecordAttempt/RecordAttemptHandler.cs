@@ -89,16 +89,7 @@ internal sealed class RecordAttemptHandler
         }
         else
         {
-            Attempt attempt = Attempt.Create(
-                participationId,
-                discipline,
-                round,
-                command.Weight,
-                command.Good,
-                user.Username);
-
-            _dbContext.Set<Attempt>().Add(attempt);
-            participation.Attempts.Add(attempt);
+            participation.RecordAttempt(discipline, round, command.Weight, command.Good, user.Username);
         }
 
         participation.RecalculateTotals();

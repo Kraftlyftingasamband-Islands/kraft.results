@@ -144,6 +144,12 @@ internal sealed class Participation
         return Result.Success();
     }
 
+    internal void RecordAttempt(Discipline discipline, short round, decimal weight, bool good, string createdBy)
+    {
+        Attempt attempt = Attempt.Create(ParticipationId, discipline, round, weight, good, createdBy);
+        Attempts.Add(attempt);
+    }
+
     internal void RecalculateTotals()
     {
         decimal bestSquat = BestGoodLift(Discipline.Squat);
