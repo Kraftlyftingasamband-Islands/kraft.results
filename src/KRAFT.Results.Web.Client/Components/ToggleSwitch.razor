@@ -1,0 +1,37 @@
+<div class="toggle-field">
+    <span id="@Id" class="toggle-label">@Label</span>
+    <button type="button"
+            role="switch"
+            aria-checked="@Value.ToString().ToLowerInvariant()"
+            aria-labelledby="@Id"
+            class="toggle-switch @(Value ? "is-on" : "")"
+            disabled="@Disabled"
+            @onclick="Toggle">
+        <span class="toggle-thumb"></span>
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public bool Value { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private async Task Toggle()
+    {
+        if (!Disabled)
+        {
+            await ValueChanged.InvokeAsync(!Value);
+        }
+    }
+}
