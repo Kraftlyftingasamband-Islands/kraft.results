@@ -30,11 +30,6 @@ internal sealed class UpdateBodyWeightHandler
         UpdateBodyWeightCommand command,
         CancellationToken cancellationToken)
     {
-        if (command.BodyWeight <= 0)
-        {
-            return MeetErrors.InvalidBodyWeight;
-        }
-
         Participation? participation = await _dbContext.Set<Participation>()
             .FirstOrDefaultAsync(
                 p => p.ParticipationId == participationId && p.MeetId == meetId,
@@ -58,7 +53,12 @@ internal sealed class UpdateBodyWeightHandler
 
         User user = userResult.FromResult();
 
-        participation.UpdateBodyWeight(command.BodyWeight, user.Username);
+        Result updateResult = participation.UpdateBodyWeight(command.BodyWeight, user.Username);
+
+        if (updateResult.IsFailure)
+        {
+            return updateResult;
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
