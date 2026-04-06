@@ -367,6 +367,20 @@ h1:focus {
     border-bottom: 1px solid var(--color-border);
 }
 
+.form-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+
+@media (min-width: 56rem) {
+    .form-columns {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+}
+
 /* Form textarea (multi-line text input) */
 .form-textarea {
     width: 100%;
