@@ -267,7 +267,7 @@ h1:focus {
 
 /* Form card */
 .form-card {
-    max-width: 32rem;
+    max-width: 64rem;
     width: 100%;
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
