@@ -121,12 +121,29 @@ public sealed class AddParticipantTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenBodyWeightDoesNotFitAnyWeightCategory()
+    public async Task ReturnsBadRequest_WhenBodyWeightExceedsMaximum()
     {
         // Arrange
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(Constants.TestAthleteSlug)
             .WithBodyWeight(999m)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task ReturnsBadRequest_WhenBodyWeightIsJustAboveMaximum()
+    {
+        // Arrange
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(Constants.TestAthleteSlug)
+            .WithBodyWeight(400.001m)
             .Build();
 
         // Act
