@@ -1,15 +1,16 @@
-<div class="toggle-field">
-    <span id="@Id" class="toggle-label">@Label</span>
+<label class="toggle-field" for="@Id">
+    <span class="toggle-label">@Label</span>
     <button type="button"
+            id="@Id"
             role="switch"
             aria-checked="@Value.ToString().ToLowerInvariant()"
-            aria-labelledby="@Id"
+            aria-label="@Label"
             class="toggle-switch @(Value ? "is-on" : "")"
             disabled="@(Disabled ? (object)true : null)"
             @onclick="Toggle">
         <span class="toggle-thumb"></span>
     </button>
-</div>
+</label>
 
 @code {
     [Parameter]

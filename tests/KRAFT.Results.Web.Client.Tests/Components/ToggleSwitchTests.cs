@@ -82,7 +82,7 @@ public sealed class ToggleSwitchTests : IDisposable
     }
 
     [Fact]
-    public void AriaLabelledByPointsToLabelId()
+    public void AriaLabelPointsToLabel()
     {
         // Arrange & Act
         IRenderedComponent<ToggleSwitch> cut = _context.Render<ToggleSwitch>(
@@ -90,11 +90,9 @@ public sealed class ToggleSwitchTests : IDisposable
                   .Add(c => c.Label, "Test"));
 
         // Assert
-        AngleSharp.Dom.IElement label = cut.Find(".toggle-label");
-        label.GetAttribute("id").ShouldBe("my-toggle");
-
         AngleSharp.Dom.IElement button = cut.Find("button");
-        button.GetAttribute("aria-labelledby").ShouldBe("my-toggle");
+        button.GetAttribute("id").ShouldBe("my-toggle");
+        button.GetAttribute("aria-label").ShouldBe("Test");
     }
 
     public void Dispose()
