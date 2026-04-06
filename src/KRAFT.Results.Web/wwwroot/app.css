@@ -341,10 +341,14 @@ h1:focus {
 
 .form-actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.75rem;
-    align-items: center;
-    max-width: 32rem;
+    justify-content: flex-end;
+}
+
+.form-actions .btn-primary {
+    width: auto;
+    min-width: 12rem;
 }
 
 /* Form section (group wrapper) */
