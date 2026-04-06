@@ -7,7 +7,7 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Athletes;
 
-internal sealed class Athlete
+internal sealed class Athlete : AggregateRoot
 {
     // For EF core
     private Athlete()

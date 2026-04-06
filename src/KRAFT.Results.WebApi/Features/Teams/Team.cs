@@ -6,7 +6,7 @@ using KRAFT.Results.WebApi.Features.Users;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
-internal sealed class Team
+internal sealed class Team : AggregateRoot
 {
     internal const int TitleMaxLength = 50;
     internal const int TitleFullMaxLength = 100;
