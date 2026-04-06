@@ -2,7 +2,7 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.ValueObjects.SlugTests;
+namespace KRAFT.Results.WebApi.UnitTests.ValueObjects.SlugTests;
 
 public sealed class Equals
 {

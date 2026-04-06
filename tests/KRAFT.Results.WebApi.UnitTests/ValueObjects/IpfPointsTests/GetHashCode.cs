@@ -2,7 +2,7 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.ValueObjects.IpfPointsTests;
+namespace KRAFT.Results.WebApi.UnitTests.ValueObjects.IpfPointsTests;
 
 public sealed class GetHashCode
 {

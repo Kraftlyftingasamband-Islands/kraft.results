@@ -2,7 +2,7 @@ using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.Tests.Abstractions;
+namespace KRAFT.Results.WebApi.UnitTests.Abstractions;
 
 public sealed class Equals
 {
