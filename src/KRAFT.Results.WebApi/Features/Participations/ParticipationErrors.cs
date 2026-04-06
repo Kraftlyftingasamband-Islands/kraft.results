@@ -23,4 +23,8 @@ internal static class ParticipationErrors
     internal static Error BodyWeightMustBePositive => new(
         "Participations.BodyWeightMustBePositive",
         "Body weight must be greater than zero.");
+
+    internal static Error BodyWeightTooHigh => new(
+        "Participations.BodyWeightTooHigh",
+        $"Body weight must not exceed {Participation.MaxBodyWeight} kg.");
 }
