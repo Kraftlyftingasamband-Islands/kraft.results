@@ -13,10 +13,8 @@ public static class BaseSeedSql
 {
     public static string SeedCountry() =>
         $"""
-        SET IDENTITY_INSERT Countries ON;
         INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
         VALUES ({TestSeedConstants.Country.Id}, '{TestSeedConstants.Country.ISO2}', '{TestSeedConstants.Country.ISO3}', '{TestSeedConstants.Country.Name}');
-        SET IDENTITY_INSERT Countries OFF;
         """;
 
     public static string SeedUsersAndRoles() =>

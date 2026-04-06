@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\KRAFT.Results.WebApi\KRAFT.Results.WebApi.csproj" />
+    <ProjectReference Include="..\..\tests\KRAFT.Results.Tests.Shared\KRAFT.Results.Tests.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
