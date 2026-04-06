@@ -9,9 +9,11 @@ public sealed class GetHashCode
     [Fact]
     public void ReturnsSameHashCode_WhenSameValue()
     {
+        // Arrange
         Gender a = Gender.Male;
         Gender b = Gender.Parse("m");
 
+        // Act & Assert
         a.GetHashCode().ShouldBe(b.GetHashCode());
     }
 }
