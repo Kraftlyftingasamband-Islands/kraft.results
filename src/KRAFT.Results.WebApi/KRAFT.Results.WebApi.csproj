@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="KRAFT.Results.WebApi.IntegrationTests" />
+    <InternalsVisibleTo Include="KRAFT.Results.WebApi.Tests" />
   </ItemGroup>
 
   <ItemGroup>
