@@ -7,8 +7,8 @@
     <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="meet-form">
         <DataAnnotationsValidator />
 
-        <div class="form-section">
-            <p class="form-section-title">Grunnupplýsingar</p>
+        <fieldset class="form-section">
+            <legend class="form-section-title">Grunnupplýsingar</legend>
 
             <div class="form-field">
                 <label class="form-label" for="title">Nafn</label>
@@ -81,10 +81,10 @@
                                disabled="@IsLoading" />
                 <ValidationMessage For="@(() => _model.Text)" />
             </div>
-        </div>
+        </fieldset>
 
-        <div class="form-section">
-            <p class="form-section-title">Keppnisstillingar</p>
+        <fieldset class="form-section">
+            <legend class="form-section-title">Keppnisstillingar</legend>
 
             <ToggleSwitch @bind-Value="_model.CalcPlaces"
                           Label="Reikna út úrslitastöðu"
@@ -116,10 +116,10 @@
                           Label="Í liðakeppni"
                           Id="is-in-team-competition"
                           Disabled="@IsLoading" />
-        </div>
+        </fieldset>
 
-        <div class="form-section">
-            <p class="form-section-title">Birtingarstillingar</p>
+        <fieldset class="form-section">
+            <legend class="form-section-title">Birtingarstillingar</legend>
 
             <ToggleSwitch @bind-Value="_model.ShowWilks"
                           Label="Sýna Wilks/IPF stig"
@@ -140,10 +140,10 @@
                           Label="Sýna lið"
                           Id="show-teams"
                           Disabled="@IsLoading" />
-        </div>
+        </fieldset>
 
-        <div class="form-section">
-            <p class="form-section-title">Birtingarstaða</p>
+        <fieldset class="form-section">
+            <legend class="form-section-title">Birtingarstaða</legend>
 
             <ToggleSwitch @bind-Value="_model.PublishedResults"
                           Label="Niðurstöður birtar"
@@ -154,7 +154,7 @@
                           Label="Birt í mótadagatal"
                           Id="published-in-calendar"
                           Disabled="@IsLoading" />
-        </div>
+        </fieldset>
 
         <div class="form-actions">
             <SubmitButton Label="@SubmitLabel" IsLoading="@IsLoading" />

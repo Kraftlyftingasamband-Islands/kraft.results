@@ -348,10 +348,21 @@ h1:focus {
 
 /* Form section (group wrapper) */
 .form-section {
+    border: none;
+    padding: 0;
+    margin-inline: 0;
     margin-block-end: 2rem;
 }
 
+.form-section::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
 .form-section-title {
+    float: left;
+    width: 100%;
     font-family: var(--font-heading);
     font-size: 0.875rem;
     font-weight: 600;
