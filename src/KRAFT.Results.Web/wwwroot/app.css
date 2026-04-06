@@ -344,6 +344,7 @@ h1:focus {
     flex-direction: column;
     gap: 0.75rem;
     align-items: center;
+    max-width: 32rem;
 }
 
 /* Form section (group wrapper) */
