@@ -17,6 +17,7 @@
     <Project Path="src/KRAFT.Results.WebApi/KRAFT.Results.WebApi.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/KRAFT.Results.Tests.Shared/KRAFT.Results.Tests.Shared.csproj" />
     <Project Path="tests/KRAFT.Results.Web.E2ETests/KRAFT.Results.Web.E2ETests.csproj" />
     <Project Path="tests/KRAFT.Results.Web.Client.Tests/KRAFT.Results.Web.Client.Tests.csproj" />
     <Project Path="tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj" />
