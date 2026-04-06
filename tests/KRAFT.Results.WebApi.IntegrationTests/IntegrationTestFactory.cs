@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using KRAFT.Results.WebApi.Abstractions;
+
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,9 +32,13 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
             services.Remove(descriptor);
         }
 
-        services.AddDbContext<ResultsDbContext>(options =>
+        services.AddScoped<DomainEventInterceptor>();
+        services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+
+        services.AddDbContext<ResultsDbContext>((IServiceProvider serviceProvider, DbContextOptionsBuilder options) =>
         {
             options.UseSqlServer(_databaseFixture.ConnectionString);
+            options.AddInterceptors(serviceProvider.GetRequiredService<DomainEventInterceptor>());
         });
     }
 }

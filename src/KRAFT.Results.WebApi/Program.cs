@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 
 using KRAFT.Results.WebApi;
+using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features;
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 using KRAFT.Results.WebApi.Middleware;
@@ -46,9 +47,13 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddDbContext<ResultsDbContext>(options =>
+builder.Services.AddScoped<DomainEventInterceptor>();
+builder.Services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+
+builder.Services.AddDbContext<ResultsDbContext>((IServiceProvider serviceProvider, DbContextOptionsBuilder options) =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("kraft-db"));
+    options.AddInterceptors(serviceProvider.GetRequiredService<DomainEventInterceptor>());
 });
 
 builder.Services.AddProblemDetails(options =>
