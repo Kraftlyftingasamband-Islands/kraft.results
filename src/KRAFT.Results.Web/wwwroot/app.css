@@ -352,6 +352,13 @@ h1:focus {
     min-width: 12rem;
 }
 
+/* Inline field row — equal-width fields side by side */
+.form-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
 /* Form section (group wrapper) */
 .form-section {
     border: none;
