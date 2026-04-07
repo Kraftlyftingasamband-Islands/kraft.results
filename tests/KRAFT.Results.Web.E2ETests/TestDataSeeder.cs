@@ -25,7 +25,7 @@ internal static class TestDataSeeder
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedMeetType());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedTeam());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedAthlete());
-        await ExecuteSqlAsync(connection, SetAthleteTeamSql());
+        await ExecuteSqlAsync(connection, BaseSeedSql.SetAthleteTeamSql());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedAgeCategories());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedWeightCategories());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedEras());
@@ -35,11 +35,6 @@ internal static class TestDataSeeder
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedBaseAttempts());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedBaseRecords());
     }
-
-    private static string SetAthleteTeamSql() =>
-        $"""
-        UPDATE Athletes SET TeamId = {TestSeedConstants.Team.Id} WHERE AthleteId = {TestSeedConstants.Athlete.Id};
-        """;
 
     [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "All SQL is composed from compile-time constants in BaseSeedSql")]
     private static async Task ExecuteSqlAsync(SqlConnection connection, string sql)
