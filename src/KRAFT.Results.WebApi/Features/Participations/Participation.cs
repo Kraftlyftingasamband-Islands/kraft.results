@@ -7,13 +7,12 @@ using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
+using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Participations;
 
 internal sealed class Participation : AggregateRoot
 {
-    internal const decimal MaxBodyWeight = 400m;
-
     // For EF Core
     private Participation()
     {
@@ -25,7 +24,7 @@ internal sealed class Participation : AggregateRoot
 
     public int MeetId { get; private set; }
 
-    public decimal Weight { get; private set; }
+    public BodyWeight Weight { get; private set; } = null!;
 
     public int WeightCategoryId { get; private set; }
 
@@ -95,14 +94,11 @@ internal sealed class Participation : AggregateRoot
             return ParticipationErrors.AgeCategoryIdMustBePositive;
         }
 
-        if (bodyWeight <= 0)
-        {
-            return ParticipationErrors.BodyWeightMustBePositive;
-        }
+        Result<BodyWeight> bodyWeightResult = BodyWeight.Create(bodyWeight);
 
-        if (bodyWeight > MaxBodyWeight)
+        if (bodyWeightResult.IsFailure)
         {
-            return ParticipationErrors.BodyWeightTooHigh;
+            return bodyWeightResult.Error;
         }
 
         Participation participation = new()
@@ -111,7 +107,7 @@ internal sealed class Participation : AggregateRoot
             MeetId = meetId,
             WeightCategoryId = weightCategoryId,
             AgeCategoryId = ageCategoryId,
-            Weight = bodyWeight,
+            Weight = bodyWeightResult.FromResult(),
             TeamId = teamId,
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
@@ -131,17 +127,14 @@ internal sealed class Participation : AggregateRoot
 
     internal Result UpdateBodyWeight(decimal bodyWeight, string modifiedBy)
     {
-        if (bodyWeight <= 0)
+        Result<BodyWeight> bodyWeightResult = BodyWeight.Create(bodyWeight);
+
+        if (bodyWeightResult.IsFailure)
         {
-            return ParticipationErrors.BodyWeightMustBePositive;
+            return Result.Failure(bodyWeightResult.Error);
         }
 
-        if (bodyWeight > MaxBodyWeight)
-        {
-            return ParticipationErrors.BodyWeightTooHigh;
-        }
-
-        Weight = bodyWeight;
+        Weight = bodyWeightResult.FromResult();
         ModifiedOn = DateTime.UtcNow;
         ModifiedBy = modifiedBy;
 
