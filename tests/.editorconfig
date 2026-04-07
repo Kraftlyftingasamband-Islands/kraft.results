@@ -26,3 +26,6 @@ dotnet_diagnostic.S2068.severity = none
 
 # S3400: Methods should not return constants (test helpers may return constant values)
 dotnet_diagnostic.S3400.severity = none
+
+# CA1724: Type names should not match namespaces (test class names like Create, Equals naturally overlap)
+dotnet_diagnostic.CA1724.severity = none
