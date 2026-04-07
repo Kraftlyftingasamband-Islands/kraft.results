@@ -59,7 +59,7 @@ internal sealed class ParticipationConfiguration : IEntityTypeConfiguration<Part
             .HasColumnType("decimal(18, 2)")
             .HasConversion(
                 x => x.Value,
-                x => BodyWeight.Create(x).FromResult());
+                x => BodyWeight.Parse(x));
 
         builder.Property(e => e.Wilks)
             .HasColumnType("decimal(18, 2)");
