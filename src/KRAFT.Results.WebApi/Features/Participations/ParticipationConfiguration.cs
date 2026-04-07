@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KRAFT.Results.WebApi.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KRAFT.Results.WebApi.Features.Participations;
@@ -54,7 +56,10 @@ internal sealed class ParticipationConfiguration : IEntityTypeConfiguration<Part
             .HasColumnType("decimal(18, 2)");
 
         builder.Property(e => e.Weight)
-            .HasColumnType("decimal(18, 2)");
+            .HasColumnType("decimal(18, 2)")
+            .HasConversion(
+                x => x.Value,
+                x => BodyWeight.Create(x).FromResult());
 
         builder.Property(e => e.Wilks)
             .HasColumnType("decimal(18, 2)");
