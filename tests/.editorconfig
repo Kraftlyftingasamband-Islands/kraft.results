@@ -14,3 +14,15 @@ dotnet_diagnostic.CA1816.severity = none
 
 # CA2234: Pass system uri objects instead of strings
 dotnet_diagnostic.CA2234.severity = none
+
+# CA1034: Nested types should not be visible (test constants use nested static classes for namespacing)
+dotnet_diagnostic.CA1034.severity = none
+
+# CA1716: Identifiers should not match keywords (domain names like User, Meet, Role conflict with VB keywords)
+dotnet_diagnostic.CA1716.severity = none
+
+# S2068: Credentials should not be hardcoded (test seed passwords are not real credentials)
+dotnet_diagnostic.S2068.severity = none
+
+# S3400: Methods should not return constants (test helpers may return constant values)
+dotnet_diagnostic.S3400.severity = none
