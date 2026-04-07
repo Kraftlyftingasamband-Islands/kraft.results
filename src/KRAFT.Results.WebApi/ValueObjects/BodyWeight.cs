@@ -11,6 +11,8 @@ internal sealed class BodyWeight : ValueObject<decimal>
     {
     }
 
+    internal static BodyWeight Parse(decimal value) => new(value);
+
     internal static Result<BodyWeight> Create(decimal value)
     {
         if (value <= 0)
