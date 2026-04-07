@@ -72,7 +72,7 @@ internal sealed class GetRecordsHandler(ResultsDbContext dbContext)
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Slug : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.DateOfBirth!.Value.Year : (int?)null,
-                r.Attempt != null ? r.Attempt.Participation.Weight : (decimal?)null,
+                r.Attempt != null ? r.Attempt.Participation.Weight.Value : (decimal?)null,
                 r.Weight,
                 r.Date,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Slug : null,

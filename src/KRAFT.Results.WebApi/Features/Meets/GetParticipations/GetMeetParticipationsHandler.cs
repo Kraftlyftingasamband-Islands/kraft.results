@@ -36,7 +36,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 WeightCategory = p.WeightCategory != null ? p.WeightCategory.Title : string.Empty,
                 Club = p.Team != null ? p.Team.TitleShort : string.Empty,
                 ClubSlug = p.Team != null ? p.Team.Slug : string.Empty,
-                p.Weight,
+                Weight = p.Weight.Value,
                 p.Total,
                 p.Benchpress,
                 IsRaw = meet.IsRaw,
