@@ -45,7 +45,7 @@ internal sealed class GetRecordHistoryHandler(ResultsDbContext dbContext)
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname : null,
                 r.Attempt != null ? r.Attempt.Participation.Athlete.Slug : null,
                 r.Weight,
-                r.Attempt != null ? r.Attempt.Participation.Weight : (decimal?)null,
+                r.Attempt != null ? r.Attempt.Participation.Weight.Value : (decimal?)null,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Title + " " + r.Attempt.Participation.Meet.StartDate.Year : null,
                 r.Attempt != null ? r.Attempt.Participation.Meet.Slug : null,
                 r.IsCurrent,

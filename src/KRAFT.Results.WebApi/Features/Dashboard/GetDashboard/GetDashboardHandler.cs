@@ -100,7 +100,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 p.Athlete.Slug,
                 p.Total,
                 p.WeightCategory.Title,
-                p.Weight,
+                p.Weight.Value,
                 p.Meet.IsRaw,
                 p.Athlete.Gender.Value,
                 p.Meet.Slug,

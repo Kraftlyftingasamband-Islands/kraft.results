@@ -23,13 +23,13 @@ internal sealed class GetAthleteParticipationsHandler(ResultsDbContext dbContext
             p.Team != null ? p.Team.Slug : null,
             p.Place,
             p.WeightCategory.Title,
-            p.Weight,
+            p.Weight.Value,
             p.Squat,
             p.Benchpress,
             p.Deadlift,
             p.Total,
             p.Wilks,
-            IpfPoints.Create(p.Meet.IsRaw, p.Athlete.Gender, p.Meet.MeetType.Title, p.Weight, p.Total),
+            IpfPoints.Create(p.Meet.IsRaw, p.Athlete.Gender, p.Meet.MeetType.Title, p.Weight.Value, p.Total),
             p.Disqualified))
         .ToListAsync(cancellationToken);
 
