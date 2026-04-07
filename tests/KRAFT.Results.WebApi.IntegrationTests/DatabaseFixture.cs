@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using KRAFT.Results.Tests.Shared;
 
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +8,7 @@ using Testcontainers.MsSql;
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
+[SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "All SQL is composed from compile-time constants in BaseSeedSql and local const fields")]
 public sealed class DatabaseFixture : IAsyncLifetime
 {
     private const int NorwayCountryId = 2;
@@ -64,6 +67,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedMeetType());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedTeam());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAthlete());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SetAthleteTeamSql());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAgeCategories());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedWeightCategories());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedEras());
@@ -173,12 +177,12 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
     private static async Task SeedBestNTestDataAsync(ResultsDbContext dbContext)
     {
-        int tc1Id = 4;
-        int tc2Id = 5;
-        int tc3Id = 6;
-        int tc4Id = 7;
-        int tc5Id = 8;
-        int tc6Id = 9;
+        const int tc1Id = 4;
+        const int tc2Id = 5;
+        const int tc3Id = 6;
+        const int tc4Id = 7;
+        const int tc5Id = 8;
+        const int tc6Id = 9;
 
         string sql =
             $"""
@@ -232,8 +236,8 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
     private static async Task SeedOrderingTestDataAsync(ResultsDbContext dbContext)
     {
-        int deltaAthleteId = 10;
-        int charlieAthleteId = 11;
+        const int deltaAthleteId = 10;
+        const int charlieAthleteId = 11;
 
         string sql =
             $"""

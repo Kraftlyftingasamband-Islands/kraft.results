@@ -175,6 +175,11 @@ public static class BaseSeedSql
         SET IDENTITY_INSERT Records OFF;
         """;
 
+    public static string SetAthleteTeamSql() =>
+        $"""
+        UPDATE Athletes SET TeamId = {TestSeedConstants.Team.Id} WHERE AthleteId = {TestSeedConstants.Athlete.Id};
+        """;
+
     public static string CleanupSql() =>
         """
         DELETE FROM Records;
