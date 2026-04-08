@@ -112,7 +112,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 IsWithinPowerlifting: false,
                 IsStandaloneDiscipline: false,
                 WeightCategory: "93 kg",
-                AgeCategory: "Open",
+                AgeCategory: "open",
                 Type: Constants.Squat,
                 Weight: 200.0m,
                 Meet: "Test Meet",
@@ -164,7 +164,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 IsWithinPowerlifting: false,
                 IsStandaloneDiscipline: false,
                 WeightCategory: "93 kg",
-                AgeCategory: "Open",
+                AgeCategory: "open",
                 Type: Constants.Total,
                 Weight: 600.0m,
                 Meet: "Test Meet",
@@ -176,7 +176,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 IsWithinPowerlifting: false,
                 IsStandaloneDiscipline: false,
                 WeightCategory: "93 kg",
-                AgeCategory: "Junior",
+                AgeCategory: "junior",
                 Type: Constants.Total,
                 Weight: 600.0m,
                 Meet: "Test Meet",
@@ -199,6 +199,58 @@ public sealed class AthleteDetailsPageTests : IDisposable
             stars.Count.ShouldBe(2);
             stars.ShouldContain("Íslandsmet · Opinn flokkur · 93 kg");
             stars.ShouldContain("Íslandsmet · Unglingaflokkur · 93 kg");
+        });
+    }
+
+    [Fact]
+    public void PersonalBestGroupCard_ShowsTranslatedMastersCategory_InTooltip()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.Squat,
+                Weight: 200.0m,
+                WeightCategory: "93 kg",
+                BodyWeight: 90.5m,
+                MeetSlug: "test-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10)),
+        ];
+
+        List<AthleteRecord> records =
+        [
+            new(
+                Date: new DateOnly(2024, 5, 10),
+                IsClassic: true,
+                IsSingleLift: false,
+                IsWithinPowerlifting: false,
+                IsStandaloneDiscipline: false,
+                WeightCategory: "93 kg",
+                AgeCategory: "masters1",
+                Type: Constants.Squat,
+                Weight: 200.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+        ];
+
+        RegisterHttpClient(records: records, personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            List<string> stars = cut.FindAll(".pbg-star")
+                .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
+                .ToList();
+
+            stars.Count.ShouldBe(1);
+            stars[0].ShouldBe("Íslandsmet · Öldungaflokkur 1 · 93 kg");
         });
     }
 
