@@ -2495,6 +2495,225 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         cascadeSlugs.ShouldContain("open");
     }
 
+    [Fact]
+    public async Task WhenTwoLiftersBreakSameRecordInSameMeet_EarlierAttemptWins()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        DateOnly masters4DateOfBirth = new(1950, 1, 1);
+
+        CreateAthleteCommand athleteACommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteAResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteACommand,
+            CancellationToken.None);
+
+        athleteAResponse.EnsureSuccessStatusCode();
+
+        string athleteASlug = Slug.Create($"{athleteACommand.FirstName} {athleteACommand.LastName}");
+
+        CreateAthleteCommand athleteBCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteBResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteBCommand,
+            CancellationToken.None);
+
+        athleteBResponse.EnsureSuccessStatusCode();
+
+        string athleteBSlug = Slug.Create($"{athleteBCommand.FirstName} {athleteBCommand.LastName}");
+
+        AddParticipantCommand participantACommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteASlug)
+            .Build();
+
+        HttpResponseMessage participantAResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantACommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantAResult = await participantAResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationAId = participantAResult!.ParticipationId;
+
+        AddParticipantCommand participantBCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteBSlug)
+            .Build();
+
+        HttpResponseMessage participantBResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantBCommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantBResult = await participantBResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationBId = participantBResult!.ParticipationId;
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Give both athletes valid totals
+        await RecordAttempt(client, participationAId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationAId, Discipline.Deadlift, 1, 250.0m);
+        await RecordAttempt(client, participationBId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationBId, Discipline.Deadlift, 1, 250.0m);
+
+        // Athlete A squats 200kg
+        await RecordAttempt(client, participationAId, Discipline.Squat, 1, 200.0m);
+
+        // Act — Athlete B squats 210kg (heavier)
+        await RecordAttempt(client, participationBId, Discipline.Squat, 1, 210.0m);
+
+        // Assert — the current record should belong to Athlete B at 210kg
+        List<RecordEntity> currentRecords = await dbContext.Set<RecordEntity>()
+            .Where(r => r.IsCurrent)
+            .Where(r => r.IsRaw)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+            .Where(r => r.Weight == 210.0m)
+            .Include(r => r.AgeCategory)
+            .OrderBy(r => r.AgeCategoryId)
+            .ToListAsync(CancellationToken.None);
+
+        List<string> cascadeSlugs = currentRecords
+            .Select(r => r.AgeCategory.Slug!)
+            .ToList();
+
+        cascadeSlugs.Count.ShouldBe(5);
+        cascadeSlugs.ShouldContain("masters4");
+        cascadeSlugs.ShouldContain("masters3");
+        cascadeSlugs.ShouldContain("masters2");
+        cascadeSlugs.ShouldContain("masters1");
+        cascadeSlugs.ShouldContain("open");
+    }
+
+    [Fact]
+    public async Task WhenSecondLifterDoesNotBeatExistingRecord_NoNewRecord()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        DateOnly masters4DateOfBirth = new(1950, 1, 1);
+
+        CreateAthleteCommand athleteACommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteAResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteACommand,
+            CancellationToken.None);
+
+        athleteAResponse.EnsureSuccessStatusCode();
+
+        string athleteASlug = Slug.Create($"{athleteACommand.FirstName} {athleteACommand.LastName}");
+
+        CreateAthleteCommand athleteBCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteBResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteBCommand,
+            CancellationToken.None);
+
+        athleteBResponse.EnsureSuccessStatusCode();
+
+        string athleteBSlug = Slug.Create($"{athleteBCommand.FirstName} {athleteBCommand.LastName}");
+
+        AddParticipantCommand participantACommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteASlug)
+            .Build();
+
+        HttpResponseMessage participantAResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantACommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantAResult = await participantAResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationAId = participantAResult!.ParticipationId;
+
+        AddParticipantCommand participantBCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteBSlug)
+            .Build();
+
+        HttpResponseMessage participantBResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantBCommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantBResult = await participantBResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationBId = participantBResult!.ParticipationId;
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Give both athletes valid totals
+        await RecordAttempt(client, participationAId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationAId, Discipline.Deadlift, 1, 250.0m);
+        await RecordAttempt(client, participationBId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationBId, Discipline.Deadlift, 1, 250.0m);
+
+        // Athlete A squats 200kg — establishes the record
+        await RecordAttempt(client, participationAId, Discipline.Squat, 1, 200.0m);
+
+        // Act — Athlete B squats 190kg (less than A's 200kg)
+        await RecordAttempt(client, participationBId, Discipline.Squat, 1, 190.0m);
+
+        // Assert — current record should still belong to Athlete A at 200kg
+        List<RecordEntity> currentRecords = await dbContext.Set<RecordEntity>()
+            .Where(r => r.IsCurrent)
+            .Where(r => r.IsRaw)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+            .Include(r => r.AgeCategory)
+            .OrderBy(r => r.AgeCategoryId)
+            .ToListAsync(CancellationToken.None);
+
+        currentRecords.ShouldAllBe(r => r.Weight == 200.0m);
+
+        List<string> cascadeSlugs = currentRecords
+            .Select(r => r.AgeCategory.Slug!)
+            .ToList();
+
+        cascadeSlugs.Count.ShouldBe(5);
+        cascadeSlugs.ShouldContain("masters4");
+        cascadeSlugs.ShouldContain("masters3");
+        cascadeSlugs.ShouldContain("masters2");
+        cascadeSlugs.ShouldContain("masters1");
+        cascadeSlugs.ShouldContain("open");
+
+        // No records should exist for Athlete B's attempt weight
+        List<RecordEntity> athleteBRecords = await dbContext.Set<RecordEntity>()
+            .Where(r => r.Weight == 190.0m)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+            .Where(r => r.IsRaw)
+            .ToListAsync(CancellationToken.None);
+
+        athleteBRecords.ShouldBeEmpty();
+    }
+
     private static async Task RecordAttempt(
         HttpClient client,
         int participationId,
