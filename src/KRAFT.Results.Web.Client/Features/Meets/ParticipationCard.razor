@@ -79,8 +79,8 @@
 
                             MeetAttempt displayAttempt = attempt
                                 ?? (_savedAttempts.TryGetValue((d, r), out (decimal W, bool G) saved)
-                                    ? new MeetAttempt(d, r, saved.W, saved.G, false, false)
-                                    : new MeetAttempt(d, r, 0, false, false, false));
+                                    ? new MeetAttempt(d, r, saved.W, saved.G, false)
+                                    : new MeetAttempt(d, r, 0, false, false));
 
                             @if (_editingAttempt.GetValueOrDefault((d, r)))
                             {
