@@ -2282,6 +2282,219 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         cascadeSlugs.ShouldContain("open");
     }
 
+    [Fact]
+    public async Task WhenAthleteIsBanned_NoRecordCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(Constants.BannedAthlete.Slug)
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        // Record bench and deadlift so total would be valid if not for the ban
+        await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Act — record squat for banned athlete during ban period (meet date 2025-03-15)
+        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+
+        // Assert — no records should be created for the banned athlete
+        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+            .Include(r => r.Attempt!)
+                .ThenInclude(a => a.Participation)
+            .Where(r => r.Attempt!.Participation.AthleteId == Constants.BannedAthlete.Id)
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
+
+        createdRecords.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task WhenRecordsPossibleIsFalse_NoRecordCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{Constants.NoRecordsMeet.Id}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        // Record bench and deadlift so total would be valid
+        await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Deadlift, 1, 250.0m);
+
+        // Act — record squat at a meet where RecordsPossible = false
+        await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Squat, 1, AttemptWeight);
+
+        // Assert — no records should be created
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+            .Include(r => r.Attempt!)
+                .ThenInclude(a => a.Participation)
+            .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
+
+        createdRecords.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task WhenNoValidTotal_NoRecordCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        DateOnly masters4DateOfBirth = new(1950, 1, 1);
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Act — record only squat (no bench or deadlift = no valid total for full powerlifting meet)
+        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+
+        // Assert — no squat record should be created because there is no valid total
+        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+            .Include(r => r.Attempt!)
+                .ThenInclude(a => a.Participation)
+            .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
+            .Where(r => r.IsCurrent)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .ToListAsync(CancellationToken.None);
+
+        createdRecords.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task WhenValidTotalExists_RecordIsCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        DateOnly masters4DateOfBirth = new(1950, 1, 1);
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Record bench and deadlift first to establish valid total
+        await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+
+        // Act — record squat with all 3 disciplines having good lifts
+        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+
+        // Assert — squat record should be created with valid total
+        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+            .Include(r => r.Attempt!)
+                .ThenInclude(a => a.Participation)
+            .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
+            .Where(r => r.IsCurrent)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.Weight == AttemptWeight)
+            .Include(r => r.AgeCategory)
+            .OrderBy(r => r.AgeCategoryId)
+            .ToListAsync(CancellationToken.None);
+
+        List<string> cascadeSlugs = createdRecords
+            .Select(r => r.AgeCategory.Slug!)
+            .ToList();
+
+        cascadeSlugs.Count.ShouldBe(5);
+        cascadeSlugs.ShouldContain("masters4");
+        cascadeSlugs.ShouldContain("masters3");
+        cascadeSlugs.ShouldContain("masters2");
+        cascadeSlugs.ShouldContain("masters1");
+        cascadeSlugs.ShouldContain("open");
+    }
+
     private static async Task RecordAttempt(
         HttpClient client,
         int participationId,
@@ -2296,6 +2509,27 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         HttpResponseMessage response = await client.PutAsJsonAsync(
             $"/meets/{SeedMeetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    private static async Task RecordAttemptForMeet(
+        HttpClient client,
+        int meetId,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .WithGood(true)
+            .Build();
+
+        HttpResponseMessage response = await client.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
             command,
             CancellationToken.None);
 
