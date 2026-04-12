@@ -1,3 +1,4 @@
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.Features.Records.Get;
 using KRAFT.Results.WebApi.Features.Records.GetHistory;
 
@@ -9,6 +10,7 @@ internal static class RecordServices
     {
         services.AddScoped<GetRecordsHandler>();
         services.AddScoped<GetRecordHistoryHandler>();
+        services.AddScoped<RecordComputationService>();
 
         return services;
     }
