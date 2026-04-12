@@ -2137,6 +2137,115 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
+    [Fact]
+    public async Task WhenAttemptIsRecordedViaEndpoint_RecordIsCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClient();
+
+        DateOnly masters4DateOfBirth = new(1950, 1, 1);
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Record bench and deadlift first so the participation has valid totals
+        await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+
+        // Act — record squat that should trigger record computation via domain event
+        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+
+        // Assert — records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
+        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+            .Where(r => r.IsCurrent)
+            .Where(r => r.IsRaw)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+            .Where(r => r.Weight == AttemptWeight)
+            .Include(r => r.AgeCategory)
+            .OrderBy(r => r.AgeCategoryId)
+            .ToListAsync(CancellationToken.None);
+
+        List<string> cascadeSlugs = createdRecords
+            .Select(r => r.AgeCategory.Slug!)
+            .ToList();
+
+        cascadeSlugs.Count.ShouldBe(5);
+        cascadeSlugs.ShouldContain("masters4");
+        cascadeSlugs.ShouldContain("masters3");
+        cascadeSlugs.ShouldContain("masters2");
+        cascadeSlugs.ShouldContain("masters1");
+        cascadeSlugs.ShouldContain("open");
+    }
+
+    private static async Task RecordAttempt(
+        HttpClient client,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .WithGood(true)
+            .Build();
+
+        HttpResponseMessage response = await client.PutAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    private static async Task ClearMastersCascadeRecordsAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            DELETE FROM Records
+            WHERE AgeCategoryId IN (
+                {TestSeedConstants.AgeCategory.OpenId},
+                {TestSeedConstants.AgeCategory.Masters1Id},
+                {TestSeedConstants.AgeCategory.Masters2Id},
+                {TestSeedConstants.AgeCategory.Masters3Id},
+                {TestSeedConstants.AgeCategory.Masters4Id})
+            AND RecordCategoryId = 1
+            AND IsRaw = 1
+            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
     private static async Task SeedRecordComputationTestDataAsync(ResultsDbContext dbContext)
     {
         string sql =
