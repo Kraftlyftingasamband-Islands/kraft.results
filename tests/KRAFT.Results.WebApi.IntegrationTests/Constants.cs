@@ -15,14 +15,6 @@ internal static class Constants
 
     internal static readonly DateOnly TestAthleteDateOfBirth = TestSeedConstants.Athlete.DateOfBirth;
 
-    internal static class PendingRecords
-    {
-        internal const int RecordBreakingAttemptId = 4;
-        internal const int NonRecordBreakingAttemptId = 5;
-        internal const int ApproveAttemptId = 6;
-        internal const int ZeroWeightAttemptId = 7;
-    }
-
     internal static class TeamCompetition
     {
         internal const string AlphaTeamSlug = "alpha-team";

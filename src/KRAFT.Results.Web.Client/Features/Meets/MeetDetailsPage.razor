@@ -1,7 +1,6 @@
 @page "/meets/{slug}"
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Meets
-@using KRAFT.Results.Contracts.Records
 @using KRAFT.Results.Contracts.TeamCompetition
 @using KRAFT.Results.Web.Client.Components
 @using KRAFT.Results.Web.Client.Features.TeamCompetition
@@ -59,9 +58,6 @@ else
 </p>
 
 <AuthorizeView Roles="Admin">
-    <MeetPendingRecords PendingRecords="_pendingRecords"
-                        MeetSlug="@Slug"
-                        OnRecordApproved="HandleRecordApproved" />
     <AddParticipantForm MeetId="Meet!.MeetId"
                         IncludedDisciplines="IncludedDisciplines"
                         MeetStartDate="Meet!.StartDate"
@@ -234,7 +230,6 @@ else
     private bool _isLoading = true;
     private string? _deleteErrorMessage;
     private bool _isAdmin;
-    private List<PendingRecordEntry> _pendingRecords = [];
     private IReadOnlyList<MeetRecordEntry> _meetRecords = [];
     private IReadOnlyList<SectionNav.SectionNavLink> _navLinks = [];
 
@@ -304,13 +299,6 @@ else
     {
         _deleteErrorMessage = null;
         await _deleteDialog.ShowAsync();
-    }
-
-    private async Task HandleRecordApproved(int attemptId)
-    {
-        _pendingRecords = _pendingRecords.Where(r => r.AttemptId != attemptId).ToList();
-        await ReloadMeetRecords();
-        await ReloadParticipations();
     }
 
     private async Task HandleDelete()
@@ -396,18 +384,6 @@ else
 
             AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             _isAdmin = authState.User.IsInRole("Admin");
-            if (_isAdmin)
-            {
-                try
-                {
-                    List<PendingRecordEntry> allPendingRecords = await HttpClient.GetFromJsonAsync<List<PendingRecordEntry>>($"/meets/{Slug}/pending-records") ?? [];
-                    _pendingRecords = allPendingRecords.Where(r => r.Weight > 0).ToList();
-                }
-                catch (HttpRequestException)
-                {
-                    _pendingRecords = [];
-                }
-            }
         }
         catch (HttpRequestException)
         {
