@@ -160,19 +160,19 @@ public sealed class DatabaseFixture : IAsyncLifetime
             SET IDENTITY_INSERT Attempts ON;
             -- Attempt 4: record-breaking squat (210 > current record of 200 for classic/open/83kg/male)
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({Constants.PendingRecords.RecordBreakingAttemptId}, 1, 1, 2, 210.0, 1, 'seed', 'seed');
+            VALUES (4, 1, 1, 2, 210.0, 1, 'seed', 'seed');
 
             -- Attempt 5: non-record-breaking squat (190 <= current record of 200 for equipped/open/83kg/male)
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({Constants.PendingRecords.NonRecordBreakingAttemptId}, 1, 1, 1, 190.0, 1, 'seed', 'seed');
+            VALUES (5, 1, 1, 1, 190.0, 1, 'seed', 'seed');
 
             -- Attempt 6: female squat for open/63kg raw slot (no existing raw record for this slot)
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({Constants.PendingRecords.ApproveAttemptId}, {FemaleParticipationId}, 1, 3, 110.0, 1, 'seed', 'seed');
+            VALUES (6, {FemaleParticipationId}, 1, 3, 110.0, 1, 'seed', 'seed');
 
-            -- Attempt 7: zero-weight good bench attempt (should be excluded from pending records)
+            -- Attempt 7: zero-weight good bench attempt
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({Constants.PendingRecords.ZeroWeightAttemptId}, 1, 2, 1, 0.0, 1, 'seed', 'seed');
+            VALUES (7, 1, 2, 1, 0.0, 1, 'seed', 'seed');
             SET IDENTITY_INSERT Attempts OFF;
             """;
 
