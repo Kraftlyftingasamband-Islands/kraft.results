@@ -69,4 +69,14 @@ internal sealed class Record
             CreatedBy = createdBy,
         };
     }
+
+    internal void SetCurrent()
+    {
+        IsCurrent = true;
+    }
+
+    internal void Demote()
+    {
+        IsCurrent = false;
+    }
 }
