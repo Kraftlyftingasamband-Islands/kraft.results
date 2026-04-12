@@ -40,12 +40,13 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         await SeedBackfillTestDataAsync(dbContext);
 
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
-        BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
         try
         {
             // Act
             await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert — slot: era=2, ageCategory=junior(2), weightCategory=93kg(2), squat(1), isRaw=true.
             // Expected chain: attempt 500 (180kg) -> attempt 501 (220kg, current).
@@ -87,13 +88,21 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
-        BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
         try
         {
-            // Act — run twice
-            await job.StartAsync(CancellationToken.None);
-            await job.StartAsync(CancellationToken.None);
+            // Act — run twice with separate instances (BackgroundService only executes once per instance)
+            using (BackfillRecordsJob firstRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
+            {
+                await firstRun.StartAsync(CancellationToken.None);
+                await (firstRun.ExecuteTask ?? Task.CompletedTask);
+            }
+
+            using (BackfillRecordsJob secondRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
+            {
+                await secondRun.StartAsync(CancellationToken.None);
+                await (secondRun.ExecuteTask ?? Task.CompletedTask);
+            }
 
             // Assert — the record chain should be consistent after two runs
             await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
