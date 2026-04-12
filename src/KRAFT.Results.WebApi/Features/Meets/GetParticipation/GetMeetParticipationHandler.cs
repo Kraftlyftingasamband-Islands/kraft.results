@@ -10,8 +10,6 @@ namespace KRAFT.Results.WebApi.Features.Meets.GetParticipation;
 
 internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
 {
-    private static readonly int[] BenchMeetTypes = [2, 5];
-
     public async Task<MeetParticipation?> Handle(int meetId, int participationId, CancellationToken cancellationToken)
     {
         var row = await dbContext.Set<Meet>()
@@ -77,7 +75,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                 a.IsRecord,
                 false));
 
-        IReadOnlyList<Discipline> disciplines = ResolveDisciplines(row.MeetTypeId, row.MeetTypeTitle);
+        IReadOnlyList<Discipline> disciplines = MeetDisciplineResolver.ResolveDisciplines(row.MeetTypeId, row.MeetTypeTitle);
         decimal displayTotal = row.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
 
         return new MeetParticipation(
@@ -98,23 +96,6 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
             ipfPoints,
             row.Disqualified,
             attempts);
-    }
-
-    private static IReadOnlyList<Discipline> ResolveDisciplines(int meetTypeId, string meetTypeTitle)
-    {
-        if (BenchMeetTypes.Contains(meetTypeId))
-        {
-            return [Discipline.Bench];
-        }
-
-        if (meetTypeTitle.Contains("réttst", StringComparison.OrdinalIgnoreCase)
-            || meetTypeTitle.Contains("rettst", StringComparison.OrdinalIgnoreCase)
-            || meetTypeTitle.Contains("deadlift", StringComparison.OrdinalIgnoreCase))
-        {
-            return [Discipline.Deadlift];
-        }
-
-        return [Discipline.Squat, Discipline.Bench, Discipline.Deadlift];
     }
 
     private static decimal ComputeDisplayTotal(IReadOnlyList<Discipline> disciplines, IEnumerable<MeetAttempt> attempts)
@@ -157,7 +138,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
         string ipfType;
         decimal liftWeight;
 
-        if (BenchMeetTypes.Contains(meetTypeId))
+        if (MeetDisciplineResolver.IsBenchMeetType(meetTypeId))
         {
             ipfType = "Benchpress";
             liftWeight = benchpress;

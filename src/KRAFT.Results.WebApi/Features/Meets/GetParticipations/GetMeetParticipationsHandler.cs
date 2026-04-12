@@ -13,8 +13,6 @@ namespace KRAFT.Results.WebApi.Features.Meets.GetParticipations;
 
 internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
 {
-    private static readonly int[] BenchMeetTypes = [2, 5];
-
     public async Task<List<MeetParticipation>> Handle(string slug, CancellationToken cancellationToken)
     {
         var rows = await dbContext.Set<Meet>()
@@ -90,7 +88,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                         a.IsRecord,
                         pendingAttemptIds.Contains(a.AttemptId)));
 
-                IReadOnlyList<Discipline> disciplines = ResolveDisciplines(r.MeetTypeId, r.MeetTypeTitle);
+                IReadOnlyList<Discipline> disciplines = MeetDisciplineResolver.ResolveDisciplines(r.MeetTypeId, r.MeetTypeTitle);
                 decimal displayTotal = r.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
 
                 return new MeetParticipation(
@@ -128,23 +126,6 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
         Discipline.Deadlift => RecordCategory.Deadlift,
         _ => RecordCategory.None,
     };
-
-    private static IReadOnlyList<Discipline> ResolveDisciplines(int meetTypeId, string meetTypeTitle)
-    {
-        if (BenchMeetTypes.Contains(meetTypeId))
-        {
-            return [Discipline.Bench];
-        }
-
-        if (meetTypeTitle.Contains("réttst", StringComparison.OrdinalIgnoreCase)
-            || meetTypeTitle.Contains("rettst", StringComparison.OrdinalIgnoreCase)
-            || meetTypeTitle.Contains("deadlift", StringComparison.OrdinalIgnoreCase))
-        {
-            return [Discipline.Deadlift];
-        }
-
-        return [Discipline.Squat, Discipline.Bench, Discipline.Deadlift];
-    }
 
     private static decimal ComputeDisplayTotal(IReadOnlyList<Discipline> disciplines, IEnumerable<MeetAttempt> attempts)
     {
@@ -186,7 +167,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
         string ipfType;
         decimal liftWeight;
 
-        if (BenchMeetTypes.Contains(meetTypeId))
+        if (MeetDisciplineResolver.IsBenchMeetType(meetTypeId))
         {
             ipfType = "Benchpress";
             liftWeight = benchpress;

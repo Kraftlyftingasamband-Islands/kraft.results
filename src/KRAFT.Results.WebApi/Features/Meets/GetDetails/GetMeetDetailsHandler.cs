@@ -8,8 +8,6 @@ namespace KRAFT.Results.WebApi.Features.Meets.GetDetails;
 
 internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
 {
-    private static readonly int[] BenchMeetTypeIds = [2, 5];
-
     public async Task<MeetDetails?> Handle(string slug, CancellationToken cancellationToken)
     {
         var raw = await dbContext.Set<Meet>()
@@ -65,24 +63,6 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
             raw.RecordsPossible,
             raw.IsRaw,
             raw.ShowTeamPoints,
-            ResolveDisciplines(raw.MeetTypeId, raw.MeetTypeTitle));
-    }
-
-    private static IReadOnlyList<Discipline> ResolveDisciplines(int meetTypeId, string meetTypeTitle)
-    {
-        if (BenchMeetTypeIds.Contains(meetTypeId))
-        {
-            return [Discipline.Bench];
-        }
-
-        if (meetTypeTitle.Contains("réttst", StringComparison.OrdinalIgnoreCase)
-            || meetTypeTitle.Contains("rettst", StringComparison.OrdinalIgnoreCase)
-            || meetTypeTitle.Contains("deadlift", StringComparison.OrdinalIgnoreCase))
-        {
-            return [Discipline.Deadlift];
-        }
-
-        // Default: full powerlifting (SBD)
-        return [Discipline.Squat, Discipline.Bench, Discipline.Deadlift];
+            MeetDisciplineResolver.ResolveDisciplines(raw.MeetTypeId, raw.MeetTypeTitle));
     }
 }
