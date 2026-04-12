@@ -58,13 +58,18 @@ public static class BaseSeedSql
         SET IDENTITY_INSERT AgeCategories ON;
         INSERT INTO AgeCategories (AgeCategoryId, Title, TitleShort, Slug)
         VALUES (1, 'Open', 'Open', 'open');
-        SET IDENTITY_INSERT AgeCategories OFF;
-
-        UPDATE AgeCategories SET Slug = 'open' WHERE AgeCategoryId = 1;
-
-        SET IDENTITY_INSERT AgeCategories ON;
         INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
         VALUES (2, 'Junior', 'junior');
+        INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
+        VALUES (3, 'Sub-Junior', 'subjunior');
+        INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
+        VALUES (4, 'Masters 1', 'masters1');
+        INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
+        VALUES (5, 'Masters 2', 'masters2');
+        INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
+        VALUES (6, 'Masters 3', 'masters3');
+        INSERT INTO AgeCategories (AgeCategoryId, Title, Slug)
+        VALUES (7, 'Masters 4', 'masters4');
         SET IDENTITY_INSERT AgeCategories OFF;
         """;
 
