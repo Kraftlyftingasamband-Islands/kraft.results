@@ -72,11 +72,6 @@ internal sealed class RecordComputationService(
 
         if (athlete.CountryId != IcelandCountryId)
         {
-            _logger.LogWarning(
-                "Skipping record computation: athlete {AthleteId} is not Icelandic (CountryId: {CountryId}, AttemptId: {AttemptId})",
-                athlete.AthleteId,
-                athlete.CountryId,
-                attemptId);
             return;
         }
 
