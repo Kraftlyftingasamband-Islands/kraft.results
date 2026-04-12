@@ -37,6 +37,10 @@ internal sealed class AttemptRecordedEventHandler(
 
             await _recordComputationService.ComputeRecordsAsync(attempt.AttemptId, cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogError(
