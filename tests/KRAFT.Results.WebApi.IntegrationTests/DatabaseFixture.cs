@@ -24,6 +24,8 @@ public sealed class DatabaseFixture : IAsyncLifetime
     private const int OrderingMeetId = 6;
     private const int BwExceedsMaxMeetId = 7;
     private const int BwJustAboveMaxMeetId = 8;
+    private const int NoRecordsMeetId = 9;
+    private const int BannedAthleteId = 12;
     private const int EditorRoleId = 2;
     private const int UserRoleId = 3;
 
@@ -57,6 +59,8 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await SeedOrderingTestDataAsync(dbContext);
         await SeedRecordCorruptionTestDataAsync(dbContext);
         await SeedBodyWeightMeetsAsync(dbContext);
+        await SeedNoRecordsMeetAsync(dbContext);
+        await SeedBanDataAsync(dbContext);
         await SeedIntegrationRolesAsync(dbContext);
     }
 
@@ -300,6 +304,35 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
             VALUES ({BwJustAboveMaxMeetId}, 'BW Just Above Max Meet', 'bw-just-above-max-meet', '2025-11-02', '2025-11-02', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
             SET IDENTITY_INSERT Meets OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task SeedNoRecordsMeetAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            SET IDENTITY_INSERT Meets ON;
+            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ({NoRecordsMeetId}, 'No Records Meet', '{Constants.NoRecordsMeet.Slug}', '2025-12-01', '2025-12-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
+            SET IDENTITY_INSERT Meets OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task SeedBanDataAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            SET IDENTITY_INSERT Athletes ON;
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({BannedAthleteId}, 'Banned', 'Athlete', '1990-01-01', 'm', {NorwayCountryId}, '{Constants.BannedAthlete.Slug}');
+            SET IDENTITY_INSERT Athletes OFF;
+
+            INSERT INTO Bans (AthleteId, FromDate, ToDate)
+            VALUES ({BannedAthleteId}, '2025-01-01', '2025-12-31');
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);

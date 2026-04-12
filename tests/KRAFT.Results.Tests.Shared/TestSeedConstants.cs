@@ -47,6 +47,11 @@ public static class TestSeedConstants
     {
         public const int OpenId = 1;
         public const int JuniorId = 2;
+        public const int SubJuniorId = 3;
+        public const int Masters1Id = 4;
+        public const int Masters2Id = 5;
+        public const int Masters3Id = 6;
+        public const int Masters4Id = 7;
     }
 
     public static class WeightCategory

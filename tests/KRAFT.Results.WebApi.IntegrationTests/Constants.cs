@@ -42,4 +42,18 @@ internal static class Constants
     {
         internal const string Slug = "ordering-meet-2025";
     }
+
+    internal static class NoRecordsMeet
+    {
+        internal const int Id = 9;
+        internal const string Slug = "no-records-meet";
+    }
+
+    internal static class BannedAthlete
+    {
+        internal const int Id = 12;
+        internal const string Slug = "banned-athlete";
+        internal static readonly DateOnly BanStartDate = new(2025, 1, 1);
+        internal static readonly DateOnly BanEndDate = new(2025, 12, 31);
+    }
 }
