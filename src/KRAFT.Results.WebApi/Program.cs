@@ -6,6 +6,7 @@ using System.Threading.RateLimiting;
 using KRAFT.Results.WebApi;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features;
+using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
 using KRAFT.Results.WebApi.Middleware;
 using KRAFT.Results.WebApi.Services;
@@ -94,6 +95,7 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IHttpContextService, HttpContextService>();
 builder.Services.AddFeatures();
+builder.Services.AddHostedService<BackfillRecordsJob>();
 
 WebApplication app = builder.Build();
 
