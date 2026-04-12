@@ -33,6 +33,20 @@ internal sealed class AgeCategory
         };
     }
 
+    internal static IReadOnlyList<string> GetCascadeSlugs(string slug)
+    {
+        return slug switch
+        {
+            "masters4" => ["masters4", "masters3", "masters2", "masters1", "open"],
+            "masters3" => ["masters3", "masters2", "masters1", "open"],
+            "masters2" => ["masters2", "masters1", "open"],
+            "masters1" => ["masters1", "open"],
+            "subjunior" => ["subjunior", "junior", "open"],
+            "junior" => ["junior", "open"],
+            _ => [slug],
+        };
+    }
+
     internal static string ResolveSlug(DateOnly? dateOfBirth, DateOnly meetDate)
     {
         if (dateOfBirth is null)
