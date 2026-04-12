@@ -1,3 +1,5 @@
+using System.Data;
+
 using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.AgeCategories;
@@ -8,6 +10,7 @@ using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
@@ -111,34 +114,54 @@ internal sealed class RecordComputationService(
         IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(slug);
 
         Dictionary<string, int> slugToIdMap = await _dbContext.Set<AgeCategory>()
-            .Where(ac => ac.Slug != null)
+            .Where(ac => cascadeSlugs.Contains(ac.Slug!))
             .ToDictionaryAsync(ac => ac.Slug!, ac => ac.AgeCategoryId, cancellationToken);
 
-        foreach (string cascadeSlug in cascadeSlugs)
+        List<int> cascadeAgeCategoryIds = slugToIdMap.Values.ToList();
+
+        IExecutionStrategy strategy = _dbContext.Database.CreateExecutionStrategy();
+
+        await strategy.ExecuteAsync(async () =>
         {
-            if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+            await using IDbContextTransaction transaction = await _dbContext.Database
+                .BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
+
+            List<Record> existingSlotRecords = await _dbContext.Set<Record>()
+                .Where(r => r.EraId == era.EraId)
+                .Where(r => cascadeAgeCategoryIds.Contains(r.AgeCategoryId))
+                .Where(r => r.WeightCategoryId == participation.WeightCategoryId)
+                .Where(r => r.RecordCategoryId == recordCategory)
+                .Where(r => r.IsRaw == meet.IsRaw)
+                .Where(r => r.IsCurrent)
+                .ToListAsync(cancellationToken);
+
+            foreach (string cascadeSlug in cascadeSlugs)
             {
-                continue;
+                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+                {
+                    continue;
+                }
+
+                bool beatRecord = TrySetRecord(
+                    existingSlotRecords,
+                    era.EraId,
+                    ageCategoryId,
+                    participation.WeightCategoryId,
+                    recordCategory,
+                    meet.IsRaw,
+                    attempt.Weight,
+                    meetDate,
+                    attemptId);
+
+                if (!beatRecord)
+                {
+                    break;
+                }
             }
 
-            bool beatRecord = await TrySetRecordAsync(
-                era.EraId,
-                ageCategoryId,
-                participation.WeightCategoryId,
-                recordCategory,
-                meet.IsRaw,
-                attempt.Weight,
-                meetDate,
-                attemptId,
-                cancellationToken);
-
-            if (!beatRecord)
-            {
-                break;
-            }
-        }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
     }
 
     private static bool HasValidTotal(Participation participation, Meet meet)
@@ -179,7 +202,8 @@ internal sealed class RecordComputationService(
         };
     }
 
-    private async Task<bool> TrySetRecordAsync(
+    private bool TrySetRecord(
+        List<Record> existingSlotRecords,
         int eraId,
         int ageCategoryId,
         int weightCategoryId,
@@ -187,17 +211,10 @@ internal sealed class RecordComputationService(
         bool isRaw,
         decimal weight,
         DateOnly date,
-        int attemptId,
-        CancellationToken cancellationToken)
+        int attemptId)
     {
-        Record? currentRecord = await _dbContext.Set<Record>()
-            .Where(r => r.EraId == eraId)
-            .Where(r => r.AgeCategoryId == ageCategoryId)
-            .Where(r => r.WeightCategoryId == weightCategoryId)
-            .Where(r => r.RecordCategoryId == recordCategory)
-            .Where(r => r.IsRaw == isRaw)
-            .Where(r => r.IsCurrent)
-            .FirstOrDefaultAsync(cancellationToken);
+        Record? currentRecord = existingSlotRecords
+            .FirstOrDefault(r => r.AgeCategoryId == ageCategoryId);
 
         if (currentRecord is not null && weight <= currentRecord.Weight)
         {
