@@ -85,7 +85,7 @@ internal sealed class RecordAttemptHandler
 
         if (existing is not null)
         {
-            existing.Update(command.Weight, command.Good, user.Username);
+            participation.UpdateAttempt(existing, command.Weight, command.Good, user.Username);
         }
         else
         {
