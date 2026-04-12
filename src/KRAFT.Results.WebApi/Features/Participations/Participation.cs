@@ -154,6 +154,12 @@ internal sealed class Participation : AggregateRoot
         Raise(new AttemptRecordedEvent(this, attempt));
     }
 
+    internal void UpdateAttempt(Attempt attempt, decimal weight, bool good, string modifiedBy)
+    {
+        attempt.Update(weight, good, modifiedBy);
+        Raise(new AttemptRecordedEvent(this));
+    }
+
     internal void RecalculateTotals()
     {
         decimal bestSquat = BestGoodLift(Discipline.Squat);
