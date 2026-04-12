@@ -83,7 +83,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
@@ -153,7 +152,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
@@ -384,7 +382,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
@@ -447,6 +444,66 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task WhenAthleteIsNotIcelandic_NoRecordCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+
+        DateOnly masters4DateOfBirth = new(1950, 1, 1);
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters4DateOfBirth)
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        // Record bench and deadlift so total would be valid
+        await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await ClearMastersCascadeRecordsAsync(dbContext);
+
+        // Act — record squat for non-Icelandic athlete
+        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+
+        // Assert — no records should be created for a non-Icelandic athlete
+        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+            .Include(r => r.Attempt!)
+                .ThenInclude(a => a.Participation)
+            .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
+
+        createdRecords.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task WhenTwoLiftersBreakSameRecordInSameMeet_EarlierAttemptWins()
     {
         // Arrange
@@ -456,7 +513,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         CreateAthleteCommand athleteACommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteAResponse = await client.PostAsJsonAsync(
@@ -470,7 +526,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         CreateAthleteCommand athleteBCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteBResponse = await client.PostAsJsonAsync(
@@ -560,7 +615,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         CreateAthleteCommand athleteACommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteAResponse = await client.PostAsJsonAsync(
@@ -574,7 +628,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         CreateAthleteCommand athleteBCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
-            .WithCountryId(2)
             .Build();
 
         HttpResponseMessage athleteBResponse = await client.PostAsJsonAsync(
