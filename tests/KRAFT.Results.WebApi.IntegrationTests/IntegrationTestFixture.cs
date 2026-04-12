@@ -1,5 +1,8 @@
 ﻿using System.Collections.Concurrent;
 
+using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.IntegrationTests;
 
 using Microsoft.AspNetCore.Authentication;
@@ -7,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: AssemblyFixture(typeof(IntegrationTestFixture))]
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
@@ -45,6 +49,24 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
                 services.AddAuthentication(TestNoNameClaimAuthHandler.SchemeName)
                     .AddScheme<AuthenticationSchemeOptions, TestNoNameClaimAuthHandler>(
                     TestNoNameClaimAuthHandler.SchemeName, options => { });
+            });
+        });
+
+        _childFactories.Add(childFactory);
+        return childFactory.CreateClient();
+    }
+
+    public HttpClient CreateAuthorizedHttpClientWithRecordComputation()
+    {
+        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddAuthentication(TestAuthHandler.SchemeName)
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.SchemeName, options => { });
+
+                services.AddScoped<IDomainEventHandler<AttemptRecordedEvent>, AttemptRecordedEventHandler>();
             });
         });
 
