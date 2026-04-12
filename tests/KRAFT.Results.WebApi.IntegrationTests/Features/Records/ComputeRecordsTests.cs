@@ -38,40 +38,47 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
-        // Act
-        await service.ComputeRecordsAsync(RecordTestAttemptId, CancellationToken.None);
+        try
+        {
+            // Act
+            await service.ComputeRecordsAsync(RecordTestAttemptId, CancellationToken.None);
 
-        // Assert — records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
-        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
-            .Where(r => r.AttemptId == RecordTestAttemptId)
-            .Where(r => r.IsCurrent)
-            .Where(r => r.IsRaw)
-            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-            .Include(r => r.AgeCategory)
-            .OrderBy(r => r.AgeCategoryId)
-            .ToListAsync(CancellationToken.None);
+            // Assert — records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
+            List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId == RecordTestAttemptId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.IsRaw)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Include(r => r.AgeCategory)
+                .OrderBy(r => r.AgeCategoryId)
+                .ToListAsync(CancellationToken.None);
 
-        List<string> cascadeSlugs = createdRecords
-            .Select(r => r.AgeCategory.Slug!)
-            .ToList();
+            List<string> cascadeSlugs = createdRecords
+                .Select(r => r.AgeCategory.Slug!)
+                .ToList();
 
-        cascadeSlugs.Count.ShouldBe(5);
-        cascadeSlugs.ShouldContain("masters4");
-        cascadeSlugs.ShouldContain("masters3");
-        cascadeSlugs.ShouldContain("masters2");
-        cascadeSlugs.ShouldContain("masters1");
-        cascadeSlugs.ShouldContain("open");
+            cascadeSlugs.Count.ShouldBe(5);
+            cascadeSlugs.ShouldContain("masters4");
+            cascadeSlugs.ShouldContain("masters3");
+            cascadeSlugs.ShouldContain("masters2");
+            cascadeSlugs.ShouldContain("masters1");
+            cascadeSlugs.ShouldContain("open");
 
-        createdRecords.ShouldAllBe(r => r.Weight == AttemptWeight);
-        createdRecords.ShouldAllBe(r => r.EraId == TestSeedConstants.Era.CurrentId);
-        createdRecords.ShouldAllBe(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg);
+            createdRecords.ShouldAllBe(r => r.Weight == AttemptWeight);
+            createdRecords.ShouldAllBe(r => r.EraId == TestSeedConstants.Era.CurrentId);
+            createdRecords.ShouldAllBe(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg);
+        }
+        finally
+        {
+            await CleanupDirectSeedTestDataAsync(dbContext);
+        }
     }
 
     [Fact]
     public async Task WhenAttemptIsRecordedViaEndpoint_RecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -141,7 +148,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenExistingAttemptIsUpdated_RecordIsRecomputed()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -216,7 +223,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenAthleteIsBanned_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
             .WithAthleteSlug(Constants.BannedAthlete.Slug)
@@ -261,9 +268,23 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenRecordsPossibleIsFalse_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
+            .WithCountryId(2)
+            .Build();
+
+        HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
 
         AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
@@ -303,7 +324,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenNoValidTotal_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -358,7 +379,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenValidTotalExists_RecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -429,7 +450,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenTwoLiftersBreakSameRecordInSameMeet_EarlierAttemptWins()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
 
@@ -533,7 +554,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     public async Task WhenSecondLifterDoesNotBeatExistingRecord_NoNewRecord()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClient();
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
 
@@ -699,6 +720,31 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             AND RecordCategoryId = 1
             AND IsRaw = 1
             AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task CleanupDirectSeedTestDataAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            DELETE FROM Records WHERE AttemptId = {RecordTestAttemptId};
+            DELETE FROM Attempts WHERE AttemptId = {RecordTestAttemptId};
+            DELETE FROM Participations WHERE ParticipationId = {RecordTestParticipationId};
+
+            -- Restore the open raw squat 83kg record that was deleted by SeedRecordComputationTestDataAsync
+            IF NOT EXISTS (
+                SELECT 1 FROM Records
+                WHERE EraId = {TestSeedConstants.Era.CurrentId}
+                AND AgeCategoryId = {TestSeedConstants.AgeCategory.OpenId}
+                AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
+                AND RecordCategoryId = 1
+                AND IsRaw = 1)
+            BEGIN
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
+            END
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);

@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
 
 using Microsoft.AspNetCore.Hosting;
@@ -39,6 +40,14 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
         if (backfillDescriptor is not null)
         {
             services.Remove(backfillDescriptor);
+        }
+
+        ServiceDescriptor? eventHandlerDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(IDomainEventHandler<AttemptRecordedEvent>));
+
+        if (eventHandlerDescriptor is not null)
+        {
+            services.Remove(eventHandlerDescriptor);
         }
 
         services.AddScoped<DomainEventInterceptor>();

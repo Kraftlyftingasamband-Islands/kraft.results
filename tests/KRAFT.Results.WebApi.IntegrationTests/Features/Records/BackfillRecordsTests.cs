@@ -18,6 +18,18 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     private const int BackfillTestAttemptLowId = 500;
     private const int BackfillTestAttemptHighId = 501;
 
+    private const string SeedRecordCorruptionSql =
+        """
+        INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+        VALUES (2, 1, 2, 2, 150.0, '2025-06-01', 0, 2, 0, 0, 'seed');
+
+        INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+        VALUES (2, 1, 2, 2, 140.0, '2025-05-01', 0, 2, 1, 0, 'seed');
+
+        INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+        VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
+        """;
+
     [Fact]
     public async Task WhenBackfillRuns_RecordChainIsCorrect()
     {
@@ -30,35 +42,42 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        // Act
-        await job.StartAsync(CancellationToken.None);
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
 
-        // Assert — slot: era=2, ageCategory=junior(2), weightCategory=93kg(2), squat(1), isRaw=true.
-        // Expected chain: attempt 500 (180kg) -> attempt 501 (220kg, current).
-        // The orphan seed record at 150kg (no attempt) should be deleted.
-        // The corrupt record at 160kg (no matching attempt) should be deleted.
-        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
-        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+            // Assert — slot: era=2, ageCategory=junior(2), weightCategory=93kg(2), squat(1), isRaw=true.
+            // Expected chain: attempt 500 (180kg) -> attempt 501 (220kg, current).
+            // The orphan seed record at 150kg (no attempt) should be deleted.
+            // The corrupt record at 160kg (no matching attempt) should be deleted.
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
-            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
-            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
-            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-            .Where(r => r.IsRaw)
-            .ToListAsync(CancellationToken.None);
+            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.IsRaw)
+                .ToListAsync(CancellationToken.None);
 
-        slotRecords.Count(r => r.IsCurrent).ShouldBe(1, "exactly one record should be current");
+            slotRecords.Count(r => r.IsCurrent).ShouldBe(1, "exactly one record should be current");
 
-        RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
-        currentRecord.Weight.ShouldBe(220.0m);
-        currentRecord.AttemptId.ShouldBe(BackfillTestAttemptHighId);
+            RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
+            currentRecord.Weight.ShouldBe(220.0m);
+            currentRecord.AttemptId.ShouldBe(BackfillTestAttemptHighId);
 
-        // The orphan seed records (AttemptId = null) should have been deleted
-        slotRecords.ShouldNotContain(r => r.AttemptId == null);
+            // The orphan seed records (AttemptId = null) should have been deleted
+            slotRecords.ShouldNotContain(r => r.AttemptId == null);
 
-        // The corrupt 160kg record should have been deleted
-        slotRecords.ShouldNotContain(r => r.Weight == 160.0m);
+            // The corrupt 160kg record should have been deleted
+            slotRecords.ShouldNotContain(r => r.Weight == 160.0m);
+        }
+        finally
+        {
+            await RestoreSeedRecordsAsync(dbContext);
+        }
     }
 
     [Fact]
@@ -66,29 +85,50 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     {
         // Arrange
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        // Act — run twice
-        await job.StartAsync(CancellationToken.None);
-        await job.StartAsync(CancellationToken.None);
-
-        // Assert — the record chain should be consistent after two runs
-        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
-        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
-            .Where(r => r.IsCurrent)
-            .ToListAsync(CancellationToken.None);
-
-        // Group by slot and verify each slot has exactly one current record
-        IEnumerable<IGrouping<string, RecordEntity>> slots = allCurrentRecords
-            .GroupBy(r => $"{r.EraId}-{r.AgeCategoryId}-{r.WeightCategoryId}-{r.RecordCategoryId}-{r.IsRaw}");
-
-        foreach (IGrouping<string, RecordEntity> slot in slots)
+        try
         {
-            slot.Count().ShouldBe(1, $"slot {slot.Key} should have exactly one current record");
+            // Act — run twice
+            await job.StartAsync(CancellationToken.None);
+            await job.StartAsync(CancellationToken.None);
+
+            // Assert — the record chain should be consistent after two runs
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.IsCurrent)
+                .ToListAsync(CancellationToken.None);
+
+            // Group by slot and verify each slot has exactly one current record
+            IEnumerable<IGrouping<string, RecordEntity>> slots = allCurrentRecords
+                .GroupBy(r => $"{r.EraId}-{r.AgeCategoryId}-{r.WeightCategoryId}-{r.RecordCategoryId}-{r.IsRaw}");
+
+            foreach (IGrouping<string, RecordEntity> slot in slots)
+            {
+                slot.Count().ShouldBe(1, $"slot {slot.Key} should have exactly one current record");
+            }
         }
+        finally
+        {
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    private static async Task RestoreSeedRecordsAsync(ResultsDbContext dbContext)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            $"""
+            DELETE FROM Records;
+            DELETE FROM Attempts WHERE AttemptId IN ({BackfillTestAttemptLowId}, {BackfillTestAttemptHighId});
+            DELETE FROM Participations WHERE ParticipationId = {BackfillTestParticipationId};
+            """);
+
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
+        await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
     }
 
     private static async Task SeedBackfillTestDataAsync(ResultsDbContext dbContext)

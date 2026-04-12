@@ -11,11 +11,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
-internal sealed class RecordComputationService(ResultsDbContext dbContext)
+internal sealed class RecordComputationService(
+    ResultsDbContext dbContext,
+    ILogger<RecordComputationService> logger)
 {
     private const string CreatedBySystem = "system";
 
     private readonly ResultsDbContext _dbContext = dbContext;
+    private readonly ILogger<RecordComputationService> _logger = logger;
 
     internal async Task ComputeRecordsAsync(int attemptId, CancellationToken cancellationToken)
     {
@@ -32,6 +35,9 @@ internal sealed class RecordComputationService(ResultsDbContext dbContext)
 
         if (attempt is null)
         {
+            _logger.LogWarning(
+                "Skipping record computation: attempt {AttemptId} not found",
+                attemptId);
             return;
         }
 
@@ -40,6 +46,10 @@ internal sealed class RecordComputationService(ResultsDbContext dbContext)
 
         if (!meet.RecordsPossible)
         {
+            _logger.LogWarning(
+                "Skipping record computation: meet {MeetSlug} has RecordsPossible=false (AttemptId: {AttemptId})",
+                meet.Slug,
+                attemptId);
             return;
         }
 
@@ -48,6 +58,11 @@ internal sealed class RecordComputationService(ResultsDbContext dbContext)
 
         if (!athlete.IsEligibleForRecord(meetDate))
         {
+            _logger.LogWarning(
+                "Skipping record computation: athlete {AthleteId} is banned on {MeetDate} (AttemptId: {AttemptId})",
+                athlete.AthleteId,
+                meetDate,
+                attemptId);
             return;
         }
 
@@ -55,11 +70,19 @@ internal sealed class RecordComputationService(ResultsDbContext dbContext)
 
         if (era is null)
         {
+            _logger.LogWarning(
+                "Skipping record computation: no era found for date {MeetDate} (AttemptId: {AttemptId})",
+                meetDate,
+                attemptId);
             return;
         }
 
         if (!HasValidTotal(participation, meet))
         {
+            _logger.LogWarning(
+                "Skipping record computation: no valid total for participation {ParticipationId} (AttemptId: {AttemptId})",
+                participation.ParticipationId,
+                attemptId);
             return;
         }
 
@@ -184,6 +207,15 @@ internal sealed class RecordComputationService(ResultsDbContext dbContext)
         if (currentRecord is not null)
         {
             currentRecord.Demote();
+            _logger.LogInformation(
+                "Record demoted: {EraId}/{AgeCategoryId}/{WeightCategoryId}/{RecordCategory}/{IsRaw} = {Weight}kg (RecordId: {RecordId})",
+                currentRecord.EraId,
+                currentRecord.AgeCategoryId,
+                currentRecord.WeightCategoryId,
+                currentRecord.RecordCategoryId,
+                currentRecord.IsRaw,
+                currentRecord.Weight,
+                currentRecord.RecordId);
         }
 
         Record newRecord = Record.Create(
@@ -200,6 +232,16 @@ internal sealed class RecordComputationService(ResultsDbContext dbContext)
         newRecord.SetCurrent();
 
         _dbContext.Set<Record>().Add(newRecord);
+
+        _logger.LogInformation(
+            "Record set: {EraId}/{AgeCategoryId}/{WeightCategoryId}/{RecordCategory}/{IsRaw} = {Weight}kg (AttemptId: {AttemptId})",
+            eraId,
+            ageCategoryId,
+            weightCategoryId,
+            recordCategory,
+            isRaw,
+            weight,
+            attemptId);
 
         return true;
     }
