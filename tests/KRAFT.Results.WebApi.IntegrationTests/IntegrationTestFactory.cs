@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Records;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -30,6 +31,14 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
         if (descriptor is not null)
         {
             services.Remove(descriptor);
+        }
+
+        ServiceDescriptor? backfillDescriptor = services.SingleOrDefault(
+            d => d.ImplementationType == typeof(BackfillRecordsJob));
+
+        if (backfillDescriptor is not null)
+        {
+            services.Remove(backfillDescriptor);
         }
 
         services.AddScoped<DomainEventInterceptor>();
