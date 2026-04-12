@@ -19,6 +19,7 @@ internal sealed class RecordComputationService(
     ILogger<RecordComputationService> logger)
 {
     private const string CreatedBySystem = "system";
+    private const int IcelandCountryId = 1;
 
     private readonly ResultsDbContext _dbContext = dbContext;
     private readonly ILogger<RecordComputationService> _logger = logger;
@@ -65,6 +66,16 @@ internal sealed class RecordComputationService(
                 "Skipping record computation: athlete {AthleteId} is banned on {MeetDate} (AttemptId: {AttemptId})",
                 athlete.AthleteId,
                 meetDate,
+                attemptId);
+            return;
+        }
+
+        if (athlete.CountryId != IcelandCountryId)
+        {
+            _logger.LogWarning(
+                "Skipping record computation: athlete {AthleteId} is not Icelandic (CountryId: {CountryId}, AttemptId: {AttemptId})",
+                athlete.AthleteId,
+                athlete.CountryId,
                 attemptId);
             return;
         }
