@@ -8,10 +8,6 @@
         {
             <span id="@_tooltipId" class="tip" role="tooltip">@RecordContext</span>
         }
-        else if (Attempt.IsPendingRecord && Attempt.IsGood)
-        {
-            <span id="@_tooltipId" class="tip" role="tooltip">Met til staðfestingar</span>
-        }
     </button>
 }
 else
@@ -21,10 +17,6 @@ else
         @if (Attempt.IsRecord && Attempt.IsGood && RecordContext is not null)
         {
             <span id="@_tooltipId" class="tip" role="tooltip">@RecordContext</span>
-        }
-        else if (Attempt.IsPendingRecord && Attempt.IsGood)
-        {
-            <span id="@_tooltipId" class="tip" role="tooltip">Met til staðfestingar</span>
         }
     </span>
 }
@@ -65,15 +57,7 @@ else
             _classes = "pill pill-record";
             _tabIndex = "0";
             _role = "img";
-            _ariaLabel = $"{_value} kg \u2013 Met";
-            _tooltipId = $"tip-{Guid.NewGuid():N}";
-        }
-        else if (Attempt.IsGood && Attempt.IsPendingRecord)
-        {
-            _classes = "pill pill-pending";
-            _tabIndex = "0";
-            _role = "img";
-            _ariaLabel = $"{_value} kg \u2013 Met til sta\u00f0festingar";
+            _ariaLabel = $"{_value} kg – Met";
             _tooltipId = $"tip-{Guid.NewGuid():N}";
         }
         else if (Attempt.IsGood)

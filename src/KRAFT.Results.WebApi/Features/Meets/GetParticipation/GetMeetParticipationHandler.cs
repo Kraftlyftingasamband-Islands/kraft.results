@@ -72,8 +72,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                 a.Round,
                 a.Weight,
                 a.Good,
-                a.IsRecord,
-                false));
+                a.IsRecord));
 
         IReadOnlyList<Discipline> disciplines = MeetDisciplineResolver.ResolveDisciplines(row.MeetTypeId, row.MeetTypeTitle);
         decimal displayTotal = row.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
