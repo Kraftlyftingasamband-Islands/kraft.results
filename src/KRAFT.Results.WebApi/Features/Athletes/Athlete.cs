@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Bans;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Teams;
@@ -46,6 +47,8 @@ internal sealed class Athlete : AggregateRoot
 
     public ICollection<Participation> Participations { get; } = [];
 
+    public ICollection<Ban> Bans { get; } = [];
+
     internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
     {
         if (string.IsNullOrWhiteSpace(firstName))
@@ -84,6 +87,13 @@ internal sealed class Athlete : AggregateRoot
         athlete.Raise(new AthleteCreatedEvent(athlete));
 
         return athlete;
+    }
+
+    internal bool IsEligibleForRecord(DateOnly meetDate)
+    {
+        return !Bans.Any(ban =>
+            meetDate >= DateOnly.FromDateTime(ban.FromDate)
+            && meetDate <= DateOnly.FromDateTime(ban.ToDate));
     }
 
     internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)

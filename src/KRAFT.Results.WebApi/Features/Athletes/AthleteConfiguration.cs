@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.ValueObjects;
+﻿using KRAFT.Results.WebApi.Features.Bans;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -68,5 +69,10 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
             .WithMany(p => p.Athletes)
             .HasForeignKey(d => d.TeamId)
             .HasConstraintName("FK_Athletes_Teams");
+
+        builder.HasMany(a => a.Bans)
+            .WithOne(b => b.Athlete)
+            .HasForeignKey(b => b.AthleteId)
+            .HasConstraintName("FK_Bans_Athletes");
     }
 }
