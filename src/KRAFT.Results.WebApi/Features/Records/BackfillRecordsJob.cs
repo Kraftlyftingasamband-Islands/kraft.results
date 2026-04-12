@@ -13,92 +13,100 @@ namespace KRAFT.Results.WebApi.Features.Records;
 
 internal sealed class BackfillRecordsJob(
     IServiceScopeFactory scopeFactory,
-    ILogger<BackfillRecordsJob> logger) : IHostedService
+    ILogger<BackfillRecordsJob> logger) : BackgroundService
 {
     private const string CreatedBySystem = "system";
 
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly ILogger<BackfillRecordsJob> _logger = logger;
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<Era> eras = await dbContext.Set<Era>()
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(stoppingToken);
 
         Dictionary<string, int> slugToIdMap = await dbContext.Set<AgeCategory>()
             .AsNoTracking()
             .Where(ac => ac.Slug != null)
-            .ToDictionaryAsync(ac => ac.Slug!, ac => ac.AgeCategoryId, cancellationToken);
+            .ToDictionaryAsync(ac => ac.Slug!, ac => ac.AgeCategoryId, stoppingToken);
 
-        List<Attempt> allAttempts = await dbContext.Set<Attempt>()
-            .AsNoTracking()
-            .Include(a => a.Participation)
-                .ThenInclude(p => p.Meet)
-                    .ThenInclude(m => m.MeetType)
-            .Include(a => a.Participation)
-                .ThenInclude(p => p.Athlete)
-                    .ThenInclude(a => a.Bans)
-            .Include(a => a.Participation)
-                .ThenInclude(p => p.AgeCategory)
-            .Where(a => a.Good)
-            .Where(a => a.Weight > 0)
-            .Where(a => a.Participation.Meet.RecordsPossible)
-            .ToListAsync(cancellationToken);
-
-        List<SlotAttempt> slotAttempts = BuildSlotAttempts(allAttempts, eras, slugToIdMap);
-
-        Dictionary<string, List<SlotAttempt>> grouped = slotAttempts
-            .GroupBy(sa => sa.SlotKey)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderBy(sa => sa.MeetDate)
-                    .ThenBy(sa => sa.AttemptId)
-                    .ToList());
-
-        List<Record> existingRecords = await dbContext.Set<Record>()
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-
-        Dictionary<string, List<Record>> existingBySlot = existingRecords
-            .GroupBy(r => FormatSlotKey(r.EraId, r.AgeCategoryId, r.WeightCategoryId, r.RecordCategoryId, r.IsRaw))
-            .ToDictionary(g => g.Key, g => g.ToList());
+        List<DivisionKey> divisionKeys = await GetDistinctDivisionKeys(dbContext, eras, slugToIdMap, stoppingToken);
 
         int recordsCreated = 0;
         int recordsDeleted = 0;
         int divisionsProcessed = 0;
 
-        HashSet<string> allSlotKeys = [.. grouped.Keys, .. existingBySlot.Keys];
-        List<int> recordIdsToDelete = [];
-        List<int> recordIdsToDemote = [];
-        List<int> recordIdsToSetCurrent = [];
-        List<Record> recordsToCreate = [];
-
-        foreach (string slotKey in allSlotKeys)
+        foreach (DivisionKey division in divisionKeys)
         {
             divisionsProcessed++;
+            string slotKey = FormatSlotKey(
+                division.EraId,
+                division.AgeCategoryId,
+                division.WeightCategoryId,
+                division.RecordCategory,
+                division.IsRaw);
 
-            List<SlotAttempt> slotChain = grouped.GetValueOrDefault(slotKey) ?? [];
-            List<Record> slotRecords = existingBySlot.GetValueOrDefault(slotKey) ?? [];
+            Era? era = eras.FirstOrDefault(e => e.EraId == division.EraId);
 
-            List<ExpectedRecord> expectedChain = ComputeExpectedChain(slotChain);
+            if (era is null)
+            {
+                continue;
+            }
+
+            List<Attempt> divisionAttempts = await dbContext.Set<Attempt>()
+                .AsNoTracking()
+                .Include(a => a.Participation)
+                    .ThenInclude(p => p.Meet)
+                        .ThenInclude(m => m.MeetType)
+                .Include(a => a.Participation)
+                    .ThenInclude(p => p.Athlete)
+                        .ThenInclude(a => a.Bans)
+                .Include(a => a.Participation)
+                    .ThenInclude(p => p.AgeCategory)
+                .Where(a => a.Good)
+                .Where(a => a.Weight > 0)
+                .Where(a => a.Participation.Meet.RecordsPossible)
+                .Where(a => a.Participation.Meet.IsRaw == division.IsRaw)
+                .Where(a => a.Participation.WeightCategoryId == division.WeightCategoryId)
+                .ToListAsync(stoppingToken);
+
+            List<SlotAttempt> slotAttempts = BuildSlotAttempts(divisionAttempts, eras, slugToIdMap)
+                .Where(sa => sa.SlotKey == slotKey)
+                .OrderBy(sa => sa.MeetDate)
+                .ThenBy(sa => sa.AttemptId)
+                .ToList();
+
+            List<Record> slotRecords = await dbContext.Set<Record>()
+                .AsNoTracking()
+                .Where(r => r.EraId == division.EraId)
+                .Where(r => r.AgeCategoryId == division.AgeCategoryId)
+                .Where(r => r.WeightCategoryId == division.WeightCategoryId)
+                .Where(r => r.RecordCategoryId == division.RecordCategory)
+                .Where(r => r.IsRaw == division.IsRaw)
+                .ToListAsync(stoppingToken);
+
+            List<ExpectedRecord> expectedChain = ComputeExpectedChain(slotAttempts);
 
             HashSet<int> expectedAttemptIds = expectedChain
                 .Select(e => e.AttemptId)
                 .ToHashSet();
 
-            // Identify records to delete (not in expected chain)
-            List<Record> toDelete = slotRecords
+            List<int> recordIdsToDelete = slotRecords
                 .Where(r => r.AttemptId is null || !expectedAttemptIds.Contains(r.AttemptId.Value))
+                .Select(r => r.RecordId)
                 .ToList();
 
-            foreach (Record record in toDelete)
+            if (recordIdsToDelete.Count > 0)
             {
-                recordIdsToDelete.Add(record.RecordId);
-                recordsDeleted++;
+                await dbContext.Set<Record>()
+                    .Where(r => recordIdsToDelete.Contains(r.RecordId))
+                    .ExecuteDeleteAsync(stoppingToken);
+
+                recordsDeleted += recordIdsToDelete.Count;
             }
 
             Dictionary<int, Record> existingByAttemptId = slotRecords
@@ -106,6 +114,10 @@ internal sealed class BackfillRecordsJob(
                 .Where(r => expectedAttemptIds.Contains(r.AttemptId!.Value))
                 .GroupBy(r => r.AttemptId!.Value)
                 .ToDictionary(g => g.Key, g => g.First());
+
+            List<int> recordIdsToDemote = [];
+            List<int> recordIdsToSetCurrent = [];
+            List<Record> recordsToCreate = [];
 
             for (int i = 0; i < expectedChain.Count; i++)
             {
@@ -145,31 +157,31 @@ internal sealed class BackfillRecordsJob(
                     recordsCreated++;
                 }
             }
-        }
 
-        // Apply changes using raw SQL for deletes/updates to avoid change tracking conflicts
-        if (recordIdsToDelete.Count > 0)
-        {
-            string deleteSql = $"DELETE FROM Records WHERE RecordId IN ({string.Join(",", recordIdsToDelete)})";
-            await dbContext.Database.ExecuteSqlRawAsync(deleteSql, cancellationToken);
-        }
+            if (recordIdsToDemote.Count > 0)
+            {
+                await dbContext.Set<Record>()
+                    .Where(r => recordIdsToDemote.Contains(r.RecordId))
+                    .ExecuteUpdateAsync(
+                        s => s.SetProperty(r => r.IsCurrent, false),
+                        stoppingToken);
+            }
 
-        if (recordIdsToDemote.Count > 0)
-        {
-            string demoteSql = $"UPDATE Records SET IsCurrent = 0 WHERE RecordId IN ({string.Join(",", recordIdsToDemote)})";
-            await dbContext.Database.ExecuteSqlRawAsync(demoteSql, cancellationToken);
-        }
+            if (recordIdsToSetCurrent.Count > 0)
+            {
+                await dbContext.Set<Record>()
+                    .Where(r => recordIdsToSetCurrent.Contains(r.RecordId))
+                    .ExecuteUpdateAsync(
+                        s => s.SetProperty(r => r.IsCurrent, true),
+                        stoppingToken);
+            }
 
-        if (recordIdsToSetCurrent.Count > 0)
-        {
-            string setCurrentSql = $"UPDATE Records SET IsCurrent = 1 WHERE RecordId IN ({string.Join(",", recordIdsToSetCurrent)})";
-            await dbContext.Database.ExecuteSqlRawAsync(setCurrentSql, cancellationToken);
-        }
-
-        if (recordsToCreate.Count > 0)
-        {
-            dbContext.Set<Record>().AddRange(recordsToCreate);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (recordsToCreate.Count > 0)
+            {
+                dbContext.Set<Record>().AddRange(recordsToCreate);
+                await dbContext.SaveChangesAsync(stoppingToken);
+                dbContext.ChangeTracker.Clear();
+            }
         }
 
         _logger.LogInformation(
@@ -179,7 +191,84 @@ internal sealed class BackfillRecordsJob(
             recordsDeleted);
     }
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    private static async Task<List<DivisionKey>> GetDistinctDivisionKeys(
+        ResultsDbContext dbContext,
+        List<Era> eras,
+        Dictionary<string, int> slugToIdMap,
+        CancellationToken cancellationToken)
+    {
+        List<DivisionKey> fromRecords = await dbContext.Set<Record>()
+            .AsNoTracking()
+            .Select(r => new DivisionKey(
+                r.EraId,
+                r.AgeCategoryId,
+                r.WeightCategoryId,
+                r.RecordCategoryId,
+                r.IsRaw))
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        List<AttemptProjection> attemptProjections = await dbContext.Set<Attempt>()
+            .AsNoTracking()
+            .Where(a => a.Good)
+            .Where(a => a.Weight > 0)
+            .Where(a => a.Participation.Meet.RecordsPossible)
+            .Select(a => new AttemptProjection(
+                a.Discipline,
+                a.Participation.Meet.MeetType.MeetTypeId,
+                a.Participation.Meet.StartDate,
+                a.Participation.AgeCategory.Slug,
+                a.Participation.WeightCategoryId,
+                a.Participation.Meet.IsRaw))
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        HashSet<DivisionKey> keys = [.. fromRecords];
+
+        foreach (AttemptProjection projection in attemptProjections)
+        {
+            if (string.IsNullOrEmpty(projection.AgeCategorySlug))
+            {
+                continue;
+            }
+
+            DateOnly meetDate = DateOnly.FromDateTime(projection.MeetStartDate);
+            Era? era = eras.FirstOrDefault(e => e.StartDate <= meetDate && e.EndDate >= meetDate);
+
+            if (era is null)
+            {
+                continue;
+            }
+
+            RecordCategory recordCategory = MapDisciplineToRecordCategory(
+                projection.Discipline,
+                projection.MeetTypeId);
+
+            if (recordCategory == RecordCategory.None)
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(projection.AgeCategorySlug);
+
+            foreach (string cascadeSlug in cascadeSlugs)
+            {
+                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+                {
+                    continue;
+                }
+
+                keys.Add(new DivisionKey(
+                    era.EraId,
+                    ageCategoryId,
+                    projection.WeightCategoryId,
+                    recordCategory,
+                    projection.IsRaw));
+            }
+        }
+
+        return [.. keys];
+    }
 
     private static List<SlotAttempt> BuildSlotAttempts(
         List<Attempt> attempts,
@@ -328,6 +417,21 @@ internal sealed class BackfillRecordsJob(
     {
         return $"{eraId}-{ageCategoryId}-{weightCategoryId}-{(int)recordCategory}-{isRaw}";
     }
+
+    private sealed record DivisionKey(
+        int EraId,
+        int AgeCategoryId,
+        int WeightCategoryId,
+        RecordCategory RecordCategory,
+        bool IsRaw);
+
+    private sealed record AttemptProjection(
+        Discipline Discipline,
+        int MeetTypeId,
+        DateTime MeetStartDate,
+        string? AgeCategorySlug,
+        int WeightCategoryId,
+        bool IsRaw);
 
     private sealed record SlotAttempt(
         string SlotKey,
