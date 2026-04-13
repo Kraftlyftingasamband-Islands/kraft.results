@@ -12,6 +12,8 @@ using KRAFT.Results.WebApi.Features.Participations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
+using static KRAFT.Results.WebApi.Features.Records.RecordSlotRebuilder;
+
 namespace KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 internal sealed class RecordComputationService(
@@ -221,31 +223,6 @@ internal sealed class RecordComputationService(
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         });
-    }
-
-    private static bool HasValidTotal(Participation participation, Meet meet)
-    {
-        IReadOnlyList<Discipline> requiredDisciplines = MeetDisciplineResolver.ResolveDisciplines(
-            meet.MeetType.MeetTypeId,
-            meet.MeetType.Title);
-
-        foreach (Discipline discipline in requiredDisciplines)
-        {
-            decimal bestLift = discipline switch
-            {
-                Discipline.Squat => participation.Squat,
-                Discipline.Bench => participation.Benchpress,
-                Discipline.Deadlift => participation.Deadlift,
-                _ => 0m,
-            };
-
-            if (bestLift <= 0)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private bool TrySetRecord(
