@@ -1,5 +1,7 @@
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Records;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -9,16 +11,22 @@ internal sealed class RemoveParticipantHandler
 {
     private readonly ILogger<RemoveParticipantHandler> _logger;
     private readonly ResultsDbContext _dbContext;
+    private readonly RecordComputationService _recordComputationService;
 
-    public RemoveParticipantHandler(ILogger<RemoveParticipantHandler> logger, ResultsDbContext dbContext)
+    public RemoveParticipantHandler(
+        ILogger<RemoveParticipantHandler> logger,
+        ResultsDbContext dbContext,
+        RecordComputationService recordComputationService)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _recordComputationService = recordComputationService;
     }
 
     public async Task<Result> Handle(int meetId, int participationId, CancellationToken cancellationToken)
     {
         Participation? participation = await _dbContext.Set<Participation>()
+            .Include(p => p.Attempts)
             .Where(p => p.ParticipationId == participationId)
             .Where(p => p.MeetId == meetId)
             .FirstOrDefaultAsync(cancellationToken);
@@ -29,8 +37,25 @@ internal sealed class RemoveParticipantHandler
             return Result.Failure(MeetErrors.ParticipationNotFound);
         }
 
+        List<int> attemptIds = participation.Attempts
+            .Select(a => a.AttemptId)
+            .ToList();
+
+        List<SlotKey> affectedSlots = await _dbContext.Set<Record>()
+            .AsNoTracking()
+            .Where(r => r.AttemptId != null)
+            .Where(r => attemptIds.Contains(r.AttemptId!.Value))
+            .Select(r => new SlotKey(r.EraId, r.AgeCategoryId, r.WeightCategoryId, r.RecordCategoryId, r.IsRaw))
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
         _dbContext.Set<Participation>().Remove(participation);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        if (affectedSlots.Count > 0)
+        {
+            await _recordComputationService.RebuildSlotsAsync(affectedSlots, cancellationToken);
+        }
 
         _logger.LogInformation("Removed participation {ParticipationId} from meet {MeetId}", participationId, meetId);
 
