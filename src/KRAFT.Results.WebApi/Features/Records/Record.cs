@@ -75,6 +75,11 @@ internal sealed class Record
         IsCurrent = true;
     }
 
+    internal void UpdateWeight(decimal weight)
+    {
+        Weight = weight;
+    }
+
     internal void Demote()
     {
         IsCurrent = false;
