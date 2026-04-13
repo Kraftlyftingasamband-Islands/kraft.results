@@ -288,6 +288,8 @@ else
                 .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
 
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
+
+            await ReloadMeetRecords();
         }
         catch (HttpRequestException)
         {
