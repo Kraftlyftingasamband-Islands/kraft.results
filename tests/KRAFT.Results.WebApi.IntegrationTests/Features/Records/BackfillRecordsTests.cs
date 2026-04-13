@@ -17,6 +17,10 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     private const int BackfillTestParticipationId = 500;
     private const int BackfillTestAttemptLowId = 500;
     private const int BackfillTestAttemptHighId = 501;
+    private const int BackfillTestBenchAttemptId = 502;
+    private const int BackfillTestDeadliftAttemptId = 503;
+    private const int DeadliftMeetParticipationId = 600;
+    private const int DeadliftMeetAttemptId = 600;
 
     private const string SeedRecordCorruptionSql =
         """
@@ -127,17 +131,161 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         }
     }
 
+    [Fact]
+    public async Task WhenBackfillRuns_TotalRecordIsCreated()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await SeedBackfillTotalTestDataAsync(dbContext);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — Total record should exist for the participation with Total=620
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+                .Where(r => r.RecordCategoryId == RecordCategory.Total)
+                .Where(r => r.IsRaw)
+                .Where(r => r.IsCurrent)
+                .ToListAsync(CancellationToken.None);
+
+            totalRecords.Count.ShouldBe(1);
+            totalRecords[0].Weight.ShouldBe(620.0m);
+        }
+        finally
+        {
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenBackfillRuns_DeadliftSingleRecordIsCreated()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await SeedDeadliftMeetBackfillDataAsync(dbContext);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — DeadliftSingle record should exist
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> dlSingleRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+                .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
+                .Where(r => r.IsRaw)
+                .Where(r => r.IsCurrent)
+                .ToListAsync(CancellationToken.None);
+
+            dlSingleRecords.Count.ShouldBe(1);
+            dlSingleRecords[0].Weight.ShouldBe(280.0m);
+        }
+        finally
+        {
+            await RestoreDeadliftMeetBackfillDataAsync(dbContext);
+        }
+    }
+
     private static async Task RestoreSeedRecordsAsync(ResultsDbContext dbContext)
     {
         await dbContext.Database.ExecuteSqlRawAsync(
             $"""
             DELETE FROM Records;
-            DELETE FROM Attempts WHERE AttemptId IN ({BackfillTestAttemptLowId}, {BackfillTestAttemptHighId});
+            DELETE FROM Attempts WHERE AttemptId IN ({BackfillTestAttemptLowId}, {BackfillTestAttemptHighId}, {BackfillTestBenchAttemptId}, {BackfillTestDeadliftAttemptId});
             DELETE FROM Participations WHERE ParticipationId = {BackfillTestParticipationId};
             """);
 
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
         await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
+    }
+
+    private static async Task SeedDeadliftMeetBackfillDataAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            DELETE FROM Records
+            WHERE RecordCategoryId = {(int)RecordCategory.DeadliftSingle}
+            AND IsRaw = 1
+            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
+
+            DELETE FROM Attempts WHERE AttemptId IN ({DeadliftMeetAttemptId});
+            DELETE FROM Participations WHERE ParticipationId = {DeadliftMeetParticipationId};
+
+            SET IDENTITY_INSERT Participations ON;
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({DeadliftMeetParticipationId}, {TestSeedConstants.Athlete.Id}, {Constants.DeadliftMeet.Id}, 80.5, {TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.AgeCategory.OpenId}, 1, 0, 0.0, 0.0, 280.0, 0.0, 0.0, 0.0, 1);
+            SET IDENTITY_INSERT Participations OFF;
+
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({DeadliftMeetAttemptId}, {DeadliftMeetParticipationId}, 3, 1, 280.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task RestoreDeadliftMeetBackfillDataAsync(ResultsDbContext dbContext)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            $"""
+            DELETE FROM Records;
+            DELETE FROM Attempts WHERE AttemptId = {DeadliftMeetAttemptId};
+            DELETE FROM Participations WHERE ParticipationId = {DeadliftMeetParticipationId};
+            """);
+
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
+        await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
+    }
+
+    private static async Task SeedBackfillTotalTestDataAsync(ResultsDbContext dbContext)
+    {
+        await SeedBackfillTestDataAsync(dbContext);
+
+        // Add bench and deadlift attempts so participation has valid total for backfill
+        string sql =
+            $"""
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({BackfillTestBenchAttemptId}, {BackfillTestParticipationId}, 2, 1, 140.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({BackfillTestDeadliftAttemptId}, {BackfillTestParticipationId}, 3, 1, 260.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+
+            DELETE FROM Records
+            WHERE EraId = {TestSeedConstants.Era.CurrentId}
+            AND AgeCategoryId = {TestSeedConstants.AgeCategory.JuniorId}
+            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id93Kg}
+            AND RecordCategoryId = {(int)RecordCategory.Total}
+            AND IsRaw = 1;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
     private static async Task SeedBackfillTestDataAsync(ResultsDbContext dbContext)

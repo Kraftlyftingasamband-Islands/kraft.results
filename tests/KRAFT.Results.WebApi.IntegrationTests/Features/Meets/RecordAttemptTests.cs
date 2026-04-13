@@ -7,6 +7,8 @@ using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.ValueObjects;
 
+using Microsoft.EntityFrameworkCore;
+
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
@@ -16,12 +18,14 @@ public sealed class RecordAttemptTests
     private const int SeedMeetId = 1;
     private const int SeedParticipationId = 2;
 
+    private readonly IntegrationTestFixture _fixture;
     private readonly HttpClient _authorizedHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
     private readonly HttpClient _nonAdminHttpClient;
 
     public RecordAttemptTests(IntegrationTestFixture fixture)
     {
+        _fixture = fixture;
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
         _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
@@ -263,6 +267,41 @@ public sealed class RecordAttemptTests
         attempt.ShouldNotBeNull();
         attempt.Weight.ShouldBe(120.0m);
         attempt.IsGood.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ReturnsNoContent_WhenLegacyRoundFourAttemptExists()
+    {
+        // Arrange — create participant, record rounds 1 and 2, then inject a legacy round 4 attempt
+        // (weight 0, good = true) as the old system stored as a placeholder
+        int participationId = await AddParticipantToSeedMeet();
+
+        await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m, true);
+
+        DbContextOptions<ResultsDbContext> dbOptions = new DbContextOptionsBuilder<ResultsDbContext>()
+            .UseSqlServer(_fixture.Database.ConnectionString)
+            .Options;
+
+        await using (ResultsDbContext dbContext = new(dbOptions))
+        {
+            await dbContext.Database.ExecuteSqlAsync(
+                $"INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy) VALUES ({participationId}, 1, 4, 0, 1, 'seed', 'seed')",
+                TestContext.Current.CancellationToken);
+        }
+
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(115.0m)
+            .Build();
+
+        // Act — editing round 3 must not be blocked by the legacy round 4 entry
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            Path(SeedMeetId, participationId, Discipline.Squat, 3),
+            command,
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>

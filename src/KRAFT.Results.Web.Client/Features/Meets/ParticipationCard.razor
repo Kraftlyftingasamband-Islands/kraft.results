@@ -4,6 +4,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Globalization
 
+@implements IAsyncDisposable
+
 @inject HttpClient HttpClient
 @inject IJSRuntime JS
 
@@ -77,10 +79,9 @@
                             MeetAttempt? attempt = Participation.Attempts
                                 .FirstOrDefault(a => a.Discipline == d && a.Round == r);
 
-                            MeetAttempt displayAttempt = attempt
-                                ?? (_savedAttempts.TryGetValue((d, r), out (decimal W, bool G) saved)
-                                    ? new MeetAttempt(d, r, saved.W, saved.G, false)
-                                    : new MeetAttempt(d, r, 0, false, false));
+                            MeetAttempt displayAttempt = _savedAttempts.TryGetValue((d, r), out (decimal W, bool G) saved)
+                                ? new MeetAttempt(d, r, saved.W, saved.G, attempt?.IsRecord ?? false)
+                                : attempt ?? new MeetAttempt(d, r, 0, false, false);
 
                             @if (_editingAttempt.GetValueOrDefault((d, r)))
                             {
@@ -99,7 +100,7 @@
                             {
                                 <AttemptPill Attempt="displayAttempt"
                                              RecordContext="@(attempt?.IsRecord == true && attempt.IsGood ? _recordContext : null)"
-                                             OnClick="() => StartEdit(d, r, attempt)" />
+                                             OnClick="() => StartEdit(d, r, displayAttempt)" />
                             }
 
                             @if (_attemptErrors.TryGetValue((d, r), out string? err))
@@ -185,6 +186,14 @@
                ErrorMessage="@_removeErrorMessage"
                IsLoading="_isRemoving" />
 
+@if (_saveErrorMessage is not null)
+{
+    <div class="attempt-save-toast" role="alert" aria-live="assertive">
+        <span>@_saveErrorMessage</span>
+        <button class="attempt-save-toast-close" @onclick="DismissSaveError" aria-label="Loka">×</button>
+    </div>
+}
+
 @code {
     private EditBodyWeightDialog _editDialog = null!;
     private ConfirmDialog _removeDialog = null!;
@@ -199,6 +208,8 @@
     private readonly Dictionary<(Discipline, short), string> _attemptErrors = [];
     private MeetParticipation? _lastParticipation;
     private MeetParticipation? _freshParticipation;
+    private string? _saveErrorMessage;
+    private CancellationTokenSource? _errorDismissCtx;
 
     [Parameter, EditorRequired]
     public MeetParticipation Participation { get; init; } = null!;
@@ -437,9 +448,16 @@
         try
         {
             RecordAttemptCommand command = new(absoluteWeight, weight > 0);
-            await HttpClient.PutAsJsonAsync(
+            HttpResponseMessage response = await HttpClient.PutAsJsonAsync(
                 $"/meets/{Participation.MeetId}/participants/{Participation.ParticipationId}/attempts/{(int)discipline}/{round}",
                 command);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _savedAttempts.Remove((discipline, round));
+                await ShowSaveErrorToast();
+                return;
+            }
 
             await RefreshParticipation();
             await OnBodyWeightUpdated.InvokeAsync();
@@ -447,7 +465,37 @@
         catch (HttpRequestException)
         {
             _savedAttempts.Remove((discipline, round));
+            await ShowSaveErrorToast();
         }
+    }
+
+    private async Task ShowSaveErrorToast()
+    {
+        if (_errorDismissCtx is not null)
+        {
+            await _errorDismissCtx.CancelAsync();
+            _errorDismissCtx.Dispose();
+        }
+        _errorDismissCtx = new CancellationTokenSource();
+        _saveErrorMessage = "Villa kom upp. Reyndu aftur.";
+        StateHasChanged();
+
+        try
+        {
+            await Task.Delay(4000, _errorDismissCtx.Token);
+            _saveErrorMessage = null;
+            StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+            // Dismissed manually or component disposed
+        }
+    }
+
+    private void DismissSaveError()
+    {
+        _errorDismissCtx?.Cancel();
+        _saveErrorMessage = null;
     }
 
     private decimal GetEffectiveAttemptWeight(Discipline discipline, short round)
@@ -571,5 +619,14 @@
 
     private string GetInputId(Discipline discipline, short round) =>
         $"attempt-input-{Participation.ParticipationId}-{(int)discipline}-{round}";
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_errorDismissCtx is not null)
+        {
+            await _errorDismissCtx.CancelAsync();
+            _errorDismissCtx.Dispose();
+        }
+    }
 
 }

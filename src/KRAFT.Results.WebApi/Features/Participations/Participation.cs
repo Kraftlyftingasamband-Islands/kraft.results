@@ -145,13 +145,13 @@ internal sealed class Participation : AggregateRoot
     {
         Attempt attempt = Attempt.Create(ParticipationId, discipline, round, weight, good, createdBy);
         Attempts.Add(attempt);
-        Raise(new AttemptRecordedEvent(this));
+        Raise(new AttemptRecordedEvent(this, attempt));
     }
 
     internal void UpdateAttempt(Attempt attempt, decimal weight, bool good, string modifiedBy)
     {
         attempt.Update(weight, good, modifiedBy);
-        Raise(new AttemptRecordedEvent(this));
+        Raise(new AttemptRecordedEvent(this, attempt));
     }
 
     internal void RecalculateTotals()
