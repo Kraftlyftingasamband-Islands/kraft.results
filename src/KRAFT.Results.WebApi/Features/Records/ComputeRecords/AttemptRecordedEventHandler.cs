@@ -1,5 +1,4 @@
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
 
 namespace KRAFT.Results.WebApi.Features.Records.ComputeRecords;
@@ -16,26 +15,12 @@ internal sealed class AttemptRecordedEventHandler(
     {
         try
         {
-            Participation participation = domainEvent.Participation;
-
-            Attempt? attempt = participation.Attempts
-                .OrderByDescending(a => a.AttemptId)
-                .FirstOrDefault();
-
-            if (attempt is null)
-            {
-                _logger.LogWarning(
-                    "AttemptRecordedEvent fired for participation {ParticipationId} but no attempts found",
-                    participation.ParticipationId);
-                return;
-            }
-
             _logger.LogInformation(
                 "Computing records for attempt {AttemptId} on participation {ParticipationId}",
-                attempt.AttemptId,
-                participation.ParticipationId);
+                domainEvent.Attempt.AttemptId,
+                domainEvent.Participation.ParticipationId);
 
-            await _recordComputationService.ComputeRecordsAsync(attempt.AttemptId, cancellationToken);
+            await _recordComputationService.ComputeRecordsAsync(domainEvent.Attempt.AttemptId, cancellationToken);
         }
         catch (OperationCanceledException)
         {

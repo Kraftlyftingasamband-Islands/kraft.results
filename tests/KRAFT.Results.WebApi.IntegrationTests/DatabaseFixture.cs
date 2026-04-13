@@ -25,6 +25,8 @@ public sealed class DatabaseFixture : IAsyncLifetime
     private const int BwExceedsMaxMeetId = 7;
     private const int BwJustAboveMaxMeetId = 8;
     private const int NoRecordsMeetId = 9;
+    private const int DeadliftMeetId = 10;
+    private const int DeadliftMeetTypeId = 3;
     private const int BannedAthleteId = 12;
     private const int EditorRoleId = 2;
     private const int UserRoleId = 3;
@@ -60,6 +62,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await SeedRecordCorruptionTestDataAsync(dbContext);
         await SeedBodyWeightMeetsAsync(dbContext);
         await SeedNoRecordsMeetAsync(dbContext);
+        await SeedDeadliftMeetAsync(dbContext);
         await SeedBanDataAsync(dbContext);
         await SeedIntegrationRolesAsync(dbContext);
     }
@@ -316,6 +319,22 @@ public sealed class DatabaseFixture : IAsyncLifetime
             SET IDENTITY_INSERT Meets ON;
             INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
             VALUES ({NoRecordsMeetId}, 'No Records Meet', '{Constants.NoRecordsMeet.Slug}', '2025-12-01', '2025-12-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
+            SET IDENTITY_INSERT Meets OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task SeedDeadliftMeetAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            INSERT INTO MeetTypes (MeetTypeId, Title)
+            VALUES ({DeadliftMeetTypeId}, '{Constants.DeadliftMeet.TypeTitle}');
+
+            SET IDENTITY_INSERT Meets ON;
+            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ({DeadliftMeetId}, 'Réttstakeppni 2025', '{Constants.DeadliftMeet.Slug}', '2025-06-01', '2025-06-01', 1, 1, 1, 1, {DeadliftMeetTypeId}, 0, 1, 0, 1, 0, 1, 1);
             SET IDENTITY_INSERT Meets OFF;
             """;
 

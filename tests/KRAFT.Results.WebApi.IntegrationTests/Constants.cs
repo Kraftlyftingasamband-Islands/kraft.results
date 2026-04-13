@@ -41,6 +41,13 @@ internal static class Constants
         internal const string Slug = "no-records-meet";
     }
 
+    internal static class DeadliftMeet
+    {
+        internal const int Id = 10;
+        internal const string Slug = "rettstakeppni-2025";
+        internal const string TypeTitle = "Réttstöðulyfting";
+    }
+
     internal static class BannedAthlete
     {
         internal const int Id = 12;

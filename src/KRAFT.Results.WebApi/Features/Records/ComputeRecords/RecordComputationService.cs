@@ -28,6 +28,8 @@ internal sealed class RecordComputationService(
     {
         Attempt? attempt = await _dbContext.Set<Attempt>()
             .Include(a => a.Participation)
+                .ThenInclude(p => p.Attempts)
+            .Include(a => a.Participation)
                 .ThenInclude(p => p.Meet)
                     .ThenInclude(m => m.MeetType)
             .Include(a => a.Participation)
@@ -95,16 +97,57 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        if (!attempt.Good || attempt.Weight <= 0)
+        IReadOnlyList<Discipline> requiredDisciplines = MeetDisciplineResolver.ResolveDisciplines(
+            meet.MeetType.MeetTypeId,
+            meet.MeetType.Title);
+
+        List<(RecordCategory Category, decimal Weight, int AttemptId)> entries = [];
+
+        foreach (Discipline discipline in requiredDisciplines)
         {
-            return;
+            Attempt? best = participation.Attempts
+                .Where(a => a.Discipline == discipline)
+                .Where(a => a.Good)
+                .Where(a => a.Weight > 0)
+                .OrderByDescending(a => a.Weight)
+                .ThenByDescending(a => a.AttemptId)
+                .FirstOrDefault();
+
+            if (best is null)
+            {
+                continue;
+            }
+
+            RecordCategory category = MeetDisciplineResolver.MapDisciplineToRecordCategory(
+                discipline,
+                meet.MeetType.MeetTypeId,
+                meet.MeetType.Title);
+
+            if (category == RecordCategory.None)
+            {
+                continue;
+            }
+
+            entries.Add((category, best.Weight, best.AttemptId));
         }
 
-        RecordCategory recordCategory = MapDisciplineToRecordCategory(
-            attempt.Discipline,
-            meet.MeetType.MeetTypeId);
+        if (requiredDisciplines.Count > 1 && participation.Total > 0)
+        {
+            Attempt? bestDeadlift = participation.Attempts
+                .Where(a => a.Discipline == Discipline.Deadlift)
+                .Where(a => a.Good)
+                .Where(a => a.Weight > 0)
+                .OrderByDescending(a => a.Weight)
+                .ThenByDescending(a => a.AttemptId)
+                .FirstOrDefault();
 
-        if (recordCategory == RecordCategory.None)
+            if (bestDeadlift is not null)
+            {
+                entries.Add((RecordCategory.Total, participation.Total, bestDeadlift.AttemptId));
+            }
+        }
+
+        if (entries.Count == 0)
         {
             return;
         }
@@ -124,6 +167,9 @@ internal sealed class RecordComputationService(
             .ToDictionaryAsync(ac => ac.Slug!, ac => ac.AgeCategoryId, cancellationToken);
 
         List<int> cascadeAgeCategoryIds = slugToIdMap.Values.ToList();
+        List<RecordCategory> applicableCategories = entries
+            .Select(e => e.Category)
+            .ToList();
 
         IExecutionStrategy strategy = _dbContext.Database.CreateExecutionStrategy();
 
@@ -136,32 +182,39 @@ internal sealed class RecordComputationService(
                 .Where(r => r.EraId == era.EraId)
                 .Where(r => cascadeAgeCategoryIds.Contains(r.AgeCategoryId))
                 .Where(r => r.WeightCategoryId == participation.WeightCategoryId)
-                .Where(r => r.RecordCategoryId == recordCategory)
+                .Where(r => applicableCategories.Contains(r.RecordCategoryId))
                 .Where(r => r.IsRaw == meet.IsRaw)
                 .Where(r => r.IsCurrent)
                 .ToListAsync(cancellationToken);
 
-            foreach (string cascadeSlug in cascadeSlugs)
+            foreach ((RecordCategory category, decimal weight, int entryAttemptId) in entries)
             {
-                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
-                {
-                    continue;
-                }
+                List<Record> categoryRecords = existingSlotRecords
+                    .Where(r => r.RecordCategoryId == category)
+                    .ToList();
 
-                bool beatRecord = TrySetRecord(
-                    existingSlotRecords,
-                    era.EraId,
-                    ageCategoryId,
-                    participation.WeightCategoryId,
-                    recordCategory,
-                    meet.IsRaw,
-                    attempt.Weight,
-                    meetDate,
-                    attemptId);
-
-                if (!beatRecord)
+                foreach (string cascadeSlug in cascadeSlugs)
                 {
-                    break;
+                    if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+                    {
+                        continue;
+                    }
+
+                    bool beatRecord = TrySetRecord(
+                        categoryRecords,
+                        era.EraId,
+                        ageCategoryId,
+                        participation.WeightCategoryId,
+                        category,
+                        meet.IsRaw,
+                        weight,
+                        meetDate,
+                        entryAttemptId);
+
+                    if (!beatRecord)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -193,19 +246,6 @@ internal sealed class RecordComputationService(
         }
 
         return true;
-    }
-
-    private static RecordCategory MapDisciplineToRecordCategory(Discipline discipline, int meetTypeId)
-    {
-        bool isSingleLiftMeet = MeetDisciplineResolver.IsBenchMeetType(meetTypeId);
-
-        return discipline switch
-        {
-            Discipline.Squat => RecordCategory.Squat,
-            Discipline.Bench => isSingleLiftMeet ? RecordCategory.BenchSingle : RecordCategory.Bench,
-            Discipline.Deadlift => RecordCategory.Deadlift,
-            _ => RecordCategory.None,
-        };
     }
 
     private bool TrySetRecord(

@@ -74,11 +74,17 @@ internal sealed class BackfillRecordsJob(
                 .Where(a => a.Participation.WeightCategoryId == division.WeightCategoryId)
                 .ToListAsync(stoppingToken);
 
-            List<SlotAttempt> slotAttempts = BuildSlotAttempts(divisionAttempts, eras, slugToIdMap)
-                .Where(sa => sa.SlotKey == slotKey)
-                .OrderBy(sa => sa.MeetDate)
-                .ThenBy(sa => sa.AttemptId)
-                .ToList();
+            List<SlotAttempt> slotAttempts = division.RecordCategory == RecordCategory.Total
+                ? BuildTotalSlotAttempts(divisionAttempts, eras, slugToIdMap)
+                    .Where(sa => sa.SlotKey == slotKey)
+                    .OrderBy(sa => sa.MeetDate)
+                    .ThenBy(sa => sa.AttemptId)
+                    .ToList()
+                : BuildSlotAttempts(divisionAttempts, eras, slugToIdMap)
+                    .Where(sa => sa.SlotKey == slotKey)
+                    .OrderBy(sa => sa.MeetDate)
+                    .ThenBy(sa => sa.AttemptId)
+                    .ToList();
 
             List<Record> slotRecords = await dbContext.Set<Record>()
                 .AsNoTracking()
@@ -216,6 +222,7 @@ internal sealed class BackfillRecordsJob(
             .Select(a => new AttemptProjection(
                 a.Discipline,
                 a.Participation.Meet.MeetType.MeetTypeId,
+                a.Participation.Meet.MeetType.Title,
                 a.Participation.Meet.StartDate,
                 a.Participation.AgeCategory.Slug,
                 a.Participation.WeightCategoryId,
@@ -240,9 +247,10 @@ internal sealed class BackfillRecordsJob(
                 continue;
             }
 
-            RecordCategory recordCategory = MapDisciplineToRecordCategory(
+            RecordCategory recordCategory = MeetDisciplineResolver.MapDisciplineToRecordCategory(
                 projection.Discipline,
-                projection.MeetTypeId);
+                projection.MeetTypeId,
+                projection.MeetTypeTitle);
 
             if (recordCategory == RecordCategory.None)
             {
@@ -263,6 +271,62 @@ internal sealed class BackfillRecordsJob(
                     ageCategoryId,
                     projection.WeightCategoryId,
                     recordCategory,
+                    projection.IsRaw));
+            }
+        }
+
+        List<TotalProjection> totalProjections = await dbContext.Set<Participation>()
+            .AsNoTracking()
+            .Where(p => p.Meet.RecordsPossible)
+            .Where(p => p.Total > 0)
+            .Select(p => new TotalProjection(
+                p.Meet.MeetType.MeetTypeId,
+                p.Meet.MeetType.Title,
+                p.Meet.StartDate,
+                p.AgeCategory.Slug,
+                p.WeightCategoryId,
+                p.Meet.IsRaw))
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        foreach (TotalProjection projection in totalProjections)
+        {
+            if (string.IsNullOrEmpty(projection.AgeCategorySlug))
+            {
+                continue;
+            }
+
+            IReadOnlyList<Discipline> requiredDisciplines = MeetDisciplineResolver.ResolveDisciplines(
+                projection.MeetTypeId,
+                projection.MeetTypeTitle);
+
+            if (requiredDisciplines.Count <= 1)
+            {
+                continue;
+            }
+
+            DateOnly meetDate = DateOnly.FromDateTime(projection.MeetStartDate);
+            Era? era = eras.FirstOrDefault(e => e.StartDate <= meetDate && e.EndDate >= meetDate);
+
+            if (era is null)
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(projection.AgeCategorySlug);
+
+            foreach (string cascadeSlug in cascadeSlugs)
+            {
+                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+                {
+                    continue;
+                }
+
+                keys.Add(new DivisionKey(
+                    era.EraId,
+                    ageCategoryId,
+                    projection.WeightCategoryId,
+                    RecordCategory.Total,
                     projection.IsRaw));
             }
         }
@@ -301,9 +365,10 @@ internal sealed class BackfillRecordsJob(
                 continue;
             }
 
-            RecordCategory recordCategory = MapDisciplineToRecordCategory(
+            RecordCategory recordCategory = MeetDisciplineResolver.MapDisciplineToRecordCategory(
                 attempt.Discipline,
-                meet.MeetType.MeetTypeId);
+                meet.MeetType.MeetTypeId,
+                meet.MeetType.Title);
 
             if (recordCategory == RecordCategory.None)
             {
@@ -336,6 +401,105 @@ internal sealed class BackfillRecordsJob(
                     ageCategoryId,
                     participation.WeightCategoryId,
                     recordCategory,
+                    meet.IsRaw);
+
+                result.Add(slotAttempt);
+            }
+        }
+
+        return result;
+    }
+
+    private static List<SlotAttempt> BuildTotalSlotAttempts(
+        List<Attempt> attempts,
+        List<Era> eras,
+        Dictionary<string, int> slugToIdMap)
+    {
+        List<SlotAttempt> result = [];
+
+        // Group attempts by participation to find the best deadlift per participation
+        IEnumerable<IGrouping<int, Attempt>> byParticipation = attempts.GroupBy(a => a.ParticipationId);
+
+        foreach (IGrouping<int, Attempt> group in byParticipation)
+        {
+            Attempt firstAttempt = group.First();
+            Participation participation = firstAttempt.Participation;
+            Meet meet = participation.Meet;
+
+            IReadOnlyList<Discipline> requiredDisciplines = MeetDisciplineResolver.ResolveDisciplines(
+                meet.MeetType.MeetTypeId,
+                meet.MeetType.Title);
+
+            if (requiredDisciplines.Count <= 1)
+            {
+                continue;
+            }
+
+            if (participation.Total <= 0)
+            {
+                continue;
+            }
+
+            DateOnly meetDate = DateOnly.FromDateTime(meet.StartDate);
+            Athlete athlete = participation.Athlete;
+
+            if (!athlete.IsEligibleForRecord(meetDate))
+            {
+                continue;
+            }
+
+            Era? era = eras.FirstOrDefault(e => e.StartDate <= meetDate && e.EndDate >= meetDate);
+
+            if (era is null)
+            {
+                continue;
+            }
+
+            if (!HasValidTotal(participation, meet))
+            {
+                continue;
+            }
+
+            // Use the best deadlift attempt as the anchor for the Total record
+            Attempt? bestDeadlift = group
+                .Where(a => a.Discipline == Discipline.Deadlift)
+                .Where(a => a.Good)
+                .Where(a => a.Weight > 0)
+                .OrderByDescending(a => a.Weight)
+                .ThenByDescending(a => a.AttemptId)
+                .FirstOrDefault();
+
+            if (bestDeadlift is null)
+            {
+                continue;
+            }
+
+            AgeCategory ageCategory = participation.AgeCategory;
+            string? slug = ageCategory.Slug;
+
+            if (string.IsNullOrEmpty(slug))
+            {
+                continue;
+            }
+
+            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(slug);
+
+            foreach (string cascadeSlug in cascadeSlugs)
+            {
+                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+                {
+                    continue;
+                }
+
+                SlotAttempt slotAttempt = new(
+                    FormatSlotKey(era.EraId, ageCategoryId, participation.WeightCategoryId, RecordCategory.Total, meet.IsRaw),
+                    bestDeadlift.AttemptId,
+                    participation.Total,
+                    meetDate,
+                    era.EraId,
+                    ageCategoryId,
+                    participation.WeightCategoryId,
+                    RecordCategory.Total,
                     meet.IsRaw);
 
                 result.Add(slotAttempt);
@@ -395,19 +559,6 @@ internal sealed class BackfillRecordsJob(
         return true;
     }
 
-    private static RecordCategory MapDisciplineToRecordCategory(Discipline discipline, int meetTypeId)
-    {
-        bool isSingleLiftMeet = MeetDisciplineResolver.IsBenchMeetType(meetTypeId);
-
-        return discipline switch
-        {
-            Discipline.Squat => RecordCategory.Squat,
-            Discipline.Bench => isSingleLiftMeet ? RecordCategory.BenchSingle : RecordCategory.Bench,
-            Discipline.Deadlift => RecordCategory.Deadlift,
-            _ => RecordCategory.None,
-        };
-    }
-
     private static string FormatSlotKey(
         int eraId,
         int ageCategoryId,
@@ -428,6 +579,15 @@ internal sealed class BackfillRecordsJob(
     private sealed record AttemptProjection(
         Discipline Discipline,
         int MeetTypeId,
+        string MeetTypeTitle,
+        DateTime MeetStartDate,
+        string? AgeCategorySlug,
+        int WeightCategoryId,
+        bool IsRaw);
+
+    private sealed record TotalProjection(
+        int MeetTypeId,
+        string MeetTypeTitle,
         DateTime MeetStartDate,
         string? AgeCategorySlug,
         int WeightCategoryId,

@@ -58,7 +58,11 @@ internal sealed class RecordAttemptHandler
             return MeetErrors.ParticipationNotFound;
         }
 
-        foreach (Attempt existingAttempt in participation.Attempts.Where(a => a.Discipline == discipline))
+        foreach (Attempt existingAttempt in participation.Attempts
+            .Where(a => a.Discipline == discipline)
+            .Where(a => a.Round >= MinRound)
+            .Where(a => a.Round <= MaxRound)
+            .Where(a => a.Weight > 0))
         {
             if (existingAttempt.Round < round && existingAttempt.Weight > command.Weight)
             {
