@@ -189,7 +189,7 @@ internal sealed class BackfillRecordsJob(
                 a.Participation.Meet.MeetType.MeetTypeId,
                 a.Participation.Meet.MeetType.Title,
                 a.Participation.Meet.StartDate,
-                a.Participation.AgeCategory.Slug,
+                a.Participation.Athlete.DateOfBirth,
                 a.Participation.WeightCategoryId,
                 a.Participation.Meet.IsRaw))
             .Distinct()
@@ -199,11 +199,6 @@ internal sealed class BackfillRecordsJob(
 
         foreach (AttemptProjection projection in attemptProjections)
         {
-            if (string.IsNullOrEmpty(projection.AgeCategorySlug))
-            {
-                continue;
-            }
-
             DateOnly meetDate = DateOnly.FromDateTime(projection.MeetStartDate);
             Era? era = eras.FirstOrDefault(e => e.StartDate <= meetDate && e.EndDate >= meetDate);
 
@@ -222,8 +217,9 @@ internal sealed class BackfillRecordsJob(
                 continue;
             }
 
+            string biologicalSlug = AgeCategory.ResolveSlug(projection.AthleteDoB, meetDate);
             IReadOnlyList<string> cascadeSlugs =
-                AgeCategory.GetCascadeSlugs(projection.AgeCategorySlug);
+                AgeCategory.GetCascadeSlugs(biologicalSlug);
 
             foreach (string cascadeSlug in cascadeSlugs)
             {
@@ -250,7 +246,7 @@ internal sealed class BackfillRecordsJob(
                 p.Meet.MeetType.MeetTypeId,
                 p.Meet.MeetType.Title,
                 p.Meet.StartDate,
-                p.AgeCategory.Slug,
+                p.Athlete.DateOfBirth,
                 p.WeightCategoryId,
                 p.Meet.IsRaw))
             .Distinct()
@@ -258,11 +254,6 @@ internal sealed class BackfillRecordsJob(
 
         foreach (TotalProjection projection in totalProjections)
         {
-            if (string.IsNullOrEmpty(projection.AgeCategorySlug))
-            {
-                continue;
-            }
-
             IReadOnlyList<Discipline> requiredDisciplines =
                 MeetDisciplineResolver.ResolveDisciplines(
                     projection.MeetTypeId,
@@ -282,8 +273,9 @@ internal sealed class BackfillRecordsJob(
                 continue;
             }
 
+            string biologicalSlug = AgeCategory.ResolveSlug(projection.AthleteDoB, meetDate);
             IReadOnlyList<string> cascadeSlugs =
-                AgeCategory.GetCascadeSlugs(projection.AgeCategorySlug);
+                AgeCategory.GetCascadeSlugs(biologicalSlug);
 
             foreach (string cascadeSlug in cascadeSlugs)
             {
@@ -316,7 +308,7 @@ internal sealed class BackfillRecordsJob(
         int MeetTypeId,
         string MeetTypeTitle,
         DateTime MeetStartDate,
-        string? AgeCategorySlug,
+        DateOnly? AthleteDoB,
         int WeightCategoryId,
         bool IsRaw);
 
@@ -324,7 +316,7 @@ internal sealed class BackfillRecordsJob(
         int MeetTypeId,
         string MeetTypeTitle,
         DateTime MeetStartDate,
-        string? AgeCategorySlug,
+        DateOnly? AthleteDoB,
         int WeightCategoryId,
         bool IsRaw);
 }

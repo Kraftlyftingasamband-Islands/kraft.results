@@ -458,6 +458,82 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task WhenMasters1AthleteCompetesAsOpen_Masters1RecordIsCreated()
+    {
+        // Arrange
+        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await CleanupStaleTestDataFor83KgAsync(dbContext);
+
+        DateOnly masters1DateOfBirth = new(1984, 1, 1);
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
+            .WithDateOfBirth(masters1DateOfBirth)
+            .Build();
+
+        HttpResponseMessage athleteResponse = await client.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .WithAgeCategorySlug("open")
+            .Build();
+
+        HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
+            $"/meets/{SeedMeetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        AddParticipantResponse? participantResult = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int participationId = participantResult!.ParticipationId;
+
+        await ClearAllRecordCategoriesAsync(dbContext);
+
+        try
+        {
+            // Record bench and deadlift first so the participation has valid totals
+            await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+            await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+
+            // Act — record squat that should trigger record computation
+            await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+
+            // Assert — records should cascade for biological Masters1: masters1 + open
+            List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.IsCurrent)
+                .Where(r => r.IsRaw)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+                .Where(r => r.Weight == AttemptWeight)
+                .Include(r => r.AgeCategory)
+                .OrderBy(r => r.AgeCategoryId)
+                .ToListAsync(CancellationToken.None);
+
+            List<string> cascadeSlugs = createdRecords
+                .Select(r => r.AgeCategory.Slug!)
+                .ToList();
+
+            cascadeSlugs.ShouldContain("masters1");
+            cascadeSlugs.ShouldContain("open");
+        }
+        finally
+        {
+            await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
+            await ClearAllRecordCategoriesAsync(dbContext);
+        }
+    }
+
+    [Fact]
     public async Task WhenAllDisciplinesRecorded_BenchRecordIsAlsoCreated()
     {
         // Arrange
@@ -2025,6 +2101,9 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             DELETE FROM Attempts WHERE AttemptId = {RecordTestAttemptId};
             DELETE FROM Participations WHERE ParticipationId = {RecordTestParticipationId};
 
+            -- Restore athlete DoB changed by SeedRecordComputationTestDataAsync
+            UPDATE Athletes SET DateOfBirth = '{TestSeedConstants.Athlete.DateOfBirth:yyyy-MM-dd}' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
+
             -- Restore the open raw squat 83kg record that was deleted by SeedRecordComputationTestDataAsync
             IF NOT EXISTS (
                 SELECT 1 FROM Records
@@ -2059,6 +2138,9 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             AND RecordCategoryId = 1
             AND IsRaw = 1
             AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
+
+            -- Set athlete DoB to Masters4 range so biological age cascades correctly
+            UPDATE Athletes SET DateOfBirth = '1950-01-01' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
 
             -- Participation in Masters4 age category for athlete 1 in test meet 1
             SET IDENTITY_INSERT Participations ON;
