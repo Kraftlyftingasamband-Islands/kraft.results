@@ -48,6 +48,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                         a.Weight,
                         a.Good,
                         IsRecord = a.Records.Count != 0,
+                        RecordAgeCategorySlugs = a.Records.Select(r => r.AgeCategory.Slug),
                     }),
             }))
             .ToListAsync(cancellationToken);
@@ -63,12 +64,28 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
                 decimal ipfPoints = CalculateIpfPoints(r.Disqualified, r.MeetTypeId, r.IsRaw, r.Gender, r.Weight, r.Total, r.Benchpress);
 
                 IEnumerable<MeetAttempt> attempts = r.Attempts
-                    .Select(a => new MeetAttempt(
-                        a.Discipline,
-                        a.Round,
-                        a.Weight,
-                        a.Good,
-                        a.IsRecord));
+                    .Select(a =>
+                    {
+                        string? recordAgeCategory = null;
+
+                        if (a.IsRecord)
+                        {
+                            List<string?> slugs = a.RecordAgeCategorySlugs.ToList();
+                            string? bestSlug = slugs
+                                .Where(s => s != null)
+                                .FirstOrDefault(s => s != "open")
+                                ?? slugs.FirstOrDefault();
+                            recordAgeCategory = bestSlug?.ToAgeCategoryLabel(r.Gender);
+                        }
+
+                        return new MeetAttempt(
+                            a.Discipline,
+                            a.Round,
+                            a.Weight,
+                            a.Good,
+                            a.IsRecord,
+                            recordAgeCategory);
+                    });
 
                 IReadOnlyList<Discipline> disciplines = MeetDisciplineResolver.ResolveDisciplines(r.MeetTypeId, r.MeetTypeTitle);
                 decimal displayTotal = r.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);

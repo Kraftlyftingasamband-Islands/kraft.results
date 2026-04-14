@@ -99,7 +99,7 @@
                             else
                             {
                                 <AttemptPill Attempt="displayAttempt"
-                                             RecordContext="@(attempt?.IsRecord == true && attempt.IsGood ? _recordContext : null)"
+                                             RecordContext="@BuildRecordContext(attempt)"
                                              OnClick="() => StartEdit(d, r, displayAttempt)" />
                             }
 
@@ -129,7 +129,7 @@
                             @if (attempt is not null)
                             {
                                 <AttemptPill Attempt="attempt"
-                                             RecordContext="@(attempt.IsRecord && attempt.IsGood ? _recordContext : null)" />
+                                             RecordContext="@BuildRecordContext(attempt)" />
                             }
                             else
                             {
@@ -235,7 +235,6 @@
     [Parameter]
     public EventCallback OnBodyWeightUpdated { get; set; }
 
-    private string _recordContext = string.Empty;
     private string _metaLine = string.Empty;
     private string _rankDisplay = string.Empty;
     private string _rankClass = string.Empty;
@@ -256,8 +255,6 @@
 
             _lastParticipation = Participation;
         }
-
-        _recordContext = $"Met: {Participation.Gender} · {Participation.AgeCategory} · {Participation.WeightCategory} kg";
 
         RebuildMetaLine();
 
@@ -292,6 +289,17 @@
         List<string> metaParts = [Participation.YearOfBirth.ToString()];
         metaParts.Add($"{bodyWeight:F2} kg");
         _metaLine = string.Join(" · ", metaParts);
+    }
+
+    private string? BuildRecordContext(MeetAttempt? attempt)
+    {
+        if (attempt is null || !attempt.IsRecord || !attempt.IsGood)
+        {
+            return null;
+        }
+
+        string ageCategory = attempt.RecordAgeCategory ?? Participation.AgeCategory;
+        return $"Met: {Participation.Gender} · {ageCategory} · {Participation.WeightCategory} kg";
     }
 
     private async Task RefreshParticipation()
