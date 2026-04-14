@@ -8,12 +8,14 @@ using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Shouldly;
 
@@ -1635,6 +1637,538 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
                 """;
 
             await dbContext.Database.ExecuteSqlRawAsync(cleanupSql, TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
+    public async Task WhenThreeAthletesProgressivelySetTotalRecord_AllPreservedInHistory()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
+
+        const int athleteAId = 400;
+        const int participationAId = 400;
+        const int squatAttemptAId = 400;
+        const int benchAttemptAId = 401;
+        const int deadliftAttemptAId = 402;
+
+        const int athleteBId = 403;
+        const int participationBId = 403;
+        const int squatAttemptBId = 403;
+        const int benchAttemptBId = 404;
+        const int deadliftAttemptBId = 405;
+
+        const int athleteCId = 406;
+        const int participationCId = 406;
+        const int squatAttemptCId = 406;
+        const int benchAttemptCId = 407;
+        const int deadliftAttemptCId = 408;
+        const int weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
+
+        List<int> allAttemptIds =
+        [
+            squatAttemptAId, benchAttemptAId, deadliftAttemptAId,
+            squatAttemptBId, benchAttemptBId, deadliftAttemptBId,
+            squatAttemptCId, benchAttemptCId, deadliftAttemptCId,
+        ];
+        string allAttemptIdsCsv = string.Join(", ", allAttemptIds);
+        List<int> allParticipationIds = [participationAId, participationBId, participationCId];
+        string allParticipationIdsCsv = string.Join(", ", allParticipationIds);
+        List<int> allAthleteIds = [athleteAId, athleteBId, athleteCId];
+        string allAthleteIdsCsv = string.Join(", ", allAthleteIds);
+
+        string seedSql =
+            $"""
+            DELETE FROM Records WHERE WeightCategoryId = {weightCategoryId} AND IsRaw = 1 AND EraId = 2;
+            DELETE FROM Records WHERE AttemptId IN ({allAttemptIdsCsv});
+            DELETE FROM Attempts WHERE AttemptId IN ({allAttemptIdsCsv});
+            DELETE FROM Participations WHERE ParticipationId IN ({allParticipationIdsCsv});
+            DELETE FROM Athletes WHERE AthleteId IN ({allAthleteIdsCsv});
+
+            SET IDENTITY_INSERT Athletes ON;
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteAId}, 'RecTest', 'SixA', '1950-01-01', 'm', 1, 'rectest-sixa');
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteBId}, 'RecTest', 'SixB', '1950-01-01', 'm', 1, 'rectest-sixb');
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteCId}, 'RecTest', 'SixC', '1950-01-01', 'm', 1, 'rectest-sixc');
+            SET IDENTITY_INSERT Athletes OFF;
+
+            SET IDENTITY_INSERT Participations ON;
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationAId}, {athleteAId}, {TestSeedConstants.Meet.Id}, 90.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, 210.0, 140.0, 260.0, 610.0, 400.0, 90.0, 50);
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationBId}, {athleteBId}, {TestSeedConstants.Meet.Id}, 91.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 2, 0, 210.0, 140.0, 270.0, 620.0, 410.0, 91.0, 51);
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationCId}, {athleteCId}, {TestSeedConstants.Meet.Id}, 92.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 3, 0, 210.0, 140.0, 280.0, 630.0, 420.0, 92.0, 52);
+            SET IDENTITY_INSERT Participations OFF;
+
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({squatAttemptAId}, {participationAId}, 1, 1, 210.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptAId}, {participationAId}, 2, 1, 140.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({deadliftAttemptAId}, {participationAId}, 3, 1, 260.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({squatAttemptBId}, {participationBId}, 1, 1, 210.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptBId}, {participationBId}, 2, 1, 140.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({deadliftAttemptBId}, {participationBId}, 3, 1, 270.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({squatAttemptCId}, {participationCId}, 1, 1, 210.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptCId}, {participationCId}, 2, 1, 140.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({deadliftAttemptCId}, {participationCId}, 3, 1, 280.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(seedSql, TestContext.Current.CancellationToken);
+
+        try
+        {
+            // Compute records for A (total=610), then B (total=620), then C (total=630)
+            await service.ComputeRecordsAsync(deadliftAttemptAId, CancellationToken.None);
+            await service.ComputeRecordsAsync(deadliftAttemptBId, CancellationToken.None);
+
+            // Act
+            await service.ComputeRecordsAsync(deadliftAttemptCId, CancellationToken.None);
+
+            // Assert — all 3 total records should be preserved in history for the open cascade slot
+            List<RecordEntity> totalRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Total)
+                .Where(r => r.IsRaw)
+                .OrderBy(r => r.Weight)
+                .ToListAsync(CancellationToken.None);
+
+            totalRecords.Count.ShouldBe(3);
+            totalRecords[0].Weight.ShouldBe(610m);
+            totalRecords[0].IsCurrent.ShouldBeFalse();
+            totalRecords[1].Weight.ShouldBe(620m);
+            totalRecords[1].IsCurrent.ShouldBeFalse();
+            totalRecords[2].Weight.ShouldBe(630m);
+            totalRecords[2].IsCurrent.ShouldBeTrue();
+        }
+        finally
+        {
+            string cleanupSql =
+                $"""
+                DELETE FROM Records WHERE AttemptId IN ({allAttemptIdsCsv});
+                DELETE FROM Attempts WHERE AttemptId IN ({allAttemptIdsCsv});
+                DELETE FROM Participations WHERE ParticipationId IN ({allParticipationIdsCsv});
+                DELETE FROM Athletes WHERE AthleteId IN ({allAthleteIdsCsv});
+                """;
+
+            await dbContext.Database.ExecuteSqlRawAsync(cleanupSql, TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
+    public async Task WhenParticipantRemoved_RecordsRevoked_SlotsRebuilt()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
+
+        const int athleteAId = 410;
+        const int participationAId = 410;
+        const int squatAttemptAId = 410;
+        const int benchAttemptAId = 411;
+        const int deadliftAttemptAId = 412;
+
+        const int athleteBId = 420;
+        const int participationBId = 420;
+        const int squatAttemptBId = 420;
+        const int benchAttemptBId = 421;
+        const int deadliftAttemptBId = 422;
+        const int weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
+
+        string seedSql =
+            $"""
+            DELETE FROM Records WHERE WeightCategoryId = {weightCategoryId} AND IsRaw = 1 AND EraId = 2;
+            DELETE FROM Records WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+            DELETE FROM Attempts WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+            DELETE FROM Participations WHERE ParticipationId IN ({participationAId}, {participationBId});
+            DELETE FROM Athletes WHERE AthleteId IN ({athleteAId}, {athleteBId});
+
+            SET IDENTITY_INSERT Athletes ON;
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteAId}, 'RecTest', 'SevenA', '1950-01-01', 'm', 1, 'rectest-sevena');
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteBId}, 'RecTest', 'SevenB', '1950-01-01', 'm', 1, 'rectest-sevenb');
+            SET IDENTITY_INSERT Athletes OFF;
+
+            SET IDENTITY_INSERT Participations ON;
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationAId}, {athleteAId}, {TestSeedConstants.Meet.Id}, 90.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, 211.0, 140.0, 260.0, 611.0, 400.0, 90.0, 50);
+            SET IDENTITY_INSERT Participations OFF;
+
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({squatAttemptAId}, {participationAId}, 1, 1, 211.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptAId}, {participationAId}, 2, 1, 140.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({deadliftAttemptAId}, {participationAId}, 3, 1, 260.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(seedSql, TestContext.Current.CancellationToken);
+
+        try
+        {
+            await service.ComputeRecordsAsync(squatAttemptAId, CancellationToken.None);
+
+            List<RecordEntity> recordsAfterA = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId == squatAttemptAId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .ToListAsync(CancellationToken.None);
+
+            recordsAfterA.ShouldNotBeEmpty();
+
+            // Seed athlete B with squat=220 (beats A's 211)
+            string seedBSql =
+                $"""
+                SET IDENTITY_INSERT Participations ON;
+                INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+                VALUES ({participationBId}, {athleteBId}, {TestSeedConstants.Meet.Id}, 92.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 2, 0, 220.0, 140.0, 260.0, 620.0, 410.0, 92.0, 51);
+                SET IDENTITY_INSERT Participations OFF;
+
+                SET IDENTITY_INSERT Attempts ON;
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES ({squatAttemptBId}, {participationBId}, 1, 1, 220.0, 1, 'test', 'test');
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES ({benchAttemptBId}, {participationBId}, 2, 1, 140.0, 1, 'test', 'test');
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES ({deadliftAttemptBId}, {participationBId}, 3, 1, 260.0, 1, 'test', 'test');
+                SET IDENTITY_INSERT Attempts OFF;
+                """;
+
+            await dbContext.Database.ExecuteSqlRawAsync(seedBSql, TestContext.Current.CancellationToken);
+            dbContext.ChangeTracker.Clear();
+
+            await service.ComputeRecordsAsync(squatAttemptBId, CancellationToken.None);
+
+            List<RecordEntity> bRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId == squatAttemptBId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .ToListAsync(CancellationToken.None);
+
+            bRecords.ShouldNotBeEmpty();
+
+            // Act — simulate participant B removal: collect affected slots, delete records + participation, rebuild
+            List<int> bAttemptIds = [squatAttemptBId, benchAttemptBId, deadliftAttemptBId];
+
+            List<SlotKey> affectedSlots = await dbContext.Set<RecordEntity>()
+                .AsNoTracking()
+                .Where(r => r.AttemptId != null)
+                .Where(r => bAttemptIds.Contains(r.AttemptId!.Value))
+                .Select(r => new SlotKey(
+                    r.EraId, r.AgeCategoryId, r.WeightCategoryId, r.RecordCategoryId, r.IsRaw))
+                .Distinct()
+                .ToListAsync(CancellationToken.None);
+
+            string deleteBSql =
+                $"""
+                DELETE FROM Records WHERE AttemptId IN ({squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+                DELETE FROM Attempts WHERE AttemptId IN ({squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+                DELETE FROM Participations WHERE ParticipationId = {participationBId};
+                """;
+
+            await dbContext.Database.ExecuteSqlRawAsync(deleteBSql, TestContext.Current.CancellationToken);
+            dbContext.ChangeTracker.Clear();
+
+            await service.RebuildSlotsAsync(affectedSlots, CancellationToken.None);
+
+            // Assert — B's records should be revoked
+            List<RecordEntity> bRemainingRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId != null)
+                .Where(r => bAttemptIds.Contains(r.AttemptId!.Value))
+                .ToListAsync(CancellationToken.None);
+
+            bRemainingRecords.ShouldBeEmpty();
+
+            // A's squat record should be restored
+            List<RecordEntity> aRestoredRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId == squatAttemptAId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .ToListAsync(CancellationToken.None);
+
+            aRestoredRecords.ShouldNotBeEmpty();
+            aRestoredRecords.ShouldAllBe(r => r.Weight == 211m);
+        }
+        finally
+        {
+            string cleanupSql =
+                $"""
+                DELETE FROM Records WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+                DELETE FROM Attempts WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+                DELETE FROM Participations WHERE ParticipationId IN ({participationAId}, {participationBId});
+                DELETE FROM Athletes WHERE AthleteId IN ({athleteAId}, {athleteBId});
+                """;
+
+            await dbContext.Database.ExecuteSqlRawAsync(cleanupSql, TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
+    public async Task WhenBenchOnlyMeet_AttemptNoGood_RecordRevoked()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
+
+        const int benchMeetId = 50;
+        const int benchMeetTypeId = 2;
+        const int athleteId = 430;
+        const int participationId = 430;
+        const int benchAttemptId = 430;
+        const int weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
+
+        string seedSql =
+            $"""
+            DELETE FROM Records WHERE WeightCategoryId = {weightCategoryId} AND IsRaw = 1 AND EraId = 2;
+            DELETE FROM Records WHERE AttemptId = {benchAttemptId};
+            DELETE FROM Attempts WHERE AttemptId = {benchAttemptId};
+            DELETE FROM Participations WHERE ParticipationId = {participationId};
+            DELETE FROM Athletes WHERE AthleteId = {athleteId};
+            DELETE FROM Participations WHERE MeetId = {benchMeetId};
+            DELETE FROM Meets WHERE MeetId = {benchMeetId};
+
+            IF NOT EXISTS (SELECT 1 FROM MeetTypes WHERE MeetTypeId = {benchMeetTypeId})
+            BEGIN
+                INSERT INTO MeetTypes (MeetTypeId, Title)
+                VALUES ({benchMeetTypeId}, 'Bench Press');
+            END
+
+            SET IDENTITY_INSERT Meets ON;
+            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+            VALUES ({benchMeetId}, 'Bench Press Meet 2025', 'bench-press-meet-2025', '2025-06-01', '2025-06-01', 1, 1, 1, 1, {benchMeetTypeId}, 0, 1, 0, 1, 0, 1, 1);
+            SET IDENTITY_INSERT Meets OFF;
+
+            SET IDENTITY_INSERT Athletes ON;
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteId}, 'RecTest', 'Eight', '1950-01-01', 'm', 1, 'rectest-eight');
+            SET IDENTITY_INSERT Athletes OFF;
+
+            SET IDENTITY_INSERT Participations ON;
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationId}, {athleteId}, {benchMeetId}, 90.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, 0.0, 150.0, 0.0, 150.0, 100.0, 50.0, 50);
+            SET IDENTITY_INSERT Participations OFF;
+
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptId}, {participationId}, 2, 1, 150.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(seedSql, TestContext.Current.CancellationToken);
+
+        try
+        {
+            await service.ComputeRecordsAsync(benchAttemptId, CancellationToken.None);
+
+            List<RecordEntity> benchRecordsBefore = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId == benchAttemptId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.RecordCategoryId == RecordCategory.BenchSingle)
+                .ToListAsync(CancellationToken.None);
+
+            benchRecordsBefore.ShouldNotBeEmpty();
+
+            // Mark attempt as no good
+            await dbContext.Set<Attempt>()
+                .Where(a => a.AttemptId == benchAttemptId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(a => a.Good, false),
+                    CancellationToken.None);
+
+            await dbContext.Set<Participation>()
+                .Where(p => p.ParticipationId == participationId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(p => p.Benchpress, 0m)
+                          .SetProperty(p => p.Total, 0m),
+                    CancellationToken.None);
+
+            dbContext.ChangeTracker.Clear();
+
+            // Act
+            await service.ComputeRecordsAsync(benchAttemptId, CancellationToken.None);
+
+            // Assert — no records should remain for this attempt
+            List<RecordEntity> benchRecordsAfter = await dbContext.Set<RecordEntity>()
+                .Where(r => r.AttemptId == benchAttemptId)
+                .ToListAsync(CancellationToken.None);
+
+            benchRecordsAfter.ShouldBeEmpty();
+        }
+        finally
+        {
+            string cleanupSql =
+                $"""
+                DELETE FROM Records WHERE AttemptId = {benchAttemptId};
+                DELETE FROM Attempts WHERE AttemptId = {benchAttemptId};
+                DELETE FROM Participations WHERE ParticipationId = {participationId};
+                DELETE FROM Athletes WHERE AthleteId = {athleteId};
+                DELETE FROM Participations WHERE MeetId = {benchMeetId};
+                DELETE FROM Meets WHERE MeetId = {benchMeetId};
+                """;
+
+            await dbContext.Database.ExecuteSqlRawAsync(cleanupSql, TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Fact]
+    public async Task WhenBackfillRunsAfterComputation_NoChanges()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
+
+        const int athleteAId = 440;
+        const int participationAId = 440;
+        const int squatAttemptAId = 440;
+        const int benchAttemptAId = 441;
+        const int deadliftAttemptAId = 442;
+
+        const int athleteBId = 450;
+        const int participationBId = 450;
+        const int squatAttemptBId = 450;
+        const int benchAttemptBId = 451;
+        const int deadliftAttemptBId = 452;
+        const int weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
+
+        string seedSql =
+            $"""
+            DELETE FROM Records WHERE WeightCategoryId = {weightCategoryId} AND IsRaw = 1 AND EraId = 2;
+            DELETE FROM Records WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+            DELETE FROM Attempts WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+            DELETE FROM Participations WHERE ParticipationId IN ({participationAId}, {participationBId});
+            DELETE FROM Athletes WHERE AthleteId IN ({athleteAId}, {athleteBId});
+
+            SET IDENTITY_INSERT Athletes ON;
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteAId}, 'RecTest', 'NineA', '1950-01-01', 'm', 1, 'rectest-ninea');
+            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+            VALUES ({athleteBId}, 'RecTest', 'NineB', '1950-01-01', 'm', 1, 'rectest-nineb');
+            SET IDENTITY_INSERT Athletes OFF;
+
+            SET IDENTITY_INSERT Participations ON;
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationAId}, {athleteAId}, {TestSeedConstants.Meet.Id}, 90.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 90.0, 50);
+            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+            VALUES ({participationBId}, {athleteBId}, {TestSeedConstants.Meet.Id}, 92.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 2, 0, 220.0, 140.0, 260.0, 620.0, 410.0, 92.0, 51);
+            SET IDENTITY_INSERT Participations OFF;
+
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({squatAttemptAId}, {participationAId}, 1, 1, 200.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptAId}, {participationAId}, 2, 1, 130.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({deadliftAttemptAId}, {participationAId}, 3, 1, 250.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({squatAttemptBId}, {participationBId}, 1, 1, 220.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({benchAttemptBId}, {participationBId}, 2, 1, 140.0, 1, 'test', 'test');
+            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+            VALUES ({deadliftAttemptBId}, {participationBId}, 3, 1, 260.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(seedSql, TestContext.Current.CancellationToken);
+
+        try
+        {
+            // Compute records for A's attempts, then B's
+            await service.ComputeRecordsAsync(squatAttemptAId, CancellationToken.None);
+            await service.ComputeRecordsAsync(benchAttemptAId, CancellationToken.None);
+            await service.ComputeRecordsAsync(deadliftAttemptAId, CancellationToken.None);
+            await service.ComputeRecordsAsync(squatAttemptBId, CancellationToken.None);
+            await service.ComputeRecordsAsync(benchAttemptBId, CancellationToken.None);
+            await service.ComputeRecordsAsync(deadliftAttemptBId, CancellationToken.None);
+
+            // Snapshot records before backfill
+            List<RecordEntity> recordsBefore = await dbContext.Set<RecordEntity>()
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.IsRaw)
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .AsNoTracking()
+                .ToListAsync(CancellationToken.None);
+
+            List<int> recordIdsBefore = recordsBefore
+                .Select(r => r.RecordId)
+                .OrderBy(id => id)
+                .ToList();
+
+            Dictionary<int, decimal> weightsBefore = recordsBefore
+                .ToDictionary(r => r.RecordId, r => r.Weight);
+
+            Dictionary<int, bool> isCurrentBefore = recordsBefore
+                .ToDictionary(r => r.RecordId, r => r.IsCurrent);
+
+            // Act — run backfill
+            IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+            using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — records should be identical after backfill
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> recordsAfter = await assertDb.Set<RecordEntity>()
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.IsRaw)
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .AsNoTracking()
+                .ToListAsync(CancellationToken.None);
+
+            List<int> recordIdsAfter = recordsAfter
+                .Select(r => r.RecordId)
+                .OrderBy(id => id)
+                .ToList();
+
+            // No records added or deleted
+            recordIdsAfter.Count.ShouldBe(recordIdsBefore.Count);
+            recordIdsAfter.ShouldBe(recordIdsBefore);
+
+            // No weights or IsCurrent flags changed
+            foreach (RecordEntity record in recordsAfter)
+            {
+                weightsBefore[record.RecordId].ShouldBe(record.Weight);
+                isCurrentBefore[record.RecordId].ShouldBe(record.IsCurrent);
+            }
+        }
+        finally
+        {
+            // Backfill may have modified global records; do a full restore
+            await dbContext.Database.ExecuteSqlRawAsync(
+                $"""
+                DELETE FROM Records;
+                DELETE FROM Attempts WHERE AttemptId IN ({squatAttemptAId}, {benchAttemptAId}, {deadliftAttemptAId}, {squatAttemptBId}, {benchAttemptBId}, {deadliftAttemptBId});
+                DELETE FROM Participations WHERE ParticipationId IN ({participationAId}, {participationBId});
+                DELETE FROM Athletes WHERE AthleteId IN ({athleteAId}, {athleteBId});
+                """,
+                TestContext.Current.CancellationToken);
+
+            await dbContext.Database.ExecuteSqlRawAsync(
+                BaseSeedSql.SeedBaseRecords(),
+                TestContext.Current.CancellationToken);
         }
     }
 
