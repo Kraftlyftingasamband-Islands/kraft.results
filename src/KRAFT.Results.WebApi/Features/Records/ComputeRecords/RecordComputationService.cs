@@ -20,7 +20,6 @@ internal sealed class RecordComputationService(
     ResultsDbContext dbContext,
     ILogger<RecordComputationService> logger)
 {
-    private const string CreatedBySystem = "system";
     private const int IcelandCountryId = 1;
 
     private readonly ResultsDbContext _dbContext = dbContext;
@@ -125,21 +124,10 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        List<SlotEntry> slotEntries = BuildSlotEntries(
-            participation,
-            meet,
-            era,
-            slugToIdMap);
-
-        if (slotEntries.Count == 0)
-        {
-            return;
-        }
-
-        await ReconcileParticipationSlotsAsync(
+        await FullRebuildSlotsAsync(
             affectedSlots,
-            slotEntries,
-            meetDate,
+            eras,
+            slugToIdMap,
             cancellationToken);
     }
 
@@ -234,200 +222,6 @@ internal sealed class RecordComputationService(
         }
 
         return affectedSlots;
-    }
-
-    private static List<SlotEntry> BuildSlotEntries(
-        Participation participation,
-        Meet meet,
-        Era era,
-        Dictionary<string, int> slugToIdMap)
-    {
-        IReadOnlyList<Discipline> requiredDisciplines =
-            MeetDisciplineResolver.ResolveDisciplines(
-                meet.MeetType.MeetTypeId,
-                meet.MeetType.Title);
-
-        List<(RecordCategory Category, decimal Weight, int AttemptId)> entries = [];
-
-        foreach (Discipline discipline in requiredDisciplines)
-        {
-            Attempt? best = participation.Attempts
-                .Where(a => a.Discipline == discipline)
-                .Where(a => a.Good)
-                .Where(a => a.Weight > 0)
-                .OrderByDescending(a => a.Weight)
-                .ThenByDescending(a => a.AttemptId)
-                .FirstOrDefault();
-
-            if (best is null)
-            {
-                continue;
-            }
-
-            RecordCategory category =
-                MeetDisciplineResolver.MapDisciplineToRecordCategory(
-                    discipline,
-                    meet.MeetType.MeetTypeId,
-                    meet.MeetType.Title);
-
-            if (category == RecordCategory.None)
-            {
-                continue;
-            }
-
-            entries.Add((category, best.Weight, best.AttemptId));
-        }
-
-        if (requiredDisciplines.Count > 1 && participation.Total > 0)
-        {
-            Attempt? bestDeadlift = participation.Attempts
-                .Where(a => a.Discipline == Discipline.Deadlift)
-                .Where(a => a.Good)
-                .Where(a => a.Weight > 0)
-                .OrderByDescending(a => a.Weight)
-                .ThenByDescending(a => a.AttemptId)
-                .FirstOrDefault();
-
-            if (bestDeadlift is not null)
-            {
-                entries.Add((
-                    RecordCategory.Total,
-                    participation.Total,
-                    bestDeadlift.AttemptId));
-            }
-        }
-
-        AgeCategory ageCategory = participation.AgeCategory;
-        string? slug = ageCategory.Slug;
-
-        if (string.IsNullOrEmpty(slug))
-        {
-            return [];
-        }
-
-        IReadOnlyList<string> cascadeSlugs =
-            AgeCategory.GetCascadeSlugs(slug);
-
-        List<SlotEntry> slotEntries = [];
-
-        foreach ((RecordCategory category, decimal weight, int entryAttemptId) in entries)
-        {
-            foreach (string cascadeSlug in cascadeSlugs)
-            {
-                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
-                {
-                    continue;
-                }
-
-                slotEntries.Add(new SlotEntry(
-                    new SlotKey(
-                        era.EraId,
-                        ageCategoryId,
-                        participation.WeightCategoryId,
-                        category,
-                        meet.IsRaw),
-                    weight,
-                    entryAttemptId));
-            }
-        }
-
-        return slotEntries;
-    }
-
-    private async Task ReconcileParticipationSlotsAsync(
-        List<SlotKey> affectedSlots,
-        List<SlotEntry> slotEntries,
-        DateOnly meetDate,
-        CancellationToken cancellationToken)
-    {
-        List<int> cascadeAgeCategoryIds = affectedSlots
-            .Select(s => s.AgeCategoryId)
-            .Distinct()
-            .ToList();
-
-        List<RecordCategory> applicableCategories = affectedSlots
-            .Select(s => s.RecordCategory)
-            .Distinct()
-            .ToList();
-
-        int eraId = affectedSlots[0].EraId;
-        int weightCategoryId = affectedSlots[0].WeightCategoryId;
-        bool isRaw = affectedSlots[0].IsRaw;
-
-        IExecutionStrategy strategy =
-            _dbContext.Database.CreateExecutionStrategy();
-
-        await strategy.ExecuteAsync(async () =>
-        {
-            await using IDbContextTransaction transaction =
-                await _dbContext.Database.BeginTransactionAsync(
-                    IsolationLevel.RepeatableRead,
-                    cancellationToken);
-
-            List<Record> existingCurrentRecords = await _dbContext.Set<Record>()
-                .AsNoTracking()
-                .Where(r => r.EraId == eraId)
-                .Where(r => cascadeAgeCategoryIds.Contains(r.AgeCategoryId))
-                .Where(r => r.WeightCategoryId == weightCategoryId)
-                .Where(r => applicableCategories.Contains(r.RecordCategoryId))
-                .Where(r => r.IsRaw == isRaw)
-                .Where(r => r.IsCurrent)
-                .ToListAsync(cancellationToken);
-
-            List<int> recordIdsToDemote = [];
-            List<Record> recordsToCreate = [];
-
-            foreach (SlotEntry entry in slotEntries)
-            {
-                Record? currentRecord = existingCurrentRecords
-                    .Where(r => r.AgeCategoryId == entry.SlotKey.AgeCategoryId)
-                    .FirstOrDefault(r =>
-                        r.RecordCategoryId == entry.SlotKey.RecordCategory);
-
-                if (currentRecord is not null
-                    && entry.Weight <= currentRecord.Weight)
-                {
-                    continue;
-                }
-
-                if (currentRecord is not null)
-                {
-                    recordIdsToDemote.Add(currentRecord.RecordId);
-                }
-
-                Record newRecord = Record.Create(
-                    entry.SlotKey.EraId,
-                    entry.SlotKey.AgeCategoryId,
-                    entry.SlotKey.WeightCategoryId,
-                    entry.SlotKey.RecordCategory,
-                    entry.Weight,
-                    meetDate,
-                    entry.AttemptId,
-                    entry.SlotKey.IsRaw,
-                    CreatedBySystem);
-
-                newRecord.SetCurrent();
-                recordsToCreate.Add(newRecord);
-            }
-
-            if (recordIdsToDemote.Count > 0)
-            {
-                await _dbContext.Set<Record>()
-                    .Where(r => recordIdsToDemote.Contains(r.RecordId))
-                    .ExecuteUpdateAsync(
-                        s => s.SetProperty(r => r.IsCurrent, false),
-                        cancellationToken);
-            }
-
-            if (recordsToCreate.Count > 0)
-            {
-                _dbContext.Set<Record>().AddRange(recordsToCreate);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                _dbContext.ChangeTracker.Clear();
-            }
-
-            await transaction.CommitAsync(cancellationToken);
-        });
     }
 
     private async Task HandleInvalidTotalAsync(
@@ -702,9 +496,4 @@ internal sealed class RecordComputationService(
             _dbContext.ChangeTracker.Clear();
         }
     }
-
-    private sealed record SlotEntry(
-        SlotKey SlotKey,
-        decimal Weight,
-        int AttemptId);
 }
