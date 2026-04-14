@@ -163,7 +163,7 @@ internal sealed class GetMeetParticipationsHandler(ResultsDbContext dbContext)
             ipfType = "Benchpress";
             liftWeight = benchpress;
         }
-        else if (meetTypeId == 1)
+        else if ((MeetCategory)meetTypeId == MeetCategory.Powerlifting)
         {
             ipfType = "Powerlifting";
             liftWeight = total;
