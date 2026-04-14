@@ -17,7 +17,7 @@ internal sealed class BackfillRecordsJob(
     IServiceScopeFactory scopeFactory,
     ILogger<BackfillRecordsJob> logger) : BackgroundService
 {
-    private const int IcelandCountryId = 1;
+    private const string IcelandIso3 = "ISL";
 
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly ILogger<BackfillRecordsJob> _logger = logger;
@@ -75,7 +75,7 @@ internal sealed class BackfillRecordsJob(
                     .ThenInclude(p => p.AgeCategory)
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
-                .Where(a => a.Participation.Athlete.CountryId == IcelandCountryId)
+                .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
                 .Where(a => a.Participation.Meet.RecordsPossible)
                 .Where(a => a.Participation.Meet.IsRaw == division.IsRaw)
                 .Where(a => a.Participation.WeightCategoryId == division.WeightCategoryId)
@@ -182,7 +182,7 @@ internal sealed class BackfillRecordsJob(
             .AsNoTracking()
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
-            .Where(a => a.Participation.Athlete.CountryId == IcelandCountryId)
+            .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
             .Where(a => a.Participation.Meet.RecordsPossible)
             .Select(a => new AttemptProjection(
                 a.Discipline,
@@ -243,7 +243,7 @@ internal sealed class BackfillRecordsJob(
 
         List<TotalProjection> totalProjections = await dbContext.Set<Participation>()
             .AsNoTracking()
-            .Where(p => p.Athlete.CountryId == IcelandCountryId)
+            .Where(p => p.Athlete.Country.Iso3 == IcelandIso3)
             .Where(p => p.Meet.RecordsPossible)
             .Where(p => p.Total > 0)
             .Select(p => new TotalProjection(
