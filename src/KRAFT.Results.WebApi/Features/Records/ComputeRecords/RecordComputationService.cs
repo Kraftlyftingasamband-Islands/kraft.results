@@ -168,16 +168,11 @@ internal sealed class RecordComputationService(
         Era era,
         Dictionary<string, int> slugToIdMap)
     {
-        AgeCategory ageCategory = participation.AgeCategory;
-        string? slug = ageCategory.Slug;
-
-        if (string.IsNullOrEmpty(slug))
-        {
-            return [];
-        }
-
+        Athlete athlete = participation.Athlete;
+        DateOnly meetDate = DateOnly.FromDateTime(meet.StartDate);
+        string biologicalSlug = AgeCategory.ResolveSlug(athlete.DateOfBirth, meetDate);
         IReadOnlyList<string> cascadeSlugs =
-            AgeCategory.GetCascadeSlugs(slug);
+            AgeCategory.GetCascadeSlugs(biologicalSlug);
 
         List<int> cascadeAgeCategoryIds = [];
 

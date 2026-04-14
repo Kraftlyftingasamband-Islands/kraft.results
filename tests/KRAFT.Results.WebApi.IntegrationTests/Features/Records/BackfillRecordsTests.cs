@@ -24,6 +24,7 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     private const int DeadliftMeetAttemptId = 600;
     private const int NonIcelandicAthleteBaseId = 700;
     private const int NorwayCountryId = 2;
+    private const string SeedAthleteDateOfBirth = "1985-07-02";
 
     private const string SeedRecordCorruptionSql =
         """
@@ -272,6 +273,7 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
             DELETE FROM Records;
             DELETE FROM Attempts WHERE AttemptId IN ({BackfillTestAttemptLowId}, {BackfillTestAttemptHighId}, {BackfillTestBenchAttemptId}, {BackfillTestDeadliftAttemptId});
             DELETE FROM Participations WHERE ParticipationId = {BackfillTestParticipationId};
+            UPDATE Athletes SET DateOfBirth = '{SeedAthleteDateOfBirth}' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
             """);
 
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
@@ -366,8 +368,11 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
 
         // Create a participation in junior age category, 93kg, in the raw test meet (MeetId=1)
+        // Temporarily set athlete DoB to junior range so biological age resolves correctly
         string seedDataSql =
             $"""
+            UPDATE Athletes SET DateOfBirth = '2003-01-01' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
+
             SET IDENTITY_INSERT Participations ON;
             INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
             VALUES ({BackfillTestParticipationId}, {TestSeedConstants.Athlete.Id}, {TestSeedConstants.Meet.Id}, 90.0, {weightCategoryId}, {ageCategoryId}, 1, 0, 220.0, 140.0, 260.0, 620.0, 420.0, 90.0, 99);

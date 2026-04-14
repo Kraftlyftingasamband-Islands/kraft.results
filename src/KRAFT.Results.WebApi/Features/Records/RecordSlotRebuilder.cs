@@ -203,15 +203,8 @@ internal static class RecordSlotRebuilder
                 continue;
             }
 
-            AgeCategory ageCategory = participation.AgeCategory;
-            string? slug = ageCategory.Slug;
-
-            if (string.IsNullOrEmpty(slug))
-            {
-                continue;
-            }
-
-            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(slug);
+            string biologicalSlug = AgeCategory.ResolveSlug(athlete.DateOfBirth, meetDate);
+            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(biologicalSlug);
 
             foreach (string cascadeSlug in cascadeSlugs)
             {
@@ -308,15 +301,8 @@ internal static class RecordSlotRebuilder
                 continue;
             }
 
-            AgeCategory ageCategory = participation.AgeCategory;
-            string? slug = ageCategory.Slug;
-
-            if (string.IsNullOrEmpty(slug))
-            {
-                continue;
-            }
-
-            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(slug);
+            string biologicalSlug = AgeCategory.ResolveSlug(athlete.DateOfBirth, meetDate);
+            IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(biologicalSlug);
 
             foreach (string cascadeSlug in cascadeSlugs)
             {
