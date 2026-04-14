@@ -5,13 +5,16 @@ namespace KRAFT.Results.WebApi.Features.Meets;
 
 internal static class MeetDisciplineResolver
 {
-    private static readonly int[] BenchMeetTypeIds = [2, 5];
-
-    internal static bool IsBenchMeetType(int meetTypeId) => BenchMeetTypeIds.Contains(meetTypeId);
+    internal static bool IsBenchMeetType(int meetTypeId)
+    {
+        MeetCategory category = (MeetCategory)meetTypeId;
+        return category == MeetCategory.Benchpress || category == MeetCategory.PushPull;
+    }
 
     internal static bool IsDeadliftMeetType(int meetTypeId, string meetTypeTitle) =>
         !IsBenchMeetType(meetTypeId)
-        && (meetTypeTitle.Contains("réttst", StringComparison.OrdinalIgnoreCase)
+        && ((MeetCategory)meetTypeId == MeetCategory.Deadlift
+            || meetTypeTitle.Contains("réttst", StringComparison.OrdinalIgnoreCase)
             || meetTypeTitle.Contains("rettst", StringComparison.OrdinalIgnoreCase)
             || meetTypeTitle.Contains("deadlift", StringComparison.OrdinalIgnoreCase));
 
