@@ -1,6 +1,7 @@
 using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Records;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,8 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     private const int BackfillTestDeadliftAttemptId = 503;
     private const int DeadliftMeetParticipationId = 600;
     private const int DeadliftMeetAttemptId = 600;
+    private const int NonIcelandicAthleteBaseId = 700;
+    private const int NorwayCountryId = 2;
 
     private const string SeedRecordCorruptionSql =
         """
@@ -208,6 +211,57 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await RestoreDeadliftMeetBackfillDataAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenNonIcelandicAthleteCompetes_BackfillDoesNotCreateRecord()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, CancellationToken.None);
+
+        SeedRecordAthlete norwegianAthlete = await new RecordTestAthleteBuilder(dbContext, NonIcelandicAthleteBaseId)
+            .WithCountryId(NorwayCountryId)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(300m)
+            .WithBench(200m)
+            .WithDeadlift(350m)
+            .BuildAsync(CancellationToken.None);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — no records should exist for the non-Icelandic athlete's slot
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.IsRaw)
+                .Where(r => r.AttemptId == norwegianAthlete.SquatAttemptId
+                    || r.AttemptId == norwegianAthlete.BenchAttemptId
+                    || r.AttemptId == norwegianAthlete.DeadliftAttemptId)
+                .ToListAsync(CancellationToken.None);
+
+            slotRecords.ShouldBeEmpty("non-Icelandic athletes should not get records via backfill");
+        }
+        finally
+        {
+            await norwegianAthlete.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
         }
     }
 
