@@ -50,6 +50,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                             a.Weight,
                             a.Good,
                             IsRecord = a.Records.Count != 0,
+                            RecordAgeCategorySlugs = a.Records.Select(r => r.AgeCategory.Slug),
                         }),
                 }))
             .FirstOrDefaultAsync(cancellationToken);
@@ -67,12 +68,28 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
         decimal ipfPoints = CalculateIpfPoints(row.Disqualified, row.MeetTypeId, row.IsRaw, row.Gender, row.Weight, row.Total, row.Benchpress);
 
         IEnumerable<MeetAttempt> attempts = row.Attempts
-            .Select(a => new MeetAttempt(
-                a.Discipline,
-                a.Round,
-                a.Weight,
-                a.Good,
-                a.IsRecord));
+            .Select(a =>
+            {
+                string? recordAgeCategory = null;
+
+                if (a.IsRecord)
+                {
+                    List<string?> slugs = a.RecordAgeCategorySlugs.ToList();
+                    string? bestSlug = slugs
+                        .Where(s => s != null)
+                        .FirstOrDefault(s => s != "open")
+                        ?? slugs.FirstOrDefault();
+                    recordAgeCategory = bestSlug?.ToAgeCategoryLabel(row.Gender);
+                }
+
+                return new MeetAttempt(
+                    a.Discipline,
+                    a.Round,
+                    a.Weight,
+                    a.Good,
+                    a.IsRecord,
+                    recordAgeCategory);
+            });
 
         IReadOnlyList<Discipline> disciplines = MeetDisciplineResolver.ResolveDisciplines(row.MeetTypeId, row.MeetTypeTitle);
         decimal displayTotal = row.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
