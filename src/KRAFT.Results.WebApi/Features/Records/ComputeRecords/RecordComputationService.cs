@@ -77,6 +77,10 @@ internal sealed class RecordComputationService(
 
         if (athlete.CountryId != IcelandCountryId)
         {
+            _logger.LogWarning(
+                "Skipping record computation: athlete {AthleteId} is not Icelandic (AttemptId: {AttemptId})",
+                athlete.AthleteId,
+                attemptId);
             return;
         }
 
@@ -297,6 +301,7 @@ internal sealed class RecordComputationService(
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
                 .Where(a => a.Participation.Meet.RecordsPossible)
+                .Where(a => a.Participation.Athlete.CountryId == IcelandCountryId)
                 .Where(a => weightCategoryIds.Contains(
                     a.Participation.WeightCategoryId))
                 .Where(a => isRawValues.Contains(
@@ -381,6 +386,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
+            .Where(a => a.Participation.Athlete.CountryId == IcelandCountryId)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
