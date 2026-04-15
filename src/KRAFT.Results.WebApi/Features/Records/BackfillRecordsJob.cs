@@ -1,3 +1,5 @@
+using System.Data;
+
 using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.AgeCategories;
@@ -8,6 +10,7 @@ using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 using static KRAFT.Results.WebApi.Features.Records.RecordSlotRebuilder;
 
@@ -46,24 +49,12 @@ internal sealed class BackfillRecordsJob(
         int recordsDeleted = 0;
         int divisionsProcessed = 0;
 
-        foreach (DivisionKey division in divisionKeys)
+        IEnumerable<IGrouping<(int WeightCategoryId, bool IsRaw), DivisionKey>> groups =
+            divisionKeys.GroupBy(d => (d.WeightCategoryId, d.IsRaw));
+
+        foreach (IGrouping<(int WeightCategoryId, bool IsRaw), DivisionKey> group in groups)
         {
-            divisionsProcessed++;
-            string slotKey = FormatSlotKey(
-                division.EraId,
-                division.AgeCategoryId,
-                division.WeightCategoryId,
-                division.RecordCategory,
-                division.IsRaw);
-
-            Era? era = eras.FirstOrDefault(e => e.EraId == division.EraId);
-
-            if (era is null)
-            {
-                continue;
-            }
-
-            List<Attempt> divisionAttempts = await dbContext.Set<Attempt>()
+            List<Attempt> allAttempts = await dbContext.Set<Attempt>()
                 .AsNoTracking()
                 .Include(a => a.Participation)
                     .ThenInclude(p => p.Meet)
@@ -77,91 +68,127 @@ internal sealed class BackfillRecordsJob(
                 .Where(a => a.Weight > 0)
                 .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
                 .Where(a => a.Participation.Meet.RecordsPossible)
-                .Where(a => a.Participation.Meet.IsRaw == division.IsRaw)
-                .Where(a => a.Participation.WeightCategoryId == division.WeightCategoryId)
+                .Where(a => a.Participation.Meet.IsRaw == group.Key.IsRaw)
+                .Where(a => a.Participation.WeightCategoryId == group.Key.WeightCategoryId)
                 .ToListAsync(stoppingToken);
 
-            List<SlotAttempt> slotAttempts = division.RecordCategory == RecordCategory.Total
-                ? FilterAndOrderForChain(BuildTotalSlotAttempts(divisionAttempts, eras, slugToIdMap), slotKey)
-                : FilterAndOrderForChain(BuildSlotAttempts(divisionAttempts, eras, slugToIdMap), slotKey);
+            List<SlotAttempt> disciplineSlotAttempts =
+                BuildSlotAttempts(allAttempts, eras, slugToIdMap);
+            List<SlotAttempt> totalSlotAttempts =
+                BuildTotalSlotAttempts(allAttempts, eras, slugToIdMap);
 
-            StandardRecordInfo? standardRecord = await GetLatestStandardRecordAsync(
-                division.EraId,
-                division.AgeCategoryId,
-                division.WeightCategoryId,
-                division.RecordCategory,
-                division.IsRaw,
-                dbContext,
-                stoppingToken);
+            IExecutionStrategy strategy = dbContext.Database.CreateExecutionStrategy();
 
-            if (standardRecord is not null)
+            await strategy.ExecuteAsync(async () =>
             {
-                slotAttempts = slotAttempts
-                    .Where(sa => sa.MeetDate >= standardRecord.Date)
-                    .ToList();
-            }
-
-            List<ExpectedRecord> expectedChain = ComputeExpectedChain(
-                slotAttempts,
-                standardRecord?.Weight ?? 0m);
-
-            SlotReconciliationResult result = await ReconcileSlotAsync(
-                division.EraId,
-                division.AgeCategoryId,
-                division.WeightCategoryId,
-                division.RecordCategory,
-                division.IsRaw,
-                expectedChain,
-                dbContext,
-                stoppingToken);
-
-            if (result.RecordIdsToDelete.Count > 0)
-            {
-                await dbContext.Set<Record>()
-                    .Where(r => result.RecordIdsToDelete.Contains(r.RecordId))
-                    .ExecuteDeleteAsync(stoppingToken);
-
-                recordsDeleted += result.RecordIdsToDelete.Count;
-            }
-
-            if (result.RecordIdsToDemote.Count > 0)
-            {
-                await dbContext.Set<Record>()
-                    .Where(r => result.RecordIdsToDemote.Contains(r.RecordId))
-                    .ExecuteUpdateAsync(
-                        s => s.SetProperty(r => r.IsCurrent, false),
+                await using IDbContextTransaction transaction =
+                    await dbContext.Database.BeginTransactionAsync(
+                        IsolationLevel.RepeatableRead,
                         stoppingToken);
-            }
 
-            if (result.RecordIdsToSetCurrent.Count > 0)
-            {
-                await dbContext.Set<Record>()
-                    .Where(r => result.RecordIdsToSetCurrent.Contains(r.RecordId))
-                    .ExecuteUpdateAsync(
-                        s => s.SetProperty(r => r.IsCurrent, true),
+                foreach (DivisionKey division in group)
+                {
+                    Era? era = eras.FirstOrDefault(e => e.EraId == division.EraId);
+
+                    if (era is null)
+                    {
+                        continue;
+                    }
+
+                    divisionsProcessed++;
+
+                    string slotKey = FormatSlotKey(
+                        division.EraId,
+                        division.AgeCategoryId,
+                        division.WeightCategoryId,
+                        division.RecordCategory,
+                        division.IsRaw);
+
+                    List<SlotAttempt> slotAttempts = division.RecordCategory == RecordCategory.Total
+                        ? FilterAndOrderForChain(totalSlotAttempts, slotKey)
+                        : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
+
+                    StandardRecordInfo? standardRecord = await GetLatestStandardRecordAsync(
+                        division.EraId,
+                        division.AgeCategoryId,
+                        division.WeightCategoryId,
+                        division.RecordCategory,
+                        division.IsRaw,
+                        dbContext,
                         stoppingToken);
-            }
 
-            for (int i = 0; i < result.RecordIdsToUpdateWeight.Count; i++)
-            {
-                int recordId = result.RecordIdsToUpdateWeight[i];
-                decimal weight = result.UpdatedWeights[i];
+                    if (standardRecord is not null)
+                    {
+                        slotAttempts = slotAttempts
+                            .Where(sa => sa.MeetDate >= standardRecord.Date)
+                            .ToList();
+                    }
 
-                await dbContext.Set<Record>()
-                    .Where(r => r.RecordId == recordId)
-                    .ExecuteUpdateAsync(
-                        s => s.SetProperty(r => r.Weight, weight),
+                    List<ExpectedRecord> expectedChain = ComputeExpectedChain(
+                        slotAttempts,
+                        standardRecord?.Weight ?? 0m);
+
+                    SlotReconciliationResult result = await ReconcileSlotAsync(
+                        division.EraId,
+                        division.AgeCategoryId,
+                        division.WeightCategoryId,
+                        division.RecordCategory,
+                        division.IsRaw,
+                        expectedChain,
+                        dbContext,
                         stoppingToken);
-            }
 
-            if (result.RecordsToCreate.Count > 0)
-            {
-                dbContext.Set<Record>().AddRange(result.RecordsToCreate);
-                await dbContext.SaveChangesAsync(stoppingToken);
-                dbContext.ChangeTracker.Clear();
+                    if (result.RecordIdsToDelete.Count > 0)
+                    {
+                        await dbContext.Set<Record>()
+                            .Where(r => result.RecordIdsToDelete.Contains(r.RecordId))
+                            .ExecuteDeleteAsync(stoppingToken);
 
-                recordsCreated += result.RecordsToCreate.Count;
-            }
+                        recordsDeleted += result.RecordIdsToDelete.Count;
+                    }
+
+                    if (result.RecordIdsToDemote.Count > 0)
+                    {
+                        await dbContext.Set<Record>()
+                            .Where(r => result.RecordIdsToDemote.Contains(r.RecordId))
+                            .ExecuteUpdateAsync(
+                                s => s.SetProperty(r => r.IsCurrent, false),
+                                stoppingToken);
+                    }
+
+                    if (result.RecordIdsToSetCurrent.Count > 0)
+                    {
+                        await dbContext.Set<Record>()
+                            .Where(r => result.RecordIdsToSetCurrent.Contains(r.RecordId))
+                            .ExecuteUpdateAsync(
+                                s => s.SetProperty(r => r.IsCurrent, true),
+                                stoppingToken);
+                    }
+
+                    for (int i = 0; i < result.RecordIdsToUpdateWeight.Count; i++)
+                    {
+                        int recordId = result.RecordIdsToUpdateWeight[i];
+                        decimal weight = result.UpdatedWeights[i];
+
+                        await dbContext.Set<Record>()
+                            .Where(r => r.RecordId == recordId)
+                            .ExecuteUpdateAsync(
+                                s => s.SetProperty(r => r.Weight, weight),
+                                stoppingToken);
+                    }
+
+                    if (result.RecordsToCreate.Count > 0)
+                    {
+                        dbContext.Set<Record>().AddRange(result.RecordsToCreate);
+                        await dbContext.SaveChangesAsync(stoppingToken);
+                        dbContext.ChangeTracker.Clear();
+
+                        recordsCreated += result.RecordsToCreate.Count;
+                    }
+                }
+
+                await transaction.CommitAsync(stoppingToken);
+            });
         }
 
         _logger.LogInformation(
