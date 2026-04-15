@@ -23,6 +23,29 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     private const int DeadliftMeetParticipationId = 600;
     private const int DeadliftMeetAttemptId = 600;
     private const int NonIcelandicAthleteBaseId = 700;
+
+    // Two athletes whose squat AttemptIds are inversely ordered relative to their weights,
+    // mirroring production data where records were entered in descending weight order.
+    // Athlete1 (baseId=800): squatAttemptId=800, squat=140 kg (lower ID, higher weight).
+    // Athlete2 (baseId=803): squatAttemptId=803, squat=110 kg (higher ID, lower weight).
+    // With the buggy sort (by AttemptId), 800 (140 kg) is processed first and becomes
+    // runningMax; 803 (110 kg < 140 kg) is skipped and its record would be created fresh
+    // only if it appears — but since 110 < 140 it never enters the chain, so no record.
+    // With the fix (sort by weight first), 803 (110 kg) comes before 800 (140 kg),
+    // both enter the chain, and both records are created.
+    private const int SortOrderAthlete1BaseId = 800; // squatAttemptId=800, 140 kg
+    private const int SortOrderAthlete2BaseId = 803; // squatAttemptId=803, 110 kg
+
+    private const int SingleLiftAthleteBaseId = 900;
+    private const int StandardRecordAthleteABaseId = 1000;
+    private const int StandardRecordAthleteBBaseId = 1003;
+    private const int IntermediateTotalAthleteBaseId = 1010;
+    private const int IntermediateTotalDlRound2AttemptId = 1013;
+    private const int IntermediateTotalDlRound3AttemptId = 1014;
+    private const int FourthAttemptAthleteBaseId = 1020;
+    private const int FourthAttemptRound4AttemptId = 1024;
+    private const int DuplicateRecordAthleteBaseId = 1030;
+
     private const int NorwayCountryId = 2;
     private const string SeedAthleteDateOfBirth = "1985-07-02";
 
@@ -216,6 +239,43 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
     }
 
     [Fact]
+    public async Task WhenBackfillRuns_StandardRecordIsNotDeleted()
+    {
+        // Arrange — base seed includes a standard record (RecordId=6) in the
+        // equipped / open / 93 kg / squat slot with no athlete attempts.
+        // The expected chain for that slot is empty, so the buggy code deletes it.
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — the standard record in the 93 kg equipped open squat slot must survive
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => !r.IsRaw)
+                .ToListAsync(CancellationToken.None);
+
+            slotRecords.ShouldContain(r => r.IsStandard, "standard record should not be deleted by backfill");
+        }
+        finally
+        {
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
     public async Task WhenNonIcelandicAthleteCompetes_BackfillDoesNotCreateRecord()
     {
         // Arrange
@@ -262,6 +322,492 @@ public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await norwegianAthlete.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenBackfillRuns_BenchAndDeadliftFromPowerliftingMeetAlsoCreateSingleLiftRecords()
+    {
+        // Arrange — a bench attempt from a powerlifting meet should create BOTH a Bench
+        // (Cat=2) record AND a BenchSingle (Cat=5) record, mirroring production data where
+        // both slots tracked lifts from full powerlifting competitions.
+        // Likewise, a deadlift attempt should produce both Deadlift (Cat=3) and
+        // DeadliftSingle (Cat=6) records.
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, SingleLiftAthleteBaseId)
+            .WithWeightCategoryId(TestSeedConstants.WeightCategory.Id105Kg)
+            .WithSquat(200m)
+            .WithBench(130m)
+            .WithDeadlift(250m)
+            .BuildAsync(CancellationToken.None);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — both Bench and BenchSingle records should be created for the bench attempt.
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            RecordEntity? benchRecord = await assertDb.Set<RecordEntity>()
+                .Where(r => r.AttemptId == athlete.BenchAttemptId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Bench)
+                .FirstOrDefaultAsync(CancellationToken.None);
+
+            RecordEntity? benchSingleRecord = await assertDb.Set<RecordEntity>()
+                .Where(r => r.AttemptId == athlete.BenchAttemptId)
+                .Where(r => r.RecordCategoryId == RecordCategory.BenchSingle)
+                .FirstOrDefaultAsync(CancellationToken.None);
+
+            benchRecord.ShouldNotBeNull("bench from powerlifting meet should produce a Bench record");
+            benchRecord.Weight.ShouldBe(130m);
+
+            benchSingleRecord.ShouldNotBeNull(
+                "bench from powerlifting meet should also produce a BenchSingle record");
+            benchSingleRecord.Weight.ShouldBe(130m);
+
+            // Also verify Deadlift and DeadliftSingle records.
+            RecordEntity? deadliftRecord = await assertDb.Set<RecordEntity>()
+                .Where(r => r.AttemptId == athlete.DeadliftAttemptId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Deadlift)
+                .FirstOrDefaultAsync(CancellationToken.None);
+
+            RecordEntity? deadliftSingleRecord = await assertDb.Set<RecordEntity>()
+                .Where(r => r.AttemptId == athlete.DeadliftAttemptId)
+                .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
+                .FirstOrDefaultAsync(CancellationToken.None);
+
+            deadliftRecord.ShouldNotBeNull("deadlift from powerlifting meet should produce a Deadlift record");
+            deadliftRecord.Weight.ShouldBe(250m);
+
+            deadliftSingleRecord.ShouldNotBeNull(
+                "deadlift from powerlifting meet should also produce a DeadliftSingle record");
+            deadliftSingleRecord.Weight.ShouldBe(250m);
+        }
+        finally
+        {
+            await athlete.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenBackfillRuns_AttemptWithLowerIdButHigherWeightDoesNotSuppressRecord()
+    {
+        // Arrange — two athletes in the same slot (open / 93 kg / squat / raw).
+        // Athlete1 (baseId=800): squatAttemptId=800, squat=140 kg (lower ID, higher weight).
+        // Athlete2 (baseId=803): squatAttemptId=803, squat=110 kg (higher ID, lower weight).
+        // The lower AttemptId has the higher weight, mirroring production data where
+        // records were entered in descending weight order.
+        // With the buggy sort (by AttemptId), 800 (140 kg) is processed first and sets
+        // runningMax=140; 803 (110 kg < 140 kg) is skipped and never enters the chain.
+        // After the fix (sort by weight first), 803 (110 kg) is processed first, 800
+        // (140 kg) second — both enter the chain and both records are created.
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await SeedRecordAthlete.ClearSlotAsync(
+            dbContext,
+            TestSeedConstants.WeightCategory.Id93Kg,
+            CancellationToken.None);
+
+        SeedRecordAthlete athlete1 = await new RecordTestAthleteBuilder(dbContext, SortOrderAthlete1BaseId)
+            .WithWeightCategoryId(TestSeedConstants.WeightCategory.Id93Kg)
+            .WithSquat(140m)
+            .WithBench(100m)
+            .WithDeadlift(150m)
+            .BuildAsync(CancellationToken.None);
+
+        SeedRecordAthlete athlete2 = await new RecordTestAthleteBuilder(dbContext, SortOrderAthlete2BaseId)
+            .WithWeightCategoryId(TestSeedConstants.WeightCategory.Id93Kg)
+            .WithSquat(110m)
+            .WithBench(80m)
+            .WithDeadlift(130m)
+            .BuildAsync(CancellationToken.None);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert — both squat records must be created; athlete1 (140 kg) is current,
+            // athlete2 (110 kg) is the predecessor in the progressive chain.
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.IsRaw)
+                .ToListAsync(CancellationToken.None);
+
+            slotRecords.ShouldContain(
+                r => r.AttemptId == athlete1.SquatAttemptId,
+                "higher-weight attempt (lower ID) should be in chain");
+
+            slotRecords.ShouldContain(
+                r => r.AttemptId == athlete2.SquatAttemptId,
+                "lower-weight attempt (higher ID) should not be suppressed by sort order bug");
+
+            RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
+            currentRecord.AttemptId.ShouldBe(athlete1.SquatAttemptId, "current record should be the highest weight");
+            currentRecord.Weight.ShouldBe(140m);
+        }
+        finally
+        {
+            await athlete1.DeleteAsync(dbContext, CancellationToken.None);
+            await athlete2.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenStandardRecordExists_ChainStartsFromStandardWeight()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, CancellationToken.None);
+
+        string insertStandardSql =
+            $"""
+            INSERT INTO Records (
+                EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
+                Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {weightCategoryId},
+                {(int)RecordCategory.Squat},
+                250.0, '2020-06-01', 1, NULL, 1, 1, 'test');
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            insertStandardSql,
+            TestContext.Current.CancellationToken);
+
+        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteABaseId)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(240m)
+            .BuildAsync(CancellationToken.None);
+
+        SeedRecordAthlete athleteB = await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteBBaseId)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(260m)
+            .BuildAsync(CancellationToken.None);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.IsRaw)
+                .ToListAsync(CancellationToken.None);
+
+            slotRecords.ShouldContain(
+                r => r.IsStandard,
+                "standard record should still exist after backfill");
+
+            List<RecordEntity> nonStandardRecords = slotRecords
+                .Where(r => !r.IsStandard)
+                .ToList();
+
+            nonStandardRecords.Count.ShouldBe(1, "only one non-standard squat record should exist");
+            nonStandardRecords[0].Weight.ShouldBe(260.0m);
+            nonStandardRecords[0].IsCurrent.ShouldBeTrue();
+
+            slotRecords.ShouldNotContain(
+                r => r.Weight == 240.0m,
+                "attempt below standard weight should not produce a record");
+        }
+        finally
+        {
+            await athleteA.DeleteAsync(dbContext, CancellationToken.None);
+            await athleteB.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenMultipleGoodDeadlifts_IntermediateTotalRecordsAreCreated()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, CancellationToken.None);
+
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(
+                dbContext,
+                IntermediateTotalAthleteBaseId)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(200m)
+            .WithBench(130m)
+            .WithDeadlift(250m)
+            .BuildAsync(CancellationToken.None);
+
+        string extraDeadliftsSql =
+            $"""
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (
+                AttemptId, ParticipationId, DisciplineId, Round, Weight, Good,
+                CreatedBy, ModifiedBy)
+            VALUES (
+                {IntermediateTotalDlRound2AttemptId},
+                {athlete.ParticipationId}, 3, 2, 260.0, 1, 'test', 'test');
+            INSERT INTO Attempts (
+                AttemptId, ParticipationId, DisciplineId, Round, Weight, Good,
+                CreatedBy, ModifiedBy)
+            VALUES (
+                {IntermediateTotalDlRound3AttemptId},
+                {athlete.ParticipationId}, 3, 3, 270.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+
+            UPDATE Participations
+            SET Deadlift = 270.0, Total = 600.0
+            WHERE ParticipationId = {athlete.ParticipationId};
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            extraDeadliftsSql,
+            TestContext.Current.CancellationToken);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Total)
+                .Where(r => r.IsRaw)
+                .OrderBy(r => r.Weight)
+                .ToListAsync(CancellationToken.None);
+
+            totalRecords.Count.ShouldBe(3, "one total record per improving deadlift attempt");
+
+            totalRecords[0].Weight.ShouldBe(580.0m);
+            totalRecords[0].AttemptId.ShouldBe(athlete.DeadliftAttemptId);
+            totalRecords[0].IsCurrent.ShouldBeFalse();
+
+            totalRecords[1].Weight.ShouldBe(590.0m);
+            totalRecords[1].AttemptId.ShouldBe(IntermediateTotalDlRound2AttemptId);
+            totalRecords[1].IsCurrent.ShouldBeFalse();
+
+            totalRecords[2].Weight.ShouldBe(600.0m);
+            totalRecords[2].AttemptId.ShouldBe(IntermediateTotalDlRound3AttemptId);
+            totalRecords[2].IsCurrent.ShouldBeTrue();
+        }
+        finally
+        {
+            await dbContext.Database.ExecuteSqlRawAsync(
+                $"""
+                DELETE FROM Records
+                WHERE AttemptId IN (
+                    {IntermediateTotalDlRound2AttemptId},
+                    {IntermediateTotalDlRound3AttemptId});
+                DELETE FROM Attempts
+                WHERE AttemptId IN (
+                    {IntermediateTotalDlRound2AttemptId},
+                    {IntermediateTotalDlRound3AttemptId});
+                """,
+                TestContext.Current.CancellationToken);
+            await athlete.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenFourthAttemptExists_TotalExcludesRoundFourWeight()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, CancellationToken.None);
+
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(
+                dbContext,
+                FourthAttemptAthleteBaseId)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(200m)
+            .WithBench(130m)
+            .WithDeadlift(250m)
+            .BuildAsync(CancellationToken.None);
+
+        string round4SquatSql =
+            $"""
+            SET IDENTITY_INSERT Attempts ON;
+            INSERT INTO Attempts (
+                AttemptId, ParticipationId, DisciplineId, Round, Weight, Good,
+                CreatedBy, ModifiedBy)
+            VALUES (
+                {FourthAttemptRound4AttemptId},
+                {athlete.ParticipationId}, 1, 4, 220.0, 1, 'test', 'test');
+            SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            round4SquatSql,
+            TestContext.Current.CancellationToken);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        try
+        {
+            // Act
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Total)
+                .Where(r => r.IsRaw)
+                .Where(r => r.IsCurrent)
+                .ToListAsync(CancellationToken.None);
+
+            totalRecords.Count.ShouldBe(1);
+            totalRecords[0].Weight.ShouldBe(
+                580.0m,
+                "total should be 200+130+250=580, not 220+130+250=600");
+        }
+        finally
+        {
+            await dbContext.Database.ExecuteSqlRawAsync(
+                $"""
+                DELETE FROM Records WHERE AttemptId = {FourthAttemptRound4AttemptId};
+                DELETE FROM Attempts WHERE AttemptId = {FourthAttemptRound4AttemptId};
+                """,
+                TestContext.Current.CancellationToken);
+            await athlete.DeleteAsync(dbContext, CancellationToken.None);
+            await RestoreSeedRecordsAsync(dbContext);
+        }
+    }
+
+    [Fact]
+    public async Task WhenDuplicateRecordsExistForSameAttempt_BackfillDeduplicates()
+    {
+        // Arrange
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, CancellationToken.None);
+
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(
+                dbContext,
+                DuplicateRecordAthleteBaseId)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(200m)
+            .WithBench(130m)
+            .WithDeadlift(250m)
+            .BuildAsync(CancellationToken.None);
+
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+
+        using (BackfillRecordsJob firstRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
+        {
+            await firstRun.StartAsync(CancellationToken.None);
+            await (firstRun.ExecuteTask ?? Task.CompletedTask);
+        }
+
+        string insertDuplicateSql =
+            $"""
+            INSERT INTO Records (
+                EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
+                Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            SELECT
+                EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
+                Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, 'duplicate'
+            FROM Records
+            WHERE AttemptId = {athlete.SquatAttemptId}
+            AND RecordCategoryId = {(int)RecordCategory.Squat};
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            insertDuplicateSql,
+            TestContext.Current.CancellationToken);
+
+        try
+        {
+            // Act
+            using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+            await job.StartAsync(CancellationToken.None);
+            await (job.ExecuteTask ?? Task.CompletedTask);
+
+            // Assert
+            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            List<RecordEntity> squatRecords = await assertDb.Set<RecordEntity>()
+                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+                .Where(r => r.WeightCategoryId == weightCategoryId)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.IsRaw)
+                .Where(r => !r.IsStandard)
+                .Where(r => r.AttemptId == athlete.SquatAttemptId)
+                .ToListAsync(CancellationToken.None);
+
+            squatRecords.Count.ShouldBe(
+                1,
+                "duplicate records for the same attempt should be deduplicated");
+        }
+        finally
+        {
+            await athlete.DeleteAsync(dbContext, CancellationToken.None);
             await RestoreSeedRecordsAsync(dbContext);
         }
     }
