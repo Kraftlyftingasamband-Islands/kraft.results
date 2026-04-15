@@ -328,9 +328,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
     {
         string sql =
             $"""
-            INSERT INTO MeetTypes (MeetTypeId, Title)
-            VALUES ({DeadliftMeetTypeId}, '{Constants.DeadliftMeet.TypeTitle}');
-
             SET IDENTITY_INSERT Meets ON;
             INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
             VALUES ({DeadliftMeetId}, 'Réttstakeppni 2025', '{Constants.DeadliftMeet.Slug}', '2025-06-01', '2025-06-01', 1, 1, 1, 1, {DeadliftMeetTypeId}, 0, 1, 0, 1, 0, 1, 1);

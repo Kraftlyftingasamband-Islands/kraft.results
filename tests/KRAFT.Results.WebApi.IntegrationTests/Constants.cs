@@ -44,7 +44,6 @@ internal static class Constants
     {
         internal const int Id = 10;
         internal const string Slug = "rettstakeppni-2025";
-        internal const string TypeTitle = "Réttstöðulyfting";
     }
 
     internal static class BannedAthlete
