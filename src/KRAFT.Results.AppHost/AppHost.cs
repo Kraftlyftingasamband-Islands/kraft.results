@@ -41,6 +41,12 @@ if (rateLimitPermit is not null)
     api = api.WithEnvironment("RateLimiting__Auth__PermitLimit", rateLimitPermit);
 }
 
+string? backfillEnabled = builder.Configuration.GetValue<string>("BackfillJob:Enabled");
+if (backfillEnabled is not null)
+{
+    api = api.WithEnvironment("BackfillJob__Enabled", backfillEnabled);
+}
+
 builder.AddProject<Projects.KRAFT_Results_Web>("web")
     .WithReference(api)
     .WaitFor(api)

@@ -95,7 +95,10 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IHttpContextService, HttpContextService>();
 builder.Services.AddFeatures();
-builder.Services.AddHostedService<BackfillRecordsJob>();
+if (builder.Configuration.GetValue<bool?>("BackfillJob:Enabled") ?? true)
+{
+    builder.Services.AddHostedService<BackfillRecordsJob>();
+}
 
 WebApplication app = builder.Build();
 
