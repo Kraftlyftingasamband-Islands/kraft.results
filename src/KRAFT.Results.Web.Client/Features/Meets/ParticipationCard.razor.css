@@ -280,6 +280,11 @@
     padding: 0;
     opacity: 0.75;
     flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .attempt-save-toast-close:hover {
@@ -294,6 +299,12 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .attempt-save-toast {
+        animation: none;
     }
 }
 
