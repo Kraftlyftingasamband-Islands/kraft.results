@@ -11,6 +11,7 @@ using KRAFT.Results.WebApi.Features.Participations;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Caching.Memory;
 
 using static KRAFT.Results.WebApi.Features.Records.RecordSlotRebuilder;
 
@@ -18,9 +19,15 @@ namespace KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 internal sealed class RecordComputationService(
     ResultsDbContext dbContext,
+    IMemoryCache memoryCache,
     ILogger<RecordComputationService> logger)
 {
+    private const string ErasCacheKey = "records:eras";
+    private const string AgeCategorySlugsCacheKey = "records:age-category-slugs";
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(1);
+
     private readonly ResultsDbContext _dbContext = dbContext;
+    private readonly IMemoryCache _memoryCache = memoryCache;
     private readonly ILogger<RecordComputationService> _logger = logger;
 
     internal async Task ComputeRecordsAsync(
@@ -85,9 +92,7 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        List<Era> eras = await _dbContext.Set<Era>()
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        List<Era> eras = await GetErasAsync(cancellationToken);
 
         Era? era = eras.FirstOrDefault(
             e => e.StartDate <= meetDate && e.EndDate >= meetDate);
@@ -101,12 +106,8 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        Dictionary<string, int> slugToIdMap = await _dbContext.Set<AgeCategory>()
-            .Where(ac => ac.Slug != null)
-            .ToDictionaryAsync(
-                ac => ac.Slug!,
-                ac => ac.AgeCategoryId,
-                cancellationToken);
+        Dictionary<string, int> slugToIdMap =
+            await GetAgeCategorySlugMapAsync(cancellationToken);
 
         if (!HasValidTotal(participation, meet))
         {
@@ -140,16 +141,10 @@ internal sealed class RecordComputationService(
         IReadOnlyList<SlotKey> affectedSlots,
         CancellationToken cancellationToken)
     {
-        List<Era> eras = await _dbContext.Set<Era>()
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        List<Era> eras = await GetErasAsync(cancellationToken);
 
-        Dictionary<string, int> slugToIdMap = await _dbContext.Set<AgeCategory>()
-            .Where(ac => ac.Slug != null)
-            .ToDictionaryAsync(
-                ac => ac.Slug!,
-                ac => ac.AgeCategoryId,
-                cancellationToken);
+        Dictionary<string, int> slugToIdMap =
+            await GetAgeCategorySlugMapAsync(cancellationToken);
 
         await FullRebuildSlotsAsync(
             affectedSlots,
@@ -162,16 +157,10 @@ internal sealed class RecordComputationService(
         IReadOnlyList<SlotKey> affectedSlots,
         CancellationToken cancellationToken)
     {
-        List<Era> eras = await _dbContext.Set<Era>()
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        List<Era> eras = await GetErasAsync(cancellationToken);
 
-        Dictionary<string, int> slugToIdMap = await _dbContext.Set<AgeCategory>()
-            .Where(ac => ac.Slug != null)
-            .ToDictionaryAsync(
-                ac => ac.Slug!,
-                ac => ac.AgeCategoryId,
-                cancellationToken);
+        Dictionary<string, int> slugToIdMap =
+            await GetAgeCategorySlugMapAsync(cancellationToken);
 
         await RebuildSlotsContentAsync(
             affectedSlots,
@@ -256,6 +245,40 @@ internal sealed class RecordComputationService(
         }
 
         return affectedSlots;
+    }
+
+    private async Task<List<Era>> GetErasAsync(CancellationToken cancellationToken)
+    {
+        List<Era>? eras = await _memoryCache.GetOrCreateAsync(
+            ErasCacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
+                return await _dbContext.Set<Era>()
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+            });
+
+        return eras ?? [];
+    }
+
+    private async Task<Dictionary<string, int>> GetAgeCategorySlugMapAsync(
+        CancellationToken cancellationToken)
+    {
+        Dictionary<string, int>? slugToIdMap = await _memoryCache.GetOrCreateAsync(
+            AgeCategorySlugsCacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
+                return await _dbContext.Set<AgeCategory>()
+                    .Where(ac => ac.Slug != null)
+                    .ToDictionaryAsync(
+                        ac => ac.Slug!,
+                        ac => ac.AgeCategoryId,
+                        cancellationToken);
+            });
+
+        return slugToIdMap ?? [];
     }
 
     private async Task HandleInvalidTotalAsync(
@@ -344,6 +367,12 @@ internal sealed class RecordComputationService(
             List<SlotAttempt> totalSlotAttempts =
                 BuildTotalSlotAttempts(allAttempts, eras, slugToIdMap);
 
+            ILookup<string, Record> allRecordsBySlot =
+                await BatchLoadSlotRecordsAsync(
+                    affectedSlots,
+                    _dbContext,
+                    cancellationToken);
+
             foreach (SlotKey slot in affectedSlots)
             {
                 string slotKey = FormatSlotKey(
@@ -359,14 +388,7 @@ internal sealed class RecordComputationService(
                         : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
 
                 StandardRecordInfo? standardRecord =
-                    await GetLatestStandardRecordAsync(
-                        slot.EraId,
-                        slot.AgeCategoryId,
-                        slot.WeightCategoryId,
-                        slot.RecordCategory,
-                        slot.IsRaw,
-                        _dbContext,
-                        cancellationToken);
+                    GetStandardRecord(slot, allRecordsBySlot);
 
                 if (standardRecord is not null)
                 {
@@ -381,15 +403,7 @@ internal sealed class RecordComputationService(
                         standardRecord?.Weight ?? 0m);
 
                 SlotReconciliationResult result =
-                    await ReconcileSlotAsync(
-                        slot.EraId,
-                        slot.AgeCategoryId,
-                        slot.WeightCategoryId,
-                        slot.RecordCategory,
-                        slot.IsRaw,
-                        expectedChain,
-                        _dbContext,
-                        cancellationToken);
+                    ReconcileSlot(slot, expectedChain, allRecordsBySlot);
 
                 await ApplyReconciliationResultAsync(
                     result,
@@ -511,6 +525,12 @@ internal sealed class RecordComputationService(
         List<SlotAttempt> totalSlotAttempts,
         CancellationToken cancellationToken)
     {
+        ILookup<string, Record> allRecordsBySlot =
+            await BatchLoadSlotRecordsAsync(
+                affectedSlots,
+                _dbContext,
+                cancellationToken);
+
         foreach (SlotKey slot in affectedSlots)
         {
             string slotKey = FormatSlotKey(
@@ -526,14 +546,7 @@ internal sealed class RecordComputationService(
                     : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
 
             StandardRecordInfo? standardRecord =
-                await GetLatestStandardRecordAsync(
-                    slot.EraId,
-                    slot.AgeCategoryId,
-                    slot.WeightCategoryId,
-                    slot.RecordCategory,
-                    slot.IsRaw,
-                    _dbContext,
-                    cancellationToken);
+                GetStandardRecord(slot, allRecordsBySlot);
 
             if (standardRecord is not null)
             {
@@ -548,15 +561,7 @@ internal sealed class RecordComputationService(
                     standardRecord?.Weight ?? 0m);
 
             SlotReconciliationResult result =
-                await ReconcileSlotAsync(
-                    slot.EraId,
-                    slot.AgeCategoryId,
-                    slot.WeightCategoryId,
-                    slot.RecordCategory,
-                    slot.IsRaw,
-                    expectedChain,
-                    _dbContext,
-                    cancellationToken);
+                ReconcileSlot(slot, expectedChain, allRecordsBySlot);
 
             await ApplyReconciliationResultAsync(
                 result,
