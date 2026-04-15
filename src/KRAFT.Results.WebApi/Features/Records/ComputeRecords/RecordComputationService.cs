@@ -162,6 +162,28 @@ internal sealed class RecordComputationService(
             cancellationToken);
     }
 
+    internal async Task RebuildSlotsWithinTransactionAsync(
+        IReadOnlyList<SlotKey> affectedSlots,
+        CancellationToken cancellationToken)
+    {
+        List<Era> eras = await _dbContext.Set<Era>()
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        Dictionary<string, int> slugToIdMap = await _dbContext.Set<AgeCategory>()
+            .Where(ac => ac.Slug != null)
+            .ToDictionaryAsync(
+                ac => ac.Slug!,
+                ac => ac.AgeCategoryId,
+                cancellationToken);
+
+        await RebuildSlotsContentAsync(
+            affectedSlots,
+            eras,
+            slugToIdMap,
+            cancellationToken);
+    }
+
     private static List<SlotKey> DetermineAffectedSlots(
         Participation participation,
         Meet meet,
@@ -431,60 +453,119 @@ internal sealed class RecordComputationService(
                     IsolationLevel.RepeatableRead,
                     cancellationToken);
 
-            foreach (SlotKey slot in affectedSlots)
-            {
-                string slotKey = FormatSlotKey(
+            await RebuildSlotsContentAsync(
+                affectedSlots,
+                disciplineSlotAttempts,
+                totalSlotAttempts,
+                cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        });
+    }
+
+    private async Task RebuildSlotsContentAsync(
+        IReadOnlyList<SlotKey> affectedSlots,
+        List<Era> eras,
+        Dictionary<string, int> slugToIdMap,
+        CancellationToken cancellationToken)
+    {
+        HashSet<int> weightCategoryIds = affectedSlots
+            .Select(s => s.WeightCategoryId)
+            .ToHashSet();
+
+        HashSet<bool> isRawValues = affectedSlots
+            .Select(s => s.IsRaw)
+            .ToHashSet();
+
+        List<Attempt> allAttempts = await _dbContext.Set<Attempt>()
+            .AsNoTracking()
+            .Include(a => a.Participation)
+                .ThenInclude(p => p.Meet)
+                    .ThenInclude(m => m.MeetType)
+            .Include(a => a.Participation)
+                .ThenInclude(p => p.Athlete)
+                    .ThenInclude(a => a.Bans)
+            .Include(a => a.Participation)
+                .ThenInclude(p => p.AgeCategory)
+            .Where(a => a.Good)
+            .Where(a => a.Weight > 0)
+            .Where(a => a.Participation.Meet.RecordsPossible)
+            .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
+            .Where(a => weightCategoryIds.Contains(
+                a.Participation.WeightCategoryId))
+            .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
+            .ToListAsync(cancellationToken);
+
+        List<SlotAttempt> disciplineSlotAttempts =
+            BuildSlotAttempts(allAttempts, eras, slugToIdMap);
+
+        List<SlotAttempt> totalSlotAttempts =
+            BuildTotalSlotAttempts(allAttempts, eras, slugToIdMap);
+
+        await RebuildSlotsContentAsync(
+            affectedSlots,
+            disciplineSlotAttempts,
+            totalSlotAttempts,
+            cancellationToken);
+    }
+
+    private async Task RebuildSlotsContentAsync(
+        IReadOnlyList<SlotKey> affectedSlots,
+        List<SlotAttempt> disciplineSlotAttempts,
+        List<SlotAttempt> totalSlotAttempts,
+        CancellationToken cancellationToken)
+    {
+        foreach (SlotKey slot in affectedSlots)
+        {
+            string slotKey = FormatSlotKey(
+                slot.EraId,
+                slot.AgeCategoryId,
+                slot.WeightCategoryId,
+                slot.RecordCategory,
+                slot.IsRaw);
+
+            List<SlotAttempt> slotAttempts =
+                slot.RecordCategory == RecordCategory.Total
+                    ? FilterAndOrderForChain(totalSlotAttempts, slotKey)
+                    : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
+
+            StandardRecordInfo? standardRecord =
+                await GetLatestStandardRecordAsync(
                     slot.EraId,
                     slot.AgeCategoryId,
                     slot.WeightCategoryId,
                     slot.RecordCategory,
-                    slot.IsRaw);
-
-                List<SlotAttempt> slotAttempts =
-                    slot.RecordCategory == RecordCategory.Total
-                        ? FilterAndOrderForChain(totalSlotAttempts, slotKey)
-                        : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
-
-                StandardRecordInfo? standardRecord =
-                    await GetLatestStandardRecordAsync(
-                        slot.EraId,
-                        slot.AgeCategoryId,
-                        slot.WeightCategoryId,
-                        slot.RecordCategory,
-                        slot.IsRaw,
-                        _dbContext,
-                        cancellationToken);
-
-                if (standardRecord is not null)
-                {
-                    slotAttempts = slotAttempts
-                        .Where(sa => sa.MeetDate >= standardRecord.Date)
-                        .ToList();
-                }
-
-                List<ExpectedRecord> expectedChain =
-                    ComputeExpectedChain(
-                        slotAttempts,
-                        standardRecord?.Weight ?? 0m);
-
-                SlotReconciliationResult result =
-                    await ReconcileSlotAsync(
-                        slot.EraId,
-                        slot.AgeCategoryId,
-                        slot.WeightCategoryId,
-                        slot.RecordCategory,
-                        slot.IsRaw,
-                        expectedChain,
-                        _dbContext,
-                        cancellationToken);
-
-                await ApplyReconciliationResultAsync(
-                    result,
+                    slot.IsRaw,
+                    _dbContext,
                     cancellationToken);
+
+            if (standardRecord is not null)
+            {
+                slotAttempts = slotAttempts
+                    .Where(sa => sa.MeetDate >= standardRecord.Date)
+                    .ToList();
             }
 
-            await transaction.CommitAsync(cancellationToken);
-        });
+            List<ExpectedRecord> expectedChain =
+                ComputeExpectedChain(
+                    slotAttempts,
+                    standardRecord?.Weight ?? 0m);
+
+            SlotReconciliationResult result =
+                await ReconcileSlotAsync(
+                    slot.EraId,
+                    slot.AgeCategoryId,
+                    slot.WeightCategoryId,
+                    slot.RecordCategory,
+                    slot.IsRaw,
+                    expectedChain,
+                    _dbContext,
+                    cancellationToken);
+
+            await ApplyReconciliationResultAsync(
+                result,
+                cancellationToken);
+        }
     }
 
     private async Task ApplyReconciliationResultAsync(
