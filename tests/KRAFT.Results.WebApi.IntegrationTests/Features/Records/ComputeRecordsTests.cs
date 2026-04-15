@@ -1072,7 +1072,8 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             cascadeSlugs.ShouldContain("masters1");
             cascadeSlugs.ShouldContain("open");
 
-            // No records should exist for Athlete B's attempt weight
+            // Athlete B's 205kg squat is a valid historical record (beaten by A's 210kg)
+            // but should not be marked as current
             List<RecordEntity> athleteBRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.Weight == 205.0m)
                 .Where(r => r.RecordCategoryId == RecordCategory.Squat)
@@ -1080,7 +1081,8 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
                 .Where(r => r.IsRaw)
                 .ToListAsync(CancellationToken.None);
 
-            athleteBRecords.ShouldBeEmpty();
+            athleteBRecords.Count.ShouldBe(5);
+            athleteBRecords.ShouldAllBe(r => !r.IsCurrent);
         }
         finally
         {
@@ -1112,7 +1114,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             DELETE FROM Athletes WHERE AthleteId = {athleteId};
 
             DELETE FROM Records
-            WHERE RecordCategoryId IN (1, 2, 3, 4) AND IsRaw = 1
+            WHERE RecordCategoryId IN (1, 2, 3, 4, 5, 6) AND IsRaw = 1
             AND WeightCategoryId = {weightCategoryId};
 
             SET IDENTITY_INSERT Athletes ON;
@@ -1174,7 +1176,13 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
                 .Where(r => attemptIds.Contains(r.AttemptId!.Value))
                 .ToListAsync(CancellationToken.None);
 
-            remainingRecords.ShouldBeEmpty();
+            // Squat, Bench, Deadlift, and Total records should be revoked (no valid total).
+            // BenchSingle and DeadliftSingle survive because single-lift records don't
+            // require a valid total — 2 categories × 5 age categories = 10 records.
+            remainingRecords.Count.ShouldBe(10);
+            remainingRecords.ShouldAllBe(r =>
+                r.RecordCategoryId == RecordCategory.BenchSingle ||
+                r.RecordCategoryId == RecordCategory.DeadliftSingle);
         }
         finally
         {
@@ -2085,7 +2093,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
                 {TestSeedConstants.AgeCategory.Masters2Id},
                 {TestSeedConstants.AgeCategory.Masters3Id},
                 {TestSeedConstants.AgeCategory.Masters4Id})
-            AND RecordCategoryId IN (1, 2, 3, 4)
+            AND RecordCategoryId IN (1, 2, 3, 4, 5, 6)
             AND IsRaw = 1
             AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
             """;

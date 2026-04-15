@@ -494,3 +494,7 @@ $RECYCLE.BIN/
 
 # Superpowers plans and specs
 docs/plans/
+
+# Local record snapshots (used by capture-records.ps1 / diff-records.ps1)
+records-snapshot.json
+records-current.json

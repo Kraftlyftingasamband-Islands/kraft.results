@@ -202,6 +202,18 @@ internal sealed class RecordComputationService(
             if (category != RecordCategory.None)
             {
                 applicableCategories.Add(category);
+
+                RecordCategory? singleLiftCategory = category switch
+                {
+                    RecordCategory.Bench => RecordCategory.BenchSingle,
+                    RecordCategory.Deadlift => RecordCategory.DeadliftSingle,
+                    _ => null,
+                };
+
+                if (singleLiftCategory is not null)
+                {
+                    applicableCategories.Add(singleLiftCategory.Value);
+                }
             }
         }
 
@@ -325,19 +337,30 @@ internal sealed class RecordComputationService(
 
                 List<SlotAttempt> slotAttempts =
                     slot.RecordCategory == RecordCategory.Total
-                        ? totalSlotAttempts
-                            .Where(sa => sa.SlotKey == slotKey)
-                            .OrderBy(sa => sa.MeetDate)
-                            .ThenBy(sa => sa.AttemptId)
-                            .ToList()
-                        : disciplineSlotAttempts
-                            .Where(sa => sa.SlotKey == slotKey)
-                            .OrderBy(sa => sa.MeetDate)
-                            .ThenBy(sa => sa.AttemptId)
-                            .ToList();
+                        ? FilterAndOrderForChain(totalSlotAttempts, slotKey)
+                        : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
+
+                StandardRecordInfo? standardRecord =
+                    await GetLatestStandardRecordAsync(
+                        slot.EraId,
+                        slot.AgeCategoryId,
+                        slot.WeightCategoryId,
+                        slot.RecordCategory,
+                        slot.IsRaw,
+                        _dbContext,
+                        cancellationToken);
+
+                if (standardRecord is not null)
+                {
+                    slotAttempts = slotAttempts
+                        .Where(sa => sa.MeetDate >= standardRecord.Date)
+                        .ToList();
+                }
 
                 List<ExpectedRecord> expectedChain =
-                    ComputeExpectedChain(slotAttempts);
+                    ComputeExpectedChain(
+                        slotAttempts,
+                        standardRecord?.Weight ?? 0m);
 
                 SlotReconciliationResult result =
                     await ReconcileSlotAsync(
@@ -419,19 +442,30 @@ internal sealed class RecordComputationService(
 
                 List<SlotAttempt> slotAttempts =
                     slot.RecordCategory == RecordCategory.Total
-                        ? totalSlotAttempts
-                            .Where(sa => sa.SlotKey == slotKey)
-                            .OrderBy(sa => sa.MeetDate)
-                            .ThenBy(sa => sa.AttemptId)
-                            .ToList()
-                        : disciplineSlotAttempts
-                            .Where(sa => sa.SlotKey == slotKey)
-                            .OrderBy(sa => sa.MeetDate)
-                            .ThenBy(sa => sa.AttemptId)
-                            .ToList();
+                        ? FilterAndOrderForChain(totalSlotAttempts, slotKey)
+                        : FilterAndOrderForChain(disciplineSlotAttempts, slotKey);
+
+                StandardRecordInfo? standardRecord =
+                    await GetLatestStandardRecordAsync(
+                        slot.EraId,
+                        slot.AgeCategoryId,
+                        slot.WeightCategoryId,
+                        slot.RecordCategory,
+                        slot.IsRaw,
+                        _dbContext,
+                        cancellationToken);
+
+                if (standardRecord is not null)
+                {
+                    slotAttempts = slotAttempts
+                        .Where(sa => sa.MeetDate >= standardRecord.Date)
+                        .ToList();
+                }
 
                 List<ExpectedRecord> expectedChain =
-                    ComputeExpectedChain(slotAttempts);
+                    ComputeExpectedChain(
+                        slotAttempts,
+                        standardRecord?.Weight ?? 0m);
 
                 SlotReconciliationResult result =
                     await ReconcileSlotAsync(

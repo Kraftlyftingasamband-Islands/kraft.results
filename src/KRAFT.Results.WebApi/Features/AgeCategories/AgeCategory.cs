@@ -54,13 +54,8 @@ internal sealed class AgeCategory
             return "open";
         }
 
+        // IPF convention: age = year of competition minus year of birth, regardless of birthday.
         int age = meetDate.Year - dateOfBirth.Value.Year;
-
-        if (dateOfBirth.Value.Month > meetDate.Month ||
-            (dateOfBirth.Value.Month == meetDate.Month && dateOfBirth.Value.Day > meetDate.Day))
-        {
-            age--;
-        }
 
         return age switch
         {
