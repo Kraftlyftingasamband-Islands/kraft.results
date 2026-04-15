@@ -9,6 +9,7 @@ using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
 [assembly: AssemblyFixture(typeof(KRAFT.Results.Web.E2ETests.PlaywrightFixture))]
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace KRAFT.Results.Web.E2ETests;
 

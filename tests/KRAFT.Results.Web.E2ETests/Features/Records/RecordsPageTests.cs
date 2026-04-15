@@ -83,7 +83,9 @@ public class RecordsPageTests(PlaywrightFixture fixture)
 
         // Act
         await page.GotoAsync($"{_fixture.BaseUrl}/records/m/open?equipmentType=equipped&era=historical-era");
-        await Expect(page.Locator("h1")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+
+        // Wait for era data to load — era selector appears only after /eras API call completes
+        await Expect(page.Locator(".era-selector")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
         await Expect(page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("Historical Era"), new PageAssertionsToHaveTitleOptions { Timeout = PageConstants.DefaultTimeoutMs });
