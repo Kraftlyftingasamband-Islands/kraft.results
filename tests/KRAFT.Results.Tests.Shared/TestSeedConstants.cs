@@ -17,12 +17,6 @@ public static class TestSeedConstants
         public const string Email = "test@email.com";
     }
 
-    public static class MeetType
-    {
-        public const int Id = 1;
-        public const string Title = "Powerlifting";
-    }
-
     public static class Athlete
     {
         public const int Id = 1;

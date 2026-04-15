@@ -1,6 +1,5 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
-using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.ValueObjects;
 
@@ -36,8 +35,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                     p.Total,
                     p.Benchpress,
                     IsRaw = meet.IsRaw,
-                    MeetTypeId = meet.MeetType.MeetTypeId,
-                    MeetTypeTitle = meet.MeetType.Title,
+                    meet.Category,
                     p.Disqualified,
                     GenderDisplay = p.Athlete.Gender == "f" ? "Konur" : "Karlar",
                     Attempts = p.Attempts
@@ -50,7 +48,6 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                             a.Weight,
                             a.Good,
                             IsRecord = a.Records.Count != 0,
-                            RecordAgeCategorySlugs = a.Records.Select(r => r.AgeCategory.Slug),
                         }),
                 }))
             .FirstOrDefaultAsync(cancellationToken);
@@ -65,25 +62,25 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
             : string.Empty;
         string ageCategorySlug = row.HasAgeCategory ? row.AgeCategorySlug ?? string.Empty : string.Empty;
 
-        decimal ipfPoints = CalculateIpfPoints(row.Disqualified, row.MeetTypeId, row.IsRaw, row.Gender, row.Weight, row.Total, row.Benchpress);
+        decimal ipfPoints = CalculateIpfPoints(
+            row.Disqualified,
+            row.Category,
+            row.IsRaw,
+            row.Gender,
+            row.Weight,
+            row.Total,
+            row.Benchpress);
 
         IEnumerable<MeetAttempt> attempts = row.Attempts
-            .Select(a =>
-            {
-                string? recordAgeCategory = a.IsRecord
-                    ? RecordAgeCategorySelector.SelectBestLabel(a.RecordAgeCategorySlugs, row.Gender)
-                    : null;
+            .Select(a => new MeetAttempt(
+                a.Discipline,
+                a.Round,
+                a.Weight,
+                a.Good,
+                a.IsRecord,
+                false));
 
-                return new MeetAttempt(
-                    a.Discipline,
-                    a.Round,
-                    a.Weight,
-                    a.Good,
-                    a.IsRecord,
-                    recordAgeCategory);
-            });
-
-        IReadOnlyList<Discipline> disciplines = MeetDisciplineResolver.ResolveDisciplines(row.MeetTypeId, row.MeetTypeTitle);
+        IReadOnlyList<Discipline> disciplines = row.Category.GetDisciplines();
         decimal displayTotal = row.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);
 
         return new MeetParticipation(
@@ -131,7 +128,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
 
     private static decimal CalculateIpfPoints(
         bool disqualified,
-        int meetTypeId,
+        MeetCategory category,
         bool isRaw,
         Gender gender,
         decimal bodyWeight,
@@ -143,17 +140,17 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
             return 0m;
         }
 
-        string ipfType;
+        MeetCategory ipfCategory;
         decimal liftWeight;
 
-        if (MeetDisciplineResolver.IsBenchMeetType(meetTypeId))
+        if (category.IsBenchCategory())
         {
-            ipfType = "Benchpress";
+            ipfCategory = MeetCategory.Benchpress;
             liftWeight = benchpress;
         }
-        else if ((MeetCategory)meetTypeId == MeetCategory.Powerlifting)
+        else if (category == MeetCategory.Powerlifting)
         {
-            ipfType = "Powerlifting";
+            ipfCategory = MeetCategory.Powerlifting;
             liftWeight = total;
         }
         else
@@ -166,7 +163,7 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
             return 0m;
         }
 
-        IpfPoints ipfPoints = IpfPoints.Create(isRaw, gender, ipfType, bodyWeight, liftWeight);
+        IpfPoints ipfPoints = IpfPoints.Create(isRaw, gender, ipfCategory, bodyWeight, liftWeight);
         return ipfPoints.Value;
     }
 }

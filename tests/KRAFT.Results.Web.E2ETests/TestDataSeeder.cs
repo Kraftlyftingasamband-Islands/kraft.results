@@ -22,7 +22,6 @@ internal static class TestDataSeeder
         await ExecuteSqlAsync(connection, BaseSeedSql.CleanupSql());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedCountry());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedUsersAndRoles());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedMeetType());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedTeam());
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedAthlete());
         await ExecuteSqlAsync(connection, BaseSeedSql.SetAthleteTeamSql());

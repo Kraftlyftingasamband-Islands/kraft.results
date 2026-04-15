@@ -1,6 +1,7 @@
-﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Records;
 
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,8 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
         {
             x.Date,
             IsClassic = x.Attempt!.Participation.Meet.IsRaw,
-            IsSingleLift = IsSingleLift(x.Attempt!.Participation.Meet.MeetType.Title),
+            IsSingleLift = x.Attempt!.Participation.Meet.Category != MeetCategory.Powerlifting
+                && x.Attempt!.Participation.Meet.Category != MeetCategory.Squat,
             WeightCategory = x.WeightCategory.Title,
             AgeCategory = x.AgeCategory.Slug ?? x.AgeCategory.Title,
             x.Attempt!.Participation.Total,
@@ -46,8 +48,6 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
             $"{x.MeetTitle} {x.MeetYear}",
             x.MeetSlug))
         .ToListAsync(cancellationToken);
-
-    private static bool IsSingleLift(string meetType) => meetType != "Powerlifting";
 
 #pragma warning disable S3358 // Ternary operators should not be nested
     private static string MapRecordType(RecordCategory category) =>

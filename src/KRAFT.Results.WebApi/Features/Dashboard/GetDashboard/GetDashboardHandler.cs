@@ -90,7 +90,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .Where(p => !p.Disqualified)
             .Where(p => p.Athlete.Country.Iso2 == "IS")
             .Where(p => p.Meet.IsRaw)
-            .Where(p => p.Meet.MeetType.MeetTypeId == 1)
+            .Where(p => p.Meet.Category == MeetCategory.Powerlifting)
             .Where(p => p.Meet.StartDate.Year == year)
             .Where(p => p.Total > 0)
             .Where(p => p.Athlete.Gender == Gender.Parse(gender))
@@ -113,7 +113,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .Select(r => new
             {
                 r,
-                IpfPoints = IpfPoints.Create(r.IsRaw, parsedGender, "Powerlifting", r.BodyWeight, r.Total).Value,
+                IpfPoints = IpfPoints.Create(r.IsRaw, parsedGender, MeetCategory.Powerlifting, r.BodyWeight, r.Total).Value,
             })
             .GroupBy(x => x.r.AthleteId)
             .Select(g => g.OrderByDescending(x => x.IpfPoints).First())

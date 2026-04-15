@@ -3,7 +3,7 @@ namespace KRAFT.Results.Tests.Shared;
 /// <summary>
 /// Returns raw SQL strings for seeding base test data.
 /// Methods must be called in FK-safe order:
-/// <see cref="SeedCountry"/> → <see cref="SeedUsersAndRoles"/> → <see cref="SeedMeetType"/>
+/// <see cref="SeedCountry"/> → <see cref="SeedUsersAndRoles"/>
 /// → <see cref="SeedTeam"/> → <see cref="SeedAthlete"/> → <see cref="SeedAgeCategories"/>
 /// → <see cref="SeedWeightCategories"/> → <see cref="SeedEras"/> → <see cref="SeedEraWeightCategories"/>
 /// → <see cref="SeedMeet"/> → <see cref="SeedBaseParticipations"/> → <see cref="SeedBaseAttempts"/>
@@ -29,12 +29,6 @@ public static class BaseSeedSql
         SELECT u.UserId, {TestSeedConstants.Role.AdminId}, GETUTCDATE(), 'seed', GETUTCDATE(), 'seed'
         FROM Users u
         WHERE u.Username = '{TestSeedConstants.User.Username}';
-        """;
-
-    public static string SeedMeetType() =>
-        $"""
-        INSERT INTO MeetTypes (MeetTypeId, Title)
-        VALUES ({TestSeedConstants.MeetType.Id}, '{TestSeedConstants.MeetType.Title}');
         """;
 
     public static string SeedTeam() =>
@@ -114,7 +108,7 @@ public static class BaseSeedSql
         $"""
         SET IDENTITY_INSERT Meets ON;
         INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-        VALUES ({TestSeedConstants.Meet.Id}, '{TestSeedConstants.Meet.Title}', '{TestSeedConstants.Meet.Slug}', '2025-03-15', '2025-03-15', 1, 1, 1, 1, {TestSeedConstants.MeetType.Id}, 0, 1, 0, 1, 0, 1, 1);
+        VALUES ({TestSeedConstants.Meet.Id}, '{TestSeedConstants.Meet.Title}', '{TestSeedConstants.Meet.Slug}', '2025-03-15', '2025-03-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
         SET IDENTITY_INSERT Meets OFF;
         """;
 
@@ -205,7 +199,6 @@ public static class BaseSeedSql
         DELETE FROM Roles;
         DELETE FROM WeightCategories;
         DELETE FROM AgeCategories;
-        DELETE FROM MeetTypes;
         DELETE FROM Countries;
         """;
 }
