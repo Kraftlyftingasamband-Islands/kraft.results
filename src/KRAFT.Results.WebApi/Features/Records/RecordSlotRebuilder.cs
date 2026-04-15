@@ -112,10 +112,7 @@ internal static class RecordSlotRebuilder
 
     internal static bool HasValidTotal(Participation participation, Meet meet)
     {
-        IReadOnlyList<Discipline> requiredDisciplines =
-            MeetDisciplineResolver.ResolveDisciplines(
-                meet.MeetType.MeetTypeId,
-                meet.MeetType.Title);
+        IReadOnlyList<Discipline> requiredDisciplines = meet.Category.GetDisciplines();
 
         foreach (Discipline discipline in requiredDisciplines)
         {
@@ -163,11 +160,7 @@ internal static class RecordSlotRebuilder
                 continue;
             }
 
-            RecordCategory recordCategory =
-                MeetDisciplineResolver.MapDisciplineToRecordCategory(
-                    attempt.Discipline,
-                    meet.MeetType.MeetTypeId,
-                    meet.MeetType.Title);
+            RecordCategory recordCategory = meet.Category.MapDisciplineToRecordCategory(attempt.Discipline);
 
             if (recordCategory == RecordCategory.None)
             {
@@ -262,10 +255,7 @@ internal static class RecordSlotRebuilder
             Participation participation = firstAttempt.Participation;
             Meet meet = participation.Meet;
 
-            IReadOnlyList<Discipline> requiredDisciplines =
-                MeetDisciplineResolver.ResolveDisciplines(
-                    meet.MeetType.MeetTypeId,
-                    meet.MeetType.Title);
+            IReadOnlyList<Discipline> requiredDisciplines = meet.Category.GetDisciplines();
 
             if (requiredDisciplines.Count <= 1)
             {

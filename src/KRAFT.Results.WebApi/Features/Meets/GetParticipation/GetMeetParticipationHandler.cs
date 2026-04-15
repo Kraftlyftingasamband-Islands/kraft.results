@@ -42,12 +42,12 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
                         .Where(a => a.Round < 4)
                         .Select(a => new
                         {
-                            a.AttemptId,
                             a.Discipline,
                             a.Round,
                             a.Weight,
                             a.Good,
                             IsRecord = a.Records.Count != 0,
+                            RecordAgeCategorySlugs = a.Records.Select(r => r.AgeCategory.Slug),
                         }),
                 }))
             .FirstOrDefaultAsync(cancellationToken);
@@ -72,13 +72,20 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
             row.Benchpress);
 
         IEnumerable<MeetAttempt> attempts = row.Attempts
-            .Select(a => new MeetAttempt(
-                a.Discipline,
-                a.Round,
-                a.Weight,
-                a.Good,
-                a.IsRecord,
-                false));
+            .Select(a =>
+            {
+                string? recordAgeCategory = a.IsRecord
+                    ? RecordAgeCategorySelector.SelectBestLabel(a.RecordAgeCategorySlugs, row.Gender)
+                    : null;
+
+                return new MeetAttempt(
+                    a.Discipline,
+                    a.Round,
+                    a.Weight,
+                    a.Good,
+                    a.IsRecord,
+                    recordAgeCategory);
+            });
 
         IReadOnlyList<Discipline> disciplines = row.Category.GetDisciplines();
         decimal displayTotal = row.Disqualified ? 0m : ComputeDisplayTotal(disciplines, attempts);

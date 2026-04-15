@@ -39,7 +39,6 @@ internal sealed class RecordComputationService(
                 .ThenInclude(p => p.Attempts)
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Meet)
-                    .ThenInclude(m => m.MeetType)
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Athlete)
                     .ThenInclude(a => a.Bans)
@@ -191,20 +190,13 @@ internal sealed class RecordComputationService(
             }
         }
 
-        IReadOnlyList<Discipline> requiredDisciplines =
-            MeetDisciplineResolver.ResolveDisciplines(
-                meet.MeetType.MeetTypeId,
-                meet.MeetType.Title);
+        IReadOnlyList<Discipline> requiredDisciplines = meet.Category.GetDisciplines();
 
         List<RecordCategory> applicableCategories = [];
 
         foreach (Discipline discipline in requiredDisciplines)
         {
-            RecordCategory category =
-                MeetDisciplineResolver.MapDisciplineToRecordCategory(
-                    discipline,
-                    meet.MeetType.MeetTypeId,
-                    meet.MeetType.Title);
+            RecordCategory category = meet.Category.MapDisciplineToRecordCategory(discipline);
 
             if (category != RecordCategory.None)
             {
@@ -345,7 +337,6 @@ internal sealed class RecordComputationService(
                 .AsNoTracking()
                 .Include(a => a.Participation)
                     .ThenInclude(p => p.Meet)
-                        .ThenInclude(m => m.MeetType)
                 .Include(a => a.Participation)
                     .ThenInclude(p => p.Athlete)
                         .ThenInclude(a => a.Bans)
@@ -432,7 +423,6 @@ internal sealed class RecordComputationService(
             .AsNoTracking()
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Meet)
-                    .ThenInclude(m => m.MeetType)
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Athlete)
                     .ThenInclude(a => a.Bans)
@@ -491,7 +481,6 @@ internal sealed class RecordComputationService(
             .AsNoTracking()
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Meet)
-                    .ThenInclude(m => m.MeetType)
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Athlete)
                     .ThenInclude(a => a.Bans)

@@ -1768,12 +1768,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             DELETE FROM Participations WHERE MeetId = {benchMeetId};
             DELETE FROM Meets WHERE MeetId = {benchMeetId};
 
-            IF NOT EXISTS (SELECT 1 FROM MeetTypes WHERE MeetTypeId = {benchMeetTypeId})
-            BEGIN
-                INSERT INTO MeetTypes (MeetTypeId, Title)
-                VALUES ({benchMeetTypeId}, 'Bench Press');
-            END
-
             SET IDENTITY_INSERT Meets ON;
             INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
             VALUES ({benchMeetId}, 'Bench Press Meet 2025', 'bench-press-meet-2025', '2025-06-01', '2025-06-01', 1, 1, 1, 1, {benchMeetTypeId}, 0, 1, 0, 1, 0, 1, 1);

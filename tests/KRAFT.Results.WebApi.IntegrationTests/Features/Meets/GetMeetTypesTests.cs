@@ -56,6 +56,6 @@ public sealed class GetMeetTypesTests
         MeetTypeSummary first = response.ShouldNotBeNull()[0];
         first.ShouldSatisfyAllConditions(
             () => first.Id.ShouldBe(1),
-            () => first.Title.ShouldBe("Kraftlyftingar"));
+            () => first.Title.ShouldBe("Powerlifting"));
     }
 }

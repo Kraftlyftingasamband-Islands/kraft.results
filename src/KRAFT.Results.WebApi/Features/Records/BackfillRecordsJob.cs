@@ -56,7 +56,6 @@ internal sealed class BackfillRecordsJob(
                 .AsNoTracking()
                 .Include(a => a.Participation)
                     .ThenInclude(p => p.Meet)
-                        .ThenInclude(m => m.MeetType)
                 .Include(a => a.Participation)
                     .ThenInclude(p => p.Athlete)
                         .ThenInclude(a => a.Bans)
@@ -230,8 +229,7 @@ internal sealed class BackfillRecordsJob(
             .Where(a => a.Participation.Meet.RecordsPossible)
             .Select(a => new AttemptProjection(
                 a.Discipline,
-                a.Participation.Meet.MeetType.MeetTypeId,
-                a.Participation.Meet.MeetType.Title,
+                a.Participation.Meet.Category,
                 a.Participation.Meet.StartDate,
                 a.Participation.Athlete.DateOfBirth,
                 a.Participation.WeightCategoryId,
@@ -251,10 +249,7 @@ internal sealed class BackfillRecordsJob(
                 continue;
             }
 
-            RecordCategory recordCategory = MeetDisciplineResolver.MapDisciplineToRecordCategory(
-                projection.Discipline,
-                projection.MeetTypeId,
-                projection.MeetTypeTitle);
+            RecordCategory recordCategory = projection.Category.MapDisciplineToRecordCategory(projection.Discipline);
 
             if (recordCategory == RecordCategory.None)
             {
@@ -305,8 +300,7 @@ internal sealed class BackfillRecordsJob(
             .Where(p => p.Meet.RecordsPossible)
             .Where(p => p.Total > 0)
             .Select(p => new TotalProjection(
-                p.Meet.MeetType.MeetTypeId,
-                p.Meet.MeetType.Title,
+                p.Meet.Category,
                 p.Meet.StartDate,
                 p.Athlete.DateOfBirth,
                 p.WeightCategoryId,
@@ -316,10 +310,7 @@ internal sealed class BackfillRecordsJob(
 
         foreach (TotalProjection projection in totalProjections)
         {
-            IReadOnlyList<Discipline> requiredDisciplines =
-                MeetDisciplineResolver.ResolveDisciplines(
-                    projection.MeetTypeId,
-                    projection.MeetTypeTitle);
+            IReadOnlyList<Discipline> requiredDisciplines = projection.Category.GetDisciplines();
 
             if (requiredDisciplines.Count <= 1)
             {
@@ -367,16 +358,14 @@ internal sealed class BackfillRecordsJob(
 
     private sealed record AttemptProjection(
         Discipline Discipline,
-        int MeetTypeId,
-        string MeetTypeTitle,
+        MeetCategory Category,
         DateTime MeetStartDate,
         DateOnly? AthleteDoB,
         int WeightCategoryId,
         bool IsRaw);
 
     private sealed record TotalProjection(
-        int MeetTypeId,
-        string MeetTypeTitle,
+        MeetCategory Category,
         DateTime MeetStartDate,
         DateOnly? AthleteDoB,
         int WeightCategoryId,
