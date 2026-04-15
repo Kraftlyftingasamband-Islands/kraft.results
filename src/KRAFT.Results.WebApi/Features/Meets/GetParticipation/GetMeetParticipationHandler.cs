@@ -70,17 +70,9 @@ internal sealed class GetMeetParticipationHandler(ResultsDbContext dbContext)
         IEnumerable<MeetAttempt> attempts = row.Attempts
             .Select(a =>
             {
-                string? recordAgeCategory = null;
-
-                if (a.IsRecord)
-                {
-                    List<string?> slugs = a.RecordAgeCategorySlugs.ToList();
-                    string? bestSlug = slugs
-                        .Where(s => s != null)
-                        .FirstOrDefault(s => s != "open")
-                        ?? slugs.FirstOrDefault();
-                    recordAgeCategory = bestSlug?.ToAgeCategoryLabel(row.Gender);
-                }
+                string? recordAgeCategory = a.IsRecord
+                    ? RecordAgeCategorySelector.SelectBestLabel(a.RecordAgeCategorySlugs, row.Gender)
+                    : null;
 
                 return new MeetAttempt(
                     a.Discipline,
