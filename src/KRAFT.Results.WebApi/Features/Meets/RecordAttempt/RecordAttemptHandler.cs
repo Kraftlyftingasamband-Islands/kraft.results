@@ -45,8 +45,9 @@ internal sealed class RecordAttemptHandler
 
         Participation? participation = await _dbContext.Set<Participation>()
             .Include(p => p.Attempts)
+            .Where(p => p.ParticipationId == participationId)
             .FirstOrDefaultAsync(
-                p => p.ParticipationId == participationId && p.MeetId == meetId,
+                p => p.MeetId == meetId,
                 cancellationToken);
 
         if (participation is null)
@@ -85,7 +86,8 @@ internal sealed class RecordAttemptHandler
         User user = userResult.FromResult();
 
         Attempt? existing = participation.Attempts
-            .FirstOrDefault(a => a.Discipline == discipline && a.Round == round);
+            .Where(a => a.Discipline == discipline)
+            .FirstOrDefault(a => a.Round == round);
 
         if (existing is not null)
         {
