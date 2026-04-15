@@ -83,6 +83,7 @@ public sealed class PlaywrightFixture : IAsyncLifetime
             "--SqlServer:Port=11433",
             "--SqlServer:Persistent=false",
             "--RateLimiting:Auth:PermitLimit=1000",
+            "--BackfillJob:Enabled=false",
         ];
 
         IDistributedApplicationTestingBuilder builder =
