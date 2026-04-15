@@ -82,18 +82,28 @@ internal sealed class BackfillRecordsJob(
                 .ToListAsync(stoppingToken);
 
             List<SlotAttempt> slotAttempts = division.RecordCategory == RecordCategory.Total
-                ? BuildTotalSlotAttempts(divisionAttempts, eras, slugToIdMap)
-                    .Where(sa => sa.SlotKey == slotKey)
-                    .OrderBy(sa => sa.MeetDate)
-                    .ThenBy(sa => sa.AttemptId)
-                    .ToList()
-                : BuildSlotAttempts(divisionAttempts, eras, slugToIdMap)
-                    .Where(sa => sa.SlotKey == slotKey)
-                    .OrderBy(sa => sa.MeetDate)
-                    .ThenBy(sa => sa.AttemptId)
-                    .ToList();
+                ? FilterAndOrderForChain(BuildTotalSlotAttempts(divisionAttempts, eras, slugToIdMap), slotKey)
+                : FilterAndOrderForChain(BuildSlotAttempts(divisionAttempts, eras, slugToIdMap), slotKey);
 
-            List<ExpectedRecord> expectedChain = ComputeExpectedChain(slotAttempts);
+            StandardRecordInfo? standardRecord = await GetLatestStandardRecordAsync(
+                division.EraId,
+                division.AgeCategoryId,
+                division.WeightCategoryId,
+                division.RecordCategory,
+                division.IsRaw,
+                dbContext,
+                stoppingToken);
+
+            if (standardRecord is not null)
+            {
+                slotAttempts = slotAttempts
+                    .Where(sa => sa.MeetDate >= standardRecord.Date)
+                    .ToList();
+            }
+
+            List<ExpectedRecord> expectedChain = ComputeExpectedChain(
+                slotAttempts,
+                standardRecord?.Weight ?? 0m);
 
             SlotReconciliationResult result = await ReconcileSlotAsync(
                 division.EraId,
@@ -217,6 +227,14 @@ internal sealed class BackfillRecordsJob(
                 continue;
             }
 
+            // Bench/deadlift from full powerlifting meets also contribute to single-lift slots.
+            RecordCategory? singleLiftCategory = recordCategory switch
+            {
+                RecordCategory.Bench => RecordCategory.BenchSingle,
+                RecordCategory.Deadlift => RecordCategory.DeadliftSingle,
+                _ => null,
+            };
+
             string biologicalSlug = AgeCategory.ResolveSlug(projection.AthleteDoB, meetDate);
             IReadOnlyList<string> cascadeSlugs =
                 AgeCategory.GetCascadeSlugs(biologicalSlug);
@@ -234,6 +252,16 @@ internal sealed class BackfillRecordsJob(
                     projection.WeightCategoryId,
                     recordCategory,
                     projection.IsRaw));
+
+                if (singleLiftCategory is not null)
+                {
+                    keys.Add(new DivisionKey(
+                        era.EraId,
+                        ageCategoryId,
+                        projection.WeightCategoryId,
+                        singleLiftCategory.Value,
+                        projection.IsRaw));
+                }
             }
         }
 

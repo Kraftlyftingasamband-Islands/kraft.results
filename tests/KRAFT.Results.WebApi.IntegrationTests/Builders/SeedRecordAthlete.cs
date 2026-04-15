@@ -35,7 +35,7 @@ internal sealed record SeedRecordAthlete(
         string clearSql =
             $"""
             DELETE FROM Records
-            WHERE RecordCategoryId IN (1, 2, 3, 4) AND IsRaw = 1
+            WHERE RecordCategoryId IN (1, 2, 3, 4, 5, 6) AND IsRaw = 1
             AND WeightCategoryId = {weightCategoryId};
             """;
 

@@ -16,10 +16,11 @@ internal static class RecordSlotRebuilder
     private const string CreatedBySystem = "system";
 
     internal static List<ExpectedRecord> ComputeExpectedChain(
-        IReadOnlyList<SlotAttempt> orderedAttempts)
+        IReadOnlyList<SlotAttempt> orderedAttempts,
+        decimal startWeight = 0m)
     {
         List<ExpectedRecord> chain = [];
-        decimal runningMax = 0m;
+        decimal runningMax = startWeight;
 
         foreach (SlotAttempt attempt in orderedAttempts)
         {
@@ -65,15 +66,25 @@ internal static class RecordSlotRebuilder
             .ToHashSet();
 
         List<int> recordIdsToDelete = slotRecords
+            .Where(r => !r.IsStandard)
             .Where(r => r.AttemptId is null || !expectedAttemptIds.Contains(r.AttemptId.Value))
             .Select(r => r.RecordId)
             .ToList();
 
-        Dictionary<int, Record> existingByAttemptId = slotRecords
+        ILookup<int, Record> existingByAttemptLookup = slotRecords
             .Where(r => r.AttemptId is not null)
             .Where(r => expectedAttemptIds.Contains(r.AttemptId!.Value))
-            .GroupBy(r => r.AttemptId!.Value)
+            .ToLookup(r => r.AttemptId!.Value);
+
+        Dictionary<int, Record> existingByAttemptId = existingByAttemptLookup
             .ToDictionary(g => g.Key, g => g.First());
+
+        List<int> duplicateRecordIds = existingByAttemptLookup
+            .SelectMany(g => g.Skip(1))
+            .Select(r => r.RecordId)
+            .ToList();
+
+        recordIdsToDelete.AddRange(duplicateRecordIds);
 
         List<int> recordIdsToDemote = [];
         List<int> recordIdsToSetCurrent = [];
@@ -187,11 +198,6 @@ internal static class RecordSlotRebuilder
                 continue;
             }
 
-            if (!HasValidTotal(participation, meet))
-            {
-                continue;
-            }
-
             RecordCategory recordCategory =
                 MeetDisciplineResolver.MapDisciplineToRecordCategory(
                     attempt.Discipline,
@@ -199,6 +205,25 @@ internal static class RecordSlotRebuilder
                     meet.MeetType.Title);
 
             if (recordCategory == RecordCategory.None)
+            {
+                continue;
+            }
+
+            // Bench/deadlift from full powerlifting meets also count towards single-lift slots
+            // regardless of whether the athlete has a valid total — a bench or deadlift can set
+            // a single-lift record even if the athlete bombed out on squats.
+            RecordCategory? singleLiftCategory = recordCategory switch
+            {
+                RecordCategory.Bench => RecordCategory.BenchSingle,
+                RecordCategory.Deadlift => RecordCategory.DeadliftSingle,
+                _ => null,
+            };
+
+            bool validTotal = HasValidTotal(participation, meet);
+
+            // Main lift categories (Squat/Bench/Deadlift from powerlifting meets) require a
+            // valid total per IPF rules. Single-lift categories do not.
+            if (!validTotal && singleLiftCategory is null)
             {
                 continue;
             }
@@ -213,23 +238,43 @@ internal static class RecordSlotRebuilder
                     continue;
                 }
 
-                SlotAttempt slotAttempt = new(
-                    FormatSlotKey(
+                if (validTotal)
+                {
+                    result.Add(new SlotAttempt(
+                        FormatSlotKey(
+                            era.EraId,
+                            ageCategoryId,
+                            participation.WeightCategoryId,
+                            recordCategory,
+                            meet.IsRaw),
+                        attempt.AttemptId,
+                        attempt.Weight,
+                        meetDate,
                         era.EraId,
                         ageCategoryId,
                         participation.WeightCategoryId,
                         recordCategory,
-                        meet.IsRaw),
-                    attempt.AttemptId,
-                    attempt.Weight,
-                    meetDate,
-                    era.EraId,
-                    ageCategoryId,
-                    participation.WeightCategoryId,
-                    recordCategory,
-                    meet.IsRaw);
+                        meet.IsRaw));
+                }
 
-                result.Add(slotAttempt);
+                if (singleLiftCategory is not null)
+                {
+                    result.Add(new SlotAttempt(
+                        FormatSlotKey(
+                            era.EraId,
+                            ageCategoryId,
+                            participation.WeightCategoryId,
+                            singleLiftCategory.Value,
+                            meet.IsRaw),
+                        attempt.AttemptId,
+                        attempt.Weight,
+                        meetDate,
+                        era.EraId,
+                        ageCategoryId,
+                        participation.WeightCategoryId,
+                        singleLiftCategory.Value,
+                        meet.IsRaw));
+                }
             }
         }
 
@@ -288,15 +333,21 @@ internal static class RecordSlotRebuilder
                 continue;
             }
 
-            Attempt? bestDeadlift = group
+            // 4th attempts don't count towards the competition total — use the
+            // participation's stored bests which reflect rounds 1-3 only.
+            decimal bestSquat = participation.Squat;
+            decimal bestBench = participation.Benchpress;
+
+            List<Attempt> goodDeadlifts = group
                 .Where(a => a.Discipline == Discipline.Deadlift)
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
-                .OrderByDescending(a => a.Weight)
-                .ThenByDescending(a => a.AttemptId)
-                .FirstOrDefault();
+                .Where(a => a.Round <= 3)
+                .OrderBy(a => a.Weight)
+                .ThenBy(a => a.AttemptId)
+                .ToList();
 
-            if (bestDeadlift is null)
+            if (goodDeadlifts.Count == 0)
             {
                 continue;
             }
@@ -304,34 +355,51 @@ internal static class RecordSlotRebuilder
             string biologicalSlug = AgeCategory.ResolveSlug(athlete.DateOfBirth, meetDate);
             IReadOnlyList<string> cascadeSlugs = AgeCategory.GetCascadeSlugs(biologicalSlug);
 
-            foreach (string cascadeSlug in cascadeSlugs)
+            foreach (Attempt deadliftAttempt in goodDeadlifts)
             {
-                if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
-                {
-                    continue;
-                }
+                decimal runningTotal = bestSquat + bestBench + deadliftAttempt.Weight;
 
-                SlotAttempt slotAttempt = new(
-                    FormatSlotKey(
+                foreach (string cascadeSlug in cascadeSlugs)
+                {
+                    if (!slugToIdMap.TryGetValue(cascadeSlug, out int ageCategoryId))
+                    {
+                        continue;
+                    }
+
+                    SlotAttempt slotAttempt = new(
+                        FormatSlotKey(
+                            era.EraId,
+                            ageCategoryId,
+                            participation.WeightCategoryId,
+                            RecordCategory.Total,
+                            meet.IsRaw),
+                        deadliftAttempt.AttemptId,
+                        runningTotal,
+                        meetDate,
                         era.EraId,
                         ageCategoryId,
                         participation.WeightCategoryId,
                         RecordCategory.Total,
-                        meet.IsRaw),
-                    bestDeadlift.AttemptId,
-                    participation.Total,
-                    meetDate,
-                    era.EraId,
-                    ageCategoryId,
-                    participation.WeightCategoryId,
-                    RecordCategory.Total,
-                    meet.IsRaw);
+                        meet.IsRaw);
 
-                result.Add(slotAttempt);
+                    result.Add(slotAttempt);
+                }
             }
         }
 
         return result;
+    }
+
+    internal static List<SlotAttempt> FilterAndOrderForChain(
+        IEnumerable<SlotAttempt> slotAttempts,
+        string slotKey)
+    {
+        return slotAttempts
+            .Where(sa => sa.SlotKey == slotKey)
+            .OrderBy(sa => sa.MeetDate)
+            .ThenBy(sa => sa.Weight)
+            .ThenBy(sa => sa.AttemptId)
+            .ToList();
     }
 
     internal static string FormatSlotKey(
@@ -343,6 +411,36 @@ internal static class RecordSlotRebuilder
     {
         return $"{eraId}-{ageCategoryId}-{weightCategoryId}-{(int)recordCategory}-{isRaw}";
     }
+
+    internal static async Task<StandardRecordInfo?> GetLatestStandardRecordAsync(
+        int eraId,
+        int ageCategoryId,
+        int weightCategoryId,
+        RecordCategory recordCategory,
+        bool isRaw,
+        ResultsDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        Record? standard = await dbContext.Set<Record>()
+            .AsNoTracking()
+            .Where(r => r.EraId == eraId)
+            .Where(r => r.AgeCategoryId == ageCategoryId)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == recordCategory)
+            .Where(r => r.IsRaw == isRaw)
+            .Where(r => r.IsStandard)
+            .OrderByDescending(r => r.Date)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (standard is null)
+        {
+            return null;
+        }
+
+        return new StandardRecordInfo(standard.Weight, standard.Date);
+    }
+
+    internal sealed record StandardRecordInfo(decimal Weight, DateOnly Date);
 
     internal sealed record SlotAttempt(
         string SlotKey,
