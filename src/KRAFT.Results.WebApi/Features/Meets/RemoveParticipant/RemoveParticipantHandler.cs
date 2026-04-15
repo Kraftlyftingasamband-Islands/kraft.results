@@ -1,9 +1,12 @@
+using System.Data;
+
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KRAFT.Results.WebApi.Features.Meets.RemoveParticipant;
 
@@ -49,13 +52,27 @@ internal sealed class RemoveParticipantHandler
             .Distinct()
             .ToListAsync(cancellationToken);
 
-        _dbContext.Set<Participation>().Remove(participation);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        IExecutionStrategy strategy = _dbContext.Database.CreateExecutionStrategy();
 
-        if (affectedSlots.Count > 0)
+        await strategy.ExecuteAsync(async () =>
         {
-            await _recordComputationService.RebuildSlotsAsync(affectedSlots, cancellationToken);
-        }
+            await using IDbContextTransaction transaction =
+                await _dbContext.Database.BeginTransactionAsync(
+                    IsolationLevel.RepeatableRead,
+                    cancellationToken);
+
+            _dbContext.Set<Participation>().Remove(participation);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            if (affectedSlots.Count > 0)
+            {
+                await _recordComputationService.RebuildSlotsWithinTransactionAsync(
+                    affectedSlots,
+                    cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         _logger.LogInformation("Removed participation {ParticipationId} from meet {MeetId}", participationId, meetId);
 
