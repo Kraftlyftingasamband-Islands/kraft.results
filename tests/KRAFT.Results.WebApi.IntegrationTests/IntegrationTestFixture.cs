@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
@@ -8,6 +8,7 @@ using KRAFT.Results.WebApi.IntegrationTests;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 [assembly: AssemblyFixture(typeof(IntegrationTestFixture))]
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -17,6 +18,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests;
 public sealed class IntegrationTestFixture : IAsyncLifetime
 {
     private readonly ConcurrentBag<WebApplicationFactory<Program>> _childFactories = [];
+    private RecordComputationChannel? _recordComputationChannel;
 
     public DatabaseFixture Database { get; private set; } = default!;
 
@@ -67,11 +69,23 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
                     TestAuthHandler.SchemeName, options => { });
 
                 services.AddScoped<IDomainEventHandler<AttemptRecordedEvent>, AttemptRecordedEventHandler>();
+                services.AddHostedService<RecordComputationWorker>();
             });
         });
 
         _childFactories.Add(childFactory);
+        _recordComputationChannel = childFactory.Services.GetRequiredService<RecordComputationChannel>();
         return childFactory.CreateClient();
+    }
+
+    public async Task WaitForRecordComputationAsync(CancellationToken cancellationToken = default)
+    {
+        if (_recordComputationChannel is null)
+        {
+            return;
+        }
+
+        await _recordComputationChannel.WaitUntilDrainedAsync(cancellationToken);
     }
 
     public HttpClient CreateNonAdminAuthorizedHttpClient()

@@ -13,6 +13,8 @@ internal static class RecordServices
         services.AddScoped<GetRecordsHandler>();
         services.AddScoped<GetRecordHistoryHandler>();
         services.AddScoped<RecordComputationService>();
+        services.AddSingleton<RecordComputationChannel>();
+        services.AddHostedService<RecordComputationWorker>();
         services.AddScoped<IDomainEventHandler<AttemptRecordedEvent>, AttemptRecordedEventHandler>();
 
         return services;
