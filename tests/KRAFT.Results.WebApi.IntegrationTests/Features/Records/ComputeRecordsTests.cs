@@ -780,29 +780,36 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         int participationId = participantResult!.ParticipationId;
 
         // Act — record a good deadlift at the deadlift-only meet
-        await RecordAttemptForMeet(
-            client,
-            Constants.DeadliftMeet.Id,
-            participationId,
-            Discipline.Deadlift,
-            1,
-            280.0m);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
-
-        // Assert — DeadliftSingle record should exist
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        List<RecordEntity> deadliftSingleRecords = await dbContext.Set<RecordEntity>()
-            .Include(r => r.Attempt!)
-                .ThenInclude(a => a.Participation)
-            .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
-            .Where(r => r.IsCurrent)
-            .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
-            .ToListAsync(CancellationToken.None);
+        try
+        {
+            await RecordAttemptForMeet(
+                client,
+                Constants.DeadliftMeet.Id,
+                participationId,
+                Discipline.Deadlift,
+                1,
+                280.0m);
+            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        deadliftSingleRecords.ShouldNotBeEmpty();
-        deadliftSingleRecords.ShouldAllBe(r => r.Weight == 280.0m);
+            // Assert — DeadliftSingle record should exist
+            List<RecordEntity> deadliftSingleRecords = await dbContext.Set<RecordEntity>()
+                .Include(r => r.Attempt!)
+                    .ThenInclude(a => a.Participation)
+                .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
+                .ToListAsync(CancellationToken.None);
+
+            deadliftSingleRecords.ShouldNotBeEmpty();
+            deadliftSingleRecords.ShouldAllBe(r => r.Weight == 280.0m);
+        }
+        finally
+        {
+            await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
+        }
     }
 
     [Fact]
