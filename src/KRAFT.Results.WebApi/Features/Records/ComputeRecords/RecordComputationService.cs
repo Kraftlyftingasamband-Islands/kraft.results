@@ -5,7 +5,6 @@ using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
@@ -21,8 +20,6 @@ internal sealed class RecordComputationService(
     ResultsDbContext dbContext,
     ILogger<RecordComputationService> logger)
 {
-    private const string IcelandIso3 = "ISL";
-
     private readonly ResultsDbContext _dbContext = dbContext;
     private readonly ILogger<RecordComputationService> _logger = logger;
 
@@ -39,6 +36,9 @@ internal sealed class RecordComputationService(
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Athlete)
                     .ThenInclude(a => a.Bans)
+            .Include(a => a.Participation)
+                .ThenInclude(p => p.Athlete)
+                    .ThenInclude(a => a.Country)
             .Include(a => a.Participation)
                 .ThenInclude(p => p.AgeCategory)
             .FirstOrDefaultAsync(a => a.AttemptId == attemptId, cancellationToken);
@@ -76,11 +76,7 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        Country? iceland = await _dbContext.Set<Country>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Iso3 == IcelandIso3, cancellationToken);
-
-        if (iceland is null || athlete.CountryId != iceland.CountryId)
+        if (athlete.Country?.Iso3 != RecordConstants.IcelandIso3)
         {
             _logger.LogWarning(
                 "Skipping record computation: athlete {AthleteId} is not Icelandic (AttemptId: {AttemptId})",
@@ -335,7 +331,7 @@ internal sealed class RecordComputationService(
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
                 .Where(a => a.Participation.Meet.RecordsPossible)
-                .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
+                .Where(a => a.Participation.Athlete.Country.Iso3 == RecordConstants.IcelandIso3)
                 .Where(a => weightCategoryIds.Contains(
                     a.Participation.WeightCategoryId))
                 .Where(a => isRawValues.Contains(
@@ -431,7 +427,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
-            .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country.Iso3 == RecordConstants.IcelandIso3)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
@@ -490,7 +486,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
-            .Where(a => a.Participation.Athlete.Country.Iso3 == IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country.Iso3 == RecordConstants.IcelandIso3)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
