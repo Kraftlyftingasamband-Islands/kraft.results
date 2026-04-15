@@ -1,11 +1,13 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
@@ -48,6 +50,15 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
         if (eventHandlerDescriptor is not null)
         {
             services.Remove(eventHandlerDescriptor);
+        }
+
+        ServiceDescriptor? workerDescriptor = services.SingleOrDefault(
+            d => d.ServiceType == typeof(IHostedService)
+                && d.ImplementationType == typeof(RecordComputationWorker));
+
+        if (workerDescriptor is not null)
+        {
+            services.Remove(workerDescriptor);
         }
 
         services.AddScoped<DomainEventInterceptor>();

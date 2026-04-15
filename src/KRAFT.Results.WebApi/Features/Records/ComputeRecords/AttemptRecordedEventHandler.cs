@@ -3,36 +3,21 @@ using KRAFT.Results.WebApi.Features.Participations;
 
 namespace KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
-#pragma warning disable CA1031 // ADR-0001: record computation failure must not fail the attempt save
 internal sealed class AttemptRecordedEventHandler(
-    RecordComputationService recordComputationService,
+    RecordComputationChannel channel,
     ILogger<AttemptRecordedEventHandler> logger) : IDomainEventHandler<AttemptRecordedEvent>
 {
-    private readonly RecordComputationService _recordComputationService = recordComputationService;
+    private readonly RecordComputationChannel _channel = channel;
     private readonly ILogger<AttemptRecordedEventHandler> _logger = logger;
 
     public async Task HandleAsync(AttemptRecordedEvent domainEvent, CancellationToken cancellationToken)
     {
-        try
-        {
-            _logger.LogInformation(
-                "Computing records for attempt {AttemptId} on participation {ParticipationId}",
-                domainEvent.Attempt.AttemptId,
-                domainEvent.Participation.ParticipationId);
+        _logger.LogInformation(
+            "Enqueuing record computation for attempt {AttemptId} on participation {ParticipationId}",
+            domainEvent.Attempt.AttemptId,
+            domainEvent.Participation.ParticipationId);
 
-            await _recordComputationService.ComputeRecordsAsync(domainEvent.Attempt.AttemptId, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Failed to compute records for participation {ParticipationId}",
-                domainEvent.Participation.ParticipationId);
-        }
+        await _channel.WriteAsync(domainEvent.Attempt.AttemptId, cancellationToken);
     }
 
     public Task HandleAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
