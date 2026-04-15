@@ -4,6 +4,7 @@ using KRAFT.Results.WebApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KRAFT.Results.WebApi.Migrations
 {
     [DbContext(typeof(ResultsDbContext))]
-    partial class ResultsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260415120020_ReplaceMeetTypeWithMeetCategory")]
+    partial class ReplaceMeetTypeWithMeetCategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -243,8 +246,6 @@ namespace KRAFT.Results.WebApi.Migrations
                         .HasColumnType("datetime");
 
                     b.HasKey("BanId");
-
-                    b.HasIndex("AthleteId");
 
                     b.ToTable("Bans", "dbo");
                 });
@@ -1122,18 +1123,6 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.Navigation("Participation");
                 });
 
-            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Bans.Ban", b =>
-                {
-                    b.HasOne("KRAFT.Results.WebApi.Features.Athletes.Athlete", "Athlete")
-                        .WithMany("Bans")
-                        .HasForeignKey("AthleteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Bans_Athletes");
-
-                    b.Navigation("Athlete");
-                });
-
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.EraWeightCategories.EraWeightCategory", b =>
                 {
                     b.HasOne("KRAFT.Results.WebApi.Features.Eras.Era", "Era")
@@ -1299,8 +1288,6 @@ namespace KRAFT.Results.WebApi.Migrations
 
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.Athletes.Athlete", b =>
                 {
-                    b.Navigation("Bans");
-
                     b.Navigation("Participations");
                 });
 

@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Meets;
@@ -10,6 +10,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 public sealed class GetMeetTypesTests
 {
     private const string Path = "/meets/types";
+    private const int ExpectedCount = 5;
 
     private readonly HttpClient _unauthorizedHttpClient;
 
@@ -31,7 +32,7 @@ public sealed class GetMeetTypesTests
     }
 
     [Fact]
-    public async Task Deserializes()
+    public async Task ReturnsFiveItems()
     {
         // Arrange
 
@@ -40,10 +41,11 @@ public sealed class GetMeetTypesTests
 
         // Assert
         response.ShouldNotBeNull();
+        response.Count.ShouldBe(ExpectedCount);
     }
 
     [Fact]
-    public async Task ReturnsTestMeetType()
+    public async Task ReturnsPowerliftingAsFirstItem()
     {
         // Arrange
 
@@ -51,6 +53,9 @@ public sealed class GetMeetTypesTests
         IReadOnlyList<MeetTypeSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<MeetTypeSummary>>(Path, CancellationToken.None);
 
         // Assert
-        response!.ShouldContain(x => x.Title == Constants.TestMeetType);
+        MeetTypeSummary first = response.ShouldNotBeNull()[0];
+        first.ShouldSatisfyAllConditions(
+            () => first.Id.ShouldBe(1),
+            () => first.Title.ShouldBe("Kraftlyftingar"));
     }
 }

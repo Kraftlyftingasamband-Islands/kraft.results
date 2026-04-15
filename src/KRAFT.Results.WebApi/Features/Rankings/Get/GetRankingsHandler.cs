@@ -1,5 +1,6 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Rankings;
+using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.ValueObjects;
 
@@ -9,9 +10,14 @@ namespace KRAFT.Results.WebApi.Features.Rankings.Get;
 
 internal sealed class GetRankingsHandler
 {
-    private static readonly int[] BenchMeetTypes = [1, 2, 5];
-    private static readonly int[] SquatMeetTypes = [1, 4];
-    private static readonly int[] DeadliftMeetTypes = [1, 3];
+    private static readonly MeetCategory[] BenchMeetCategories =
+        [MeetCategory.Powerlifting, MeetCategory.Benchpress, MeetCategory.PushPull];
+
+    private static readonly MeetCategory[] SquatMeetCategories =
+        [MeetCategory.Powerlifting, MeetCategory.Squat];
+
+    private static readonly MeetCategory[] DeadliftMeetCategories =
+        [MeetCategory.Powerlifting, MeetCategory.Deadlift];
 
     private readonly ResultsDbContext _dbContext;
 
@@ -48,11 +54,11 @@ internal sealed class GetRankingsHandler
 
         query = disciplineKey switch
         {
-            "total" => query.Where(p => p.Meet.MeetType.MeetTypeId == 1),
-            "bench" => query.Where(p => BenchMeetTypes.Contains(p.Meet.MeetType.MeetTypeId)),
-            "squat" => query.Where(p => SquatMeetTypes.Contains(p.Meet.MeetType.MeetTypeId)),
-            "deadlift" => query.Where(p => DeadliftMeetTypes.Contains(p.Meet.MeetType.MeetTypeId)),
-            _ => query.Where(p => p.Meet.MeetType.MeetTypeId == 1),
+            "total" => query.Where(p => p.Meet.Category == MeetCategory.Powerlifting),
+            "bench" => query.Where(p => BenchMeetCategories.Contains(p.Meet.Category)),
+            "squat" => query.Where(p => SquatMeetCategories.Contains(p.Meet.Category)),
+            "deadlift" => query.Where(p => DeadliftMeetCategories.Contains(p.Meet.Category)),
+            _ => query.Where(p => p.Meet.Category == MeetCategory.Powerlifting),
         };
 
         if (year is not null && year > 0)
@@ -133,12 +139,14 @@ internal sealed class GetRankingsHandler
 
         List<RawRankingData> rawData = await rawQuery.ToListAsync(cancellationToken);
 
-        string ipfType = disciplineKey == "bench" ? "Benchpress" : "Powerlifting";
+        MeetCategory ipfCategory = disciplineKey == "bench"
+            ? MeetCategory.Benchpress
+            : MeetCategory.Powerlifting;
 
         foreach (RawRankingData row in rawData)
         {
             Gender parsedGender = Gender.Parse(row.Gender);
-            IpfPoints ipfPoints = IpfPoints.Create(row.IsRaw, parsedGender, ipfType, row.BodyWeight, row.Result);
+            IpfPoints ipfPoints = IpfPoints.Create(row.IsRaw, parsedGender, ipfCategory, row.BodyWeight, row.Result);
             row.CalculatedIpfPoints = ipfPoints.Value;
         }
 

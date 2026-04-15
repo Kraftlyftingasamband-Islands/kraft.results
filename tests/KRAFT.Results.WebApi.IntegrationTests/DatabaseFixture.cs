@@ -71,7 +71,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
     {
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedCountry());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedUsersAndRoles());
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedMeetType());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedTeam());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAthlete());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SetAthleteTeamSql());

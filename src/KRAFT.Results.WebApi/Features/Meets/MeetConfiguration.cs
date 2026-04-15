@@ -13,7 +13,7 @@ internal sealed class MeetConfiguration : IEntityTypeConfiguration<Meet>
 
         builder.HasIndex(e => e.PublishedResults, "nci_wi_Meets_096AE4AB-BAC9-480E-99C7-F2591AA73EF9");
 
-        builder.HasIndex(nameof(Meet.IsRaw), "MeetTypeId")
+        builder.HasIndex(e => new { e.IsRaw, e.Category })
             .HasDatabaseName("nci_wi_Meets_B4C6AEB59052E88F812BB1BBA9EB448F");
 
         builder.Property<int>("MeetId")
@@ -34,8 +34,11 @@ internal sealed class MeetConfiguration : IEntityTypeConfiguration<Meet>
             .HasMaxLength(50)
             .HasDefaultValue(string.Empty, "DF_Meets_Location");
 
-        builder.Property<int>("MeetTypeId")
-            .HasDefaultValue(1, "DF_Meets_MeetTypeId");
+        builder.Property(e => e.Category)
+            .HasColumnName("MeetTypeId")
+            .HasConversion<int>()
+            .HasDefaultValue(MeetCategory.Powerlifting, "DF_Meets_MeetTypeId")
+            .HasSentinel((MeetCategory)0);
 
         builder.Property(e => e.ModifiedBy)
             .HasMaxLength(50)
@@ -79,9 +82,7 @@ internal sealed class MeetConfiguration : IEntityTypeConfiguration<Meet>
         builder.Property(e => e.Title)
             .HasMaxLength(100);
 
-        builder.HasOne(d => d.MeetType)
-            .WithMany(p => p.Meets)
-            .HasForeignKey("MeetTypeId")
-            .HasConstraintName("FK_Meets_MeetTypes");
+        builder.HasIndex(e => e.Category)
+            .HasDatabaseName("IX_Meets_Category");
     }
 }

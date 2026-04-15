@@ -4,7 +4,6 @@ namespace KRAFT.Results.WebApi.IntegrationTests;
 
 internal static class Constants
 {
-    internal const string TestMeetType = TestSeedConstants.MeetType.Title;
     internal const string TestAthleteFirstName = TestSeedConstants.Athlete.FirstName;
     internal const string TestAthleteLastName = TestSeedConstants.Athlete.LastName;
     internal const string TestAthleteSlug = TestSeedConstants.Athlete.Slug;

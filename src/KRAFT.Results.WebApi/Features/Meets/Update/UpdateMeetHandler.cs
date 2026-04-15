@@ -47,17 +47,17 @@ internal sealed class UpdateMeetHandler
             return Result.Failure(MeetErrors.MeetExists(command.Title, command.StartDate));
         }
 
-        int meetTypeId = command.MeetTypeId ?? 1;
+        MeetCategory category = (MeetCategory)(command.MeetTypeId ?? 1);
 
-        if (await GetMeetTypeAsync(meetTypeId, cancellationToken) is not MeetType type)
+        if (!Enum.IsDefined(category))
         {
-            _logger.LogWarning("Meet type with Id {Id} was not found in the database", meetTypeId);
+            _logger.LogWarning("Meet category {Id} is not a valid MeetCategory value", command.MeetTypeId);
             return Result.Failure(MeetErrors.MeetTypeNotFound);
         }
 
         Result result = meet.Update(
             modifier,
-            type,
+            category,
             command.Title,
             command.StartDate,
             command.EndDate,
@@ -91,9 +91,4 @@ internal sealed class UpdateMeetHandler
         .Where(x => x.Title == title)
         .Where(x => x.StartDate == startDate.ToDateTime(TimeOnly.MinValue))
         .AnyAsync(cancellationToken);
-
-    private Task<MeetType?> GetMeetTypeAsync(int meetTypeId, CancellationToken cancellationToken) =>
-        _dbContext.Set<MeetType>()
-        .Where(x => x.MeetTypeId == meetTypeId)
-        .FirstOrDefaultAsync(cancellationToken);
 }

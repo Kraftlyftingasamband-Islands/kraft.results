@@ -1,4 +1,3 @@
-﻿using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Enums;
 
@@ -21,8 +20,7 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
                 Text = x.Text ?? string.Empty,
                 x.StartDate,
                 x.EndDate,
-                MeetTypeTitle = x.MeetType.Title,
-                x.MeetType.MeetTypeId,
+                x.Category,
                 x.ResultModeId,
                 x.CalcPlaces,
                 x.IsInTeamCompetition,
@@ -50,8 +48,8 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
             raw.Text,
             DateOnly.FromDateTime(raw.StartDate),
             DateOnly.FromDateTime(raw.EndDate),
-            raw.MeetTypeTitle,
-            raw.MeetTypeId,
+            raw.Category.ToDisplayName(),
+            (int)raw.Category,
             ((ResultMode)raw.ResultModeId).ToString(),
             raw.CalcPlaces,
             raw.IsInTeamCompetition,
@@ -63,6 +61,6 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
             raw.RecordsPossible,
             raw.IsRaw,
             raw.ShowTeamPoints,
-            MeetDisciplineResolver.ResolveDisciplines(raw.MeetTypeId, raw.MeetTypeTitle));
+            raw.Category.GetDisciplines());
     }
 }

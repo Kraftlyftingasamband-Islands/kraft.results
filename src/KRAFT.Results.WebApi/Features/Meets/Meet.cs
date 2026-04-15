@@ -60,7 +60,7 @@ internal sealed class Meet : AggregateRoot
 
     public string CreatedBy { get; private set; } = null!;
 
-    public MeetType MeetType { get; private set; } = null!;
+    public MeetCategory Category { get; private set; }
 
     public ICollection<Participation> Participations { get; } = [];
 
@@ -68,7 +68,7 @@ internal sealed class Meet : AggregateRoot
 
     internal static Result<Meet> Create(
         User creator,
-        MeetType type,
+        MeetCategory category,
         string title,
         DateOnly startDate,
         DateOnly? endDate = null,
@@ -131,7 +131,7 @@ internal sealed class Meet : AggregateRoot
 
         Meet meet = new()
         {
-            MeetType = type,
+            Category = category,
             Title = title,
             StartDate = startDateTime,
             EndDate = resolvedEndDate.ToDateTime(TimeOnly.MinValue),
@@ -158,7 +158,7 @@ internal sealed class Meet : AggregateRoot
 
     internal Result Update(
         User modifier,
-        MeetType type,
+        MeetCategory category,
         string title,
         DateOnly startDate,
         DateOnly? endDate = null,
@@ -222,7 +222,7 @@ internal sealed class Meet : AggregateRoot
         Title = title;
         StartDate = startDateTime;
         EndDate = resolvedEndDate.ToDateTime(TimeOnly.MinValue);
-        MeetType = type;
+        Category = category;
         CalcPlaces = calcPlaces;
         Text = normalizedText;
         Location = normalizedLocation;
