@@ -80,7 +80,7 @@
                                 .FirstOrDefault(a => a.Discipline == d && a.Round == r);
 
                             MeetAttempt displayAttempt = _savedAttempts.TryGetValue((d, r), out (decimal W, bool G) saved)
-                                ? new MeetAttempt(d, r, saved.W, saved.G, attempt?.IsRecord ?? false)
+                                ? new MeetAttempt(d, r, saved.W, saved.G, attempt?.IsRecord ?? false, attempt?.RecordAgeCategory)
                                 : attempt ?? new MeetAttempt(d, r, 0, false, false);
 
                             @if (_editingAttempt.GetValueOrDefault((d, r)))
@@ -188,7 +188,7 @@
 
 @if (_saveErrorMessage is not null)
 {
-    <div class="attempt-save-toast" role="alert" aria-live="assertive">
+    <div class="attempt-save-toast" role="alert">
         <span>@_saveErrorMessage</span>
         <button class="attempt-save-toast-close" @onclick="DismissSaveError" aria-label="Loka">×</button>
     </div>

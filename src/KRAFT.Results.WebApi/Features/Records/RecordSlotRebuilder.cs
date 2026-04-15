@@ -88,8 +88,7 @@ internal static class RecordSlotRebuilder
 
         List<int> recordIdsToDemote = [];
         List<int> recordIdsToSetCurrent = [];
-        List<int> recordIdsToUpdateWeight = [];
-        List<decimal> updatedWeights = [];
+        List<(int RecordId, decimal Weight)> weightUpdates = [];
         List<Record> recordsToCreate = [];
 
         for (int i = 0; i < expectedChain.Count; i++)
@@ -101,8 +100,7 @@ internal static class RecordSlotRebuilder
             {
                 if (existing.Weight != expected.Weight)
                 {
-                    recordIdsToUpdateWeight.Add(existing.RecordId);
-                    updatedWeights.Add(expected.Weight);
+                    weightUpdates.Add((existing.RecordId, expected.Weight));
                 }
 
                 if (shouldBeCurrent && !existing.IsCurrent)
@@ -140,8 +138,7 @@ internal static class RecordSlotRebuilder
             recordIdsToDelete,
             recordIdsToDemote,
             recordIdsToSetCurrent,
-            recordIdsToUpdateWeight,
-            updatedWeights,
+            weightUpdates,
             recordsToCreate);
     }
 
@@ -467,7 +464,6 @@ internal static class RecordSlotRebuilder
         List<int> RecordIdsToDelete,
         List<int> RecordIdsToDemote,
         List<int> RecordIdsToSetCurrent,
-        List<int> RecordIdsToUpdateWeight,
-        List<decimal> UpdatedWeights,
+        List<(int RecordId, decimal Weight)> WeightUpdates,
         List<Record> RecordsToCreate);
 }
