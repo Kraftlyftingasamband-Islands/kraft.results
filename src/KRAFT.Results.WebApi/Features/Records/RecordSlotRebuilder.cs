@@ -6,6 +6,7 @@ using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,34 @@ namespace KRAFT.Results.WebApi.Features.Records;
 internal static class RecordSlotRebuilder
 {
     private const string CreatedBySystem = "system";
+
+    internal static async Task<ILookup<string, Record>> BatchLoadSlotRecordsAsync(
+        IReadOnlyList<SlotKey> slots,
+        ResultsDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        HashSet<int> eraIds = slots.Select(s => s.EraId).ToHashSet();
+        HashSet<int> ageCategoryIds = slots.Select(s => s.AgeCategoryId).ToHashSet();
+        HashSet<int> weightCategoryIds = slots.Select(s => s.WeightCategoryId).ToHashSet();
+        HashSet<RecordCategory> recordCategories = slots.Select(s => s.RecordCategory).ToHashSet();
+        HashSet<bool> isRawValues = slots.Select(s => s.IsRaw).ToHashSet();
+
+        List<Record> allRecords = await dbContext.Set<Record>()
+            .AsNoTracking()
+            .Where(r => eraIds.Contains(r.EraId))
+            .Where(r => ageCategoryIds.Contains(r.AgeCategoryId))
+            .Where(r => weightCategoryIds.Contains(r.WeightCategoryId))
+            .Where(r => recordCategories.Contains(r.RecordCategoryId))
+            .Where(r => isRawValues.Contains(r.IsRaw))
+            .ToListAsync(cancellationToken);
+
+        return allRecords.ToLookup(r => FormatSlotKey(
+            r.EraId,
+            r.AgeCategoryId,
+            r.WeightCategoryId,
+            r.RecordCategoryId,
+            r.IsRaw));
+    }
 
     internal static List<ExpectedRecord> ComputeExpectedChain(
         IReadOnlyList<SlotAttempt> orderedAttempts,
@@ -42,6 +71,23 @@ internal static class RecordSlotRebuilder
         return chain;
     }
 
+    internal static SlotReconciliationResult ReconcileSlot(
+        SlotKey slot,
+        List<ExpectedRecord> expectedChain,
+        ILookup<string, Record> allRecordsBySlot)
+    {
+        string slotKey = FormatSlotKey(
+            slot.EraId,
+            slot.AgeCategoryId,
+            slot.WeightCategoryId,
+            slot.RecordCategory,
+            slot.IsRaw);
+
+        List<Record> slotRecords = allRecordsBySlot[slotKey].ToList();
+
+        return ReconcileSlotFromRecords(slotRecords, expectedChain);
+    }
+
     internal static async Task<SlotReconciliationResult> ReconcileSlotAsync(
         int eraId,
         int ageCategoryId,
@@ -61,85 +107,7 @@ internal static class RecordSlotRebuilder
             .Where(r => r.IsRaw == isRaw)
             .ToListAsync(cancellationToken);
 
-        HashSet<int> expectedAttemptIds = expectedChain
-            .Select(e => e.AttemptId)
-            .ToHashSet();
-
-        List<int> recordIdsToDelete = slotRecords
-            .Where(r => !r.IsStandard)
-            .Where(r => r.AttemptId is null || !expectedAttemptIds.Contains(r.AttemptId.Value))
-            .Select(r => r.RecordId)
-            .ToList();
-
-        ILookup<int, Record> existingByAttemptLookup = slotRecords
-            .Where(r => r.AttemptId is not null)
-            .Where(r => expectedAttemptIds.Contains(r.AttemptId!.Value))
-            .ToLookup(r => r.AttemptId!.Value);
-
-        Dictionary<int, Record> existingByAttemptId = existingByAttemptLookup
-            .ToDictionary(g => g.Key, g => g.First());
-
-        List<int> duplicateRecordIds = existingByAttemptLookup
-            .SelectMany(g => g.Skip(1))
-            .Select(r => r.RecordId)
-            .ToList();
-
-        recordIdsToDelete.AddRange(duplicateRecordIds);
-
-        List<int> recordIdsToDemote = [];
-        List<int> recordIdsToSetCurrent = [];
-        List<(int RecordId, decimal Weight)> weightUpdates = [];
-        List<Record> recordsToCreate = [];
-
-        for (int i = 0; i < expectedChain.Count; i++)
-        {
-            ExpectedRecord expected = expectedChain[i];
-            bool shouldBeCurrent = i == expectedChain.Count - 1;
-
-            if (existingByAttemptId.TryGetValue(expected.AttemptId, out Record? existing))
-            {
-                if (existing.Weight != expected.Weight)
-                {
-                    weightUpdates.Add((existing.RecordId, expected.Weight));
-                }
-
-                if (shouldBeCurrent && !existing.IsCurrent)
-                {
-                    recordIdsToSetCurrent.Add(existing.RecordId);
-                }
-                else if (!shouldBeCurrent && existing.IsCurrent)
-                {
-                    recordIdsToDemote.Add(existing.RecordId);
-                }
-            }
-            else
-            {
-                Record newRecord = Record.Create(
-                    expected.EraId,
-                    expected.AgeCategoryId,
-                    expected.WeightCategoryId,
-                    expected.RecordCategory,
-                    expected.Weight,
-                    expected.Date,
-                    expected.AttemptId,
-                    expected.IsRaw,
-                    CreatedBySystem);
-
-                if (shouldBeCurrent)
-                {
-                    newRecord.SetCurrent();
-                }
-
-                recordsToCreate.Add(newRecord);
-            }
-        }
-
-        return new SlotReconciliationResult(
-            recordIdsToDelete,
-            recordIdsToDemote,
-            recordIdsToSetCurrent,
-            weightUpdates,
-            recordsToCreate);
+        return ReconcileSlotFromRecords(slotRecords, expectedChain);
     }
 
     internal static bool HasValidTotal(Participation participation, Meet meet)
@@ -409,6 +377,30 @@ internal static class RecordSlotRebuilder
         return $"{eraId}-{ageCategoryId}-{weightCategoryId}-{(int)recordCategory}-{isRaw}";
     }
 
+    internal static StandardRecordInfo? GetStandardRecord(
+        SlotKey slot,
+        ILookup<string, Record> allRecordsBySlot)
+    {
+        string slotKey = FormatSlotKey(
+            slot.EraId,
+            slot.AgeCategoryId,
+            slot.WeightCategoryId,
+            slot.RecordCategory,
+            slot.IsRaw);
+
+        Record? standard = allRecordsBySlot[slotKey]
+            .Where(r => r.IsStandard)
+            .OrderByDescending(r => r.Date)
+            .FirstOrDefault();
+
+        if (standard is null)
+        {
+            return null;
+        }
+
+        return new StandardRecordInfo(standard.Weight, standard.Date);
+    }
+
     internal static async Task<StandardRecordInfo?> GetLatestStandardRecordAsync(
         int eraId,
         int ageCategoryId,
@@ -435,6 +427,91 @@ internal static class RecordSlotRebuilder
         }
 
         return new StandardRecordInfo(standard.Weight, standard.Date);
+    }
+
+    private static SlotReconciliationResult ReconcileSlotFromRecords(
+        List<Record> slotRecords,
+        List<ExpectedRecord> expectedChain)
+    {
+        HashSet<int> expectedAttemptIds = expectedChain
+            .Select(e => e.AttemptId)
+            .ToHashSet();
+
+        List<int> recordIdsToDelete = slotRecords
+            .Where(r => !r.IsStandard)
+            .Where(r => r.AttemptId is null || !expectedAttemptIds.Contains(r.AttemptId.Value))
+            .Select(r => r.RecordId)
+            .ToList();
+
+        ILookup<int, Record> existingByAttemptLookup = slotRecords
+            .Where(r => r.AttemptId is not null)
+            .Where(r => expectedAttemptIds.Contains(r.AttemptId!.Value))
+            .ToLookup(r => r.AttemptId!.Value);
+
+        Dictionary<int, Record> existingByAttemptId = existingByAttemptLookup
+            .ToDictionary(g => g.Key, g => g.First());
+
+        List<int> duplicateRecordIds = existingByAttemptLookup
+            .SelectMany(g => g.Skip(1))
+            .Select(r => r.RecordId)
+            .ToList();
+
+        recordIdsToDelete.AddRange(duplicateRecordIds);
+
+        List<int> recordIdsToDemote = [];
+        List<int> recordIdsToSetCurrent = [];
+        List<(int RecordId, decimal Weight)> weightUpdates = [];
+        List<Record> recordsToCreate = [];
+
+        for (int i = 0; i < expectedChain.Count; i++)
+        {
+            ExpectedRecord expected = expectedChain[i];
+            bool shouldBeCurrent = i == expectedChain.Count - 1;
+
+            if (existingByAttemptId.TryGetValue(expected.AttemptId, out Record? existing))
+            {
+                if (existing.Weight != expected.Weight)
+                {
+                    weightUpdates.Add((existing.RecordId, expected.Weight));
+                }
+
+                if (shouldBeCurrent && !existing.IsCurrent)
+                {
+                    recordIdsToSetCurrent.Add(existing.RecordId);
+                }
+                else if (!shouldBeCurrent && existing.IsCurrent)
+                {
+                    recordIdsToDemote.Add(existing.RecordId);
+                }
+            }
+            else
+            {
+                Record newRecord = Record.Create(
+                    expected.EraId,
+                    expected.AgeCategoryId,
+                    expected.WeightCategoryId,
+                    expected.RecordCategory,
+                    expected.Weight,
+                    expected.Date,
+                    expected.AttemptId,
+                    expected.IsRaw,
+                    CreatedBySystem);
+
+                if (shouldBeCurrent)
+                {
+                    newRecord.SetCurrent();
+                }
+
+                recordsToCreate.Add(newRecord);
+            }
+        }
+
+        return new SlotReconciliationResult(
+            recordIdsToDelete,
+            recordIdsToDemote,
+            recordIdsToSetCurrent,
+            weightUpdates,
+            recordsToCreate);
     }
 
     internal sealed record StandardRecordInfo(decimal Weight, DateOnly Date);

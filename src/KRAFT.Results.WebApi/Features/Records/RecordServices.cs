@@ -10,6 +10,7 @@ internal static class RecordServices
 {
     internal static IServiceCollection AddRecords(this IServiceCollection services)
     {
+        services.AddMemoryCache();
         services.AddScoped<GetRecordsHandler>();
         services.AddScoped<GetRecordHistoryHandler>();
         services.AddScoped<RecordComputationService>();
