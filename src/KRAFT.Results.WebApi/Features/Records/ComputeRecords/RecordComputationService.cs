@@ -594,11 +594,8 @@ internal sealed class RecordComputationService(
                     cancellationToken);
         }
 
-        for (int i = 0; i < result.RecordIdsToUpdateWeight.Count; i++)
+        foreach ((int recordId, decimal weight) in result.WeightUpdates)
         {
-            int recordId = result.RecordIdsToUpdateWeight[i];
-            decimal weight = result.UpdatedWeights[i];
-
             await _dbContext.Set<Record>()
                 .Where(r => r.RecordId == recordId)
                 .ExecuteUpdateAsync(

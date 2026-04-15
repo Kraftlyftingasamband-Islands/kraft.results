@@ -76,9 +76,17 @@ internal sealed class BackfillRecordsJob(
                 BuildTotalSlotAttempts(allAttempts, eras, slugToIdMap);
 
             IExecutionStrategy strategy = dbContext.Database.CreateExecutionStrategy();
+            int groupDivisionsProcessed = 0;
+            int groupRecordsCreated = 0;
+            int groupRecordsDeleted = 0;
 
             await strategy.ExecuteAsync(async () =>
             {
+                // Reset local counters so retries don't double-count.
+                groupDivisionsProcessed = 0;
+                groupRecordsCreated = 0;
+                groupRecordsDeleted = 0;
+
                 await using IDbContextTransaction transaction =
                     await dbContext.Database.BeginTransactionAsync(
                         IsolationLevel.RepeatableRead,
@@ -93,7 +101,7 @@ internal sealed class BackfillRecordsJob(
                         continue;
                     }
 
-                    divisionsProcessed++;
+                    groupDivisionsProcessed++;
 
                     string slotKey = FormatSlotKey(
                         division.EraId,
@@ -142,7 +150,7 @@ internal sealed class BackfillRecordsJob(
                             .Where(r => result.RecordIdsToDelete.Contains(r.RecordId))
                             .ExecuteDeleteAsync(stoppingToken);
 
-                        recordsDeleted += result.RecordIdsToDelete.Count;
+                        groupRecordsDeleted += result.RecordIdsToDelete.Count;
                     }
 
                     if (result.RecordIdsToDemote.Count > 0)
@@ -163,11 +171,8 @@ internal sealed class BackfillRecordsJob(
                                 stoppingToken);
                     }
 
-                    for (int i = 0; i < result.RecordIdsToUpdateWeight.Count; i++)
+                    foreach ((int recordId, decimal weight) in result.WeightUpdates)
                     {
-                        int recordId = result.RecordIdsToUpdateWeight[i];
-                        decimal weight = result.UpdatedWeights[i];
-
                         await dbContext.Set<Record>()
                             .Where(r => r.RecordId == recordId)
                             .ExecuteUpdateAsync(
@@ -181,12 +186,16 @@ internal sealed class BackfillRecordsJob(
                         await dbContext.SaveChangesAsync(stoppingToken);
                         dbContext.ChangeTracker.Clear();
 
-                        recordsCreated += result.RecordsToCreate.Count;
+                        groupRecordsCreated += result.RecordsToCreate.Count;
                     }
                 }
 
                 await transaction.CommitAsync(stoppingToken);
             });
+
+            divisionsProcessed += groupDivisionsProcessed;
+            recordsCreated += groupRecordsCreated;
+            recordsDeleted += groupRecordsDeleted;
         }
 
         _logger.LogInformation(

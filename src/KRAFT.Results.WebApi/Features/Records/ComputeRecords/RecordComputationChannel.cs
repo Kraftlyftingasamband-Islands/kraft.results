@@ -22,7 +22,7 @@ internal sealed class RecordComputationChannel
     {
         lock (_lock)
         {
-            Interlocked.Increment(ref _pendingCount);
+            _pendingCount++;
 
             if (_drainedTcs.Task.IsCompleted)
             {
@@ -42,7 +42,7 @@ internal sealed class RecordComputationChannel
     {
         lock (_lock)
         {
-            if (Interlocked.Decrement(ref _pendingCount) == 0)
+            if (--_pendingCount == 0)
             {
                 _drainedTcs.TrySetResult();
             }
@@ -55,7 +55,7 @@ internal sealed class RecordComputationChannel
 
         lock (_lock)
         {
-            if (Volatile.Read(ref _pendingCount) == 0)
+            if (_pendingCount == 0)
             {
                 return;
             }
