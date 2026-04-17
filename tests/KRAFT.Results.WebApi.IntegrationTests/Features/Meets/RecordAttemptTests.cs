@@ -5,6 +5,7 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,17 +14,18 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
+[Collection(nameof(RecordAttemptsCollection))]
 public sealed class RecordAttemptTests
 {
     private const int SeedMeetId = 1;
     private const int SeedParticipationId = 2;
 
-    private readonly IntegrationTestFixture _fixture;
+    private readonly CollectionFixture _fixture;
     private readonly HttpClient _authorizedHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
     private readonly HttpClient _nonAdminHttpClient;
 
-    public RecordAttemptTests(IntegrationTestFixture fixture)
+    public RecordAttemptTests(CollectionFixture fixture)
     {
         _fixture = fixture;
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();

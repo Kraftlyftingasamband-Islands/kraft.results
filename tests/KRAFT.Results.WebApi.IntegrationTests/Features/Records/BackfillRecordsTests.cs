@@ -2,6 +2,7 @@ using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,8 @@ using RecordEntity = KRAFT.Results.WebApi.Features.Records.Record;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
-public sealed class BackfillRecordsTests(IntegrationTestFixture fixture)
+[Collection(nameof(RecordsCollection))]
+public sealed class BackfillRecordsTests(CollectionFixture fixture)
 {
     private const int BackfillTestParticipationId = 500;
     private const int BackfillTestAttemptLowId = 500;

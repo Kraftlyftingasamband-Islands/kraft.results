@@ -11,6 +11,7 @@ using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,8 @@ using RecordEntity = KRAFT.Results.WebApi.Features.Records.Record;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
-public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
+[Collection(nameof(RecordsCollection))]
+public sealed class ComputeRecordsTests(CollectionFixture fixture)
 {
     private const int SeedMeetId = 1;
     private const int RecordTestParticipationId = 100;
