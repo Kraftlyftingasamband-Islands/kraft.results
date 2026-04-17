@@ -102,6 +102,7 @@ public sealed class CollectionFixture : IAsyncLifetime
         Factory = new IntegrationTestFactory(Database);
     }
 
+    // internal: RecordComputationChannel is internal, so the return type cannot be public
     internal (HttpClient Client, RecordComputationChannel Channel) CreateAuthorizedHttpClientWithRecordComputation()
     {
         WebApplicationFactory<Program> childFactory = Factory!.WithWebHostBuilder(builder =>
