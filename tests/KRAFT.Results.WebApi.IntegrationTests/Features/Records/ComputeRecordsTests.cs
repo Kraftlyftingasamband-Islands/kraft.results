@@ -117,35 +117,43 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         await ClearAllRecordCategoriesAsync(dbContext);
 
-        // Record bench and deadlift first so the participation has valid totals
-        await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
-        await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+        try
+        {
+            // Record bench and deadlift first so the participation has valid totals
+            await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+            await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
 
-        // Act — record squat that should trigger record computation via domain event
-        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            // Act — record squat that should trigger record computation via domain event
+            await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        // Assert — records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
-        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
-            .Where(r => r.IsCurrent)
-            .Where(r => r.IsRaw)
-            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
-            .Where(r => r.Weight == AttemptWeight)
-            .Include(r => r.AgeCategory)
-            .OrderBy(r => r.AgeCategoryId)
-            .ToListAsync(CancellationToken.None);
+            // Assert — records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
+            List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+                .Where(r => r.IsCurrent)
+                .Where(r => r.IsRaw)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+                .Where(r => r.Weight == AttemptWeight)
+                .Include(r => r.AgeCategory)
+                .OrderBy(r => r.AgeCategoryId)
+                .ToListAsync(CancellationToken.None);
 
-        List<string> cascadeSlugs = createdRecords
-            .Select(r => r.AgeCategory.Slug!)
-            .ToList();
+            List<string> cascadeSlugs = createdRecords
+                .Select(r => r.AgeCategory.Slug!)
+                .ToList();
 
-        cascadeSlugs.Count.ShouldBe(5);
-        cascadeSlugs.ShouldContain("masters4");
-        cascadeSlugs.ShouldContain("masters3");
-        cascadeSlugs.ShouldContain("masters2");
-        cascadeSlugs.ShouldContain("masters1");
-        cascadeSlugs.ShouldContain("open");
+            cascadeSlugs.Count.ShouldBe(5);
+            cascadeSlugs.ShouldContain("masters4");
+            cascadeSlugs.ShouldContain("masters3");
+            cascadeSlugs.ShouldContain("masters2");
+            cascadeSlugs.ShouldContain("masters1");
+            cascadeSlugs.ShouldContain("open");
+        }
+        finally
+        {
+            await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
+        }
     }
 
     [Fact]
@@ -229,7 +237,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -532,7 +540,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -601,7 +609,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -670,7 +678,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -738,7 +746,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -976,7 +984,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationAId, participationBId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -1102,7 +1110,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationAId, participationBId);
-            await ClearAllRecordCategoriesAsync(dbContext);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
         }
     }
 
@@ -2102,6 +2110,27 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task RestoreClassic83KgSeedRecordAsync(ResultsDbContext dbContext)
+    {
+        // Restores the open raw squat 83kg record deleted during test setup by ClearAllRecordCategoriesAsync.
+        string sql =
+            $"""
+            IF NOT EXISTS (
+                SELECT 1 FROM Records
+                WHERE EraId = {TestSeedConstants.Era.CurrentId}
+                AND AgeCategoryId = {TestSeedConstants.AgeCategory.OpenId}
+                AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
+                AND RecordCategoryId = 1
+                AND IsRaw = 1)
+            BEGIN
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql, TestContext.Current.CancellationToken);
     }
 
     private static async Task ClearAllRecordCategoriesAsync(ResultsDbContext dbContext)
