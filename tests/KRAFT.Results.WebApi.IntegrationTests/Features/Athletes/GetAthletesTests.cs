@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Athletes;
@@ -10,12 +10,44 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Athletes;
 
 [Collection(nameof(AthletesCollection))]
-public sealed class GetAthletesTests(CollectionFixture fixture)
+public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const string Path = "/athletes";
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
+    private string _slug = string.Empty;
+
+    public async ValueTask InitializeAsync()
+    {
+        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
+            .WithFirstName("0")
+            .WithLastName("0")
+            .Build();
+        await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+
+        List<AthleteSummary>? athletes = await _authorizedHttpClient.GetFromJsonAsync<List<AthleteSummary>>(Path, CancellationToken.None);
+        AthleteSummary athlete = athletes!.First(a => a.Name == "0 0");
+        _slug = athlete.Slug!;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!string.IsNullOrEmpty(_slug))
+        {
+            try
+            {
+                await _authorizedHttpClient.DeleteAsync($"/athletes/{_slug}", CancellationToken.None);
+            }
+            catch (HttpRequestException)
+            {
+                // Best-effort cleanup; do not mask test failures.
+            }
+        }
+
+        _authorizedHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
+    }
 
     [Fact]
     public async Task ReturnsOk_WhenNotAuthenticated()
@@ -62,18 +94,13 @@ public sealed class GetAthletesTests(CollectionFixture fixture)
         IReadOnlyList<AthleteSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
 
         // Assert
-        response!.ShouldContain(x => x.Slug == Constants.TestAthleteSlug);
+        response!.ShouldContain(x => x.Slug == _slug);
     }
 
     [Fact]
     public async Task ReturnsTestAthletesOrderedByFirstName()
     {
         // Arrange
-        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
-            .WithFirstName("0")
-            .WithLastName("0")
-            .Build();
-        await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
         // Act
         IReadOnlyList<AthleteSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
