@@ -15,34 +15,53 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
 [Collection(nameof(RecordAttemptsCollection))]
-public sealed class RecordAttemptTests
+public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const int SeedMeetId = 1;
-    private const int SeedParticipationId = 2;
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
+    private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
+    private int _meetId;
+    private string _meetSlug = string.Empty;
+    private int _participationId;
 
-    private readonly CollectionFixture _fixture;
-    private readonly HttpClient _authorizedHttpClient;
-    private readonly HttpClient _unauthorizedHttpClient;
-    private readonly HttpClient _nonAdminHttpClient;
-
-    public RecordAttemptTests(CollectionFixture fixture)
+    public async ValueTask InitializeAsync()
     {
-        _fixture = fixture;
-        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
-        _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
+        CreateMeetCommand meetCommand = new CreateMeetCommandBuilder().Build();
+
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync("/meets", meetCommand, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+
+        _meetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_meetSlug}", CancellationToken.None);
+        _meetId = details!.MeetId;
+
+        _participationId = await AddParticipantAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_meetId != 0)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
+        }
+
+        _authorizedHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
+        _nonAdminHttpClient.Dispose();
     }
 
     [Fact]
     public async Task ReturnsNoContent_WhenCreatingNewAttempt()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
+        int participationId = await AddParticipantAsync();
         RecordAttemptCommand command = new RecordAttemptCommandBuilder().Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, participationId, Discipline.Squat, 1),
+            Path(_meetId, participationId, Discipline.Squat, 1),
             command,
             CancellationToken.None);
 
@@ -54,15 +73,8 @@ public sealed class RecordAttemptTests
     public async Task ReturnsNoContent_WhenUpdatingExistingAttempt()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
-        RecordAttemptCommand createCommand = new RecordAttemptCommandBuilder()
-            .WithWeight(100.0m)
-            .Build();
-
-        await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, participationId, Discipline.Squat, 1),
-            createCommand,
-            CancellationToken.None);
+        int participationId = await AddParticipantAsync();
+        await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
 
         RecordAttemptCommand updateCommand = new RecordAttemptCommandBuilder()
             .WithWeight(110.0m)
@@ -70,7 +82,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, participationId, Discipline.Squat, 1),
+            Path(_meetId, participationId, Discipline.Squat, 1),
             updateCommand,
             CancellationToken.None);
 
@@ -82,7 +94,7 @@ public sealed class RecordAttemptTests
     public async Task TotalsRecalculated_AfterAttemptRecorded()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
+        int participationId = await AddParticipantAsync();
 
         await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
         await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m, true);
@@ -96,7 +108,7 @@ public sealed class RecordAttemptTests
         // Assert - best good lifts: Squat=110, Bench=70, Deadlift=160, Total=340
         IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
             .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
-                $"/meets/{Constants.TestMeetSlug}/participations",
+                $"/meets/{_meetSlug}/participations",
                 CancellationToken.None);
 
         participations.ShouldNotBeNull();
@@ -111,7 +123,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, 99999, Discipline.Squat, 1),
+            Path(_meetId, 99999, Discipline.Squat, 1),
             command,
             CancellationToken.None);
 
@@ -127,7 +139,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(99999, SeedParticipationId, Discipline.Squat, 1),
+            Path(99999, _participationId, Discipline.Squat, 1),
             command,
             CancellationToken.None);
 
@@ -143,7 +155,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, SeedParticipationId, Discipline.Squat, 1),
+            Path(_meetId, _participationId, Discipline.Squat, 1),
             command,
             CancellationToken.None);
 
@@ -159,7 +171,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, SeedParticipationId, Discipline.Squat, 1),
+            Path(_meetId, _participationId, Discipline.Squat, 1),
             command,
             CancellationToken.None);
 
@@ -175,7 +187,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, SeedParticipationId, (Discipline)99, 1),
+            Path(_meetId, _participationId, (Discipline)99, 1),
             command,
             CancellationToken.None);
 
@@ -191,7 +203,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, SeedParticipationId, Discipline.Squat, 4),
+            Path(_meetId, _participationId, Discipline.Squat, 4),
             command,
             CancellationToken.None);
 
@@ -209,7 +221,7 @@ public sealed class RecordAttemptTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, SeedParticipationId, Discipline.Squat, 1),
+            Path(_meetId, _participationId, Discipline.Squat, 1),
             command,
             CancellationToken.None);
 
@@ -221,7 +233,7 @@ public sealed class RecordAttemptTests
     public async Task BombedOut_WhenNoBenchGoodLifts()
     {
         // Arrange - all bench attempts are no-good
-        int participationId = await AddParticipantToSeedMeet();
+        int participationId = await AddParticipantAsync();
 
         await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
         await RecordAttempt(participationId, Discipline.Bench, 1, 60.0m, false);
@@ -232,22 +244,23 @@ public sealed class RecordAttemptTests
         // Act
         IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
             .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
-                $"/meets/{Constants.TestMeetSlug}/participations",
+                $"/meets/{_meetSlug}/participations",
                 CancellationToken.None);
 
         // Assert
         participations.ShouldNotBeNull();
         MeetParticipation? bombedOut = participations
-            .LastOrDefault(p => p.Total == 0m && p.Attempts.Any());
+            .FirstOrDefault(p => p.ParticipationId == participationId);
 
         bombedOut.ShouldNotBeNull();
+        bombedOut.Total.ShouldBe(0m);
     }
 
     [Fact]
     public async Task AttemptPersistedThroughAggregate_WhenRecordedViaParticipation()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
+        int participationId = await AddParticipantAsync();
 
         // Act
         await RecordAttempt(participationId, Discipline.Squat, 1, 120.0m, true);
@@ -255,7 +268,7 @@ public sealed class RecordAttemptTests
         // Assert — retrieve participation and verify attempt is persisted and retrievable
         IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
             .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
-                $"/meets/{Constants.TestMeetSlug}/participations",
+                $"/meets/{_meetSlug}/participations",
                 CancellationToken.None);
 
         participations.ShouldNotBeNull();
@@ -276,13 +289,13 @@ public sealed class RecordAttemptTests
     {
         // Arrange — create participant, record rounds 1 and 2, then inject a legacy round 4 attempt
         // (weight 0, good = true) as the old system stored as a placeholder
-        int participationId = await AddParticipantToSeedMeet();
+        int participationId = await AddParticipantAsync();
 
         await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
         await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m, true);
 
         DbContextOptions<ResultsDbContext> dbOptions = new DbContextOptionsBuilder<ResultsDbContext>()
-            .UseSqlServer(_fixture.Database!.ConnectionString)
+            .UseSqlServer(fixture.Database!.ConnectionString)
             .Options;
 
         await using (ResultsDbContext dbContext = new(dbOptions))
@@ -298,7 +311,7 @@ public sealed class RecordAttemptTests
 
         // Act — editing round 3 must not be blocked by the legacy round 4 entry
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, participationId, Discipline.Squat, 3),
+            Path(_meetId, participationId, Discipline.Squat, 3),
             command,
             CancellationToken.None);
 
@@ -317,14 +330,14 @@ public sealed class RecordAttemptTests
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            Path(SeedMeetId, participationId, discipline, round),
+            Path(_meetId, participationId, discipline, round),
             command,
             CancellationToken.None);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
-    private async Task<int> AddParticipantToSeedMeet()
+    private async Task<int> AddParticipantAsync()
     {
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
@@ -341,9 +354,11 @@ public sealed class RecordAttemptTests
             .Build();
 
         HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
 
         AddParticipantResponse? result = await participantResponse.Content
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
