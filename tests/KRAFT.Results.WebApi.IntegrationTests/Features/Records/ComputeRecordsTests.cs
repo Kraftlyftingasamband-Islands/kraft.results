@@ -262,8 +262,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         // Act — record squat for banned athlete during ban period (meet date 2025-03-15)
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
         await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
@@ -373,8 +371,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        await ClearAllRecordCategoriesAsync(dbContext);
 
         // Act — record only squat (no bench or deadlift = no valid total for full powerlifting meet)
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
@@ -855,8 +851,6 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        await ClearAllRecordCategoriesAsync(dbContext);
 
         // Act — record squat for non-Icelandic athlete
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
@@ -1951,6 +1945,19 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
             await dbContext.Database.ExecuteSqlRawAsync(
                 BaseSeedSql.SeedBaseRecords(),
+                TestContext.Current.CancellationToken);
+
+            // Restore corruption test records that were seeded in DatabaseFixture
+            // but are not included in SeedBaseRecords() (they have auto-assigned IDs)
+            await dbContext.Database.ExecuteSqlRawAsync(
+                """
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES (2, 1, 2, 2, 150.0, '2025-06-01', 0, 2, 0, 0, 'seed');
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES (2, 1, 2, 2, 140.0, '2025-05-01', 0, 2, 1, 0, 'seed');
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
+                """,
                 TestContext.Current.CancellationToken);
         }
     }
