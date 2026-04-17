@@ -47,7 +47,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             // Act
             await service.ComputeRecordsAsync(RecordTestAttemptId, CancellationToken.None);
 
-            // Assert â€” records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
+            // Assert â€" records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.AttemptId == RecordTestAttemptId)
                 .Where(r => r.IsCurrent)
@@ -123,11 +123,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
 
-            // Act â€” record squat that should trigger record computation via domain event
+            // Act â€" record squat that should trigger record computation via domain event
             await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
+            // Assert â€" records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -203,16 +203,16 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationId, Discipline.Bench, 1, 140.0m);
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
 
-            // Record initial squat attempt (210kg) â€” records should be created at 210kg
+            // Record initial squat attempt (210kg) â€" records should be created at 210kg
             decimal initialWeight = 210.0m;
             await RecordAttempt(client, participationId, Discipline.Squat, 1, initialWeight);
 
-            // Act â€” update the same squat attempt to 260kg
+            // Act â€" update the same squat attempt to 260kg
             decimal updatedWeight = 260.0m;
             await RecordAttempt(client, participationId, Discipline.Squat, 1, updatedWeight);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” records should now reflect 260kg, not 210kg
+            // Assert â€" records should now reflect 260kg, not 210kg
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -270,11 +270,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        // Act â€” record squat for banned athlete during ban period (meet date 2025-03-15)
+        // Act â€" record squat for banned athlete during ban period (meet date 2025-03-15)
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
         await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        // Assert â€” no records should be created for the banned athlete
+        // Assert â€" no records should be created for the banned athlete
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
             .Include(r => r.Attempt!)
                 .ThenInclude(a => a.Participation)
@@ -324,11 +324,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Bench, 1, 130.0m);
         await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Deadlift, 1, 250.0m);
 
-        // Act â€” record squat at a meet where RecordsPossible = false
+        // Act â€" record squat at a meet where RecordsPossible = false
         await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Squat, 1, AttemptWeight);
         await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        // Assert â€” no records should be created
+        // Assert â€" no records should be created
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -380,11 +380,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        // Act â€” record only squat (no bench or deadlift = no valid total for full powerlifting meet)
+        // Act â€" record only squat (no bench or deadlift = no valid total for full powerlifting meet)
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
         await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        // Assert â€” no squat record should be created because there is no valid total
+        // Assert â€" no squat record should be created because there is no valid total
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
             .Include(r => r.Attempt!)
                 .ThenInclude(a => a.Participation)
@@ -435,36 +435,44 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         await ClearAllRecordCategoriesAsync(dbContext);
 
-        // Record bench and deadlift first to establish valid total
-        await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
-        await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
+        try
+        {
+            // Record bench and deadlift first to establish valid total
+            await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
+            await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
 
-        // Act â€” record squat with all 3 disciplines having good lifts
-        await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            // Act — record squat with all 3 disciplines having good lifts
+            await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
+            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        // Assert â€” squat record should be created with valid total
-        List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
-            .Include(r => r.Attempt!)
-                .ThenInclude(a => a.Participation)
-            .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
-            .Where(r => r.IsCurrent)
-            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-            .Where(r => r.Weight == AttemptWeight)
-            .Include(r => r.AgeCategory)
-            .OrderBy(r => r.AgeCategoryId)
-            .ToListAsync(CancellationToken.None);
+            // Assert — squat record should be created with valid total
+            List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
+                .Include(r => r.Attempt!)
+                    .ThenInclude(a => a.Participation)
+                .Where(r => r.Attempt!.Participation.ParticipationId == participationId)
+                .Where(r => r.IsCurrent)
+                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+                .Where(r => r.Weight == AttemptWeight)
+                .Include(r => r.AgeCategory)
+                .OrderBy(r => r.AgeCategoryId)
+                .ToListAsync(CancellationToken.None);
 
-        List<string> cascadeSlugs = createdRecords
-            .Select(r => r.AgeCategory.Slug!)
-            .ToList();
+            List<string> cascadeSlugs = createdRecords
+                .Select(r => r.AgeCategory.Slug!)
+                .ToList();
 
-        cascadeSlugs.Count.ShouldBe(5);
-        cascadeSlugs.ShouldContain("masters4");
-        cascadeSlugs.ShouldContain("masters3");
-        cascadeSlugs.ShouldContain("masters2");
-        cascadeSlugs.ShouldContain("masters1");
-        cascadeSlugs.ShouldContain("open");
+            cascadeSlugs.Count.ShouldBe(5);
+            cascadeSlugs.ShouldContain("masters4");
+            cascadeSlugs.ShouldContain("masters3");
+            cascadeSlugs.ShouldContain("masters2");
+            cascadeSlugs.ShouldContain("masters1");
+            cascadeSlugs.ShouldContain("open");
+        }
+        finally
+        {
+            await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
+            await RestoreClassic83KgSeedRecordAsync(dbContext);
+        }
     }
 
     [Fact]
@@ -515,11 +523,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
 
-            // Act â€” record squat that should trigger record computation
+            // Act â€" record squat that should trigger record computation
             await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” records should cascade for biological Masters1: masters1 + open
+            // Assert â€" records should cascade for biological Masters1: masters1 + open
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -591,11 +599,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationId, Discipline.Squat, 1, 210.0m);
             await RecordAttempt(client, participationId, Discipline.Bench, 1, 140.0m);
 
-            // Act â€” deadlift completes the total, enabling all records
+            // Act â€" deadlift completes the total, enabling all records
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” bench record should exist (not just the triggering deadlift)
+            // Assert â€" bench record should exist (not just the triggering deadlift)
             List<RecordEntity> benchRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -660,11 +668,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationId, Discipline.Squat, 1, 210.0m);
             await RecordAttempt(client, participationId, Discipline.Bench, 1, 140.0m);
 
-            // Act â€” deadlift completes the total, enabling all records
+            // Act â€" deadlift completes the total, enabling all records
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” squat record should exist even though it was recorded before total was valid
+            // Assert â€" squat record should exist even though it was recorded before total was valid
             List<RecordEntity> squatRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -728,11 +736,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationId, Discipline.Squat, 1, 210.0m);
             await RecordAttempt(client, participationId, Discipline.Bench, 1, 140.0m);
 
-            // Act â€” deadlift completes the total
+            // Act â€" deadlift completes the total
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” total record should exist with weight = 210 + 140 + 260 = 610
+            // Assert â€" total record should exist with weight = 210 + 140 + 260 = 610
             List<RecordEntity> totalRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -783,7 +791,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         int participationId = participantResult!.ParticipationId;
 
-        // Act â€” record a good deadlift at the deadlift-only meet
+        // Act â€" record a good deadlift at the deadlift-only meet
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -798,7 +806,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
                 280.0m);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” DeadliftSingle record should exist
+            // Assert â€" DeadliftSingle record should exist
             List<RecordEntity> deadliftSingleRecords = await dbContext.Set<RecordEntity>()
                 .Include(r => r.Attempt!)
                     .ThenInclude(a => a.Participation)
@@ -860,11 +868,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
         await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        // Act â€” record squat for non-Icelandic athlete
+        // Act â€" record squat for non-Icelandic athlete
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
         await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-        // Assert â€” no records should be created for a non-Icelandic athlete
+        // Assert â€" no records should be created for a non-Icelandic athlete
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
             .Include(r => r.Attempt!)
                 .ThenInclude(a => a.Participation)
@@ -955,11 +963,11 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             // Athlete A squats 210kg
             await RecordAttempt(client, participationAId, Discipline.Squat, 1, 210.0m);
 
-            // Act â€” Athlete B squats 220kg (heavier)
+            // Act â€" Athlete B squats 220kg (heavier)
             await RecordAttempt(client, participationBId, Discipline.Squat, 1, 220.0m);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” the current record should belong to Athlete B at 220kg
+            // Assert â€" the current record should belong to Athlete B at 220kg
             List<RecordEntity> currentRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -1065,14 +1073,14 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             await RecordAttempt(client, participationBId, Discipline.Bench, 1, 140.0m);
             await RecordAttempt(client, participationBId, Discipline.Deadlift, 1, 260.0m);
 
-            // Athlete A squats 210kg â€” establishes the record
+            // Athlete A squats 210kg â€" establishes the record
             await RecordAttempt(client, participationAId, Discipline.Squat, 1, 210.0m);
 
-            // Act â€” Athlete B squats 205kg (less than A's 210kg)
+            // Act â€" Athlete B squats 205kg (less than A's 210kg)
             await RecordAttempt(client, participationBId, Discipline.Squat, 1, 205.0m);
             await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
 
-            // Assert â€” current record should still belong to Athlete A at 210kg
+            // Assert â€" current record should still belong to Athlete A at 210kg
             List<RecordEntity> currentRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
@@ -1201,7 +1209,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
             // Squat, Bench, Deadlift, and Total records should be revoked (no valid total).
             // BenchSingle and DeadliftSingle survive because single-lift records don't
-            // require a valid total â€” 2 categories Ã— 5 age categories = 10 records.
+            // require a valid total â€" 2 categories Ã— 5 age categories = 10 records.
             remainingRecords.Count.ShouldBe(10);
             remainingRecords.ShouldAllBe(r =>
                 r.RecordCategoryId == RecordCategory.BenchSingle ||
@@ -1238,7 +1246,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             athlete.WeightCategoryId,
             TestContext.Current.CancellationToken);
 
-        // Start with deadlift as a bad attempt â€” no valid total yet
+        // Start with deadlift as a bad attempt â€" no valid total yet
         await dbContext.Set<Attempt>()
             .Where(a => a.AttemptId == athlete.DeadliftAttemptId)
             .ExecuteUpdateAsync(
@@ -1361,7 +1369,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
             recordsAfterB.ShouldNotBeEmpty();
 
-            // Reduce B's squat below A's weight â€” total stays valid (all disciplines still good)
+            // Reduce B's squat below A's weight â€" total stays valid (all disciplines still good)
             await dbContext.Set<Attempt>()
                 .Where(a => a.AttemptId == athleteB.SquatAttemptId)
                 .ExecuteUpdateAsync(
@@ -1530,7 +1538,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
             bTotalRecords.ShouldNotBeEmpty();
 
-            // Reduce B's deadlift so total drops below A's â€” all disciplines stay good
+            // Reduce B's deadlift so total drops below A's â€" all disciplines stay good
             await dbContext.Set<Attempt>()
                 .Where(a => a.AttemptId == athleteB.DeadliftAttemptId)
                 .ExecuteUpdateAsync(
@@ -1616,7 +1624,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             // Act
             await service.ComputeRecordsAsync(athleteC.DeadliftAttemptId, CancellationToken.None);
 
-            // Assert â€” all 3 total records should be preserved in history for the open cascade slot
+            // Assert â€" all 3 total records should be preserved in history for the open cascade slot
             List<RecordEntity> totalRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
                 .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
@@ -1693,7 +1701,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
             bRecords.ShouldNotBeEmpty();
 
-            // Act â€” simulate participant B removal: collect affected slots, delete records + participation, rebuild
+            // Act â€" simulate participant B removal: collect affected slots, delete records + participation, rebuild
             List<int> bAttemptIds =
             [
                 athleteB.SquatAttemptId,
@@ -1723,7 +1731,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
             await service.RebuildSlotsAsync(affectedSlots, CancellationToken.None);
 
-            // Assert â€” B's records should be revoked
+            // Assert â€" B's records should be revoked
             List<RecordEntity> bRemainingRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.AttemptId != null)
                 .Where(r => bAttemptIds.Contains(r.AttemptId!.Value))
@@ -1831,7 +1839,7 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             // Act
             await service.ComputeRecordsAsync(benchAttemptId, CancellationToken.None);
 
-            // Assert â€” no records should remain for this attempt
+            // Assert â€" no records should remain for this attempt
             List<RecordEntity> benchRecordsAfter = await dbContext.Set<RecordEntity>()
                 .Where(r => r.AttemptId == benchAttemptId)
                 .ToListAsync(CancellationToken.None);
@@ -1904,14 +1912,14 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
             Dictionary<int, bool> isCurrentBefore = recordsBefore
                 .ToDictionary(r => r.RecordId, r => r.IsCurrent);
 
-            // Act â€” run backfill
+            // Act â€" run backfill
             IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
             using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
             await job.StartAsync(CancellationToken.None);
             await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert â€” records should be identical after backfill
+            // Assert â€" records should be identical after backfill
             await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -1997,10 +2005,10 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
         try
         {
-            // Act â€” compute records triggered by the Icelandic athlete's squat
+            // Act â€" compute records triggered by the Icelandic athlete's squat
             await service.ComputeRecordsAsync(icelandicAthlete.SquatAttemptId, CancellationToken.None);
 
-            // Assert â€” the current squat record must belong to the Icelandic athlete (200kg),
+            // Assert â€" the current squat record must belong to the Icelandic athlete (200kg),
             // not the Norwegian athlete who lifted heavier (250kg)
             List<RecordEntity> currentSquatRecords = await dbContext.Set<RecordEntity>()
                 .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
