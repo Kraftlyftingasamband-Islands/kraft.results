@@ -29,7 +29,7 @@ public sealed class RecordAttemptTests
     {
         _fixture = fixture;
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
         _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
     }
 
@@ -282,7 +282,7 @@ public sealed class RecordAttemptTests
         await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m, true);
 
         DbContextOptions<ResultsDbContext> dbOptions = new DbContextOptionsBuilder<ResultsDbContext>()
-            .UseSqlServer(_fixture.Database.ConnectionString)
+            .UseSqlServer(_fixture.Database!.ConnectionString)
             .Options;
 
         await using (ResultsDbContext dbContext = new(dbOptions))

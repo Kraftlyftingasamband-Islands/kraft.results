@@ -5,7 +5,7 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests;
 
 [Collection(nameof(InfraCollection))]
-public class IntegrationTestFixtureTests(CollectionFixture fixture)
+public sealed class IntegrationTestFixtureTests(CollectionFixture fixture)
 {
     [Fact]
     public void TracksChildFactory_WhenCreatingAuthorizedHttpClient()

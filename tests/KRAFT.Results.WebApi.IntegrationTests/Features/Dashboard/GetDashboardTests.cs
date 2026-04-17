@@ -13,7 +13,7 @@ public sealed class GetDashboardTests(CollectionFixture fixture)
 {
     private const string Path = "/dashboard";
 
-    private readonly HttpClient _client = fixture.Factory.CreateClient();
+    private readonly HttpClient _client = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk()

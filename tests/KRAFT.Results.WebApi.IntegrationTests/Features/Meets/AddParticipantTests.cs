@@ -22,7 +22,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
     private const int ExistingTeamId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsCreated_WhenSuccessful()

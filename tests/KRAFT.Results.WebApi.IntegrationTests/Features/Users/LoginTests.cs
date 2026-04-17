@@ -14,7 +14,7 @@ public sealed class LoginTests(CollectionFixture fixture)
 {
     private const string Path = "/users/login";
 
-    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk_WhenSuccessful()

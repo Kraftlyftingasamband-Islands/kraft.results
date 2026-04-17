@@ -23,7 +23,7 @@ public sealed class UpdateBodyWeightTests
     public UpdateBodyWeightTests(CollectionFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
         _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
     }
 

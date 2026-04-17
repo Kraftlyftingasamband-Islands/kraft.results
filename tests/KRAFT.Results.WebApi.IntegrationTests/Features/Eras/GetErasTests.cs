@@ -13,7 +13,7 @@ public sealed class GetErasTests(CollectionFixture fixture)
 {
     private const string Path = "/eras";
 
-    private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk()

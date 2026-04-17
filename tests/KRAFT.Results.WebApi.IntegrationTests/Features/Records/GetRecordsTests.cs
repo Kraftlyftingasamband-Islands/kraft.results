@@ -13,7 +13,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture)
 {
     private const string Path = "/records";
 
-    private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk_WithValidFilters()

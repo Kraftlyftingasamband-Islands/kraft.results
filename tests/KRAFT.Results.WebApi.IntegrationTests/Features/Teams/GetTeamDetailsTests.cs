@@ -17,7 +17,7 @@ public sealed class GetTeamDetailsTests
 
     public GetTeamDetailsTests(CollectionFixture fixture)
     {
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]

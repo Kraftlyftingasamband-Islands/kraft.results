@@ -8,24 +8,22 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 public sealed class CollectionFixture : IAsyncLifetime
 {
     private readonly ConcurrentBag<WebApplicationFactory<Program>> _childFactories = [];
-    private RecordComputationChannel? _recordComputationChannel;
 
-    public DatabaseFixture Database { get; private set; } = default!;
+    public DatabaseFixture? Database { get; private set; }
 
-    public IntegrationTestFactory Factory { get; private set; } = default!;
+    public IntegrationTestFactory? Factory { get; private set; }
 
     public int ChildFactoryCount => _childFactories.Count;
 
     public HttpClient CreateAuthorizedHttpClient()
     {
-        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
+        WebApplicationFactory<Program> childFactory = Factory!.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -41,7 +39,7 @@ public sealed class CollectionFixture : IAsyncLifetime
 
     public HttpClient CreateNoNameClaimHttpClient()
     {
-        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
+        WebApplicationFactory<Program> childFactory = Factory!.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -55,39 +53,9 @@ public sealed class CollectionFixture : IAsyncLifetime
         return childFactory.CreateClient();
     }
 
-    public HttpClient CreateAuthorizedHttpClientWithRecordComputation()
-    {
-        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services.AddAuthentication(TestAuthHandler.SchemeName)
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                    TestAuthHandler.SchemeName, options => { });
-
-                services.AddScoped<IDomainEventHandler<AttemptRecordedEvent>, AttemptRecordedEventHandler>();
-                services.AddHostedService<RecordComputationWorker>();
-            });
-        });
-
-        _childFactories.Add(childFactory);
-        _recordComputationChannel = childFactory.Services.GetRequiredService<RecordComputationChannel>();
-        return childFactory.CreateClient();
-    }
-
-    public async Task WaitForRecordComputationAsync(CancellationToken cancellationToken = default)
-    {
-        if (_recordComputationChannel is null)
-        {
-            return;
-        }
-
-        await _recordComputationChannel.WaitUntilDrainedAsync(cancellationToken);
-    }
-
     public HttpClient CreateNonAdminAuthorizedHttpClient()
     {
-        WebApplicationFactory<Program> childFactory = Factory.WithWebHostBuilder(builder =>
+        WebApplicationFactory<Program> childFactory = Factory!.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -103,7 +71,7 @@ public sealed class CollectionFixture : IAsyncLifetime
 
     public async Task ExecuteSqlAsync(string sql)
     {
-        await using AsyncServiceScope scope = Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
@@ -132,5 +100,25 @@ public sealed class CollectionFixture : IAsyncLifetime
         await Database.InitializeAsync();
 
         Factory = new IntegrationTestFactory(Database);
+    }
+
+    internal (HttpClient Client, RecordComputationChannel Channel) CreateAuthorizedHttpClientWithRecordComputation()
+    {
+        WebApplicationFactory<Program> childFactory = Factory!.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddAuthentication(TestAuthHandler.SchemeName)
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.SchemeName, options => { });
+
+                services.AddScoped<IDomainEventHandler<AttemptRecordedEvent>, AttemptRecordedEventHandler>();
+                services.AddHostedService<RecordComputationWorker>();
+            });
+        });
+
+        _childFactories.Add(childFactory);
+        RecordComputationChannel channel = childFactory.Services.GetRequiredService<RecordComputationChannel>();
+        return (childFactory.CreateClient(), channel);
     }
 }

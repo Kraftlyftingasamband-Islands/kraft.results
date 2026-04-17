@@ -67,7 +67,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRuns_RecordChainIsCorrect()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await SeedBackfillTestDataAsync(dbContext);
@@ -85,7 +85,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             // Expected chain: attempt 500 (180kg) -> attempt 501 (220kg, current).
             // The orphan seed record at 150kg (no attempt) should be deleted.
             // The corrupt record at 160kg (no matching attempt) should be deleted.
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -118,7 +118,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRunsTwice_ResultIsIdempotent()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
 
@@ -138,7 +138,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             }
 
             // Assert — the record chain should be consistent after two runs
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
@@ -164,7 +164,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRuns_TotalRecordIsCreated()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await SeedBackfillTotalTestDataAsync(dbContext);
@@ -179,7 +179,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert — Total record should exist for the participation with Total=620
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
@@ -204,7 +204,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRuns_DeadliftSingleRecordIsCreated()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await SeedDeadliftMeetBackfillDataAsync(dbContext);
@@ -219,7 +219,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert — DeadliftSingle record should exist
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> dlSingleRecords = await assertDb.Set<RecordEntity>()
@@ -246,7 +246,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         // Arrange — base seed includes a standard record (RecordId=6) in the
         // equipped / open / 93 kg / squat slot with no athlete attempts.
         // The expected chain for that slot is empty, so the buggy code deletes it.
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
@@ -258,7 +258,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert — the standard record in the 93 kg equipped open squat slot must survive
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -281,7 +281,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenNonIcelandicAthleteCompetes_BackfillDoesNotCreateRecord()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
@@ -306,7 +306,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert — no records should exist for the non-Icelandic athlete's slot
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -336,7 +336,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         // both slots tracked lifts from full powerlifting competitions.
         // Likewise, a deadlift attempt should produce both Deadlift (Cat=3) and
         // DeadliftSingle (Cat=6) records.
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, SingleLiftAthleteBaseId)
@@ -356,7 +356,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert — both Bench and BenchSingle records should be created for the bench attempt.
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             RecordEntity? benchRecord = await assertDb.Set<RecordEntity>()
@@ -413,7 +413,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         // runningMax=140; 803 (110 kg < 140 kg) is skipped and never enters the chain.
         // After the fix (sort by weight first), 803 (110 kg) is processed first, 800
         // (140 kg) second — both enter the chain and both records are created.
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await SeedRecordAthlete.ClearSlotAsync(
@@ -446,7 +446,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
 
             // Assert — both squat records must be created; athlete1 (140 kg) is current,
             // athlete2 (110 kg) is the predecessor in the progressive chain.
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -481,7 +481,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenStandardRecordExists_ChainStartsFromStandardWeight()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
@@ -525,7 +525,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -564,7 +564,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenMultipleGoodDeadlifts_IntermediateTotalRecordsAreCreated()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
@@ -616,7 +616,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
@@ -665,7 +665,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenFourthAttemptExists_TotalExcludesRoundFourWeight()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
@@ -707,7 +707,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
@@ -741,7 +741,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenDuplicateRecordsExistForSameAttempt_BackfillDeduplicates()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
@@ -790,7 +790,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> squatRecords = await assertDb.Set<RecordEntity>()
