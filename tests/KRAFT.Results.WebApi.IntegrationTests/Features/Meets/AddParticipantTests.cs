@@ -10,19 +10,40 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
 [Collection(nameof(MeetsCollection))]
-public sealed class AddParticipantTests(CollectionFixture fixture)
+public sealed class AddParticipantTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const int ExistingMeetId = 2;
-    private const int MeetWithExistingParticipationId = 1;
     private const int NonExistentMeetId = 99999;
-    private const int MeetForTeamTest = 5;
-    private const int NegativeBodyWeightTestMeetId = 4;
-    private const int BodyWeightExceedsMaxMeetId = 7;
-    private const int BodyWeightJustAboveMaxMeetId = 8;
     private const int ExistingTeamId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
+    private int _meetId;
+    private string _meetSlug = string.Empty;
+
+    public async ValueTask InitializeAsync()
+    {
+        CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
+
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync("/meets", command, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+
+        _meetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_meetSlug}", CancellationToken.None);
+        _meetId = details!.MeetId;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_meetId != 0)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
+        }
+
+        _authorizedHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
+    }
 
     [Fact]
     public async Task ReturnsCreated_WhenSuccessful()
@@ -35,7 +56,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -53,7 +74,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/3/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -70,7 +91,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -102,7 +123,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -116,9 +137,13 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
             .WithAthleteSlug(Constants.TestAthleteSlug)
             .Build();
 
+        HttpResponseMessage firstResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
+        firstResponse.EnsureSuccessStatusCode();
+
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{MeetWithExistingParticipationId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -135,7 +160,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{BodyWeightExceedsMaxMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -152,7 +177,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{BodyWeightJustAboveMaxMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -162,14 +187,14 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
     public async Task ReturnsUnauthorized_WhenNameClaimIsMissing()
     {
         // Arrange
-        HttpClient noNameClaimHttpClient = fixture.CreateNoNameClaimHttpClient();
+        using HttpClient noNameClaimHttpClient = fixture.CreateNoNameClaimHttpClient();
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(Constants.TestAthleteSlug)
             .Build();
 
         // Act
         HttpResponseMessage response = await noNameClaimHttpClient.PostAsJsonAsync(
-            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -187,7 +212,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{MeetForTeamTest}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -205,7 +230,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{ExistingMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -224,7 +249,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture)
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{NegativeBodyWeightTestMeetId}/participants", command, CancellationToken.None);
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

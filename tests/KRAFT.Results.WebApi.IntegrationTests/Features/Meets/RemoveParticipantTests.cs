@@ -11,25 +11,53 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
 [Collection(nameof(MeetsCollection))]
-public sealed class RemoveParticipantTests(CollectionFixture fixture)
+public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const int NonExistentMeetId = 99999;
     private const int NonExistentParticipationId = 99999;
-    private const int ExistingMeetId = 4;
+    private const int IrrelevantParticipationId = int.MaxValue;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
+    private int _meetId;
+    private string _meetSlug = string.Empty;
+
+    public async ValueTask InitializeAsync()
+    {
+        CreateMeetCommand command = new CreateMeetCommandBuilder().Build();
+
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync("/meets", command, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+
+        _meetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_meetSlug}", CancellationToken.None);
+        _meetId = details!.MeetId;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_meetId != 0)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
+        }
+
+        _authorizedHttpClient.Dispose();
+        _nonAdminHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
+    }
 
     [Fact]
     public async Task ReturnsNoContent_WhenSuccessful()
     {
         // Arrange
-        int participationId = await AddParticipantAsync(ExistingMeetId);
+        int participationId = await AddParticipantAsync(_meetId);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync(
-            $"/meets/{ExistingMeetId}/participants/{participationId}", CancellationToken.None);
+            $"/meets/{_meetId}/participants/{participationId}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -40,7 +68,7 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture)
     {
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync(
-            $"/meets/{ExistingMeetId}/participants/{NonExistentParticipationId}", CancellationToken.None);
+            $"/meets/{_meetId}/participants/{NonExistentParticipationId}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -65,7 +93,7 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture)
     {
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.DeleteAsync(
-            $"/meets/{ExistingMeetId}/participants/1", CancellationToken.None);
+            $"/meets/{_meetId}/participants/{IrrelevantParticipationId}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
@@ -76,7 +104,7 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture)
     {
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.DeleteAsync(
-            $"/meets/{ExistingMeetId}/participants/1", CancellationToken.None);
+            $"/meets/{_meetId}/participants/{IrrelevantParticipationId}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
