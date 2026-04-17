@@ -1,11 +1,13 @@
+using KRAFT.Results.Contracts.Teams;
+
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
+namespace KRAFT.Results.WebApi.IntegrationTests.Builders.UpdateTeamCommandBuilderTests;
 
-public sealed class UpdateTeamCommandBuilderTests
+public sealed class Build
 {
     [Fact]
-    public void Build_GeneratesUniqueTitleShort_AcrossMultipleInstances()
+    public void WhenMultipleInstancesAreBuilt_TitleShortsAreUnique()
     {
         // Arrange
         const int count = 100;
@@ -14,7 +16,7 @@ public sealed class UpdateTeamCommandBuilderTests
         // Act
         for (int i = 0; i < count; i++)
         {
-            Contracts.Teams.UpdateTeamCommand command = new UpdateTeamCommandBuilder().Build();
+            UpdateTeamCommand command = new UpdateTeamCommandBuilder().Build();
             titleShorts.Add(command.TitleShort);
         }
 

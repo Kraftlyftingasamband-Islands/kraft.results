@@ -4,7 +4,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class CreateTeamCommandBuilder
 {
-    private static int _counter;
+    private static int s_counter;
 
     private string _title = Guid.NewGuid().ToString();
     private string _titleShort = GenerateUniqueTitleShort();
@@ -40,7 +40,7 @@ internal sealed class CreateTeamCommandBuilder
 
     private static string GenerateUniqueTitleShort()
     {
-        int n = Interlocked.Increment(ref _counter);
+        int n = Interlocked.Increment(ref s_counter);
         char c0 = (char)('a' + (n % 26));
         char c1 = (char)('a' + ((n / 26) % 26));
         char c2 = (char)('a' + ((n / 676) % 26));
