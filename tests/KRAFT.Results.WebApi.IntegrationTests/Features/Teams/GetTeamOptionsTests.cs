@@ -14,7 +14,7 @@ public sealed class GetTeamOptionsTests(CollectionFixture fixture)
     private const string Path = "/teams/options";
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsUnauthorized_WhenNotAuthenticated()

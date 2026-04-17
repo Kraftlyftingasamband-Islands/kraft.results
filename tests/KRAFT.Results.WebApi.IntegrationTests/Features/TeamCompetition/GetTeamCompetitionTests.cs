@@ -13,7 +13,7 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture)
 {
     private const string BasePath = "/team-competition";
 
-    private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk()

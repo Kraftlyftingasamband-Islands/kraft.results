@@ -21,7 +21,7 @@ public sealed class CreateUserTests
     public CreateUserTests(CollectionFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]

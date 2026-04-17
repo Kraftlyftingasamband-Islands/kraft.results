@@ -17,7 +17,7 @@ public sealed class GetCountriesTests
 
     public GetCountriesTests(CollectionFixture fixture)
     {
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]

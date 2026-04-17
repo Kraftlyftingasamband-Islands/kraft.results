@@ -9,7 +9,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.HealthChecks;
 [Collection(nameof(InfraCollection))]
 public sealed class HealthCheckTests(CollectionFixture fixture)
 {
-    private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task HealthCheckReturnsHealthyStatus()

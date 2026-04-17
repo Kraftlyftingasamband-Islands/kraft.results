@@ -17,7 +17,7 @@ public sealed class UpdateAthleteTests(CollectionFixture fixture)
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
-    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk_WhenSuccessful()

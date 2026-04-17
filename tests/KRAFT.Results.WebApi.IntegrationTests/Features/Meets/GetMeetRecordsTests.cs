@@ -13,7 +13,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture)
 {
     private const string BasePath = "/meets";
 
-    private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk_WithRecords_WhenMeetHasApprovedRecords()

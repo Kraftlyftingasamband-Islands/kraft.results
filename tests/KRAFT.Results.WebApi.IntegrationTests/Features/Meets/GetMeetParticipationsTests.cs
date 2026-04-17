@@ -18,7 +18,7 @@ public sealed class GetMeetParticipationsTests
 
     public GetMeetParticipationsTests(CollectionFixture fixture)
     {
-        _httpClient = fixture.Factory.CreateClient();
+        _httpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]

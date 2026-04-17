@@ -16,7 +16,7 @@ public sealed class ChangePasswordTests(CollectionFixture fixture)
     private const string ChangePasswordPath = "/users/change-password";
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory.CreateClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
     [Fact]
     public async Task ReturnsOk_WhenPasswordChangedSuccessfully()

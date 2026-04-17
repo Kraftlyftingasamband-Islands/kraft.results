@@ -37,7 +37,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenGoodAttemptBeatsCurrentRecord_CreatesRecordAndCascades()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await SeedRecordComputationTestDataAsync(dbContext);
@@ -84,7 +84,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAttemptIsRecordedViaEndpoint_RecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -114,7 +114,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
         int participationId = participantResult!.ParticipationId;
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await ClearAllRecordCategoriesAsync(dbContext);
@@ -127,7 +127,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" record squat that should trigger record computation via domain event
             await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -162,9 +162,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenExistingAttemptIsUpdated_RecordIsRecomputed()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -212,7 +212,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
             // Act â€" update the same squat attempt to 260kg
             decimal updatedWeight = 260.0m;
             await RecordAttempt(client, participationId, Discipline.Squat, 1, updatedWeight);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" records should now reflect 260kg, not 210kg
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -247,7 +247,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAthleteIsBanned_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
             .WithAthleteSlug(Constants.BannedAthlete.Slug)
@@ -269,12 +269,12 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
         await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
         await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         // Act â€" record squat for banned athlete during ban period (meet date 2025-03-15)
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+        await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
         // Assert â€" no records should be created for the banned athlete
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -291,7 +291,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenRecordsPossibleIsFalse_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithCountryId(2)
@@ -328,10 +328,10 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
         // Act â€" record squat at a meet where RecordsPossible = false
         await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Squat, 1, AttemptWeight);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+        await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
         // Assert â€" no records should be created
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -348,7 +348,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenNoValidTotal_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -379,12 +379,12 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
         int participationId = participantResult!.ParticipationId;
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         // Act â€" record only squat (no bench or deadlift = no valid total for full powerlifting meet)
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+        await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
         // Assert â€" no squat record should be created because there is no valid total
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -402,7 +402,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenValidTotalExists_RecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -432,7 +432,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
         int participationId = participantResult!.ParticipationId;
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await ClearAllRecordCategoriesAsync(dbContext);
@@ -445,7 +445,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act — record squat with all 3 disciplines having good lifts
             await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert — squat record should be created with valid total
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -481,9 +481,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenMasters1AthleteCompetesAsOpen_Masters1RecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -527,7 +527,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" record squat that should trigger record computation
             await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" records should cascade for biological Masters1: masters1 + open
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -558,9 +558,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAllDisciplinesRecorded_BenchRecordIsAlsoCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -603,7 +603,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" deadlift completes the total, enabling all records
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" bench record should exist (not just the triggering deadlift)
             List<RecordEntity> benchRecords = await dbContext.Set<RecordEntity>()
@@ -627,9 +627,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAllDisciplinesRecorded_SquatRecordIsAlsoCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -672,7 +672,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" deadlift completes the total, enabling all records
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" squat record should exist even though it was recorded before total was valid
             List<RecordEntity> squatRecords = await dbContext.Set<RecordEntity>()
@@ -696,9 +696,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAllDisciplinesRecorded_TotalRecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -740,7 +740,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" deadlift completes the total
             await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 260.0m);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" total record should exist with weight = 210 + 140 + 260 = 610
             List<RecordEntity> totalRecords = await dbContext.Set<RecordEntity>()
@@ -764,7 +764,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenDeadliftRecordedAtDeadliftOnlyMeet_DeadliftSingleRecordIsCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().Build();
 
@@ -794,7 +794,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
         int participationId = participantResult!.ParticipationId;
 
         // Act â€" record a good deadlift at the deadlift-only meet
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         try
@@ -806,7 +806,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
                 Discipline.Deadlift,
                 1,
                 280.0m);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" DeadliftSingle record should exist
             List<RecordEntity> deadliftSingleRecords = await dbContext.Set<RecordEntity>()
@@ -830,7 +830,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAthleteIsNotIcelandic_NoRecordCreated()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -867,12 +867,12 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
         await RecordAttempt(client, participationId, Discipline.Bench, 1, 130.0m);
         await RecordAttempt(client, participationId, Discipline.Deadlift, 1, 250.0m);
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         // Act â€" record squat for non-Icelandic athlete
         await RecordAttempt(client, participationId, Discipline.Squat, 1, AttemptWeight);
-        await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+        await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
         // Assert â€" no records should be created for a non-Icelandic athlete
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
@@ -889,9 +889,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenTwoLiftersBreakSameRecordInSameMeet_EarlierAttemptWins()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -967,7 +967,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" Athlete B squats 220kg (heavier)
             await RecordAttempt(client, participationBId, Discipline.Squat, 1, 220.0m);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" the current record should belong to Athlete B at 220kg
             List<RecordEntity> currentRecords = await dbContext.Set<RecordEntity>()
@@ -1002,9 +1002,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenSecondLifterDoesNotBeatExistingRecord_NoNewRecord()
     {
         // Arrange
-        HttpClient client = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await CleanupStaleTestDataFor83KgAsync(dbContext);
@@ -1080,7 +1080,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
 
             // Act â€" Athlete B squats 205kg (less than A's 210kg)
             await RecordAttempt(client, participationBId, Discipline.Squat, 1, 205.0m);
-            await fixture.WaitForRecordComputationAsync(TestContext.Current.CancellationToken);
+            await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
             // Assert â€" current record should still belong to Athlete A at 210kg
             List<RecordEntity> currentRecords = await dbContext.Set<RecordEntity>()
@@ -1128,7 +1128,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAttemptMarkedNoGood_AllRecordsRevoked_SlotRebuilt()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1235,7 +1235,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenNoGoodOverturned_RecordsReEvaluated()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1328,7 +1328,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAttemptWeightReduced_RecordRevoked_PreviousHolderRestored()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1423,7 +1423,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenAttemptWeightCorrected_SameAttemptId_RecordWeightUpdated()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1496,7 +1496,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenTotalReduced_TotalRecordRevoked_SlotRebuilt()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1591,7 +1591,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenThreeAthletesProgressivelySetTotalRecord_AllPreservedInHistory()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1656,7 +1656,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenParticipantRemoved_RecordsRevoked_SlotsRebuilt()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1766,7 +1766,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenBenchOnlyMeet_AttemptNoGood_RecordRevoked()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1868,7 +1868,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRunsAfterComputation_NoChanges()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
@@ -1922,7 +1922,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
             await (job.ExecuteTask ?? Task.CompletedTask);
 
             // Assert â€" records should be identical after backfill
-            await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
+            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
             ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             List<RecordEntity> recordsAfter = await assertDb.Set<RecordEntity>()
@@ -1984,7 +1984,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture)
     public async Task WhenNonIcelandicAthleteHasBetterLift_SlotRebuildIgnoresNonIcelander()
     {
         // Arrange
-        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 

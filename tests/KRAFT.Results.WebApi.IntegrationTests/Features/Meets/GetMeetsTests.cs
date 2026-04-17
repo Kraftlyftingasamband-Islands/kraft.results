@@ -20,7 +20,7 @@ public sealed class GetMeetsTests
     public GetMeetsTests(CollectionFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]

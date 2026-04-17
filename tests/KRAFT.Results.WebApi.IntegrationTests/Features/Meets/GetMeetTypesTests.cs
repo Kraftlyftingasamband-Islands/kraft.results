@@ -18,7 +18,7 @@ public sealed class GetMeetTypesTests
 
     public GetMeetTypesTests(CollectionFixture fixture)
     {
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]

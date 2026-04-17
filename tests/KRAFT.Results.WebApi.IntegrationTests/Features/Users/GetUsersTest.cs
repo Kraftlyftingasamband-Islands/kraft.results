@@ -21,7 +21,7 @@ public sealed class GetUsersTest
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory.CreateClient();
+        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     }
 
     [Fact]
