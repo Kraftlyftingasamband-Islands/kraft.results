@@ -12,31 +12,76 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
 [Collection(nameof(MeetsCollection))]
-public sealed class UpdateBodyWeightTests
+public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const int SeedMeetId = 1;
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
+    private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
+    private int _meetId;
+    private string _meetSlug = string.Empty;
+    private int _participationId;
 
-    private readonly HttpClient _authorizedHttpClient;
-    private readonly HttpClient _unauthorizedHttpClient;
-    private readonly HttpClient _nonAdminHttpClient;
-
-    public UpdateBodyWeightTests(CollectionFixture fixture)
+    public async ValueTask InitializeAsync()
     {
-        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
-        _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
+        CreateMeetCommand meetCommand = new CreateMeetCommandBuilder().Build();
+
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync("/meets", meetCommand, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+
+        _meetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_meetSlug}", CancellationToken.None);
+        _meetId = details!.MeetId;
+
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .Build();
+
+        HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{_meetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? result = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        _participationId = result!.ParticipationId;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_meetId != 0)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
+        }
+
+        _authorizedHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
+        _nonAdminHttpClient.Dispose();
     }
 
     [Fact]
     public async Task ReturnsNoContent_WhenSuccessful()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
         UpdateBodyWeightCommand command = new(85.50m);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, participationId),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -48,24 +93,23 @@ public sealed class UpdateBodyWeightTests
     public async Task UpdatesBodyWeight_WhenSuccessful()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
         decimal newWeight = 92.75m;
         UpdateBodyWeightCommand command = new(newWeight);
 
         // Act
         await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, participationId),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
         // Assert
         List<MeetParticipation>? participations = await _authorizedHttpClient
             .GetFromJsonAsync<List<MeetParticipation>>(
-                $"/meets/{Constants.TestMeetSlug}/participations",
+                $"/meets/{_meetSlug}/participations",
                 CancellationToken.None);
 
         participations.ShouldNotBeNull();
-        participations.ShouldContain(p => p.ParticipationId == participationId && p.BodyWeight == newWeight);
+        participations.ShouldContain(p => p.ParticipationId == _participationId && p.BodyWeight == newWeight);
     }
 
     [Fact]
@@ -76,7 +120,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, 99999),
+            Path(_meetId, 99999),
             command,
             CancellationToken.None);
 
@@ -92,7 +136,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(99999, 1),
+            Path(99999, _participationId),
             command,
             CancellationToken.None);
 
@@ -108,7 +152,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, 1),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -124,7 +168,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, 1),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -140,7 +184,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, 1),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -156,7 +200,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, 1),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -168,12 +212,11 @@ public sealed class UpdateBodyWeightTests
     public async Task ReturnsNoContent_WhenBodyWeightIsAtMaximum()
     {
         // Arrange
-        int participationId = await AddParticipantToSeedMeet();
         UpdateBodyWeightCommand command = new(400.0m);
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, participationId),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -189,7 +232,7 @@ public sealed class UpdateBodyWeightTests
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.PatchAsJsonAsync(
-            Path(SeedMeetId, 1),
+            Path(_meetId, _participationId),
             command,
             CancellationToken.None);
 
@@ -199,31 +242,4 @@ public sealed class UpdateBodyWeightTests
 
     private static string Path(int meetId, int participationId) =>
         $"/meets/{meetId}/participations/{participationId}";
-
-    private async Task<int> AddParticipantToSeedMeet()
-    {
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
-        HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
-            "/athletes",
-            athleteCommand,
-            CancellationToken.None);
-
-        athleteResponse.EnsureSuccessStatusCode();
-
-        string athleteSlug = ValueObjects.Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
-
-        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
-            .WithAthleteSlug(athleteSlug)
-            .Build();
-
-        HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
-            participantCommand,
-            CancellationToken.None);
-
-        AddParticipantResponse? result = await participantResponse.Content
-            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
-
-        return result!.ParticipationId;
-    }
 }
