@@ -108,7 +108,7 @@ public sealed class GetMeetRecordsTests(IntegrationTestFixture fixture)
             .ReadFromJsonAsync<List<MeetRecordEntry>>(CancellationToken.None);
         records.ShouldNotBeNull();
 
-        MeetRecordEntry squatRecord = records.First(r => r.Weight == 200.0m && r.Discipline == "Hnébeygja");
+        MeetRecordEntry squatRecord = records.First(r => r.Weight == 200.0m && r.Discipline == "Hnébeygja" && !r.IsClassic);
         squatRecord.AthleteName.ShouldBe("Testie McTestFace");
         squatRecord.AthleteSlug.ShouldBe("testie-mctestface");
         squatRecord.WeightCategory.ShouldBe("83");

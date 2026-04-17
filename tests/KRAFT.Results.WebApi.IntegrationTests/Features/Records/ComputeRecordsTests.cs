@@ -2122,20 +2122,13 @@ public sealed class ComputeRecordsTests(IntegrationTestFixture fixture)
 
     private static async Task RestoreClassic83KgSeedRecordAsync(ResultsDbContext dbContext)
     {
-        // Restores the open raw squat 83kg record deleted during test setup by ClearAllRecordCategoriesAsync.
+        // Slot rebuilds create chain records for seed attempts (AttemptId=1,2,3) across all age categories.
+        // Delete all classic records for those attempts first, then restore the canonical seed record.
         string sql =
             $"""
-            IF NOT EXISTS (
-                SELECT 1 FROM Records
-                WHERE EraId = {TestSeedConstants.Era.CurrentId}
-                AND AgeCategoryId = {TestSeedConstants.AgeCategory.OpenId}
-                AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-                AND RecordCategoryId = 1
-                AND IsRaw = 1)
-            BEGIN
-                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
-            END
+            DELETE FROM Records WHERE AttemptId IN (1, 2, 3) AND IsRaw = 1;
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql, TestContext.Current.CancellationToken);
