@@ -4,12 +4,14 @@ using System.Net.Http.Json;
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
-public sealed class ChangePasswordTests(IntegrationTestFixture fixture)
+[Collection(nameof(UsersCollection))]
+public sealed class ChangePasswordTests(CollectionFixture fixture)
 {
     private const string ChangePasswordPath = "/users/change-password";
 

@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
-public sealed class LoginTests(IntegrationTestFixture fixture)
+[Collection(nameof(UsersCollection))]
+public sealed class LoginTests(CollectionFixture fixture)
 {
     private const string Path = "/users/login";
 

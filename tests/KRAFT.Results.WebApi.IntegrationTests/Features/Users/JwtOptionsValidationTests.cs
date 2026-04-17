@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
 using KRAFT.Results.WebApi.Features.Users.Infrastructure;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
+[Collection(nameof(UsersCollection))]
 public sealed class JwtOptionsValidationTests
 {
     private const string ValidKey = "valid-key-value-that-is-at-least-32-chars";

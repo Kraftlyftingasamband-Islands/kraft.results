@@ -4,11 +4,13 @@ using System.Net.Http.Json;
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
+[Collection(nameof(UsersCollection))]
 public sealed class CreateUserTests
 {
     private const string Path = "/users";
@@ -16,7 +18,7 @@ public sealed class CreateUserTests
     private readonly HttpClient _authorizedHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
 
-    public CreateUserTests(IntegrationTestFixture fixture)
+    public CreateUserTests(CollectionFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();

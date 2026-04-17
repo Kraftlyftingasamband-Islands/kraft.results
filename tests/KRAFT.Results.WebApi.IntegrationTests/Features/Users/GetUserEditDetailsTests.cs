@@ -2,12 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Users;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
-public sealed class GetUserEditDetailsTests(IntegrationTestFixture fixture)
+[Collection(nameof(UsersCollection))]
+public sealed class GetUserEditDetailsTests(CollectionFixture fixture)
 {
     private const string BasePath = "/users";
 
