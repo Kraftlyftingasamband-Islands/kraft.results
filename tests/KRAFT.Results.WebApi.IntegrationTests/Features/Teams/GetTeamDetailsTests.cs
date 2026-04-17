@@ -89,7 +89,7 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
     public async Task ReturnsNotFound_WhenTeamDoesNotExist()
     {
         // Arrange
-        string path = $"{BasePath}/{Guid.NewGuid}";
+        string path = $"{BasePath}/{Guid.NewGuid()}";
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(path, CancellationToken.None);

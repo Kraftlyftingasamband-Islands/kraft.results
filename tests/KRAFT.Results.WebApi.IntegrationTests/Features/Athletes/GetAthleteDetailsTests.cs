@@ -89,7 +89,7 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
     public async Task ReturnsNotFound_WhenAthleteDoesNotExist()
     {
         // Arrange
-        string path = $"{BasePath}/{Guid.NewGuid}";
+        string path = $"{BasePath}/{Guid.NewGuid()}";
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(path, CancellationToken.None);
