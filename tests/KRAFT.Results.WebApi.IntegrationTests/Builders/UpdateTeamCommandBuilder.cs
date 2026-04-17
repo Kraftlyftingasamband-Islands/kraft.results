@@ -4,8 +4,10 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 
 internal sealed class UpdateTeamCommandBuilder
 {
+    private static int _counter;
+
     private string _title = Guid.NewGuid().ToString();
-    private string _titleShort = Guid.NewGuid().ToString()[0..3];
+    private string _titleShort = GenerateUniqueTitleShort();
     private string _titleFull = Guid.NewGuid().ToString();
     private int _countryId = 1;
 
@@ -35,4 +37,13 @@ internal sealed class UpdateTeamCommandBuilder
 
     public UpdateTeamCommand Build() =>
         new(_title, _titleShort, _titleFull, _countryId);
+
+    private static string GenerateUniqueTitleShort()
+    {
+        int n = Interlocked.Increment(ref _counter);
+        char c0 = (char)('a' + (n % 26));
+        char c1 = (char)('a' + ((n / 26) % 26));
+        char c2 = (char)('a' + ((n / 676) % 26));
+        return new string([c0, c1, c2]);
+    }
 }
