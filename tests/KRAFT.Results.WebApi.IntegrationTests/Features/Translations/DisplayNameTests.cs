@@ -1,10 +1,12 @@
 using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Translations;
 
+[Collection(nameof(InfraCollection))]
 public sealed class DisplayNameTests
 {
     [Theory]

@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Rankings;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Rankings;
 
-public sealed class GetRankingsTests(IntegrationTestFixture fixture)
+[Collection(nameof(RankingsCollection))]
+public sealed class GetRankingsTests(CollectionFixture fixture)
 {
     private const string Path = "/rankings";
 

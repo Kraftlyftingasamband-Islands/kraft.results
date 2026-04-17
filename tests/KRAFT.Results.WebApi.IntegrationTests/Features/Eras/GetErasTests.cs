@@ -2,12 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Eras;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Eras;
 
-public sealed class GetErasTests(IntegrationTestFixture fixture)
+[Collection(nameof(InfraCollection))]
+public sealed class GetErasTests(CollectionFixture fixture)
 {
     private const string Path = "/eras";
 
