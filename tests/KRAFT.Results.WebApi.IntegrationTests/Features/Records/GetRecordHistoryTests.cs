@@ -2,12 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Records;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
-public sealed class GetRecordHistoryTests(IntegrationTestFixture fixture)
+[Collection(nameof(RecordsCollection))]
+public sealed class GetRecordHistoryTests(CollectionFixture fixture)
 {
     private const string RecordsPath = "/records";
 
