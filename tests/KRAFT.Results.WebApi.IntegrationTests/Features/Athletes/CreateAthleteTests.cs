@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Athletes;
 
-public class CreateAthleteTests(IntegrationTestFixture fixture)
+[Collection(nameof(AthletesCollection))]
+public class CreateAthleteTests(CollectionFixture fixture)
 {
     private const string Path = "/athletes";
 
