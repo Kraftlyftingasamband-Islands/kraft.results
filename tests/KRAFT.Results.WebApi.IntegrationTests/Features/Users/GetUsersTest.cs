@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Users;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
@@ -9,19 +10,44 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
 [Collection(nameof(UsersCollection))]
-public sealed class GetUsersTest
+public sealed class GetUsersTest(CollectionFixture fixture) : IAsyncLifetime
 {
     private const string Path = "/users";
 
-    private readonly HttpClient _authorizedHttpClient;
-    private readonly HttpClient _nonAdminHttpClient;
-    private readonly HttpClient _unauthorizedHttpClient;
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
-    public GetUsersTest(CollectionFixture fixture)
+    private int _userId;
+    private string _email = string.Empty;
+
+    public async ValueTask InitializeAsync()
     {
-        _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-        _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
-        _unauthorizedHttpClient = fixture.Factory!.CreateClient();
+        CreateUserCommand createCommand = new CreateUserCommandBuilder().Build();
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, createCommand, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+        _email = createCommand.Email;
+        List<UserSummary>? users = await _authorizedHttpClient.GetFromJsonAsync<List<UserSummary>>(Path, CancellationToken.None);
+        _userId = users!.First(u => u.Email == _email).UserId;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_userId != 0)
+        {
+            try
+            {
+                await _authorizedHttpClient.DeleteAsync($"{Path}/{_userId}", CancellationToken.None);
+            }
+            catch (HttpRequestException)
+            {
+                // Best-effort cleanup; do not mask test failures.
+            }
+        }
+
+        _authorizedHttpClient.Dispose();
+        _nonAdminHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
     }
 
     [Fact]
@@ -57,7 +83,7 @@ public sealed class GetUsersTest
         IReadOnlyList<UserSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<UserSummary>>(Path, CancellationToken.None);
 
         // Assert
-        response!.ShouldContain(x => x.Email == Constants.TestUser.Email);
+        response!.ShouldContain(x => x.Email == _email);
     }
 
     [Fact]

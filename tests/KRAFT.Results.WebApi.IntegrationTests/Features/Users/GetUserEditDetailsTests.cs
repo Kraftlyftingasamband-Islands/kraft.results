@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Users;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
@@ -9,7 +10,7 @@ using Shouldly;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Users;
 
 [Collection(nameof(UsersCollection))]
-public sealed class GetUserEditDetailsTests(CollectionFixture fixture)
+public sealed class GetUserEditDetailsTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const string BasePath = "/users";
 
@@ -17,21 +18,54 @@ public sealed class GetUserEditDetailsTests(CollectionFixture fixture)
     private readonly HttpClient _nonAdminHttpClient = fixture.CreateNonAdminAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
 
+    private int _userId;
+    private string _email = string.Empty;
+
+    public async ValueTask InitializeAsync()
+    {
+        CreateUserCommand createCommand = new CreateUserCommandBuilder().Build();
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+        _email = createCommand.Email;
+        List<UserSummary>? users = await _authorizedHttpClient.GetFromJsonAsync<List<UserSummary>>(BasePath, CancellationToken.None);
+        _userId = users!.First(u => u.Email == _email).UserId;
+        ChangeUserRoleCommand roleCommand = new(["Admin"]);
+        await _authorizedHttpClient.PatchAsJsonAsync($"{BasePath}/{_userId}/role", roleCommand, CancellationToken.None);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_userId != 0)
+        {
+            try
+            {
+                await _authorizedHttpClient.DeleteAsync($"{BasePath}/{_userId}", CancellationToken.None);
+            }
+            catch (HttpRequestException)
+            {
+                // Best-effort cleanup; do not mask test failures.
+            }
+        }
+
+        _authorizedHttpClient.Dispose();
+        _nonAdminHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
+    }
+
     [Fact]
     public async Task ReturnsOk_WithUserDetails_WhenUserExists()
     {
         // Arrange
-        int userId = await GetSeededUserIdAsync();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.GetAsync(
-            $"{BasePath}/{userId}/edit", CancellationToken.None);
+            $"{BasePath}/{_userId}/edit", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         UserEditDetails? details = await response.Content.ReadFromJsonAsync<UserEditDetails>(CancellationToken.None);
         details.ShouldNotBeNull();
-        details.Email.ShouldBe(Constants.TestUser.Email);
+        details.Email.ShouldBe(_email);
         details.Roles.ShouldContain("Admin");
     }
 
@@ -50,11 +84,10 @@ public sealed class GetUserEditDetailsTests(CollectionFixture fixture)
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
-        int userId = await GetSeededUserIdAsync();
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.GetAsync(
-            $"{BasePath}/{userId}/edit", CancellationToken.None);
+            $"{BasePath}/{_userId}/edit", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
@@ -69,12 +102,5 @@ public sealed class GetUserEditDetailsTests(CollectionFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
-
-    private async Task<int> GetSeededUserIdAsync()
-    {
-        List<UserSummary>? users = await _authorizedHttpClient.GetFromJsonAsync<List<UserSummary>>(BasePath, CancellationToken.None);
-        UserSummary user = users!.First(u => u.Email == Constants.TestUser.Email);
-        return user.UserId;
     }
 }
