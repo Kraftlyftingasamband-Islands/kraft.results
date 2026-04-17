@@ -4,12 +4,14 @@ using System.Net.Http.Json;
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
-public sealed class RemoveParticipantTests(IntegrationTestFixture fixture)
+[Collection(nameof(MeetsCollection))]
+public sealed class RemoveParticipantTests(CollectionFixture fixture)
 {
     private const int NonExistentMeetId = 99999;
     private const int NonExistentParticipationId = 99999;

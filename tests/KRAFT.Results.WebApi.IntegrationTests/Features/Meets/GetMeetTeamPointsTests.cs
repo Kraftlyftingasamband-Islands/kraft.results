@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
-public sealed class GetMeetTeamPointsTests(IntegrationTestFixture fixture)
+[Collection(nameof(MeetsCollection))]
+public sealed class GetMeetTeamPointsTests(CollectionFixture fixture)
 {
     private const string BasePath = "/meets";
 

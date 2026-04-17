@@ -3,11 +3,13 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
+[Collection(nameof(MeetsCollection))]
 public sealed class GetMeetsTests
 {
     private const string Path = "/meets";
@@ -15,7 +17,7 @@ public sealed class GetMeetsTests
     private readonly HttpClient _authorizedHttpClient;
     private readonly HttpClient _unauthorizedHttpClient;
 
-    public GetMeetsTests(IntegrationTestFixture fixture)
+    public GetMeetsTests(CollectionFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();

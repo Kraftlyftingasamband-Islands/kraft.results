@@ -4,12 +4,14 @@ using System.Net.Http.Json;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
+[Collection(nameof(MeetsCollection))]
 public sealed class UpdateBodyWeightTests
 {
     private const int SeedMeetId = 1;
@@ -18,7 +20,7 @@ public sealed class UpdateBodyWeightTests
     private readonly HttpClient _unauthorizedHttpClient;
     private readonly HttpClient _nonAdminHttpClient;
 
-    public UpdateBodyWeightTests(IntegrationTestFixture fixture)
+    public UpdateBodyWeightTests(CollectionFixture fixture)
     {
         _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
