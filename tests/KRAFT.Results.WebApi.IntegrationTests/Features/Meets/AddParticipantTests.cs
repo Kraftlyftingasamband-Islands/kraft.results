@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
-public sealed class AddParticipantTests(IntegrationTestFixture fixture)
+[Collection(nameof(MeetsCollection))]
+public sealed class AddParticipantTests(CollectionFixture fixture)
 {
     private const int ExistingMeetId = 2;
     private const int MeetWithExistingParticipationId = 1;

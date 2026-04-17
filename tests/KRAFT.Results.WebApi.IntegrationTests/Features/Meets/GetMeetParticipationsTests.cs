@@ -3,18 +3,20 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
+[Collection(nameof(MeetsCollection))]
 public sealed class GetMeetParticipationsTests
 {
     private const string Path = $"/meets/{Constants.OrderingMeet.Slug}/participations";
 
     private readonly HttpClient _httpClient;
 
-    public GetMeetParticipationsTests(IntegrationTestFixture fixture)
+    public GetMeetParticipationsTests(CollectionFixture fixture)
     {
         _httpClient = fixture.Factory.CreateClient();
     }
