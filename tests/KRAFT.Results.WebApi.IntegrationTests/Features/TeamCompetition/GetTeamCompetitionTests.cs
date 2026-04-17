@@ -2,12 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.TeamCompetition;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.TeamCompetition;
 
-public sealed class GetTeamCompetitionTests(IntegrationTestFixture fixture)
+[Collection(nameof(TeamCompetitionCollection))]
+public sealed class GetTeamCompetitionTests(CollectionFixture fixture)
 {
     private const string BasePath = "/team-competition";
 

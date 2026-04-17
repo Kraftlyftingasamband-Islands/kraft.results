@@ -5,12 +5,14 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
 
-public sealed class DeleteTeamTests(IntegrationTestFixture fixture)
+[Collection(nameof(TeamsCollection))]
+public sealed class DeleteTeamTests(CollectionFixture fixture)
 {
     private const string BasePath = "/teams";
 

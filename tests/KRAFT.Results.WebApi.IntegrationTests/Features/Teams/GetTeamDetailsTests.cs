@@ -2,18 +2,20 @@
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
 
+[Collection(nameof(TeamsCollection))]
 public sealed class GetTeamDetailsTests
 {
     private const string BasePath = "/teams";
 
     private readonly HttpClient _unauthorizedHttpClient;
 
-    public GetTeamDetailsTests(IntegrationTestFixture fixture)
+    public GetTeamDetailsTests(CollectionFixture fixture)
     {
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }
