@@ -2,18 +2,20 @@
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Countries;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Countries;
 
+[Collection(nameof(InfraCollection))]
 public sealed class GetCountriesTests
 {
     private const string Path = "/countries";
 
     private readonly HttpClient _unauthorizedHttpClient;
 
-    public GetCountriesTests(IntegrationTestFixture fixture)
+    public GetCountriesTests(CollectionFixture fixture)
     {
         _unauthorizedHttpClient = fixture.Factory.CreateClient();
     }

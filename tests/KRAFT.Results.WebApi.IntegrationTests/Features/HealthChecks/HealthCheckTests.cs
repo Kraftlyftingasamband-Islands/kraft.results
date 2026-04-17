@@ -1,10 +1,13 @@
 ﻿using System.Net;
 
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
+
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.HealthChecks;
 
-public sealed class HealthCheckTests(IntegrationTestFixture fixture)
+[Collection(nameof(InfraCollection))]
+public sealed class HealthCheckTests(CollectionFixture fixture)
 {
     private readonly HttpClient _httpClient = fixture.Factory.CreateClient();
 

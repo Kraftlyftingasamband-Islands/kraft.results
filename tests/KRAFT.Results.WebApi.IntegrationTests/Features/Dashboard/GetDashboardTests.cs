@@ -2,12 +2,14 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Dashboard;
+using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Dashboard;
 
-public sealed class GetDashboardTests(IntegrationTestFixture fixture)
+[Collection(nameof(InfraCollection))]
+public sealed class GetDashboardTests(CollectionFixture fixture)
 {
     private const string Path = "/dashboard";
 
