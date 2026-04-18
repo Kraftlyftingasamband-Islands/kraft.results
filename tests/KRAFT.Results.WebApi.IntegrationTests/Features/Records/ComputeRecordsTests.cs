@@ -207,8 +207,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
-
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
@@ -526,8 +524,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
-
         DateOnly masters1DateOfBirth = new(1984, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters1DateOfBirth)
@@ -603,8 +599,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
-
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
@@ -672,8 +666,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
-
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
             .WithDateOfBirth(masters4DateOfBirth)
@@ -740,8 +732,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
@@ -934,8 +924,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
-
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
 
         CreateAthleteCommand athleteACommand = new CreateAthleteCommandBuilder()
@@ -1046,8 +1034,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        await CleanupStaleTestDataFor83KgAsync(dbContext);
 
         DateOnly masters4DateOfBirth = new(1950, 1, 1);
 
@@ -2168,31 +2154,5 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         decimal weight)
     {
         await RecordAttemptForMeet(client, _meetId, participationId, discipline, round, weight);
-    }
-
-    /// <summary>
-    /// Removes non-seed participations (and their attempts/records) from the 83kg slot
-    /// in the seed meet. This prevents leftover data from prior endpoint-based tests
-    /// from interfering with the FullRebuildSlotsAsync computation.
-    /// </summary>
-    private async Task CleanupStaleTestDataFor83KgAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            DELETE FROM Records WHERE AttemptId IN (
-                SELECT a.AttemptId FROM Attempts a
-                INNER JOIN Participations p ON a.ParticipationId = p.ParticipationId
-                WHERE p.WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-                AND p.MeetId = {_meetId});
-            DELETE FROM Attempts WHERE ParticipationId IN (
-                SELECT ParticipationId FROM Participations
-                WHERE WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-                AND MeetId = {_meetId});
-            DELETE FROM Participations
-            WHERE WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-            AND MeetId = {_meetId};
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 }
