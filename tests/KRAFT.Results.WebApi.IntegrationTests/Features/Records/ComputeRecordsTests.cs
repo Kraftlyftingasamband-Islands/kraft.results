@@ -27,7 +27,6 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 [Collection(nameof(RecordsCollection))]
 public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const int SeedMeetId = 1;
     private const int RecordTestParticipationId = 100;
     private const int RecordTestAttemptId = 100;
     private const string AttemptWeightSql = "300.0";
@@ -143,7 +142,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -226,7 +225,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -292,7 +291,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -408,7 +407,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -461,7 +460,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -546,7 +545,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -622,7 +621,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -691,7 +690,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -760,7 +759,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -890,7 +889,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -967,7 +966,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantAResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantACommand,
             CancellationToken.None);
 
@@ -981,7 +980,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantBResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantBCommand,
             CancellationToken.None);
 
@@ -1080,7 +1079,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantAResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantACommand,
             CancellationToken.None);
 
@@ -1094,7 +1093,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantBResponse = await client.PostAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants",
+            $"/meets/{_meetId}/participants",
             participantBCommand,
             CancellationToken.None);
 
@@ -2075,26 +2074,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         }
     }
 
-    private static async Task RecordAttempt(
-        HttpClient client,
-        int participationId,
-        Discipline discipline,
-        int round,
-        decimal weight)
-    {
-        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
-            .WithWeight(weight)
-            .WithGood(true)
-            .Build();
-
-        HttpResponseMessage response = await client.PutAsJsonAsync(
-            $"/meets/{SeedMeetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
-            command,
-            CancellationToken.None);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-    }
-
     private static async Task RecordAttemptForMeet(
         HttpClient client,
         int meetId,
@@ -2131,44 +2110,26 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
-    /// <summary>
-    /// Removes non-seed participations (and their attempts/records) from the 83kg slot
-    /// in the seed meet. This prevents leftover data from prior endpoint-based tests
-    /// from interfering with the FullRebuildSlotsAsync computation.
-    /// </summary>
-    private static async Task CleanupStaleTestDataFor83KgAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            DELETE FROM Records WHERE AttemptId IN (
-                SELECT a.AttemptId FROM Attempts a
-                INNER JOIN Participations p ON a.ParticipationId = p.ParticipationId
-                WHERE p.WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-                AND p.MeetId = {TestSeedConstants.Meet.Id}
-                AND p.ParticipationId NOT IN (1, 2, 3));
-            DELETE FROM Attempts WHERE ParticipationId IN (
-                SELECT ParticipationId FROM Participations
-                WHERE WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-                AND MeetId = {TestSeedConstants.Meet.Id}
-                AND ParticipationId NOT IN (1, 2, 3));
-            DELETE FROM Participations
-            WHERE WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-            AND MeetId = {TestSeedConstants.Meet.Id}
-            AND ParticipationId NOT IN (1, 2, 3);
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
     private static async Task RestoreClassic83KgSeedRecordAsync(ResultsDbContext dbContext)
     {
         // Slot rebuilds create chain records for seed attempts (AttemptId=1,2,3) across all age categories.
         // Delete all classic records for those attempts first, then restore the canonical seed record.
+        // Also restore seed AttemptIds 4,5 (squats for ParticipationId=1) that ClearAllRecordCategoriesAsync deletes.
         string sql =
             $"""
             DELETE FROM Records WHERE AttemptId IN (1, 2, 3) AND IsRaw = 1;
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
+
+            IF NOT EXISTS (SELECT 1 FROM Attempts WHERE AttemptId = 4)
+            BEGIN
+                SET IDENTITY_INSERT Attempts ON;
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES (4, 1, 1, 2, 210.0, 1, 'seed', 'seed');
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES (5, 1, 1, 1, 190.0, 1, 'seed', 'seed');
+                SET IDENTITY_INSERT Attempts OFF;
+            END
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql, TestContext.Current.CancellationToken);
@@ -2188,6 +2149,9 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             AND RecordCategoryId IN (1, 2, 3, 4, 5, 6)
             AND IsRaw = 1
             AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
+
+            DELETE FROM Records WHERE AttemptId IN (4, 5);
+            DELETE FROM Attempts WHERE AttemptId IN (4, 5);
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
@@ -2272,6 +2236,42 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
             VALUES ({RecordTestAttemptId}, {RecordTestParticipationId}, 1, 1, {AttemptWeightSql}, 1, 'test', 'test');
             SET IDENTITY_INSERT Attempts OFF;
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private async Task RecordAttempt(
+        HttpClient client,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight)
+    {
+        await RecordAttemptForMeet(client, _meetId, participationId, discipline, round, weight);
+    }
+
+    /// <summary>
+    /// Removes non-seed participations (and their attempts/records) from the 83kg slot
+    /// in the seed meet. This prevents leftover data from prior endpoint-based tests
+    /// from interfering with the FullRebuildSlotsAsync computation.
+    /// </summary>
+    private async Task CleanupStaleTestDataFor83KgAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            DELETE FROM Records WHERE AttemptId IN (
+                SELECT a.AttemptId FROM Attempts a
+                INNER JOIN Participations p ON a.ParticipationId = p.ParticipationId
+                WHERE p.WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
+                AND p.MeetId = {_meetId});
+            DELETE FROM Attempts WHERE ParticipationId IN (
+                SELECT ParticipationId FROM Participations
+                WHERE WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
+                AND MeetId = {_meetId});
+            DELETE FROM Participations
+            WHERE WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
+            AND MeetId = {_meetId};
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
