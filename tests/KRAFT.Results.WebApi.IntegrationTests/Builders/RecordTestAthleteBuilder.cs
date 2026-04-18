@@ -75,6 +75,11 @@ internal sealed class RecordTestAthleteBuilder(ResultsDbContext dbContext, int b
         decimal total = _squat + _bench + _deadlift;
         string slug = $"rectest-{baseId}";
 
+        string squat = _squat.ToString(CultureInfo.InvariantCulture);
+        string bench = _bench.ToString(CultureInfo.InvariantCulture);
+        string deadlift = _deadlift.ToString(CultureInfo.InvariantCulture);
+        string totalStr = total.ToString(CultureInfo.InvariantCulture);
+
         string seedSql =
             $"""
             DELETE FROM Records WHERE AttemptId IN ({squatAttemptId}, {benchAttemptId}, {deadliftAttemptId});
@@ -89,16 +94,16 @@ internal sealed class RecordTestAthleteBuilder(ResultsDbContext dbContext, int b
 
             SET IDENTITY_INSERT Participations ON;
             INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({participationId}, {athleteId}, {_meetId}, 90.0, {_weightCategoryId}, {_ageCategoryId}, 1, 0, {_squat}, {_bench}, {_deadlift}, {total}, 400.0, 90.0, 50);
+            VALUES ({participationId}, {athleteId}, {_meetId}, 90.0, {_weightCategoryId}, {_ageCategoryId}, 1, 0, {squat}, {bench}, {deadlift}, {totalStr}, 400.0, 90.0, 50);
             SET IDENTITY_INSERT Participations OFF;
 
             SET IDENTITY_INSERT Attempts ON;
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({squatAttemptId}, {participationId}, 1, 1, {_squat}, 1, 'test', 'test');
+            VALUES ({squatAttemptId}, {participationId}, 1, 1, {squat}, 1, 'test', 'test');
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({benchAttemptId}, {participationId}, 2, 1, {_bench}, 1, 'test', 'test');
+            VALUES ({benchAttemptId}, {participationId}, 2, 1, {bench}, 1, 'test', 'test');
             INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({deadliftAttemptId}, {participationId}, 3, 1, {_deadlift}, 1, 'test', 'test');
+            VALUES ({deadliftAttemptId}, {participationId}, 3, 1, {deadlift}, 1, 'test', 'test');
             SET IDENTITY_INSERT Attempts OFF;
             """;
 
