@@ -6,6 +6,7 @@ using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -275,7 +276,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             "/athletes", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        string slug = $"{firstName} {lastName}".ToLowerInvariant().Replace(' ', '-');
+        string slug = Slug.Create($"{firstName} {lastName}");
         _athleteSlugs.Add(slug);
         return slug;
     }
