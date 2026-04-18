@@ -275,9 +275,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             "/athletes", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        List<AthleteSummary>? athletes = await _authorizedHttpClient.GetFromJsonAsync<List<AthleteSummary>>(
-            $"/athletes?search={firstName}+{lastName}", CancellationToken.None);
-        string slug = athletes!.Single(a => a.Name == $"{firstName} {lastName}").Slug!;
+        string slug = $"{firstName} {lastName}".ToLowerInvariant().Replace(' ', '-');
         _athleteSlugs.Add(slug);
         return slug;
     }
