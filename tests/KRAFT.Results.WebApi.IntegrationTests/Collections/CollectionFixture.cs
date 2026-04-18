@@ -69,11 +69,11 @@ public sealed class CollectionFixture : IAsyncLifetime
         return childFactory.CreateClient();
     }
 
-    public async Task ExecuteSqlAsync(string sql)
+    public async Task ExecuteSqlAsync(FormattableString sql)
     {
         await using AsyncServiceScope scope = Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
+        await dbContext.Database.ExecuteSqlAsync(sql);
     }
 
     public async ValueTask DisposeAsync()

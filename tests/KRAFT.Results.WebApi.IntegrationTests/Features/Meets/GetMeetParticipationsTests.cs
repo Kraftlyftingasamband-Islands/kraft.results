@@ -6,7 +6,6 @@ using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
-using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -15,8 +14,8 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 [Collection(nameof(MeetsCollection))]
 public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private readonly HttpClient _setupHttpClient = fixture.CreateAuthorizedHttpClient();
-    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
+    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     private readonly string _suffix = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private int _meetId;
@@ -36,13 +35,13 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             .WithIsRaw(true)
             .Build();
 
-        HttpResponseMessage createResponse = await _setupHttpClient.PostAsJsonAsync(
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/meets", meetCommand, CancellationToken.None);
         createResponse.EnsureSuccessStatusCode();
 
         _meetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
 
-        MeetDetails? details = await _setupHttpClient.GetFromJsonAsync<MeetDetails>(
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
             $"/meets/{_meetSlug}", CancellationToken.None);
         _meetId = details!.MeetId;
 
@@ -81,16 +80,16 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
     {
         if (_meetId != 0)
         {
-            await _setupHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
         }
 
         foreach (string slug in _athleteSlugs)
         {
-            await _setupHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
+            await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
         }
 
-        _setupHttpClient.Dispose();
-        _httpClient.Dispose();
+        _authorizedHttpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
     }
 
     [Fact]
@@ -99,7 +98,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -112,7 +111,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -138,7 +137,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -154,7 +153,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -173,7 +172,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -193,7 +192,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -208,7 +207,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -224,7 +223,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -239,7 +238,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -255,7 +254,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         // Arrange
 
         // Act
-        List<MeetParticipation>? participations = await _httpClient.GetFromJsonAsync<List<MeetParticipation>>(
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
             $"/meets/{_meetSlug}/participations", CancellationToken.None);
 
         // Assert
@@ -272,11 +271,13 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             .WithDateOfBirth(new DateOnly(1990, 1, 1))
             .Build();
 
-        HttpResponseMessage response = await _setupHttpClient.PostAsJsonAsync(
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        string slug = Slug.Create($"{firstName} {lastName}");
+        List<AthleteSummary>? athletes = await _authorizedHttpClient.GetFromJsonAsync<List<AthleteSummary>>(
+            $"/athletes?search={firstName}+{lastName}", CancellationToken.None);
+        string slug = athletes!.Single(a => a.Name == $"{firstName} {lastName}").Slug!;
         _athleteSlugs.Add(slug);
         return slug;
     }
@@ -289,7 +290,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             .WithAgeCategorySlug("open")
             .Build();
 
-        HttpResponseMessage response = await _setupHttpClient.PostAsJsonAsync(
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
             $"/meets/{_meetId}/participants", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
@@ -318,7 +319,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             .WithGood(good)
             .Build();
 
-        HttpResponseMessage response = await _setupHttpClient.PutAsJsonAsync(
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
             $"/meets/{_meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
             command,
             CancellationToken.None);
