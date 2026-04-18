@@ -27,9 +27,6 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 [Collection(nameof(RecordsCollection))]
 public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const int RecordTestParticipationId = 100;
-    private const int RecordTestAttemptId = 100;
-    private const string AttemptWeightSql = "300.0";
     private const decimal AttemptWeight = 300.0m;
 
     private readonly HttpClient _setupHttpClient = fixture.CreateAuthorizedHttpClient();
@@ -76,19 +73,25 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         // Arrange
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        await SeedRecordComputationTestDataAsync(dbContext);
-
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
+
+        const int weightCategoryId = TestSeedConstants.WeightCategory.Id83Kg;
+
+        await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
+
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 600)
+            .WithWeightCategoryId(weightCategoryId)
+            .WithSquat(AttemptWeight)
+            .BuildAsync(TestContext.Current.CancellationToken);
 
         try
         {
             // Act
-            await service.ComputeRecordsAsync(RecordTestAttemptId, CancellationToken.None);
+            await service.ComputeRecordsAsync(athlete.SquatAttemptId, CancellationToken.None);
 
-            // Assert â€" records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
+            // Assert — records should exist for full Masters4 cascade: masters4, masters3, masters2, masters1, open
             List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
-                .Where(r => r.AttemptId == RecordTestAttemptId)
+                .Where(r => r.AttemptId == athlete.SquatAttemptId)
                 .Where(r => r.IsCurrent)
                 .Where(r => r.IsRaw)
                 .Where(r => r.RecordCategoryId == RecordCategory.Squat)
@@ -109,11 +112,11 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
             createdRecords.ShouldAllBe(r => r.Weight == AttemptWeight);
             createdRecords.ShouldAllBe(r => r.EraId == TestSeedConstants.Era.CurrentId);
-            createdRecords.ShouldAllBe(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg);
+            createdRecords.ShouldAllBe(r => r.WeightCategoryId == weightCategoryId);
         }
         finally
         {
-            await CleanupDirectSeedTestDataAsync(dbContext);
+            await athlete.DeleteAsync(dbContext, TestContext.Current.CancellationToken);
         }
     }
 
@@ -2152,90 +2155,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
             DELETE FROM Records WHERE AttemptId IN (4, 5);
             DELETE FROM Attempts WHERE AttemptId IN (4, 5);
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static async Task CleanupDirectSeedTestDataAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            DELETE FROM Records WHERE AttemptId = {RecordTestAttemptId};
-            DELETE FROM Attempts WHERE AttemptId = {RecordTestAttemptId};
-            DELETE FROM Participations WHERE ParticipationId = {RecordTestParticipationId};
-
-            -- Restore athlete DoB changed by SeedRecordComputationTestDataAsync
-            UPDATE Athletes SET DateOfBirth = '{TestSeedConstants.Athlete.DateOfBirth:yyyy-MM-dd}' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
-
-            -- Restore the open raw squat 83kg record that was deleted by SeedRecordComputationTestDataAsync
-            IF NOT EXISTS (
-                SELECT 1 FROM Records
-                WHERE EraId = {TestSeedConstants.Era.CurrentId}
-                AND AgeCategoryId = {TestSeedConstants.AgeCategory.OpenId}
-                AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg}
-                AND RecordCategoryId = 1
-                AND IsRaw = 1)
-            BEGIN
-                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
-            END
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static async Task ClearMastersCascadeRecordsAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            DELETE FROM Records
-            WHERE AgeCategoryId IN (
-                {TestSeedConstants.AgeCategory.OpenId},
-                {TestSeedConstants.AgeCategory.Masters1Id},
-                {TestSeedConstants.AgeCategory.Masters2Id},
-                {TestSeedConstants.AgeCategory.Masters3Id},
-                {TestSeedConstants.AgeCategory.Masters4Id})
-            AND RecordCategoryId = 1
-            AND IsRaw = 1
-            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static async Task SeedRecordComputationTestDataAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            -- Clear any existing records for masters age categories in raw squat 83kg to avoid interference
-            DELETE FROM Records
-            WHERE AgeCategoryId IN ({TestSeedConstants.AgeCategory.Masters1Id}, {TestSeedConstants.AgeCategory.Masters2Id}, {TestSeedConstants.AgeCategory.Masters3Id}, {TestSeedConstants.AgeCategory.Masters4Id})
-            AND RecordCategoryId = 1
-            AND IsRaw = 1
-            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
-
-            -- Also clear the open raw squat 83kg record to ensure our attempt beats it
-            DELETE FROM Records
-            WHERE AgeCategoryId = {TestSeedConstants.AgeCategory.OpenId}
-            AND RecordCategoryId = 1
-            AND IsRaw = 1
-            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
-
-            -- Set athlete DoB to Masters4 range so biological age cascades correctly
-            UPDATE Athletes SET DateOfBirth = '1950-01-01' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
-
-            -- Participation in Masters4 age category for athlete 1 in test meet 1
-            SET IDENTITY_INSERT Participations ON;
-            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({RecordTestParticipationId}, {TestSeedConstants.Athlete.Id}, {TestSeedConstants.Meet.Id}, 80.5, {TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, {AttemptWeightSql}, 130.0, 250.0, 680.0, 450.0, 95.0, 50);
-            SET IDENTITY_INSERT Participations OFF;
-
-            -- Good squat attempt that beats any existing record
-            SET IDENTITY_INSERT Attempts ON;
-            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({RecordTestAttemptId}, {RecordTestParticipationId}, 1, 1, {AttemptWeightSql}, 1, 'test', 'test');
-            SET IDENTITY_INSERT Attempts OFF;
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
