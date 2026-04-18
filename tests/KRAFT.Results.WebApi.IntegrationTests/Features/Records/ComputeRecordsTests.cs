@@ -25,13 +25,51 @@ using RecordEntity = KRAFT.Results.WebApi.Features.Records.Record;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
 [Collection(nameof(RecordsCollection))]
-public sealed class ComputeRecordsTests(CollectionFixture fixture)
+public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const int SeedMeetId = 1;
     private const int RecordTestParticipationId = 100;
     private const int RecordTestAttemptId = 100;
     private const string AttemptWeightSql = "300.0";
     private const decimal AttemptWeight = 300.0m;
+
+    private readonly HttpClient _setupHttpClient = fixture.CreateAuthorizedHttpClient();
+    private int _meetId;
+    private string _meetSlug = string.Empty;
+
+    public async ValueTask InitializeAsync()
+    {
+        CreateMeetCommand meetCommand = new CreateMeetCommandBuilder()
+            .WithIsRaw(true)
+            .Build();
+
+        HttpResponseMessage createResponse = await _setupHttpClient.PostAsJsonAsync(
+            "/meets",
+            meetCommand,
+            CancellationToken.None);
+
+        createResponse.EnsureSuccessStatusCode();
+
+        _meetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _setupHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_meetSlug}",
+            CancellationToken.None);
+
+        _meetId = details!.MeetId;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_meetId != 0)
+        {
+            await _setupHttpClient.DeleteAsync(
+                $"/meets/{_meetSlug}",
+                CancellationToken.None);
+        }
+
+        _setupHttpClient.Dispose();
+    }
 
     [Fact]
     public async Task WhenGoodAttemptBeatsCurrentRecord_CreatesRecordAndCascades()
