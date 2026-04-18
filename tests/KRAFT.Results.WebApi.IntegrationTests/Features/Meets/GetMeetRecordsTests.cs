@@ -24,9 +24,12 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     private const decimal ClassicSquatWeight = 195.0m;
     private const decimal BenchWeight = 130.0m;
     private const decimal DeadliftWeight = 250.0m;
+    private const decimal StandardSquatWeight = 220.0m;
+    private const decimal TotalWilksWeight = 400.0m;
+    private const decimal TotalIpfPointsWeight = 85.5m;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
-    private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
+    private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     private int _meetId;
     private string _meetSlug = string.Empty;
     private string _athleteName = string.Empty;
@@ -109,14 +112,38 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .SingleAsync(CancellationToken.None);
 
         // Insert records directly via SQL — this test verifies the GET endpoint, not record computation
-        await dbContext.Database.ExecuteSqlAsync(
+        // Classic and equipped squat records (non-standard) — should appear in results
+        await fixture.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES
                 ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {ClassicSquatWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 1, 'test-setup'),
                 ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {EquippedSquatWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 0, 'test-setup')
-            """,
-            CancellationToken.None);
+            """);
+
+        // Standard record — should be filtered out by handler
+        await fixture.ExecuteSqlAsync(
+            $"""
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES
+                ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 1, {StandardSquatWeight}, GETUTCDATE(), 1, {squatAttemptId}, 1, 1, 'test-setup')
+            """);
+
+        // TotalWilks record — should be filtered out by handler
+        await fixture.ExecuteSqlAsync(
+            $"""
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES
+                ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 7, {TotalWilksWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 1, 'test-setup')
+            """);
+
+        // TotalIpfPoints record — should be filtered out by handler
+        await fixture.ExecuteSqlAsync(
+            $"""
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES
+                ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 8, {TotalIpfPointsWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 1, 'test-setup')
+            """);
     }
 
     public async ValueTask DisposeAsync()
@@ -138,14 +165,14 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         }
 
         _authorizedHttpClient.Dispose();
-        _httpClient.Dispose();
+        _unauthorizedHttpClient.Dispose();
     }
 
     [Fact]
     public async Task ReturnsOk_WithRecords_WhenMeetHasApprovedRecords()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
@@ -161,7 +188,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     public async Task DoesNotInclude_StandardRecords()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
@@ -171,17 +198,18 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .ReadFromJsonAsync<List<MeetRecordEntry>>(CancellationToken.None);
         records.ShouldNotBeNull();
 
-        // Standard record is for 93kg squat (220kg) — should not appear
-        records.ShouldNotContain(r => r.WeightCategory == "93"
-            && r.Discipline == "Hnébeygja"
-            && r.Weight == 220.0m);
+        // Standard record is for 93kg squat (220kg) — exists in DB but should be filtered out
+        records
+            .Where(r => r.WeightCategory == "93")
+            .Where(r => r.Discipline == "Hnébeygja")
+            .ShouldNotContain(r => r.Weight == StandardSquatWeight);
     }
 
     [Fact]
     public async Task DoesNotInclude_TotalWilksRecords()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
@@ -190,14 +218,16 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         List<MeetRecordEntry>? records = await response.Content
             .ReadFromJsonAsync<List<MeetRecordEntry>>(CancellationToken.None);
         records.ShouldNotBeNull();
-        records.ShouldNotContain(r => r.Weight == 400.0m);
+
+        // TotalWilks record exists in DB but should be filtered out
+        records.ShouldNotContain(r => r.Weight == TotalWilksWeight);
     }
 
     [Fact]
     public async Task DoesNotInclude_TotalIpfPointsRecords()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
@@ -206,14 +236,16 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         List<MeetRecordEntry>? records = await response.Content
             .ReadFromJsonAsync<List<MeetRecordEntry>>(CancellationToken.None);
         records.ShouldNotBeNull();
-        records.ShouldNotContain(r => r.Weight == 85.5m);
+
+        // TotalIpfPoints record exists in DB but should be filtered out
+        records.ShouldNotContain(r => r.Weight == TotalIpfPointsWeight);
     }
 
     [Fact]
     public async Task IncludesCorrectFields_ForEquippedRecord()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
@@ -239,7 +271,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     public async Task IncludesClassicRecords_WithIsClassicTrue()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
@@ -257,7 +289,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     public async Task ReturnsNotFound_WhenMeetDoesNotExist()
     {
         // Arrange & Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/non-existent-meet/records",
             CancellationToken.None);
 
@@ -270,7 +302,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange — using unauthenticated client
         // Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_meetSlug}/records",
             CancellationToken.None);
 
