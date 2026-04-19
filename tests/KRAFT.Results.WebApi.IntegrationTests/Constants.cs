@@ -29,11 +29,6 @@ internal static class Constants
         internal const string Email = TestSeedConstants.User.Email;
     }
 
-    internal static class OrderingMeet
-    {
-        internal const string Slug = "ordering-meet-2025";
-    }
-
     internal static class NoRecordsMeet
     {
         internal const int Id = 9;
