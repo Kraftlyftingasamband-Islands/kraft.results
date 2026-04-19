@@ -21,9 +21,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
     private const int TcMeet2Id = 3;
     private const int TcMeet2026Meet1Id = 4;
     private const int TcMeet2026Meet2Id = 5;
-    private const int OrderingMeetId = 6;
-    private const int BwExceedsMaxMeetId = 7;
-    private const int BwJustAboveMaxMeetId = 8;
     private const int NoRecordsMeetId = 9;
     private const int DeadliftMeetId = 10;
     private const int DeadliftMeetTypeId = 3;
@@ -58,9 +55,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await SeedTeamCompetitionDataAsync(dbContext);
         await SeedIntegrationTestAttemptsAsync(dbContext);
         await SeedBestNTestDataAsync(dbContext);
-        await SeedOrderingTestDataAsync(dbContext);
         await SeedRecordCorruptionTestDataAsync(dbContext);
-        await SeedBodyWeightMeetsAsync(dbContext);
         await SeedNoRecordsMeetAsync(dbContext);
         await SeedDeadliftMeetAsync(dbContext);
         await SeedBanDataAsync(dbContext);
@@ -240,45 +235,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
-    private static async Task SeedOrderingTestDataAsync(ResultsDbContext dbContext)
-    {
-        const int deltaAthleteId = 10;
-        const int charlieAthleteId = 11;
-
-        string sql =
-            $"""
-            SET IDENTITY_INSERT Athletes ON;
-            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
-            VALUES ({deltaAthleteId}, 'Delta', 'Test', '1992-01-01', 'm', {NorwayCountryId}, 'delta-test');
-            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
-            VALUES ({charlieAthleteId}, 'Charlie', 'Test', '1993-01-01', 'm', {NorwayCountryId}, 'charlie-test');
-            SET IDENTITY_INSERT Athletes OFF;
-
-            SET IDENTITY_INSERT Meets ON;
-            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-            VALUES ({OrderingMeetId}, 'Ordering Meet 2025', '{Constants.OrderingMeet.Slug}', '2025-10-01', '2025-10-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
-            SET IDENTITY_INSERT Meets OFF;
-
-            -- Participation: Place=1, not DQ (Delta Test)
-            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({deltaAthleteId}, {OrderingMeetId}, 82.0, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.0, 1);
-
-            -- Participation: Place=1 (tied), not DQ (Charlie Test)
-            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({charlieAthleteId}, {OrderingMeetId}, 82.0, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.0, 2);
-
-            -- Participation: Place=3, not DQ (Bob Test)
-            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({BobAthleteId}, {OrderingMeetId}, 82.0, 1, 1, 3, 0, 180.0, 120.0, 230.0, 530.0, 370.0, 78.0, 3);
-
-            -- Participation: Place=-1, DQ (Anna Test)
-            INSERT INTO Participations (AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({AnnaAthleteId}, {OrderingMeetId}, 82.0, 1, 1, -1, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4);
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
     private static async Task SeedRecordCorruptionTestDataAsync(ResultsDbContext dbContext)
     {
         await dbContext.Database.ExecuteSqlRawAsync(
@@ -294,21 +250,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
             """);
-    }
-
-    private static async Task SeedBodyWeightMeetsAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            SET IDENTITY_INSERT Meets ON;
-            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-            VALUES ({BwExceedsMaxMeetId}, 'BW Exceeds Max Meet', 'bw-exceeds-max-meet', '2025-11-01', '2025-11-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
-            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-            VALUES ({BwJustAboveMaxMeetId}, 'BW Just Above Max Meet', 'bw-just-above-max-meet', '2025-11-02', '2025-11-02', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
-            SET IDENTITY_INSERT Meets OFF;
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
     private static async Task SeedNoRecordsMeetAsync(ResultsDbContext dbContext)
