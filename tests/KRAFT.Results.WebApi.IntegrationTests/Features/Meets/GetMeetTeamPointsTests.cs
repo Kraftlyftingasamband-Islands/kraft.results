@@ -22,14 +22,17 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     private readonly string _suffix = UniqueShortCode.Next();
     private readonly string _alphaShortCode = UniqueShortCode.Next();
     private readonly string _betaShortCode = UniqueShortCode.Next();
+    private readonly string _gammaShortCode = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
 
     private string _alphaTeamName = string.Empty;
     private string _alphaTeamSlug = string.Empty;
     private string _betaTeamName = string.Empty;
     private string _betaTeamSlug = string.Empty;
+    private string _gammaTeamSlug = string.Empty;
     private int _alphaTeamId;
     private int _betaTeamId;
+    private int _gammaTeamId;
 
     private int _tc2025MeetId;
     private string _tc2025MeetSlug = string.Empty;
@@ -47,6 +50,10 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         _betaTeamName = $"Beta{_suffix}";
         _betaTeamSlug = Slug.Create(_betaTeamName);
         _betaTeamId = await CreateTeamAsync(_betaTeamName, _betaShortCode);
+
+        string gammaTeamName = $"Gamma{_suffix}";
+        _gammaTeamSlug = Slug.Create(gammaTeamName);
+        _gammaTeamId = await CreateTeamAsync(gammaTeamName, _gammaShortCode);
 
         // Create 3 meets
         _tc2025MeetSlug = await CreateMeetAsync(new DateOnly(2025, 6, 1));
@@ -77,7 +84,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         int betaFemalePid = await AddParticipantAsync(_tc2025MeetId, betaFemaleSlug, _betaTeamId, 57.0m);
         int dqAlphaMalePid = await AddParticipantAsync(_tc2025MeetId, dqAlphaMaleSlug, _alphaTeamId);
         int noTeamPid = await AddParticipantAsync(_tc2025MeetId, noTeamSlug, teamId: null);
-        int zeroPtsPid = await AddParticipantAsync(_tc2025MeetId, zeroPtsSlug, _alphaTeamId);
+        int zeroPtsPid = await AddParticipantAsync(_tc2025MeetId, zeroPtsSlug, _gammaTeamId);
 
         // Set TeamPoints, Place, Disqualified via SQL for 2025 meet
         await fixture.ExecuteSqlAsync(
@@ -107,15 +114,21 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
 
     public async ValueTask DisposeAsync()
     {
-        if (_tc2025MeetId == 0)
+        // Delete meets first (cascades participations)
+        if (!string.IsNullOrEmpty(_tc2025MeetSlug))
         {
-            return;
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_tc2025MeetSlug}", CancellationToken.None);
         }
 
-        // Delete meets first (cascades participations)
-        await _authorizedHttpClient.DeleteAsync($"/meets/{_tc2025MeetSlug}", CancellationToken.None);
-        await _authorizedHttpClient.DeleteAsync($"/meets/{_tc2026MeetSlug}", CancellationToken.None);
-        await _authorizedHttpClient.DeleteAsync($"/meets/{_nonTcMeetSlug}", CancellationToken.None);
+        if (!string.IsNullOrEmpty(_tc2026MeetSlug))
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_tc2026MeetSlug}", CancellationToken.None);
+        }
+
+        if (!string.IsNullOrEmpty(_nonTcMeetSlug))
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_nonTcMeetSlug}", CancellationToken.None);
+        }
 
         // Delete athletes
         foreach (string slug in _athleteSlugs)
@@ -124,8 +137,20 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         }
 
         // Delete teams
-        await _authorizedHttpClient.DeleteAsync($"/teams/{_alphaTeamSlug}", CancellationToken.None);
-        await _authorizedHttpClient.DeleteAsync($"/teams/{_betaTeamSlug}", CancellationToken.None);
+        if (!string.IsNullOrEmpty(_alphaTeamSlug))
+        {
+            await _authorizedHttpClient.DeleteAsync($"/teams/{_alphaTeamSlug}", CancellationToken.None);
+        }
+
+        if (!string.IsNullOrEmpty(_betaTeamSlug))
+        {
+            await _authorizedHttpClient.DeleteAsync($"/teams/{_betaTeamSlug}", CancellationToken.None);
+        }
+
+        if (!string.IsNullOrEmpty(_gammaTeamSlug))
+        {
+            await _authorizedHttpClient.DeleteAsync($"/teams/{_gammaTeamSlug}", CancellationToken.None);
+        }
 
         _authorizedHttpClient.Dispose();
         _httpClient.Dispose();
@@ -274,14 +299,16 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     [Fact]
     public async Task ExcludesParticipationsWithZeroTeamPoints()
     {
-        // Arrange — a participation with TeamPoints=0 for Alpha exists
+        // Arrange — Gamma has only a participation with TeamPoints=0
+        // If the TeamPoints > 0 filter were removed, Gamma would appear as a third team
 
         // Act
         MeetTeamPointsResponse? response = await _httpClient.GetFromJsonAsync<MeetTeamPointsResponse>(
             $"{BasePath}/{_tc2025MeetSlug}/team-points", CancellationToken.None);
 
-        // Assert — Alpha men should have 12 (not including the 0-point entry)
-        response!.Men[0].TotalPoints.ShouldBe(12);
+        // Assert — only Alpha and Beta appear; Gamma (with zero points) is excluded
+        response!.Men.Count.ShouldBe(2);
+        response.Men.ShouldNotContain(s => s.TeamSlug == _gammaTeamSlug);
     }
 
     private async Task<int> CreateTeamAsync(string title, string titleShort)
