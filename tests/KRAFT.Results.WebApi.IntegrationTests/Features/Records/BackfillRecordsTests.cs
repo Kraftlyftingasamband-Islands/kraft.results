@@ -15,7 +15,7 @@ using RecordEntity = KRAFT.Results.WebApi.Features.Records.Record;
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
 [Collection(nameof(RecordsCollection))]
-public sealed class BackfillRecordsTests(CollectionFixture fixture)
+public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const int BackfillTestParticipationId = 500;
     private const int BackfillTestAttemptLowId = 500;
@@ -67,6 +67,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRuns_RecordChainIsCorrect()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -75,88 +77,75 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — slot: era=2, ageCategory=junior(2), weightCategory=93kg(2), squat(1), isRaw=true.
-            // Expected chain: attempt 500 (180kg) -> attempt 501 (220kg, current).
-            // The orphan seed record at 150kg (no attempt) should be deleted.
-            // The corrupt record at 160kg (no matching attempt) should be deleted.
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — slot: era=2, ageCategory=junior(2), weightCategory=93kg(2), squat(1), isRaw=true.
+        // Expected chain: attempt 500 (180kg) -> attempt 501 (220kg, current).
+        // The orphan seed record at 150kg (no attempt) should be deleted.
+        // The corrupt record at 160kg (no matching attempt) should be deleted.
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
-                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
-                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-                .Where(r => r.IsRaw)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .ToListAsync(CancellationToken.None);
 
-            slotRecords.Count(r => r.IsCurrent).ShouldBe(1, "exactly one record should be current");
+        slotRecords.Count(r => r.IsCurrent).ShouldBe(1, "exactly one record should be current");
 
-            RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
-            currentRecord.Weight.ShouldBe(220.0m);
-            currentRecord.AttemptId.ShouldBe(BackfillTestAttemptHighId);
+        RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
+        currentRecord.Weight.ShouldBe(220.0m);
+        currentRecord.AttemptId.ShouldBe(BackfillTestAttemptHighId);
 
-            // The orphan seed records (AttemptId = null) should have been deleted
-            slotRecords.ShouldNotContain(r => r.AttemptId == null);
+        // The orphan seed records (AttemptId = null) should have been deleted
+        slotRecords.ShouldNotContain(r => r.AttemptId == null);
 
-            // The corrupt 160kg record should have been deleted
-            slotRecords.ShouldNotContain(r => r.Weight == 160.0m);
-        }
-        finally
-        {
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        // The corrupt 160kg record should have been deleted
+        slotRecords.ShouldNotContain(r => r.Weight == 160.0m);
     }
 
     [Fact]
     public async Task WhenBackfillRunsTwice_ResultIsIdempotent()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
-        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
 
-        try
+        // Act — run twice with separate instances (BackgroundService only executes once per instance)
+        using (BackfillRecordsJob firstRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
         {
-            // Act — run twice with separate instances (BackgroundService only executes once per instance)
-            using (BackfillRecordsJob firstRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
-            {
-                await firstRun.StartAsync(CancellationToken.None);
-                await (firstRun.ExecuteTask ?? Task.CompletedTask);
-            }
-
-            using (BackfillRecordsJob secondRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
-            {
-                await secondRun.StartAsync(CancellationToken.None);
-                await (secondRun.ExecuteTask ?? Task.CompletedTask);
-            }
-
-            // Assert — the record chain should be consistent after two runs
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-            List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.IsCurrent)
-                .ToListAsync(CancellationToken.None);
-
-            // Group by slot and verify each slot has exactly one current record
-            IEnumerable<IGrouping<string, RecordEntity>> slots = allCurrentRecords
-                .GroupBy(r => $"{r.EraId}-{r.AgeCategoryId}-{r.WeightCategoryId}-{r.RecordCategoryId}-{r.IsRaw}");
-
-            foreach (IGrouping<string, RecordEntity> slot in slots)
-            {
-                slot.Count().ShouldBe(1, $"slot {slot.Key} should have exactly one current record");
-            }
+            await firstRun.StartAsync(CancellationToken.None);
+            await (firstRun.ExecuteTask ?? Task.CompletedTask);
         }
-        finally
+
+        using (BackfillRecordsJob secondRun = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance))
         {
-            await RestoreSeedRecordsAsync(dbContext);
+            await secondRun.StartAsync(CancellationToken.None);
+            await (secondRun.ExecuteTask ?? Task.CompletedTask);
+        }
+
+        // Assert — the record chain should be consistent after two runs
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
+
+        // Group by slot and verify each slot has exactly one current record
+        IEnumerable<IGrouping<string, RecordEntity>> slots = allCurrentRecords
+            .GroupBy(r => $"{r.EraId}-{r.AgeCategoryId}-{r.WeightCategoryId}-{r.RecordCategoryId}-{r.IsRaw}");
+
+        foreach (IGrouping<string, RecordEntity> slot in slots)
+        {
+            slot.Count().ShouldBe(1, $"slot {slot.Key} should have exactly one current record");
         }
     }
 
@@ -164,6 +153,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
     public async Task WhenBackfillRuns_TotalRecordIsCreated()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -172,38 +163,33 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — Total record should exist for the participation with Total=620
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — Total record should exist for the participation with Total=620
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
-                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
-                .Where(r => r.RecordCategoryId == RecordCategory.Total)
-                .Where(r => r.IsRaw)
-                .Where(r => r.IsCurrent)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.JuniorId)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+            .Where(r => r.RecordCategoryId == RecordCategory.Total)
+            .Where(r => r.IsRaw)
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
 
-            totalRecords.Count.ShouldBe(1);
-            totalRecords[0].Weight.ShouldBe(620.0m);
-        }
-        finally
-        {
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        totalRecords.Count.ShouldBe(1);
+        totalRecords[0].Weight.ShouldBe(620.0m);
     }
 
     [Fact]
     public async Task WhenBackfillRuns_DeadliftSingleRecordIsCreated()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -212,32 +198,25 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — DeadliftSingle record should exist
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — DeadliftSingle record should exist
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> dlSingleRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
-                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
-                .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
-                .Where(r => r.IsRaw)
-                .Where(r => r.IsCurrent)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> dlSingleRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id83Kg)
+            .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
+            .Where(r => r.IsRaw)
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
 
-            dlSingleRecords.Count.ShouldBe(1);
-            dlSingleRecords[0].Weight.ShouldBe(280.0m);
-        }
-        finally
-        {
-            await RestoreDeadliftMeetBackfillDataAsync(dbContext);
-        }
+        dlSingleRecords.Count.ShouldBe(1);
+        dlSingleRecords[0].Weight.ShouldBe(280.0m);
     }
 
     [Fact]
@@ -246,41 +225,37 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         // Arrange — base seed includes a standard record (RecordId=6) in the
         // equipped / open / 93 kg / squat slot with no athlete attempts.
         // The expected chain for that slot is empty, so the buggy code deletes it.
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
-        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — the standard record in the 93 kg equipped open squat slot must survive
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — the standard record in the 93 kg equipped open squat slot must survive
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
-                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
-                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-                .Where(r => !r.IsRaw)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => !r.IsRaw)
+            .ToListAsync(CancellationToken.None);
 
-            slotRecords.ShouldContain(r => r.IsStandard, "standard record should not be deleted by backfill");
-        }
-        finally
-        {
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        slotRecords.ShouldContain(r => r.IsStandard, "standard record should not be deleted by backfill");
     }
 
     [Fact]
     public async Task WhenNonIcelandicAthleteCompetes_BackfillDoesNotCreateRecord()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -299,33 +274,25 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — no records should exist for the non-Icelandic athlete's slot
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — no records should exist for the non-Icelandic athlete's slot
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
-                .Where(r => r.WeightCategoryId == weightCategoryId)
-                .Where(r => r.IsRaw)
-                .Where(r => r.AttemptId == norwegianAthlete.SquatAttemptId
-                    || r.AttemptId == norwegianAthlete.BenchAttemptId
-                    || r.AttemptId == norwegianAthlete.DeadliftAttemptId)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.IsRaw)
+            .Where(r => r.AttemptId == norwegianAthlete.SquatAttemptId
+                || r.AttemptId == norwegianAthlete.BenchAttemptId
+                || r.AttemptId == norwegianAthlete.DeadliftAttemptId)
+            .ToListAsync(CancellationToken.None);
 
-            slotRecords.ShouldBeEmpty("non-Icelandic athletes should not get records via backfill");
-        }
-        finally
-        {
-            await norwegianAthlete.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        slotRecords.ShouldBeEmpty("non-Icelandic athletes should not get records via backfill");
     }
 
     [Fact]
@@ -336,6 +303,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         // both slots tracked lifts from full powerlifting competitions.
         // Likewise, a deadlift attempt should produce both Deadlift (Cat=3) and
         // DeadliftSingle (Cat=6) records.
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -349,56 +318,48 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — both Bench and BenchSingle records should be created for the bench attempt.
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — both Bench and BenchSingle records should be created for the bench attempt.
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            RecordEntity? benchRecord = await assertDb.Set<RecordEntity>()
-                .Where(r => r.AttemptId == athlete.BenchAttemptId)
-                .Where(r => r.RecordCategoryId == RecordCategory.Bench)
-                .FirstOrDefaultAsync(CancellationToken.None);
+        RecordEntity? benchRecord = await assertDb.Set<RecordEntity>()
+            .Where(r => r.AttemptId == athlete.BenchAttemptId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Bench)
+            .FirstOrDefaultAsync(CancellationToken.None);
 
-            RecordEntity? benchSingleRecord = await assertDb.Set<RecordEntity>()
-                .Where(r => r.AttemptId == athlete.BenchAttemptId)
-                .Where(r => r.RecordCategoryId == RecordCategory.BenchSingle)
-                .FirstOrDefaultAsync(CancellationToken.None);
+        RecordEntity? benchSingleRecord = await assertDb.Set<RecordEntity>()
+            .Where(r => r.AttemptId == athlete.BenchAttemptId)
+            .Where(r => r.RecordCategoryId == RecordCategory.BenchSingle)
+            .FirstOrDefaultAsync(CancellationToken.None);
 
-            benchRecord.ShouldNotBeNull("bench from powerlifting meet should produce a Bench record");
-            benchRecord.Weight.ShouldBe(130m);
+        benchRecord.ShouldNotBeNull("bench from powerlifting meet should produce a Bench record");
+        benchRecord.Weight.ShouldBe(130m);
 
-            benchSingleRecord.ShouldNotBeNull(
-                "bench from powerlifting meet should also produce a BenchSingle record");
-            benchSingleRecord.Weight.ShouldBe(130m);
+        benchSingleRecord.ShouldNotBeNull(
+            "bench from powerlifting meet should also produce a BenchSingle record");
+        benchSingleRecord.Weight.ShouldBe(130m);
 
-            // Also verify Deadlift and DeadliftSingle records.
-            RecordEntity? deadliftRecord = await assertDb.Set<RecordEntity>()
-                .Where(r => r.AttemptId == athlete.DeadliftAttemptId)
-                .Where(r => r.RecordCategoryId == RecordCategory.Deadlift)
-                .FirstOrDefaultAsync(CancellationToken.None);
+        // Also verify Deadlift and DeadliftSingle records.
+        RecordEntity? deadliftRecord = await assertDb.Set<RecordEntity>()
+            .Where(r => r.AttemptId == athlete.DeadliftAttemptId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Deadlift)
+            .FirstOrDefaultAsync(CancellationToken.None);
 
-            RecordEntity? deadliftSingleRecord = await assertDb.Set<RecordEntity>()
-                .Where(r => r.AttemptId == athlete.DeadliftAttemptId)
-                .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
-                .FirstOrDefaultAsync(CancellationToken.None);
+        RecordEntity? deadliftSingleRecord = await assertDb.Set<RecordEntity>()
+            .Where(r => r.AttemptId == athlete.DeadliftAttemptId)
+            .Where(r => r.RecordCategoryId == RecordCategory.DeadliftSingle)
+            .FirstOrDefaultAsync(CancellationToken.None);
 
-            deadliftRecord.ShouldNotBeNull("deadlift from powerlifting meet should produce a Deadlift record");
-            deadliftRecord.Weight.ShouldBe(250m);
+        deadliftRecord.ShouldNotBeNull("deadlift from powerlifting meet should produce a Deadlift record");
+        deadliftRecord.Weight.ShouldBe(250m);
 
-            deadliftSingleRecord.ShouldNotBeNull(
-                "deadlift from powerlifting meet should also produce a DeadliftSingle record");
-            deadliftSingleRecord.Weight.ShouldBe(250m);
-        }
-        finally
-        {
-            await athlete.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        deadliftSingleRecord.ShouldNotBeNull(
+            "deadlift from powerlifting meet should also produce a DeadliftSingle record");
+        deadliftSingleRecord.Weight.ShouldBe(250m);
     }
 
     [Fact]
@@ -413,6 +374,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         // runningMax=140; 803 (110 kg < 140 kg) is skipped and never enters the chain.
         // After the fix (sort by weight first), 803 (110 kg) is processed first, 800
         // (140 kg) second — both enter the chain and both records are created.
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -438,49 +401,42 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert — both squat records must be created; athlete1 (140 kg) is current,
-            // athlete2 (110 kg) is the predecessor in the progressive chain.
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert — both squat records must be created; athlete1 (140 kg) is current,
+        // athlete2 (110 kg) is the predecessor in the progressive chain.
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
-                .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
-                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-                .Where(r => r.IsRaw)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+            .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .ToListAsync(CancellationToken.None);
 
-            slotRecords.ShouldContain(
-                r => r.AttemptId == athlete1.SquatAttemptId,
-                "higher-weight attempt (lower ID) should be in chain");
+        slotRecords.ShouldContain(
+            r => r.AttemptId == athlete1.SquatAttemptId,
+            "higher-weight attempt (lower ID) should be in chain");
 
-            slotRecords.ShouldContain(
-                r => r.AttemptId == athlete2.SquatAttemptId,
-                "lower-weight attempt (higher ID) should not be suppressed by sort order bug");
+        slotRecords.ShouldContain(
+            r => r.AttemptId == athlete2.SquatAttemptId,
+            "lower-weight attempt (higher ID) should not be suppressed by sort order bug");
 
-            RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
-            currentRecord.AttemptId.ShouldBe(athlete1.SquatAttemptId, "current record should be the highest weight");
-            currentRecord.Weight.ShouldBe(140m);
-        }
-        finally
-        {
-            await athlete1.DeleteAsync(dbContext, CancellationToken.None);
-            await athlete2.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        RecordEntity currentRecord = slotRecords.Single(r => r.IsCurrent);
+        currentRecord.AttemptId.ShouldBe(athlete1.SquatAttemptId, "current record should be the highest weight");
+        currentRecord.Weight.ShouldBe(140m);
     }
 
     [Fact]
     public async Task WhenStandardRecordExists_ChainStartsFromStandardWeight()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -505,12 +461,12 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             insertStandardSql,
             TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteABaseId)
+        await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteABaseId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(240m)
             .BuildAsync(CancellationToken.None);
 
-        SeedRecordAthlete athleteB = await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteBBaseId)
+        await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteBBaseId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(260m)
             .BuildAsync(CancellationToken.None);
@@ -518,52 +474,45 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
-                .Where(r => r.WeightCategoryId == weightCategoryId)
-                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-                .Where(r => r.IsRaw)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .ToListAsync(CancellationToken.None);
 
-            slotRecords.ShouldContain(
-                r => r.IsStandard,
-                "standard record should still exist after backfill");
+        slotRecords.ShouldContain(
+            r => r.IsStandard,
+            "standard record should still exist after backfill");
 
-            List<RecordEntity> nonStandardRecords = slotRecords
-                .Where(r => !r.IsStandard)
-                .ToList();
+        List<RecordEntity> nonStandardRecords = slotRecords
+            .Where(r => !r.IsStandard)
+            .ToList();
 
-            nonStandardRecords.Count.ShouldBe(1, "only one non-standard squat record should exist");
-            nonStandardRecords[0].Weight.ShouldBe(260.0m);
-            nonStandardRecords[0].IsCurrent.ShouldBeTrue();
+        nonStandardRecords.Count.ShouldBe(1, "only one non-standard squat record should exist");
+        nonStandardRecords[0].Weight.ShouldBe(260.0m);
+        nonStandardRecords[0].IsCurrent.ShouldBeTrue();
 
-            slotRecords.ShouldNotContain(
-                r => r.Weight == 240.0m,
-                "attempt below standard weight should not produce a record");
-        }
-        finally
-        {
-            await athleteA.DeleteAsync(dbContext, CancellationToken.None);
-            await athleteB.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        slotRecords.ShouldNotContain(
+            r => r.Weight == 240.0m,
+            "attempt below standard weight should not produce a record");
     }
 
     [Fact]
     public async Task WhenMultipleGoodDeadlifts_IntermediateTotalRecordsAreCreated()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -609,62 +558,44 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
-                .Where(r => r.WeightCategoryId == weightCategoryId)
-                .Where(r => r.RecordCategoryId == RecordCategory.Total)
-                .Where(r => r.IsRaw)
-                .OrderBy(r => r.Weight)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Total)
+            .Where(r => r.IsRaw)
+            .OrderBy(r => r.Weight)
+            .ToListAsync(CancellationToken.None);
 
-            totalRecords.Count.ShouldBe(3, "one total record per improving deadlift attempt");
+        totalRecords.Count.ShouldBe(3, "one total record per improving deadlift attempt");
 
-            totalRecords[0].Weight.ShouldBe(580.0m);
-            totalRecords[0].AttemptId.ShouldBe(athlete.DeadliftAttemptId);
-            totalRecords[0].IsCurrent.ShouldBeFalse();
+        totalRecords[0].Weight.ShouldBe(580.0m);
+        totalRecords[0].AttemptId.ShouldBe(athlete.DeadliftAttemptId);
+        totalRecords[0].IsCurrent.ShouldBeFalse();
 
-            totalRecords[1].Weight.ShouldBe(590.0m);
-            totalRecords[1].AttemptId.ShouldBe(IntermediateTotalDlRound2AttemptId);
-            totalRecords[1].IsCurrent.ShouldBeFalse();
+        totalRecords[1].Weight.ShouldBe(590.0m);
+        totalRecords[1].AttemptId.ShouldBe(IntermediateTotalDlRound2AttemptId);
+        totalRecords[1].IsCurrent.ShouldBeFalse();
 
-            totalRecords[2].Weight.ShouldBe(600.0m);
-            totalRecords[2].AttemptId.ShouldBe(IntermediateTotalDlRound3AttemptId);
-            totalRecords[2].IsCurrent.ShouldBeTrue();
-        }
-        finally
-        {
-            await dbContext.Database.ExecuteSqlRawAsync(
-                $"""
-                DELETE FROM Records
-                WHERE AttemptId IN (
-                    {IntermediateTotalDlRound2AttemptId},
-                    {IntermediateTotalDlRound3AttemptId});
-                DELETE FROM Attempts
-                WHERE AttemptId IN (
-                    {IntermediateTotalDlRound2AttemptId},
-                    {IntermediateTotalDlRound3AttemptId});
-                """,
-                TestContext.Current.CancellationToken);
-            await athlete.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        totalRecords[2].Weight.ShouldBe(600.0m);
+        totalRecords[2].AttemptId.ShouldBe(IntermediateTotalDlRound3AttemptId);
+        totalRecords[2].IsCurrent.ShouldBeTrue();
     }
 
     [Fact]
     public async Task WhenFourthAttemptExists_TotalExcludesRoundFourWeight()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -700,47 +631,35 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
-        try
-        {
-            // Act
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
-                .Where(r => r.WeightCategoryId == weightCategoryId)
-                .Where(r => r.RecordCategoryId == RecordCategory.Total)
-                .Where(r => r.IsRaw)
-                .Where(r => r.IsCurrent)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Total)
+            .Where(r => r.IsRaw)
+            .Where(r => r.IsCurrent)
+            .ToListAsync(CancellationToken.None);
 
-            totalRecords.Count.ShouldBe(1);
-            totalRecords[0].Weight.ShouldBe(
-                580.0m,
-                "total should be 200+130+250=580, not 220+130+250=600");
-        }
-        finally
-        {
-            await dbContext.Database.ExecuteSqlRawAsync(
-                $"""
-                DELETE FROM Records WHERE AttemptId = {FourthAttemptRound4AttemptId};
-                DELETE FROM Attempts WHERE AttemptId = {FourthAttemptRound4AttemptId};
-                """,
-                TestContext.Current.CancellationToken);
-            await athlete.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        totalRecords.Count.ShouldBe(1);
+        totalRecords[0].Weight.ShouldBe(
+            580.0m,
+            "total should be 200+130+250=580, not 220+130+250=600");
     }
 
     [Fact]
     public async Task WhenDuplicateRecordsExistForSameAttempt_BackfillDeduplicates()
     {
         // Arrange
+        await ResetToBaseStateAsync();
+
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -782,50 +701,38 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             insertDuplicateSql,
             TestContext.Current.CancellationToken);
 
-        try
-        {
-            // Act
-            using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
-            await job.StartAsync(CancellationToken.None);
-            await (job.ExecuteTask ?? Task.CompletedTask);
+        // Act
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
 
-            // Assert
-            await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        // Assert
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-            List<RecordEntity> squatRecords = await assertDb.Set<RecordEntity>()
-                .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-                .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
-                .Where(r => r.WeightCategoryId == weightCategoryId)
-                .Where(r => r.RecordCategoryId == RecordCategory.Squat)
-                .Where(r => r.IsRaw)
-                .Where(r => !r.IsStandard)
-                .Where(r => r.AttemptId == athlete.SquatAttemptId)
-                .ToListAsync(CancellationToken.None);
+        List<RecordEntity> squatRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .Where(r => !r.IsStandard)
+            .Where(r => r.AttemptId == athlete.SquatAttemptId)
+            .ToListAsync(CancellationToken.None);
 
-            squatRecords.Count.ShouldBe(
-                1,
-                "duplicate records for the same attempt should be deduplicated");
-        }
-        finally
-        {
-            await athlete.DeleteAsync(dbContext, CancellationToken.None);
-            await RestoreSeedRecordsAsync(dbContext);
-        }
+        squatRecords.Count.ShouldBe(
+            1,
+            "duplicate records for the same attempt should be deduplicated");
     }
 
-    private static async Task RestoreSeedRecordsAsync(ResultsDbContext dbContext)
+    public ValueTask InitializeAsync()
     {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            $"""
-            DELETE FROM Records;
-            DELETE FROM Attempts WHERE AttemptId IN ({BackfillTestAttemptLowId}, {BackfillTestAttemptHighId}, {BackfillTestBenchAttemptId}, {BackfillTestDeadliftAttemptId});
-            DELETE FROM Participations WHERE ParticipationId = {BackfillTestParticipationId};
-            UPDATE Athletes SET DateOfBirth = '{SeedAthleteDateOfBirth}' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
-            """);
+        return ValueTask.CompletedTask;
+    }
 
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
-        await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
+    public async ValueTask DisposeAsync()
+    {
+        await ResetToBaseStateAsync();
     }
 
     private static async Task SeedDeadliftMeetBackfillDataAsync(ResultsDbContext dbContext)
@@ -852,19 +759,6 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static async Task RestoreDeadliftMeetBackfillDataAsync(ResultsDbContext dbContext)
-    {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            $"""
-            DELETE FROM Records;
-            DELETE FROM Attempts WHERE AttemptId = {DeadliftMeetAttemptId};
-            DELETE FROM Participations WHERE ParticipationId = {DeadliftMeetParticipationId};
-            """);
-
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
-        await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
     }
 
     private static async Task SeedBackfillTotalTestDataAsync(ResultsDbContext dbContext)
@@ -949,5 +843,75 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture)
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(corruptRecordsSql);
+    }
+
+    private async Task ResetToBaseStateAsync()
+    {
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        // Delete ALL records first (FK-safe: records reference attempts)
+        await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM Records;");
+
+        // Delete test-created attempts (hardcoded IDs from tests 1-4)
+        string deleteAttemptsSql =
+            $"""
+            DELETE FROM Attempts WHERE AttemptId IN (
+                {BackfillTestAttemptLowId}, {BackfillTestAttemptHighId},
+                {BackfillTestBenchAttemptId}, {BackfillTestDeadliftAttemptId},
+                {DeadliftMeetAttemptId},
+                {IntermediateTotalDlRound2AttemptId}, {IntermediateTotalDlRound3AttemptId},
+                {FourthAttemptRound4AttemptId});
+            """;
+        await dbContext.Database.ExecuteSqlRawAsync(deleteAttemptsSql);
+
+        // Delete test-created participations (hardcoded IDs from tests 1-4)
+        string deleteParticipationsSql =
+            $"""
+            DELETE FROM Participations WHERE ParticipationId IN (
+                {BackfillTestParticipationId}, {DeadliftMeetParticipationId});
+            """;
+        await dbContext.Database.ExecuteSqlRawAsync(deleteParticipationsSql);
+
+        // Delete RecordTestAthleteBuilder-created entities (tests 6-12)
+        // Builder creates athlete=baseId, participation=baseId, attempts=baseId/baseId+1/baseId+2
+        int[] baseIds =
+        [
+            NonIcelandicAthleteBaseId,
+            SortOrderAthlete1BaseId, SortOrderAthlete2BaseId,
+            SingleLiftAthleteBaseId,
+            StandardRecordAthleteABaseId, StandardRecordAthleteBBaseId,
+            IntermediateTotalAthleteBaseId,
+            FourthAttemptAthleteBaseId,
+            DuplicateRecordAthleteBaseId
+        ];
+
+        foreach (int baseId in baseIds)
+        {
+            int squatId = baseId;
+            int benchId = baseId + 1;
+            int deadliftId = baseId + 2;
+            string deleteAttempts =
+                $"DELETE FROM Attempts WHERE AttemptId IN ({squatId}, {benchId}, {deadliftId});";
+            await dbContext.Database.ExecuteSqlRawAsync(deleteAttempts);
+            string deleteParticipation =
+                $"DELETE FROM Participations WHERE ParticipationId = {baseId};";
+            await dbContext.Database.ExecuteSqlRawAsync(deleteParticipation);
+            string deleteAthlete =
+                $"DELETE FROM Athletes WHERE AthleteId = {baseId};";
+            await dbContext.Database.ExecuteSqlRawAsync(deleteAthlete);
+        }
+
+        // Restore athlete DoB (tests 1-3 modify it)
+        string restoreDobSql =
+            $"""
+            UPDATE Athletes SET DateOfBirth = '{SeedAthleteDateOfBirth}'
+            WHERE AthleteId = {TestSeedConstants.Athlete.Id};
+            """;
+        await dbContext.Database.ExecuteSqlRawAsync(restoreDobSql);
+
+        // Re-seed base records and corruption records
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
+        await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
     }
 }
