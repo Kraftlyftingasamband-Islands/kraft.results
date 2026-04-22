@@ -442,4 +442,50 @@ Text, sub-items (`**(a)**`-`**(f)**`), tables, and examples that belong to a num
 ## Known remaining artifacts
 
 - Spaced hyphens used as dashes/separators (e.g., `Length - not less than`) are left as-is since they function as list separators in the PDF, not compound word hyphens.
-- Section 7 item 17: `three four referees` is the actual text in the PDF -- verified against the source PDF, not an extraction artifact.
+
+## Sections removed for project relevance
+
+The full IPF Technical Rules document contains rules that will never be implemented in software. The following sections were removed to keep the reference document focused on rules that drive data models, scoring logic, meet management UI, and referee verdict submission.
+
+### Filtering criteria
+
+When processing a new rules edition, apply these criteria to decide what to keep:
+
+**Keep** content that:
+- Defines data the system stores or computes (age categories, weight classes, bodyweight, attempts, totals, points, records, IPF formula)
+- Defines scoring, placing, or ranking logic (tie-breaking, team points, best lifter awards)
+- Defines competition flow the system must enforce (round system, rising bar, attempt changes, time limits, grouping, lot numbers)
+- Defines weight increment rules (2.5 kg multiples, 0.5 kg record attempts)
+- Defines record recognition and cascading rules
+- Defines failure/disqualification reasons referees select from (the system presents these as options)
+- Defines equipment specs the system renders (disc colors for loader view, bar weight, collar weight)
+- Defines scoreboard or card layouts the system displays
+- Defines loading error handling that affects recorded results
+
+**Remove** content that:
+- Describes physical clothing, gear specifications, or personal equipment rules (suits, shirts, belts, shoes, wraps, knee sleeves, socks, headwear, medical tape, sponsor logos, lubricants)
+- Describes referee qualifications, examinations, registration, dress code, or administrative procedures
+- Describes jury composition, protest/appeal procedures, or governance
+- Describes coach responsibilities, conduct rules, dress code, or warm-up area management
+- Describes physical venue/equipment setup enforced by humans (platform surface material, scale calibration certificates, rack manufacturer approval)
+- Describes nomination, entry, or team roster submission procedures (60-day deadlines, preliminary nominations)
+- Describes medal ceremony dress code, medical personnel requirements, or conduct rules
+- Describes official appointment procedures or job descriptions (speaker, secretary, marshals, spotter/loaders, technical controller)
+
+### What was removed (2026 edition)
+
+| Original section | Removed |
+|-----------------|---------|
+| 1. General Rules | Preamble (items 1a-d: lift sequence definition, "competition takes place between lifters", rules apply to all levels). Championship list (item 2). Nomination procedures (items 3-4: 60-day deadlines, preliminary nominations, reserves, team rosters). Referee requirement per nation for team scoring (item 7). Medal ceremony dress code and participation mementos (item 10 partial). Whipping rule (item 11). Medical personnel requirement (item 12). |
+| 3. Personal Equipment | Entire section (3.1-3.14): suits, t-shirts, supportive shirts, briefs, socks, belts, shoes, knee sleeves, wraps, headwear, medical tape, equipment inspection, sponsor logos, general attire rules. |
+| 4. Rules of Performance | Lift performance prose descriptions (squat items 1-6, bench items 1-9, deadlift items 1-4). Disabled athlete rules prose (4.2.2) -- the amputee weight addition table is kept in Section 5. |
+| 5. Weighing In | Clothing specifications for weigh-in (item 5 prose about singlet, t-shirt, underwear). Rack height checks (item 8). |
+| 6. Order of Competition | Official appointment procedures (6.1q sub-items a-h: speaker, secretary, marshals, spotter/loaders, technical controller). Official job descriptions (6.2 a-h). Coach staffing ratio tables (6.3 item 1). Costume/ammonia rules (6.3 item 2). Conduct and misconduct rules (6.3 items 9-13: hair, belt discarding, injury/doctor, warnings, disqualification for misconduct). Appeal procedures (6.3 items 14-15: written complaints, Euro 75 fee, jury deliberation). Referee signals table (6.3 item 15 table). Instant replay governance (6.3 item 16). |
+| 7. Referees | Entire section (items 1-30): referee count and positioning, pre-contest and during-contest duties, commentary abstention, bar cleaning, score sheet signing, selection procedures, nation restrictions, Cat 1/Cat 2 qualifications and examination procedures, dress code table, registration and re-registration, fees. |
+| 8. Jury and Technical Committee | Entire section (8.1-8.2): jury composition, jury member positioning, protest handling, referee replacement, drug testing selection, music volume, technical committee composition, referee training, equipment manufacturer approval and certification. Jury override rules (8.1 items 8-9) are kept -- see Section 8 in the trimmed document. |
+| 9. World and International Records | IPF sanction requirement (item 2a). Referee card requirements (item 2b-c). Approved equipment requirement (item 2d). World Games records note (item 1 footnote). |
+| 10. Coach Responsibilities | Entire section: coach aims, duties, warm-up area staffing tables (duplicated from 6.3), observation zone, dress code, badge requirements, training schedule, equipment tidiness, weigh-in documents, equipment check, anti-doping acknowledgment, family/children policy, victory ceremony preparation, alcohol policy, eligible coaches rule, filming policy, acknowledgment/signature form. |
+
+### Renumbering after removal
+
+Items within kept sections were renumbered to maintain sequential order. Cross-references between items were updated accordingly (e.g., team scoring cross-reference updated from "item 8" to "item 6"). The Table of Contents was rewritten to match the new structure. Section numbers in headings were updated where sections were consolidated (e.g., Section 9 became Section 7).
