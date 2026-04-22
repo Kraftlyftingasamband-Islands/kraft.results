@@ -1,9 +1,7 @@
-using System.Reflection;
-
-using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Bans;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 
 using Shouldly;
 
@@ -29,7 +27,10 @@ public sealed class IsEligibleForRecordTests
     {
         // Arrange
         WebApi.Features.Athletes.Athlete athlete = CreateAthlete();
-        Ban ban = CreateBan(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+        Ban ban = new BanBuilder()
+            .WithFromDate(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+            .WithToDate(new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc))
+            .Build();
         athlete.Bans.Add(ban);
 
         // Act
@@ -44,7 +45,10 @@ public sealed class IsEligibleForRecordTests
     {
         // Arrange
         WebApi.Features.Athletes.Athlete athlete = CreateAthlete();
-        Ban ban = CreateBan(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+        Ban ban = new BanBuilder()
+            .WithFromDate(new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+            .WithToDate(new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc))
+            .Build();
         athlete.Bans.Add(ban);
 
         // Act
@@ -59,7 +63,10 @@ public sealed class IsEligibleForRecordTests
     {
         // Arrange
         WebApi.Features.Athletes.Athlete athlete = CreateAthlete();
-        Ban ban = CreateBan(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+        Ban ban = new BanBuilder()
+            .WithFromDate(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+            .WithToDate(new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc))
+            .Build();
         athlete.Bans.Add(ban);
 
         // Act
@@ -74,7 +81,10 @@ public sealed class IsEligibleForRecordTests
     {
         // Arrange
         WebApi.Features.Athletes.Athlete athlete = CreateAthlete();
-        Ban ban = CreateBan(new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc), new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+        Ban ban = new BanBuilder()
+            .WithFromDate(new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc))
+            .WithToDate(new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc))
+            .Build();
         athlete.Bans.Add(ban);
 
         // Act
@@ -89,7 +99,10 @@ public sealed class IsEligibleForRecordTests
     {
         // Arrange
         WebApi.Features.Athletes.Athlete athlete = CreateAthlete();
-        Ban ban = CreateBan(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc));
+        Ban ban = new BanBuilder()
+            .WithFromDate(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+            .WithToDate(new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc))
+            .Build();
         athlete.Bans.Add(ban);
 
         // Act
@@ -101,25 +114,9 @@ public sealed class IsEligibleForRecordTests
 
     private static WebApi.Features.Athletes.Athlete CreateAthlete()
     {
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
         Country country = new();
         return WebApi.Features.Athletes.Athlete.Create(
             creator, "John", "Doe", "m", country, null, null).FromResult();
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
-    }
-
-    private static Ban CreateBan(DateTime fromDate, DateTime toDate)
-    {
-        Ban ban = (Ban)Activator.CreateInstance(typeof(Ban), nonPublic: true)!;
-        typeof(Ban).GetProperty(nameof(Ban.FromDate))!.SetValue(ban, fromDate);
-        typeof(Ban).GetProperty(nameof(Ban.ToDate))!.SetValue(ban, toDate);
-        return ban;
     }
 }

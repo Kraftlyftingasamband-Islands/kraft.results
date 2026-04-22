@@ -1,9 +1,7 @@
-using System.Reflection;
-
-using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 
 using Shouldly;
 
@@ -15,7 +13,7 @@ public sealed class AggregateRootTests
     public void ClearDomainEvents_EmptiesEventList()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
         Country country = new();
         Athlete athlete = Athlete.Create(creator, "John", "Doe", "m", country, null, null).FromResult();
         athlete.DomainEvents.ShouldNotBeEmpty();
@@ -25,13 +23,5 @@ public sealed class AggregateRootTests
 
         // Assert
         athlete.DomainEvents.ShouldBeEmpty();
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
     }
 }
