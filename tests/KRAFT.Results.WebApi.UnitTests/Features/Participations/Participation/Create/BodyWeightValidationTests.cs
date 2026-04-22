@@ -1,8 +1,6 @@
-using System.Reflection;
-
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
@@ -15,7 +13,7 @@ public sealed class BodyWeightValidationTests
     public void ReturnsFailure_WhenBodyWeightIsZero()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
 
         // Act
         Result<WebApi.Features.Participations.Participation> result =
@@ -31,7 +29,7 @@ public sealed class BodyWeightValidationTests
     public void ReturnsFailure_WhenBodyWeightExceedsMaximum()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
 
         // Act
         Result<WebApi.Features.Participations.Participation> result =
@@ -47,7 +45,7 @@ public sealed class BodyWeightValidationTests
     public void StoresBodyWeightValueObject_WhenValid()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
 
         // Act
         Result<WebApi.Features.Participations.Participation> result =
@@ -59,13 +57,5 @@ public sealed class BodyWeightValidationTests
         WebApi.Features.Participations.Participation participation = result.FromResult();
         participation.Weight.ShouldBeOfType<BodyWeight>();
         participation.Weight.Value.ShouldBe(83.5m);
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
     }
 }

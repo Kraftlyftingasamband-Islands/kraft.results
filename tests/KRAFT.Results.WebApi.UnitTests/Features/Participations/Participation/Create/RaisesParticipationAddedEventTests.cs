@@ -1,8 +1,7 @@
-using System.Reflection;
-
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 
 using Shouldly;
 
@@ -14,7 +13,7 @@ public sealed class RaisesParticipationAddedEventTests
     public void RaisesExactlyOneParticipationAddedEvent()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
 
         // Act
         WebApi.Features.Participations.Participation participation = WebApi.Features.Participations.Participation.Create(
@@ -25,13 +24,5 @@ public sealed class RaisesParticipationAddedEventTests
         IDomainEvent domainEvent = participation.DomainEvents.ShouldHaveSingleItem();
         ParticipationAddedEvent addedEvent = domainEvent.ShouldBeOfType<ParticipationAddedEvent>();
         addedEvent.Participation.ShouldBeSameAs(participation);
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
     }
 }

@@ -1,9 +1,8 @@
-using System.Reflection;
-
 using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 
 using Shouldly;
 
@@ -15,7 +14,7 @@ public sealed class RaisesAttemptRecordedEventTests
     public void RaisesAttemptRecordedEvent()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
         WebApi.Features.Participations.Participation participation = WebApi.Features.Participations.Participation.Create(
             creator, athleteId: 1, meetId: 1, weightCategoryId: 1, ageCategoryId: 1, bodyWeight: 83.5m).FromResult();
 
@@ -31,13 +30,5 @@ public sealed class RaisesAttemptRecordedEventTests
         recordedEvent.Attempt.Discipline.ShouldBe(Discipline.Squat);
         recordedEvent.Attempt.Round.ShouldBe((short)1);
         recordedEvent.Attempt.Weight.ShouldBe(200m);
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
     }
 }

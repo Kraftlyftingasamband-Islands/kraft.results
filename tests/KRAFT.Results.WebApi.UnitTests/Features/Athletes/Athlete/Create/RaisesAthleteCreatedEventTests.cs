@@ -1,9 +1,8 @@
-using System.Reflection;
-
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 
 using Shouldly;
 
@@ -15,7 +14,7 @@ public sealed class RaisesAthleteCreatedEventTests
     public void RaisesExactlyOneAthleteCreatedEvent()
     {
         // Arrange
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
         Country country = new();
 
         // Act
@@ -27,13 +26,5 @@ public sealed class RaisesAthleteCreatedEventTests
         IDomainEvent domainEvent = athlete.DomainEvents.ShouldHaveSingleItem();
         AthleteCreatedEvent createdEvent = domainEvent.ShouldBeOfType<AthleteCreatedEvent>();
         createdEvent.Athlete.ShouldBeSameAs(athlete);
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
     }
 }

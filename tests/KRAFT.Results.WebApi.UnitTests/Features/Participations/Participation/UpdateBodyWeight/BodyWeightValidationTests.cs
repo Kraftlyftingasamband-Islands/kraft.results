@@ -1,8 +1,6 @@
-using System.Reflection;
-
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.UnitTests.Builders;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
@@ -55,16 +53,8 @@ public sealed class BodyWeightValidationTests
 
     private static WebApi.Features.Participations.Participation CreateParticipation()
     {
-        User creator = CreateUser("testuser");
+        User creator = new UserBuilder().Build();
         return WebApi.Features.Participations.Participation.Create(
             creator, athleteId: 1, meetId: 1, weightCategoryId: 1, ageCategoryId: 1, bodyWeight: 83.5m).FromResult();
-    }
-
-    private static User CreateUser(string username)
-    {
-        User user = (User)Activator.CreateInstance(typeof(User), nonPublic: true)!;
-        PropertyInfo usernameProperty = typeof(User).GetProperty(nameof(User.Username))!;
-        usernameProperty.SetValue(user, username);
-        return user;
     }
 }
