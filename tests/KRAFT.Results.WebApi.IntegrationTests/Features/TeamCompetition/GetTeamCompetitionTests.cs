@@ -65,8 +65,8 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         _betaTeamId = await CreateTeamAsync(_betaTeamName, _betaShortCode);
 
         // Create 2025 meets (two meets in same year for cross-meet totals)
-        int meet1_2025Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2025, 6, 1));
-        int meet2_2025Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2025, 9, 1));
+        int meet1In2025Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2025, 6, 1));
+        int meet2In2025Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2025, 9, 1));
 
         // Create athletes for 2025
         string alphaMaleSlug = await CreateAthleteAsync("AlphaM", "m");
@@ -78,57 +78,57 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         string zeroPtsSlug = await CreateAthleteAsync("ZeroPts", "m");
 
         // Alpha male: meet1=12, meet2=9 → total=21
-        int alphaMalePid1 = await AddParticipantAsync(meet1_2025Id, alphaMaleSlug, _alphaTeamId);
+        int alphaMalePid1 = await AddParticipantAsync(meet1In2025Id, alphaMaleSlug, _alphaTeamId);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {AlphaMenMeet1Points}, Place = 1 WHERE ParticipationId = {alphaMalePid1}");
 
-        int alphaMalePid2 = await AddParticipantAsync(meet2_2025Id, alphaMaleSlug, _alphaTeamId);
+        int alphaMalePid2 = await AddParticipantAsync(meet2In2025Id, alphaMaleSlug, _alphaTeamId);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {AlphaMenMeet2Points}, Place = 2 WHERE ParticipationId = {alphaMalePid2}");
 
         // Beta male: meet1=8, meet2=12 → total=20
-        int betaMalePid1 = await AddParticipantAsync(meet1_2025Id, betaMaleSlug, _betaTeamId);
+        int betaMalePid1 = await AddParticipantAsync(meet1In2025Id, betaMaleSlug, _betaTeamId);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {BetaMenMeet1Points}, Place = 3 WHERE ParticipationId = {betaMalePid1}");
 
-        int betaMalePid2 = await AddParticipantAsync(meet2_2025Id, betaMaleSlug, _betaTeamId);
+        int betaMalePid2 = await AddParticipantAsync(meet2In2025Id, betaMaleSlug, _betaTeamId);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {BetaMenMeet2Points}, Place = 1 WHERE ParticipationId = {betaMalePid2}");
 
         // Alpha female: meet1=12
-        int alphaFemalePid = await AddParticipantAsync(meet1_2025Id, alphaFemaleSlug, _alphaTeamId, 57.0m);
+        int alphaFemalePid = await AddParticipantAsync(meet1In2025Id, alphaFemaleSlug, _alphaTeamId, 57.0m);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {AlphaWomenPoints}, Place = 1 WHERE ParticipationId = {alphaFemalePid}");
 
         // Beta female: meet1=9
-        int betaFemalePid = await AddParticipantAsync(meet1_2025Id, betaFemaleSlug, _betaTeamId, 57.0m);
+        int betaFemalePid = await AddParticipantAsync(meet1In2025Id, betaFemaleSlug, _betaTeamId, 57.0m);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {BetaWomenPoints}, Place = 2 WHERE ParticipationId = {betaFemalePid}");
 
         // DQ'd participation: Alpha male, meet1, TeamPoints=7 (should be excluded)
-        int dqPid = await AddParticipantAsync(meet1_2025Id, dqAlphaMaleSlug, _alphaTeamId);
+        int dqPid = await AddParticipantAsync(meet1In2025Id, dqAlphaMaleSlug, _alphaTeamId);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET Disqualified = 1, TeamPoints = {DqPoints} WHERE ParticipationId = {dqPid}");
 
         // No team participation: meet1, TeamPoints=5 (should be excluded)
-        int noTeamPid = await AddParticipantAsync(meet1_2025Id, noTeamSlug, teamId: null);
+        int noTeamPid = await AddParticipantAsync(meet1In2025Id, noTeamSlug, teamId: null);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {NoTeamPoints} WHERE ParticipationId = {noTeamPid}");
 
         // Zero team points participation: meet1, TeamPoints=0 (should be excluded)
-        int zeroPtsPid = await AddParticipantAsync(meet1_2025Id, zeroPtsSlug, _alphaTeamId);
+        int zeroPtsPid = await AddParticipantAsync(meet1In2025Id, zeroPtsSlug, _alphaTeamId);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = {ZeroTeamPoints} WHERE ParticipationId = {zeroPtsPid}");
 
         // Create 2026 meets for BestN test
-        int meet1_2026Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2026, 6, 1));
-        int meet2_2026Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2026, 9, 1));
+        int meet1In2026Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2026, 6, 1));
+        int meet2In2026Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2026, 9, 1));
 
         // Meet1 2026: 6 male athletes all scoring 12 → best 5 → 60
         for (int i = 1; i <= 6; i++)
         {
             string slug = await CreateAthleteAsync($"Alpha26M{i}", "m");
-            int pid = await AddParticipantAsync(meet1_2026Id, slug, _alphaTeamId);
+            int pid = await AddParticipantAsync(meet1In2026Id, slug, _alphaTeamId);
             await fixture.ExecuteSqlAsync(
                 $"UPDATE Participations SET TeamPoints = {BestNPointsPerAthlete}, Place = {i} WHERE ParticipationId = {pid}");
         }
@@ -138,7 +138,7 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         for (int i = 0; i < meet2Points.Length; i++)
         {
             string slug = await CreateAthleteAsync($"Alpha26N{i}", "m");
-            int pid = await AddParticipantAsync(meet2_2026Id, slug, _alphaTeamId);
+            int pid = await AddParticipantAsync(meet2In2026Id, slug, _alphaTeamId);
             await fixture.ExecuteSqlAsync(
                 $"UPDATE Participations SET TeamPoints = {meet2Points[i]}, Place = {i + 1} WHERE ParticipationId = {pid}");
         }
@@ -291,8 +291,8 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         TeamCompetitionResponse? response = await _httpClient.GetFromJsonAsync<TeamCompetitionResponse>(
             $"{BasePath}/{Year2025}", CancellationToken.None);
 
-        // Assert — no-team participation should not create an extra team entry
-        response!.Men.ShouldNotContain(s => s.TeamSlug == string.Empty);
+        // Assert — no-team participation must not create a phantom entry with null/empty slug
+        response!.Men.ShouldAllBe(s => !string.IsNullOrEmpty(s.TeamSlug));
     }
 
     [Fact]
