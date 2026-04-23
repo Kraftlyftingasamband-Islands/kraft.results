@@ -66,8 +66,6 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
 
     private const int NorwayCountryId = 2;
 
-    private bool _infrastructureSeeded;
-
     [Fact]
     public async Task WhenBackfillRuns_RecordChainIsCorrect()
     {
@@ -987,11 +985,6 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
 
     private async Task SeedOwnedInfrastructureAsync()
     {
-        if (_infrastructureSeeded)
-        {
-            return;
-        }
-
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
@@ -1111,8 +1104,6 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(corruptionRecordsSql);
-
-        _infrastructureSeeded = true;
     }
 
     private async Task CleanupOwnedDataAsync()
