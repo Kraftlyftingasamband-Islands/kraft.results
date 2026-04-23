@@ -170,8 +170,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Record bench and deadlift first so the participation has valid totals
@@ -207,7 +205,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -247,8 +245,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
 
         int participationId = participantResult!.ParticipationId;
-
-        await ClearAllRecordCategoriesAsync(dbContext);
 
         try
         {
@@ -290,7 +286,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -486,8 +482,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Record bench and deadlift first to establish valid total
@@ -524,7 +518,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -566,8 +560,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         int participationId = participantResult!.ParticipationId;
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Record bench and deadlift first so the participation has valid totals
@@ -599,7 +591,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -640,8 +632,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         int participationId = participantResult!.ParticipationId;
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Record squat, bench, then deadlift (deadlift triggers the last event)
@@ -666,7 +656,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -707,8 +697,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         int participationId = participantResult!.ParticipationId;
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Record squat first (no valid total yet), then bench, then deadlift
@@ -733,7 +721,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -774,8 +762,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         int participationId = participantResult!.ParticipationId;
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             await RecordAttempt(client, participationId, Discipline.Squat, 1, 210.0m);
@@ -799,7 +785,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -993,8 +979,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         int participationBId = participantBResult!.ParticipationId;
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Give both athletes valid totals
@@ -1035,7 +1019,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationAId, participationBId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -1104,8 +1088,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         int participationBId = participantBResult!.ParticipationId;
 
-        await ClearAllRecordCategoriesAsync(dbContext);
-
         try
         {
             // Give both athletes valid totals
@@ -1159,7 +1141,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationAId, participationBId);
-            await RestoreClassic83KgSeedRecordAsync(dbContext);
+            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -2127,51 +2109,18 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
-    private static async Task RestoreClassic83KgSeedRecordAsync(ResultsDbContext dbContext)
+    private static async Task RestoreSeedRecordStateAsync(ResultsDbContext dbContext)
     {
-        // Slot rebuilds create chain records for seed attempts (AttemptId=1,2,3) across all age categories.
-        // Delete all classic records for those attempts first, then restore the canonical seed record.
-        // Also restore seed AttemptIds 4,5 (squats for ParticipationId=1) that ClearAllRecordCategoriesAsync deletes.
+        // Slot rebuilds may create additional record rows for seed attempts and flip IsCurrent flags.
+        // Delete all raw records for seed attempts, then restore the canonical seed record.
         string sql =
             $"""
             DELETE FROM Records WHERE AttemptId IN (1, 2, 3) AND IsRaw = 1;
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
             VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
-
-            IF NOT EXISTS (SELECT 1 FROM Attempts WHERE AttemptId = 4)
-            BEGIN
-                SET IDENTITY_INSERT Attempts ON;
-                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-                VALUES (4, 1, 1, 2, 210.0, 1, 'seed', 'seed');
-                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-                VALUES (5, 1, 1, 1, 190.0, 1, 'seed', 'seed');
-                SET IDENTITY_INSERT Attempts OFF;
-            END
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql, TestContext.Current.CancellationToken);
-    }
-
-    private static async Task ClearAllRecordCategoriesAsync(ResultsDbContext dbContext)
-    {
-        string sql =
-            $"""
-            DELETE FROM Records
-            WHERE AgeCategoryId IN (
-                {TestSeedConstants.AgeCategory.OpenId},
-                {TestSeedConstants.AgeCategory.Masters1Id},
-                {TestSeedConstants.AgeCategory.Masters2Id},
-                {TestSeedConstants.AgeCategory.Masters3Id},
-                {TestSeedConstants.AgeCategory.Masters4Id})
-            AND RecordCategoryId IN (1, 2, 3, 4, 5, 6)
-            AND IsRaw = 1
-            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id83Kg};
-
-            DELETE FROM Records WHERE AttemptId IN (4, 5);
-            DELETE FROM Attempts WHERE AttemptId IN (4, 5);
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
     private async Task RecordAttempt(
