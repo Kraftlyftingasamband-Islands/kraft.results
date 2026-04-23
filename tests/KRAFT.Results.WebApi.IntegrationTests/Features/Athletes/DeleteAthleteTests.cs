@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
@@ -48,11 +49,29 @@ public sealed class DeleteAthleteTests(CollectionFixture fixture)
     [Fact]
     public async Task ReturnsConflict_WithErrorCode_WhenAthleteHasParticipations()
     {
-        // Arrange — the seeded athlete has participations
-        string seededAthleteSlug = Constants.TestAthleteSlug;
+        // Arrange
+        string athleteSlug = await CreateAthleteAsync();
+
+        CreateMeetCommand meetCommand = new CreateMeetCommandBuilder().Build();
+        HttpResponseMessage meetResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets", meetCommand, CancellationToken.None);
+        meetResponse.EnsureSuccessStatusCode();
+        string meetSlug = meetResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{meetSlug}", CancellationToken.None);
+        int meetId = details!.MeetId;
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .Build();
+        HttpResponseMessage addResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{meetId}/participants", participantCommand, CancellationToken.None);
+        addResponse.EnsureSuccessStatusCode();
 
         // Act
-        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{seededAthleteSlug}", CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync(
+            $"{BasePath}/{athleteSlug}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);

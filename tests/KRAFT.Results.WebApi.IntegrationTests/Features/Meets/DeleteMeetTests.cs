@@ -48,11 +48,22 @@ public sealed class DeleteMeetTests(CollectionFixture fixture)
     [Fact]
     public async Task ReturnsConflict_WithErrorCode_WhenMeetHasParticipations()
     {
-        // Arrange — the seeded meet has participations
-        string slug = Constants.TestMeetSlug;
+        // Arrange
+        string slug = await CreateMeetAsync();
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"{BasePath}/{slug}", CancellationToken.None);
+        int meetId = details!.MeetId;
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(Constants.TestAthleteSlug)
+            .Build();
+        HttpResponseMessage addResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"{BasePath}/{meetId}/participants", participantCommand, CancellationToken.None);
+        addResponse.EnsureSuccessStatusCode();
 
         // Act
-        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{slug}", CancellationToken.None);
+        HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync(
+            $"{BasePath}/{slug}", CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
