@@ -17,6 +17,22 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 [Collection(nameof(RecordsCollection))]
 public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
+    // Owned infrastructure entity IDs
+    private const int OwnedAthleteId = 510;
+    private const int OwnedMeetId = 510;
+    private const int OwnedDeadliftMeetId = 511;
+    private const int DeadliftMeetTypeId = 3;
+
+    // Owned base participation + attempts for corruption records
+    private const int OwnedBaseParticipationId = 510;
+    private const int OwnedBaseAttemptSquatId = 510;
+    private const int OwnedBaseAttemptBenchId = 511;
+    private const int OwnedBaseAttemptDeadliftId = 512;
+
+    // Owned standard record
+    private const int OwnedStandardRecordId = 510;
+
+    // Per-test entity IDs
     private const int BackfillTestParticipationId = 500;
     private const int BackfillTestAttemptLowId = 500;
     private const int BackfillTestAttemptHighId = 501;
@@ -49,19 +65,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
     private const int DuplicateRecordAthleteBaseId = 1030;
 
     private const int NorwayCountryId = 2;
-    private const string SeedAthleteDateOfBirth = "1985-07-02";
 
-    private const string SeedRecordCorruptionSql =
-        """
-        INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-        VALUES (2, 1, 2, 2, 150.0, '2025-06-01', 0, 2, 0, 0, 'seed');
-
-        INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-        VALUES (2, 1, 2, 2, 140.0, '2025-05-01', 0, 2, 1, 0, 'seed');
-
-        INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-        VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
-        """;
+    private bool _infrastructureSeeded;
 
     [Fact]
     public async Task WhenBackfillRuns_RecordChainIsCorrect()
@@ -222,8 +227,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
     [Fact]
     public async Task WhenBackfillRuns_StandardRecordIsNotDeleted()
     {
-        // Arrange — base seed includes a standard record (RecordId=6) in the
-        // equipped / open / 93 kg / squat slot with no athlete attempts.
+        // Arrange — owned standard record (RecordId=510) in the
+        // equipped / masters4 / 93 kg / squat slot with no athlete attempts.
         // The expected chain for that slot is empty, so the buggy code deletes it.
         await ResetToBaseStateAsync();
 
@@ -235,13 +240,13 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await job.StartAsync(CancellationToken.None);
         await (job.ExecuteTask ?? Task.CompletedTask);
 
-        // Assert — the standard record in the 93 kg equipped open squat slot must survive
+        // Assert — the standard record in the 93 kg equipped masters4 squat slot must survive
         await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
             .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
-            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.OpenId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
             .Where(r => r.WeightCategoryId == TestSeedConstants.WeightCategory.Id93Kg)
             .Where(r => r.RecordCategoryId == RecordCategory.Squat)
             .Where(r => !r.IsRaw)
@@ -264,6 +269,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, CancellationToken.None);
 
         SeedRecordAthlete norwegianAthlete = await new RecordTestAthleteBuilder(dbContext, NonIcelandicAthleteBaseId)
+            .WithMeetId(OwnedMeetId)
             .WithCountryId(NorwayCountryId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(300m)
@@ -309,6 +315,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, SingleLiftAthleteBaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(TestSeedConstants.WeightCategory.Id105Kg)
             .WithSquat(200m)
             .WithBench(130m)
@@ -385,6 +392,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             CancellationToken.None);
 
         SeedRecordAthlete athlete1 = await new RecordTestAthleteBuilder(dbContext, SortOrderAthlete1BaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(TestSeedConstants.WeightCategory.Id93Kg)
             .WithSquat(140m)
             .WithBench(100m)
@@ -392,6 +400,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             .BuildAsync(CancellationToken.None);
 
         SeedRecordAthlete athlete2 = await new RecordTestAthleteBuilder(dbContext, SortOrderAthlete2BaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(TestSeedConstants.WeightCategory.Id93Kg)
             .WithSquat(110m)
             .WithBench(80m)
@@ -454,7 +463,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
                 {TestSeedConstants.AgeCategory.Masters4Id},
                 {weightCategoryId},
                 {(int)RecordCategory.Squat},
-                250.0, '2020-06-01', 1, NULL, 1, 1, 'test');
+                250.0, '2020-06-01', 1, NULL, 1, 1, 'backfill-test');
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(
@@ -462,11 +471,13 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             TestContext.Current.CancellationToken);
 
         await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteABaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(240m)
             .BuildAsync(CancellationToken.None);
 
         await new RecordTestAthleteBuilder(dbContext, StandardRecordAthleteBBaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(260m)
             .BuildAsync(CancellationToken.None);
@@ -523,6 +534,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(
                 dbContext,
                 IntermediateTotalAthleteBaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(200m)
             .WithBench(130m)
@@ -606,6 +618,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(
                 dbContext,
                 FourthAttemptAthleteBaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(200m)
             .WithBench(130m)
@@ -670,6 +683,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(
                 dbContext,
                 DuplicateRecordAthleteBaseId)
+            .WithMeetId(OwnedMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(200m)
             .WithBench(130m)
@@ -725,14 +739,14 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             "duplicate records for the same attempt should be deduplicated");
     }
 
-    public ValueTask InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
-        return ValueTask.CompletedTask;
+        await SeedOwnedInfrastructureAsync();
     }
 
     public async ValueTask DisposeAsync()
     {
-        await ResetToBaseStateAsync();
+        await CleanupOwnedDataAsync();
     }
 
     private static async Task SeedDeadliftMeetBackfillDataAsync(ResultsDbContext dbContext)
@@ -749,7 +763,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
 
             SET IDENTITY_INSERT Participations ON;
             INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({DeadliftMeetParticipationId}, {TestSeedConstants.Athlete.Id}, {Constants.DeadliftMeet.Id}, 80.5, {TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.AgeCategory.OpenId}, 1, 0, 0.0, 0.0, 280.0, 0.0, 0.0, 0.0, 1);
+            VALUES ({DeadliftMeetParticipationId}, {OwnedAthleteId}, {OwnedDeadliftMeetId}, 80.5, {TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.AgeCategory.OpenId}, 1, 0, 0.0, 0.0, 280.0, 0.0, 0.0, 0.0, 1);
             SET IDENTITY_INSERT Participations OFF;
 
             SET IDENTITY_INSERT Attempts ON;
@@ -809,15 +823,13 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
 
         await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
 
-        // Create a participation in junior age category, 93kg, in the raw test meet (MeetId=1)
-        // Temporarily set athlete DoB to junior range so biological age resolves correctly
+        // Create a participation in junior age category, 93kg, in the owned meet
+        // Owned athlete DOB is 2003-01-01, which resolves to junior age category
         string seedDataSql =
             $"""
-            UPDATE Athletes SET DateOfBirth = '2003-01-01' WHERE AthleteId = {TestSeedConstants.Athlete.Id};
-
             SET IDENTITY_INSERT Participations ON;
             INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({BackfillTestParticipationId}, {TestSeedConstants.Athlete.Id}, {TestSeedConstants.Meet.Id}, 90.0, {weightCategoryId}, {ageCategoryId}, 1, 0, 220.0, 140.0, 260.0, 620.0, 420.0, 90.0, 99);
+            VALUES ({BackfillTestParticipationId}, {OwnedAthleteId}, {OwnedMeetId}, 90.0, {weightCategoryId}, {ageCategoryId}, 1, 0, 220.0, 140.0, 260.0, 620.0, 420.0, 90.0, 99);
             SET IDENTITY_INSERT Participations OFF;
 
             SET IDENTITY_INSERT Attempts ON;
@@ -836,10 +848,10 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         string corruptRecordsSql =
             $"""
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES ({eraId}, {ageCategoryId}, {weightCategoryId}, 1, 150.0, '2025-01-01', 0, NULL, 1, 1, 'seed');
+            VALUES ({eraId}, {ageCategoryId}, {weightCategoryId}, 1, 150.0, '2025-01-01', 0, NULL, 1, 1, 'backfill-test');
 
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES ({eraId}, {ageCategoryId}, {weightCategoryId}, 1, 160.0, '2025-02-01', 0, NULL, 1, 1, 'seed');
+            VALUES ({eraId}, {ageCategoryId}, {weightCategoryId}, 1, 160.0, '2025-02-01', 0, NULL, 1, 1, 'backfill-test');
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(corruptRecordsSql);
@@ -850,31 +862,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        // Delete ALL records first (FK-safe: records reference attempts)
-        await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM Records;");
-
-        // Delete test-created attempts (hardcoded IDs from tests 1-4)
-        string deleteAttemptsSql =
-            $"""
-            DELETE FROM Attempts WHERE AttemptId IN (
-                {BackfillTestAttemptLowId}, {BackfillTestAttemptHighId},
-                {BackfillTestBenchAttemptId}, {BackfillTestDeadliftAttemptId},
-                {DeadliftMeetAttemptId},
-                {IntermediateTotalDlRound2AttemptId}, {IntermediateTotalDlRound3AttemptId},
-                {FourthAttemptRound4AttemptId});
-            """;
-        await dbContext.Database.ExecuteSqlRawAsync(deleteAttemptsSql);
-
-        // Delete test-created participations (hardcoded IDs from tests 1-4)
-        string deleteParticipationsSql =
-            $"""
-            DELETE FROM Participations WHERE ParticipationId IN (
-                {BackfillTestParticipationId}, {DeadliftMeetParticipationId});
-            """;
-        await dbContext.Database.ExecuteSqlRawAsync(deleteParticipationsSql);
-
-        // Delete RecordTestAthleteBuilder-created entities (tests 6-12)
-        // Builder creates athlete=baseId, participation=baseId, attempts=baseId/baseId+1/baseId+2
+        // Builder-created entities: athlete=baseId, participation=baseId, attempts=baseId/baseId+1/baseId+2
         int[] baseIds =
         [
             NonIcelandicAthleteBaseId,
@@ -886,14 +874,54 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             DuplicateRecordAthleteBaseId
         ];
 
+        // Per-test attempt IDs (excludes owned infrastructure attempts which must persist)
+        List<int> perTestAttemptIds =
+        [
+            BackfillTestAttemptLowId, BackfillTestAttemptHighId,
+            BackfillTestBenchAttemptId, BackfillTestDeadliftAttemptId,
+            DeadliftMeetAttemptId,
+            IntermediateTotalDlRound2AttemptId, IntermediateTotalDlRound3AttemptId,
+            FourthAttemptRound4AttemptId
+        ];
+
         foreach (int baseId in baseIds)
         {
-            int squatId = baseId;
-            int benchId = baseId + 1;
-            int deadliftId = baseId + 2;
-            string deleteAttempts =
-                $"DELETE FROM Attempts WHERE AttemptId IN ({squatId}, {benchId}, {deadliftId});";
-            await dbContext.Database.ExecuteSqlRawAsync(deleteAttempts);
+            perTestAttemptIds.Add(baseId);
+            perTestAttemptIds.Add(baseId + 1);
+            perTestAttemptIds.Add(baseId + 2);
+        }
+
+        string perTestAttemptIdsCsv = string.Join(", ", perTestAttemptIds);
+
+        // Delete records: per-test attempts + owned infra attempts + CreatedBy marker
+        string deleteRecordsSql =
+            $"""
+            DELETE FROM Records WHERE AttemptId IN (
+                {perTestAttemptIdsCsv},
+                {OwnedBaseAttemptSquatId}, {OwnedBaseAttemptBenchId}, {OwnedBaseAttemptDeadliftId});
+            DELETE FROM Records WHERE CreatedBy = 'backfill-test';
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(deleteRecordsSql);
+
+        // Delete per-test attempts (owned infrastructure attempts are kept)
+        string deleteAttemptsSql =
+            $"""
+            DELETE FROM Attempts WHERE AttemptId IN ({perTestAttemptIdsCsv});
+            """;
+        await dbContext.Database.ExecuteSqlRawAsync(deleteAttemptsSql);
+
+        // Delete test-created participations
+        string deleteParticipationsSql =
+            $"""
+            DELETE FROM Participations WHERE ParticipationId IN (
+                {BackfillTestParticipationId}, {DeadliftMeetParticipationId});
+            """;
+        await dbContext.Database.ExecuteSqlRawAsync(deleteParticipationsSql);
+
+        // Delete builder-created participations and athletes
+        foreach (int baseId in baseIds)
+        {
             string deleteParticipation =
                 $"DELETE FROM Participations WHERE ParticipationId = {baseId};";
             await dbContext.Database.ExecuteSqlRawAsync(deleteParticipation);
@@ -902,16 +930,209 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             await dbContext.Database.ExecuteSqlRawAsync(deleteAthlete);
         }
 
-        // Restore athlete DoB (tests 1-3 modify it)
-        string restoreDobSql =
+        // Re-seed corruption records (they get deleted during record cleanup)
+        string corruptionRecordsSql =
             $"""
-            UPDATE Athletes SET DateOfBirth = '{SeedAthleteDateOfBirth}'
-            WHERE AthleteId = {TestSeedConstants.Athlete.Id};
-            """;
-        await dbContext.Database.ExecuteSqlRawAsync(restoreDobSql);
+            IF NOT EXISTS (
+                SELECT 1 FROM Records
+                WHERE EraId = {TestSeedConstants.Era.CurrentId}
+                AND AgeCategoryId = {TestSeedConstants.AgeCategory.Masters4Id}
+                AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id93Kg}
+                AND RecordCategoryId = {(int)RecordCategory.Bench}
+                AND Weight = 150.0
+                AND CreatedBy = 'backfill-test')
+            BEGIN
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES (
+                    {TestSeedConstants.Era.CurrentId},
+                    {TestSeedConstants.AgeCategory.Masters4Id},
+                    {TestSeedConstants.WeightCategory.Id93Kg},
+                    {(int)RecordCategory.Bench},
+                    150.0, '2025-06-01', 0, {OwnedBaseAttemptBenchId}, 0, 0, 'backfill-test');
 
-        // Re-seed base records and corruption records
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseRecords());
-        await dbContext.Database.ExecuteSqlRawAsync(SeedRecordCorruptionSql);
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES (
+                    {TestSeedConstants.Era.CurrentId},
+                    {TestSeedConstants.AgeCategory.Masters4Id},
+                    {TestSeedConstants.WeightCategory.Id93Kg},
+                    {(int)RecordCategory.Bench},
+                    140.0, '2025-05-01', 0, {OwnedBaseAttemptBenchId}, 1, 0, 'backfill-test');
+
+                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES (
+                    {TestSeedConstants.Era.CurrentId},
+                    {TestSeedConstants.AgeCategory.Masters4Id},
+                    {TestSeedConstants.WeightCategory.Id83Kg},
+                    {(int)RecordCategory.BenchSingle},
+                    130.0, '2025-03-15', 1, {OwnedBaseAttemptBenchId}, 1, 0, 'backfill-test');
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(corruptionRecordsSql);
+
+        // Re-seed standard record if deleted
+        string standardRecordSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Records WHERE RecordId = {OwnedStandardRecordId})
+            BEGIN
+                SET IDENTITY_INSERT Records ON;
+                INSERT INTO Records (RecordId, EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES ({OwnedStandardRecordId}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.Masters4Id}, {TestSeedConstants.WeightCategory.Id93Kg}, {(int)RecordCategory.Squat}, 220.0, '2025-01-01', 1, NULL, 1, 0, 'backfill-test');
+                SET IDENTITY_INSERT Records OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(standardRecordSql);
+    }
+
+    private async Task SeedOwnedInfrastructureAsync()
+    {
+        if (_infrastructureSeeded)
+        {
+            return;
+        }
+
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        // Owned athlete — Icelandic, DOB 2003-01-01 for junior eligibility
+        string athleteSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Athletes WHERE AthleteId = {OwnedAthleteId})
+            BEGIN
+                SET IDENTITY_INSERT Athletes ON;
+                INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+                VALUES ({OwnedAthleteId}, 'Backfill', 'Test', '2003-01-01', 'm', {TestSeedConstants.Country.Id}, 'backfill-test');
+                SET IDENTITY_INSERT Athletes OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(athleteSql);
+
+        // Owned powerlifting meet — IsRaw=1, RecordsPossible=1
+        string meetSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedMeetId})
+            BEGIN
+                SET IDENTITY_INSERT Meets ON;
+                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+                VALUES ({OwnedMeetId}, 'Backfill Test Meet', 'backfill-test-meet', '2025-03-15', '2025-03-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
+                SET IDENTITY_INSERT Meets OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(meetSql);
+
+        // Owned deadlift meet
+        string deadliftMeetSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedDeadliftMeetId})
+            BEGIN
+                SET IDENTITY_INSERT Meets ON;
+                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+                VALUES ({OwnedDeadliftMeetId}, 'Backfill DL Meet', 'backfill-dl-meet', '2025-06-01', '2025-06-01', 1, 1, 1, 1, {DeadliftMeetTypeId}, 0, 1, 0, 1, 0, 1, 1);
+                SET IDENTITY_INSERT Meets OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(deadliftMeetSql);
+
+        // Owned base participation + attempts for corruption records to reference
+        string baseParticipationSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Participations WHERE ParticipationId = {OwnedBaseParticipationId})
+            BEGIN
+                SET IDENTITY_INSERT Participations ON;
+                INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
+                VALUES ({OwnedBaseParticipationId}, {OwnedAthleteId}, {OwnedMeetId}, 90.0, {TestSeedConstants.WeightCategory.Id93Kg}, {TestSeedConstants.AgeCategory.OpenId}, 1, 1, 150.0, 100.0, 180.0, 430.0, 300.0, 70.0, 99);
+                SET IDENTITY_INSERT Participations OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(baseParticipationSql);
+
+        string baseAttemptsSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Attempts WHERE AttemptId = {OwnedBaseAttemptSquatId})
+            BEGIN
+                SET IDENTITY_INSERT Attempts ON;
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES ({OwnedBaseAttemptSquatId}, {OwnedBaseParticipationId}, 1, 1, 150.0, 0, 'backfill-test', 'backfill-test');
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES ({OwnedBaseAttemptBenchId}, {OwnedBaseParticipationId}, 2, 1, 100.0, 0, 'backfill-test', 'backfill-test');
+                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
+                VALUES ({OwnedBaseAttemptDeadliftId}, {OwnedBaseParticipationId}, 3, 1, 180.0, 0, 'backfill-test', 'backfill-test');
+                SET IDENTITY_INSERT Attempts OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(baseAttemptsSql);
+
+        // Owned standard record — equipped / open / 93kg / squat, IsStandard=1
+        string standardRecordSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Records WHERE RecordId = {OwnedStandardRecordId})
+            BEGIN
+                SET IDENTITY_INSERT Records ON;
+                INSERT INTO Records (RecordId, EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+                VALUES ({OwnedStandardRecordId}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.Masters4Id}, {TestSeedConstants.WeightCategory.Id93Kg}, {(int)RecordCategory.Squat}, 220.0, '2025-01-01', 1, NULL, 1, 0, 'backfill-test');
+                SET IDENTITY_INSERT Records OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(standardRecordSql);
+
+        // Corruption records — reference owned attempts
+        string corruptionRecordsSql =
+            $"""
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {TestSeedConstants.WeightCategory.Id93Kg},
+                {(int)RecordCategory.Bench},
+                150.0, '2025-06-01', 0, {OwnedBaseAttemptBenchId}, 0, 0, 'backfill-test');
+
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {TestSeedConstants.WeightCategory.Id93Kg},
+                {(int)RecordCategory.Bench},
+                140.0, '2025-05-01', 0, {OwnedBaseAttemptBenchId}, 1, 0, 'backfill-test');
+
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {TestSeedConstants.WeightCategory.Id83Kg},
+                {(int)RecordCategory.BenchSingle},
+                130.0, '2025-03-15', 1, {OwnedBaseAttemptBenchId}, 1, 0, 'backfill-test');
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(corruptionRecordsSql);
+
+        _infrastructureSeeded = true;
+    }
+
+    private async Task CleanupOwnedDataAsync()
+    {
+        await ResetToBaseStateAsync();
+
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        // Delete owned infrastructure in FK-safe order
+        string cleanupSql =
+            $"""
+            DELETE FROM Records WHERE RecordId = {OwnedStandardRecordId};
+            DELETE FROM Records WHERE CreatedBy = 'backfill-test';
+            DELETE FROM Attempts WHERE AttemptId IN ({OwnedBaseAttemptSquatId}, {OwnedBaseAttemptBenchId}, {OwnedBaseAttemptDeadliftId});
+            DELETE FROM Participations WHERE ParticipationId = {OwnedBaseParticipationId};
+            DELETE FROM Meets WHERE MeetId IN ({OwnedMeetId}, {OwnedDeadliftMeetId});
+            DELETE FROM Athletes WHERE AthleteId = {OwnedAthleteId};
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
     }
 }
