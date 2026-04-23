@@ -8,8 +8,6 @@ using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
 
-using Microsoft.EntityFrameworkCore;
-
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
@@ -294,16 +292,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         await RecordAttempt(participationId, Discipline.Squat, 1, 100.0m, true);
         await RecordAttempt(participationId, Discipline.Squat, 2, 110.0m, true);
 
-        DbContextOptions<ResultsDbContext> dbOptions = new DbContextOptionsBuilder<ResultsDbContext>()
-            .UseSqlServer(fixture.Database!.ConnectionString)
-            .Options;
-
-        await using (ResultsDbContext dbContext = new(dbOptions))
-        {
-            await dbContext.Database.ExecuteSqlAsync(
-                $"INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy) VALUES ({participationId}, 1, 4, 0, 1, 'seed', 'seed')",
-                TestContext.Current.CancellationToken);
-        }
+        await fixture.ExecuteSqlAsync(
+            $"INSERT INTO Attempts (ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy) VALUES ({participationId}, 1, 4, 0, 1, 'seed', 'seed')");
 
         RecordAttemptCommand command = new RecordAttemptCommandBuilder()
             .WithWeight(115.0m)
