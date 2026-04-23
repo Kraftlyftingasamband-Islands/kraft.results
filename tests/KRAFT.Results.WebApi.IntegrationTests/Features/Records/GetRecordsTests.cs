@@ -277,7 +277,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         int classicNonEmptyCount = classicGroups
             .SelectMany(g => g.Records)
-            .Count(r => r.Athlete is not null);
+            .Count(r => r.Athlete != null);
         classicNonEmptyCount.ShouldBe(1);
     }
 
