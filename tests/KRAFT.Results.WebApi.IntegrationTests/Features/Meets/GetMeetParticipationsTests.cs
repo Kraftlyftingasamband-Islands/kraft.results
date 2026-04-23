@@ -12,7 +12,7 @@ using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 
-[Collection(nameof(MeetsCollection))]
+[Collection(nameof(GetMeetParticipationsCollection))]
 public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
