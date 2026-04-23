@@ -29,12 +29,22 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 {
     private const decimal AttemptWeight = 300.0m;
 
+    // Owned infrastructure entity IDs
+    private const int OwnedBannedAthleteId = 1100;
+    private const string OwnedBannedAthleteSlug = "compute-banned";
+    private const int OwnedNoRecordsMeetId = 1101;
+    private const int OwnedDeadliftMeetId = 1102;
+    private const int DeadliftMeetTypeId = 3;
+    private const int OwnedBaseMeetId = 1103;
+
     private readonly HttpClient _setupHttpClient = fixture.CreateAuthorizedHttpClient();
     private int _meetId;
     private string _meetSlug = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
+        await SeedOwnedInfrastructureAsync();
+
         CreateMeetCommand meetCommand = new CreateMeetCommandBuilder()
             .WithIsRaw(true)
             .Build();
@@ -57,6 +67,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
     public async ValueTask DisposeAsync()
     {
+        await CleanupOwnedDataAsync();
+
         if (_meetId != 0)
         {
             await _setupHttpClient.DeleteAsync(
@@ -79,7 +91,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 600)
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 1110)
+            .WithMeetId(OwnedBaseMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(AttemptWeight)
             .BuildAsync(TestContext.Current.CancellationToken);
@@ -288,7 +301,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         (HttpClient client, RecordComputationChannel channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
         AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
-            .WithAthleteSlug(Constants.BannedAthlete.Slug)
+            .WithAthleteSlug(OwnedBannedAthleteSlug)
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
@@ -318,7 +331,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         List<RecordEntity> createdRecords = await dbContext.Set<RecordEntity>()
             .Include(r => r.Attempt!)
                 .ThenInclude(a => a.Participation)
-            .Where(r => r.Attempt!.Participation.AthleteId == Constants.BannedAthlete.Id)
+            .Where(r => r.Attempt!.Participation.AthleteId == OwnedBannedAthleteId)
             .Where(r => r.IsCurrent)
             .ToListAsync(CancellationToken.None);
 
@@ -349,7 +362,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{Constants.NoRecordsMeet.Id}/participants",
+            $"/meets/{OwnedNoRecordsMeetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -361,11 +374,11 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         int participationId = participantResult!.ParticipationId;
 
         // Record bench and deadlift so total would be valid
-        await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Bench, 1, 130.0m);
-        await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Deadlift, 1, 250.0m);
+        await RecordAttemptForMeet(client, OwnedNoRecordsMeetId, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttemptForMeet(client, OwnedNoRecordsMeetId, participationId, Discipline.Deadlift, 1, 250.0m);
 
         // Act â€" record squat at a meet where RecordsPossible = false
-        await RecordAttemptForMeet(client, Constants.NoRecordsMeet.Id, participationId, Discipline.Squat, 1, AttemptWeight);
+        await RecordAttemptForMeet(client, OwnedNoRecordsMeetId, participationId, Discipline.Squat, 1, AttemptWeight);
         await channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
         // Assert â€" no records should be created
@@ -812,7 +825,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage participantResponse = await client.PostAsJsonAsync(
-            $"/meets/{Constants.DeadliftMeet.Id}/participants",
+            $"/meets/{OwnedDeadliftMeetId}/participants",
             participantCommand,
             CancellationToken.None);
 
@@ -831,7 +844,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         {
             await RecordAttemptForMeet(
                 client,
-                Constants.DeadliftMeet.Id,
+                OwnedDeadliftMeetId,
                 participationId,
                 Discipline.Deadlift,
                 1,
@@ -1158,11 +1171,11 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
-        const int athleteId = 300;
-        const int participationId = 300;
-        const int squatAttemptId = 300;
-        const int benchAttemptId = 301;
-        const int deadliftAttemptId = 302;
+        const int athleteId = 1300;
+        const int participationId = 1300;
+        const int squatAttemptId = 1300;
+        const int benchAttemptId = 1301;
+        const int deadliftAttemptId = 1302;
         const int weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
 
         string seedSql =
@@ -1183,7 +1196,7 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
             SET IDENTITY_INSERT Participations ON;
             INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({participationId}, {athleteId}, {TestSeedConstants.Meet.Id}, 90.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 90.0, 50);
+            VALUES ({participationId}, {athleteId}, {OwnedBaseMeetId}, 90.0, {weightCategoryId}, {TestSeedConstants.AgeCategory.Masters4Id}, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 90.0, 50);
             SET IDENTITY_INSERT Participations OFF;
 
             SET IDENTITY_INSERT Attempts ON;
@@ -1265,7 +1278,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
-        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 310)
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 1113)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(200m).WithBench(130m).WithDeadlift(200m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
@@ -1358,7 +1372,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
-        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 320)
+        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 1116)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(200m).WithBench(130m).WithDeadlift(250m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
@@ -1381,7 +1396,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
             recordsAfterA.ShouldNotBeEmpty();
 
-            athleteB = await new RecordTestAthleteBuilder(dbContext, 330)
+            athleteB = await new RecordTestAthleteBuilder(dbContext, 1119)
+                .WithMeetId(OwnedBaseMeetId)
                 .WithSquat(210m).WithBench(130m).WithDeadlift(250m)
                 .BuildAsync(TestContext.Current.CancellationToken);
 
@@ -1453,7 +1469,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
-        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 340)
+        SeedRecordAthlete athlete = await new RecordTestAthleteBuilder(dbContext, 1122)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(200m).WithBench(130m).WithDeadlift(250m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
@@ -1530,7 +1547,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 350)
+        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 1125)
+            .WithMeetId(OwnedBaseMeetId)
             .WithBench(150m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
@@ -1548,7 +1566,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
             aTotalRecords.ShouldNotBeEmpty();
 
-            athleteB = await new RecordTestAthleteBuilder(dbContext, 360)
+            athleteB = await new RecordTestAthleteBuilder(dbContext, 1128)
+                .WithMeetId(OwnedBaseMeetId)
                 .WithSquat(250m)
                 .WithBench(150m)
                 .WithDeadlift(300m)
@@ -1625,19 +1644,22 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 400)
+        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 1131)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(210m)
             .WithBench(140m)
             .WithDeadlift(260m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteB = await new RecordTestAthleteBuilder(dbContext, 403)
+        SeedRecordAthlete athleteB = await new RecordTestAthleteBuilder(dbContext, 1134)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(210m)
             .WithBench(140m)
             .WithDeadlift(270m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteC = await new RecordTestAthleteBuilder(dbContext, 406)
+        SeedRecordAthlete athleteC = await new RecordTestAthleteBuilder(dbContext, 1137)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(210m)
             .WithBench(140m)
             .WithDeadlift(280m)
@@ -1690,7 +1712,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 410)
+        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 1140)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(211m)
             .WithBench(140m)
             .WithDeadlift(260m)
@@ -1711,7 +1734,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             recordsAfterA.ShouldNotBeEmpty();
 
             // Seed athlete B with squat=220 (beats A's 211)
-            athleteB = await new RecordTestAthleteBuilder(dbContext, 420)
+            athleteB = await new RecordTestAthleteBuilder(dbContext, 1143)
+                .WithMeetId(OwnedBaseMeetId)
                 .WithSquat(220m)
                 .WithBench(140m)
                 .WithDeadlift(260m)
@@ -1796,11 +1820,11 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
         RecordComputationService service = scope.ServiceProvider.GetRequiredService<RecordComputationService>();
 
-        const int benchMeetId = 50;
+        const int benchMeetId = 1310;
         const int benchMeetTypeId = 2;
-        const int athleteId = 430;
-        const int participationId = 430;
-        const int benchAttemptId = 430;
+        const int athleteId = 1311;
+        const int participationId = 1311;
+        const int benchAttemptId = 1311;
         const int weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
 
         string seedSql =
@@ -1902,10 +1926,12 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 440)
+        SeedRecordAthlete athleteA = await new RecordTestAthleteBuilder(dbContext, 1146)
+            .WithMeetId(OwnedBaseMeetId)
             .BuildAsync(TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete athleteB = await new RecordTestAthleteBuilder(dbContext, 450)
+        SeedRecordAthlete athleteB = await new RecordTestAthleteBuilder(dbContext, 1149)
+            .WithMeetId(OwnedBaseMeetId)
             .WithSquat(220m)
             .WithBench(140m)
             .WithDeadlift(260m)
@@ -2019,7 +2045,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         await SeedRecordAthlete.ClearSlotAsync(dbContext, weightCategoryId, TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete norwegianAthlete = await new RecordTestAthleteBuilder(dbContext, 500)
+        SeedRecordAthlete norwegianAthlete = await new RecordTestAthleteBuilder(dbContext, 1152)
+            .WithMeetId(OwnedBaseMeetId)
             .WithCountryId(norwayCountryId)
             .WithWeightCategoryId(weightCategoryId)
             .WithSquat(250m)
@@ -2027,7 +2054,8 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .WithDeadlift(300m)
             .BuildAsync(TestContext.Current.CancellationToken);
 
-        SeedRecordAthlete icelandicAthlete = await new RecordTestAthleteBuilder(dbContext, 510)
+        SeedRecordAthlete icelandicAthlete = await new RecordTestAthleteBuilder(dbContext, 1155)
+            .WithMeetId(OwnedBaseMeetId)
             .WithWeightCategoryId(weightCategoryId)
             .BuildAsync(TestContext.Current.CancellationToken);
 
@@ -2154,5 +2182,95 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         decimal weight)
     {
         await RecordAttemptForMeet(client, _meetId, participationId, discipline, round, weight);
+    }
+
+    private async Task SeedOwnedInfrastructureAsync()
+    {
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        // Owned banned athlete + ban record
+        string bannedAthleteSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Athletes WHERE AthleteId = {OwnedBannedAthleteId})
+            BEGIN
+                SET IDENTITY_INSERT Athletes ON;
+                INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
+                VALUES ({OwnedBannedAthleteId}, 'Compute', 'Banned', '1990-01-01', 'm', 2, '{OwnedBannedAthleteSlug}');
+                SET IDENTITY_INSERT Athletes OFF;
+
+                INSERT INTO Bans (AthleteId, FromDate, ToDate)
+                VALUES ({OwnedBannedAthleteId}, '2025-01-01', '2025-12-31');
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(bannedAthleteSql);
+
+        // Owned no-records meet (RecordsPossible=0)
+        string noRecordsMeetSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedNoRecordsMeetId})
+            BEGIN
+                SET IDENTITY_INSERT Meets ON;
+                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+                VALUES ({OwnedNoRecordsMeetId}, 'Compute No Records Meet', 'compute-no-records-meet', '2025-12-01', '2025-12-01', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1);
+                SET IDENTITY_INSERT Meets OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(noRecordsMeetSql);
+
+        // Owned deadlift meet (MeetTypeId=3)
+        string deadliftMeetSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedDeadliftMeetId})
+            BEGIN
+                SET IDENTITY_INSERT Meets ON;
+                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+                VALUES ({OwnedDeadliftMeetId}, 'Compute DL Meet', 'compute-dl-meet', '2025-06-01', '2025-06-01', 1, 1, 1, 1, {DeadliftMeetTypeId}, 0, 1, 0, 1, 0, 1, 1);
+                SET IDENTITY_INSERT Meets OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(deadliftMeetSql);
+
+        // Owned base powerlifting meet (IsRaw=1, RecordsPossible=1)
+        string baseMeetSql =
+            $"""
+            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedBaseMeetId})
+            BEGIN
+                SET IDENTITY_INSERT Meets ON;
+                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
+                VALUES ({OwnedBaseMeetId}, 'Compute Base Meet', 'compute-base-meet', '2025-03-15', '2025-03-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
+                SET IDENTITY_INSERT Meets OFF;
+            END
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(baseMeetSql);
+    }
+
+    private async Task CleanupOwnedDataAsync()
+    {
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        // Delete owned data in FK-safe order
+        string cleanupSql =
+            """
+            DELETE FROM Records WHERE AttemptId IN (
+                SELECT AttemptId FROM Attempts WHERE ParticipationId IN (
+                    SELECT ParticipationId FROM Participations WHERE MeetId IN (1101, 1102, 1103)
+                )
+            ) OR CreatedBy = 'compute-test';
+            DELETE FROM Attempts WHERE ParticipationId IN (
+                SELECT ParticipationId FROM Participations WHERE MeetId IN (1101, 1102, 1103)
+            );
+            DELETE FROM Participations WHERE MeetId IN (1101, 1102, 1103);
+            DELETE FROM Bans WHERE AthleteId = 1100;
+            DELETE FROM Athletes WHERE AthleteId = 1100;
+            DELETE FROM Meets WHERE MeetId IN (1101, 1102, 1103);
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
     }
 }
