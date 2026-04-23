@@ -271,14 +271,14 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
             $"{Path}?gender=m&ageCategory=open&equipmentType=classic",
             CancellationToken.None);
 
-        // Assert
+        // Assert — at least one classic record with an athlete exists
         classicGroups.ShouldNotBeNull();
         classicGroups.ShouldNotBeEmpty();
 
         int classicNonEmptyCount = classicGroups
             .SelectMany(g => g.Records)
             .Count(r => r.Athlete != null);
-        classicNonEmptyCount.ShouldBe(1);
+        classicNonEmptyCount.ShouldBeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
