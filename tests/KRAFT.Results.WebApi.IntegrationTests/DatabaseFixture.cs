@@ -55,7 +55,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
         await SeedTeamCompetitionDataAsync(dbContext);
         await SeedIntegrationTestAttemptsAsync(dbContext);
         await SeedBestNTestDataAsync(dbContext);
-        await SeedRecordCorruptionTestDataAsync(dbContext);
+
         await SeedNoRecordsMeetAsync(dbContext);
         await SeedDeadliftMeetAsync(dbContext);
         await SeedBanDataAsync(dbContext);
@@ -233,23 +233,6 @@ public sealed class DatabaseFixture : IAsyncLifetime
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static async Task SeedRecordCorruptionTestDataAsync(ResultsDbContext dbContext)
-    {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            -- IsCurrent corruption: bench record for 93kg where IsCurrent=1 is on a LOWER weight
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES (2, 1, 2, 2, 150.0, '2025-06-01', 0, 2, 0, 0, 'seed');
-
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES (2, 1, 2, 2, 140.0, '2025-05-01', 0, 2, 1, 0, 'seed');
-
-            -- IsStandard flag corruption: record with IsStandard=1 but linked to a real athlete via AttemptId
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
-            """);
     }
 
     private static async Task SeedNoRecordsMeetAsync(ResultsDbContext dbContext)

@@ -13,7 +13,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Builders;
 /// </summary>
 internal sealed class RecordTestAthleteBuilder(ResultsDbContext dbContext, int baseId)
 {
-    private readonly int _meetId = TestSeedConstants.Meet.Id;
+    private int _meetId = TestSeedConstants.Meet.Id;
 
     private int _countryId = TestSeedConstants.Country.Id;
     private int _weightCategoryId = TestSeedConstants.WeightCategory.Id93Kg;
@@ -22,6 +22,12 @@ internal sealed class RecordTestAthleteBuilder(ResultsDbContext dbContext, int b
     private decimal _bench = 130m;
     private decimal _deadlift = 250m;
     private string _nameSuffix = baseId.ToString(CultureInfo.InvariantCulture);
+
+    internal RecordTestAthleteBuilder WithMeetId(int meetId)
+    {
+        _meetId = meetId;
+        return this;
+    }
 
     internal RecordTestAthleteBuilder WithCountryId(int countryId)
     {
