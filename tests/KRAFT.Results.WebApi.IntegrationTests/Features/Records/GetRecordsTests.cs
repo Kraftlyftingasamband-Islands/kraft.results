@@ -151,10 +151,17 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     {
         // Delete in FK-safe reverse order
         await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Records WHERE RecordId BETWEEN {RecordSquatEquipped83} AND {RecordCorruptIsStandardBenchSingle83}");
+            $"""
+            DELETE FROM Records WHERE RecordId IN (
+                {RecordSquatEquipped83},{RecordBench83},{RecordDeadlift83},{RecordTotal83},
+                {RecordSquatClassic83},{RecordStandardSquat93},{RecordTotalWilks83},{RecordTotalIpfPoints83},
+                {RecordJuniorSquat83},{RecordLowerSquat83},{RecordFemaleSquat63},
+                {RecordJuniorsOnlyWcOpen74},{RecordJuniorsOnlyWcJunior74},{RecordNoEraWc105},
+                {RecordCorruptBenchHigher93},{RecordCorruptBenchLower93},{RecordCorruptIsStandardBenchSingle83})
+            """);
 
         await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Attempts WHERE AttemptId BETWEEN {AttemptSquatId} AND {AttemptDeadliftId}");
+            $"DELETE FROM Attempts WHERE AttemptId IN ({AttemptSquatId},{AttemptBenchId},{AttemptDeadliftId})");
 
         await fixture.ExecuteSqlAsync(
             $"DELETE FROM Participations WHERE ParticipationId = {ParticipationId}");
@@ -202,65 +209,56 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task FiltersByGender()
+    public async Task FiltersByGender_Male_ReturnsRecordsWithAthletes()
     {
-        // Arrange
+        // Arrange — male open equipped has multiple records linked to athletes
 
         // Act
-        List<RecordGroup>? maleGroups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
             $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
             CancellationToken.None);
 
-        List<RecordGroup>? femaleGroups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+        // Assert
+        groups.ShouldNotBeNull();
+        int nonEmptyCount = groups
+            .SelectMany(g => g.Records)
+            .Count(r => r.Athlete != null);
+        nonEmptyCount.ShouldBeGreaterThan(1);
+    }
+
+    [Fact]
+    public async Task FiltersByGender_Female_ReturnsNoRecordsWithAthletes()
+    {
+        // Arrange — female open equipped has one standard record (no athlete)
+
+        // Act
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
             $"{Path}?gender=f&ageCategory=open&equipmentType=equipped",
             CancellationToken.None);
 
         // Assert
-        maleGroups.ShouldNotBeNull();
-        maleGroups.ShouldNotBeEmpty();
-
-        femaleGroups.ShouldNotBeNull();
-        femaleGroups.ShouldNotBeEmpty();
-
-        int maleNonEmptyCount = maleGroups
-            .SelectMany(g => g.Records)
-            .Count(r => r.Athlete is not null);
-        int femaleNonEmptyCount = femaleGroups
-            .SelectMany(g => g.Records)
-            .Count(r => r.Athlete is not null);
-
-        maleNonEmptyCount.ShouldBeGreaterThan(femaleNonEmptyCount);
+        groups.ShouldNotBeNull();
+        groups.ShouldNotBeEmpty();
+        groups.SelectMany(g => g.Records).ShouldAllBe(r => r.Athlete == null);
     }
 
     [Fact]
-    public async Task FiltersByAgeCategory()
+    public async Task FiltersByAgeCategory_Junior_ReturnsOnlyJuniorRecords()
     {
-        // Arrange
+        // Arrange — junior equipped male has 2 records with athletes (squat 83kg + JuniorsOnly 74kg)
 
         // Act
-        List<RecordGroup>? openGroups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
-            CancellationToken.None);
-
-        List<RecordGroup>? juniorGroups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
+        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
             $"{Path}?gender=m&ageCategory=junior&equipmentType=equipped",
             CancellationToken.None);
 
         // Assert
-        openGroups.ShouldNotBeNull();
-        openGroups.ShouldNotBeEmpty();
-
-        juniorGroups.ShouldNotBeNull();
-        juniorGroups.ShouldNotBeEmpty();
-
-        int openNonEmptyCount = openGroups
+        groups.ShouldNotBeNull();
+        groups.ShouldNotBeEmpty();
+        int nonEmptyCount = groups
             .SelectMany(g => g.Records)
-            .Count(r => r.Athlete is not null);
-        int juniorNonEmptyCount = juniorGroups
-            .SelectMany(g => g.Records)
-            .Count(r => r.Athlete is not null);
-
-        openNonEmptyCount.ShouldBeGreaterThan(juniorNonEmptyCount);
+            .Count(r => r.Athlete != null);
+        nonEmptyCount.ShouldBe(2);
     }
 
     [Fact]
