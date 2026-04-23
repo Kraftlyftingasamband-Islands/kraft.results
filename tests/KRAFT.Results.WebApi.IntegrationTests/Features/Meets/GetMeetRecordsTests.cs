@@ -199,7 +199,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
             await CleanupTestDataAsync();
         }
 
-        _authorizedHttpClient.Dispose();
+        _authorizedHttpClient?.Dispose();
         _unauthorizedHttpClient.Dispose();
     }
 
@@ -335,7 +335,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     [Fact]
     public async Task IsPublic_NoAuthRequired()
     {
-        // Arrange -- using unauthenticated client
+        // Arrange — using unauthenticated client
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
             $"{BasePath}/{_rawMeetSlug}/records",
@@ -370,6 +370,8 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
+        // SQL cleanup required: the delete meet endpoint rejects deletion when participations exist,
+        // and records/attempts must be deleted in FK order before participations can be removed.
         List<int> meetIds = new[] { _rawMeetId, _equippedMeetId }
             .Where(id => id != 0)
             .ToList();
