@@ -812,7 +812,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             WHERE EraId = {eraId}
             AND AgeCategoryId = {ageCategoryId}
             AND WeightCategoryId = {weightCategoryId}
-            AND RecordCategoryId = 1
+            AND RecordCategoryId = {(int)RecordCategory.Squat}
             AND IsRaw = 1;
 
             DELETE FROM Attempts WHERE AttemptId IN ({BackfillTestAttemptLowId}, {BackfillTestAttemptHighId});
