@@ -1,10 +1,11 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Tests.Shared;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -28,34 +29,59 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     private const decimal TotalWilksWeight = 400.0m;
     private const decimal TotalIpfPointsWeight = 85.5m;
 
-    private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
-    private int _meetId;
-    private string _meetSlug = string.Empty;
+    private HttpClient _authorizedHttpClient = null!;
+    private RecordComputationChannel _channel = null!;
+    private int _rawMeetId;
+    private string _rawMeetSlug = string.Empty;
+    private int _equippedMeetId;
+    private string _equippedMeetSlug = string.Empty;
     private string _athleteName = string.Empty;
     private string _athleteSlug = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
-        // Create a meet with RecordsPossible=true
-        CreateMeetCommand meetCommand = new CreateMeetCommandBuilder()
+        (_authorizedHttpClient, _channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+
+        // Create a raw meet (IsRaw=true) — records from this meet have IsClassic=true
+        CreateMeetCommand rawMeetCommand = new CreateMeetCommandBuilder()
             .WithIsRaw(true)
             .Build();
 
-        HttpResponseMessage createMeetResponse = await _authorizedHttpClient.PostAsJsonAsync(
+        HttpResponseMessage createRawMeetResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/meets",
-            meetCommand,
+            rawMeetCommand,
             CancellationToken.None);
 
-        createMeetResponse.EnsureSuccessStatusCode();
+        createRawMeetResponse.EnsureSuccessStatusCode();
 
-        _meetSlug = createMeetResponse.Headers.Location!.ToString().TrimStart('/');
+        _rawMeetSlug = createRawMeetResponse.Headers.Location!.ToString().TrimStart('/');
 
-        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{_meetSlug}",
+        MeetDetails? rawMeetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_rawMeetSlug}",
             CancellationToken.None);
 
-        _meetId = meetDetails!.MeetId;
+        _rawMeetId = rawMeetDetails!.MeetId;
+
+        // Create an equipped meet (IsRaw=false) — records from this meet have IsClassic=false
+        CreateMeetCommand equippedMeetCommand = new CreateMeetCommandBuilder()
+            .WithIsRaw(false)
+            .Build();
+
+        HttpResponseMessage createEquippedMeetResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets",
+            equippedMeetCommand,
+            CancellationToken.None);
+
+        createEquippedMeetResponse.EnsureSuccessStatusCode();
+
+        _equippedMeetSlug = createEquippedMeetResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? equippedMeetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{_equippedMeetSlug}",
+            CancellationToken.None);
+
+        _equippedMeetId = equippedMeetDetails!.MeetId;
 
         // Create an Icelandic athlete (eligible for records)
         string uniqueCode = UniqueShortCode.Next();
@@ -77,51 +103,71 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         createAthleteResponse.EnsureSuccessStatusCode();
 
-        // Add participant: 83kg weight class, open age
-        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+        // Add participant to raw meet: 83kg weight class, open age
+        AddParticipantCommand rawParticipantCommand = new AddParticipantCommandBuilder()
             .WithAthleteSlug(_athleteSlug)
             .WithBodyWeight(82.5m)
             .WithAgeCategorySlug("open")
             .Build();
 
-        HttpResponseMessage addParticipantResponse = await _authorizedHttpClient.PostAsJsonAsync(
-            $"/meets/{_meetId}/participants",
-            participantCommand,
+        HttpResponseMessage addRawParticipantResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{_rawMeetId}/participants",
+            rawParticipantCommand,
             CancellationToken.None);
 
-        addParticipantResponse.EnsureSuccessStatusCode();
+        addRawParticipantResponse.EnsureSuccessStatusCode();
 
-        AddParticipantResponse? participantResult = await addParticipantResponse.Content
+        AddParticipantResponse? rawParticipantResult = await addRawParticipantResponse.Content
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
 
-        int participationId = participantResult!.ParticipationId;
+        int rawParticipationId = rawParticipantResult!.ParticipationId;
 
-        // Record attempts to create real Attempt entities
-        await RecordAttempt(participationId, (int)Discipline.Bench, 1, BenchWeight);
-        await RecordAttempt(participationId, (int)Discipline.Deadlift, 1, DeadliftWeight);
-        await RecordAttempt(participationId, (int)Discipline.Squat, 1, ClassicSquatWeight);
+        // Record attempts on raw meet — triggers record computation for classic records
+        await RecordAttempt(_rawMeetId, rawParticipationId, (int)Discipline.Bench, 1, BenchWeight);
+        await RecordAttempt(_rawMeetId, rawParticipationId, (int)Discipline.Deadlift, 1, DeadliftWeight);
+        await RecordAttempt(_rawMeetId, rawParticipationId, (int)Discipline.Squat, 1, ClassicSquatWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
-        // Find the squat attempt ID for record insertion
+        // Add participant to equipped meet: 83kg weight class, open age
+        AddParticipantCommand equippedParticipantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(_athleteSlug)
+            .WithBodyWeight(82.5m)
+            .WithAgeCategorySlug("open")
+            .Build();
+
+        HttpResponseMessage addEquippedParticipantResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{_equippedMeetId}/participants",
+            equippedParticipantCommand,
+            CancellationToken.None);
+
+        addEquippedParticipantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? equippedParticipantResult = await addEquippedParticipantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int equippedParticipationId = equippedParticipantResult!.ParticipationId;
+
+        // Record attempts on equipped meet — triggers record computation for equipped records
+        await RecordAttempt(_equippedMeetId, equippedParticipationId, (int)Discipline.Bench, 1, BenchWeight);
+        await RecordAttempt(_equippedMeetId, equippedParticipationId, (int)Discipline.Deadlift, 1, DeadliftWeight);
+        await RecordAttempt(
+            _equippedMeetId, equippedParticipationId, (int)Discipline.Squat, 1, EquippedSquatWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Find a squat attempt ID from the raw meet for negative-filter SQL INSERTs
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         int squatAttemptId = await dbContext.Set<WebApi.Features.Attempts.Attempt>()
-            .Where(a => a.ParticipationId == participationId)
+            .Where(a => a.ParticipationId == rawParticipationId)
             .Where(a => a.Discipline == Discipline.Squat)
             .Select(a => a.AttemptId)
             .SingleAsync(CancellationToken.None);
 
-        // Insert records directly via SQL — this test verifies the GET endpoint, not record computation
-        // Classic and equipped squat records (non-standard) — should appear in results
-        await fixture.ExecuteSqlAsync(
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES
-                ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {ClassicSquatWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 1, 'test-setup'),
-                ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {EquippedSquatWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 0, 'test-setup')
-            """);
+        // SQL INSERTs below are for record types that computation does not produce.
+        // These records exist in the DB but should be filtered out by the handler.
 
-        // Standard record — should be filtered out by handler
+        // Standard record — no endpoint produces IsStandard=true records
         await fixture.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
@@ -129,7 +175,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
                 ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 1, {StandardSquatWeight}, GETUTCDATE(), 1, {squatAttemptId}, 1, 1, 'test-setup')
             """);
 
-        // TotalWilks record — should be filtered out by handler
+        // TotalWilks record — computation does not produce TotalWilks category
         await fixture.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
@@ -137,7 +183,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
                 ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 7, {TotalWilksWeight}, GETUTCDATE(), 0, {squatAttemptId}, 1, 1, 'test-setup')
             """);
 
-        // TotalIpfPoints record — should be filtered out by handler
+        // TotalIpfPoints record — computation does not produce TotalIpfPoints category
         await fixture.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
@@ -148,20 +194,9 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
     public async ValueTask DisposeAsync()
     {
-        if (_meetId == 0)
+        if (_rawMeetId != 0 || _equippedMeetId != 0)
         {
-            return;
-        }
-
-        await _authorizedHttpClient.DeleteAsync(
-            $"/meets/{_meetSlug}",
-            CancellationToken.None);
-
-        if (_athleteSlug.Length > 0)
-        {
-            await _authorizedHttpClient.DeleteAsync(
-                $"/athletes/{_athleteSlug}",
-                CancellationToken.None);
+            await CleanupTestDataAsync();
         }
 
         _authorizedHttpClient.Dispose();
@@ -173,7 +208,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange & Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_rawMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
@@ -189,7 +224,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange & Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_rawMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
@@ -210,7 +245,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange & Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_rawMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
@@ -228,7 +263,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange & Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_rawMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
@@ -246,7 +281,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange & Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_equippedMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
@@ -258,12 +293,12 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         MeetRecordEntry squatRecord = records
             .Where(r => r.Weight == EquippedSquatWeight)
             .Where(r => r.Discipline == "Hnébeygja")
+            .Where(r => r.AgeCategory == "Open")
             .First(r => !r.IsClassic);
 
         squatRecord.AthleteName.ShouldBe(_athleteName);
         squatRecord.AthleteSlug.ShouldBe(_athleteSlug);
         squatRecord.WeightCategory.ShouldBe("83");
-        squatRecord.AgeCategory.ShouldBe("Open");
         squatRecord.IsClassic.ShouldBeFalse();
     }
 
@@ -272,7 +307,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange & Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_rawMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
@@ -300,17 +335,22 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     [Fact]
     public async Task IsPublic_NoAuthRequired()
     {
-        // Arrange — using unauthenticated client
+        // Arrange -- using unauthenticated client
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
-            $"{BasePath}/{_meetSlug}/records",
+            $"{BasePath}/{_rawMeetSlug}/records",
             CancellationToken.None);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    private async Task RecordAttempt(int participationId, int disciplineId, int round, decimal weight)
+    private async Task RecordAttempt(
+        int meetId,
+        int participationId,
+        int disciplineId,
+        int round,
+        decimal weight)
     {
         RecordAttemptCommand command = new RecordAttemptCommandBuilder()
             .WithWeight(weight)
@@ -318,10 +358,45 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
-            $"/meets/{_meetId}/participants/{participationId}/attempts/{disciplineId}/{round}",
+            $"/meets/{meetId}/participants/{participationId}/attempts/{disciplineId}/{round}",
             command,
             CancellationToken.None);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    private async Task CleanupTestDataAsync()
+    {
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<int> meetIds = new[] { _rawMeetId, _equippedMeetId }
+            .Where(id => id != 0)
+            .ToList();
+
+        string meetIdList = string.Join(", ", meetIds);
+
+        string cleanupSql =
+            $"""
+            DELETE FROM Records WHERE AttemptId IN (
+                SELECT AttemptId FROM Attempts WHERE ParticipationId IN (
+                    SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
+                )
+            );
+            DELETE FROM Attempts WHERE ParticipationId IN (
+                SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
+            );
+            DELETE FROM Participations WHERE MeetId IN ({meetIdList});
+            DELETE FROM Meets WHERE MeetId IN ({meetIdList});
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
+
+        if (_athleteSlug.Length > 0)
+        {
+            await _authorizedHttpClient.DeleteAsync(
+                $"/athletes/{_athleteSlug}",
+                CancellationToken.None);
+        }
     }
 }
