@@ -9,18 +9,7 @@ internal static class Constants
     internal const string TestAthleteSlug = TestSeedConstants.Athlete.Slug;
     internal const string TestTeamSlug = TestSeedConstants.Team.Slug;
     internal const string TestCountryName = TestSeedConstants.Country.Name;
-    internal const string TestMeetTitle = TestSeedConstants.Meet.Title;
-    internal const string TestMeetSlug = TestSeedConstants.Meet.Slug;
-
     internal static readonly DateOnly TestAthleteDateOfBirth = TestSeedConstants.Athlete.DateOfBirth;
-
-    internal static class TeamCompetition
-    {
-        internal const string AlphaTeamSlug = "alpha-team";
-        internal const string BetaTeamSlug = "beta-team";
-        internal const string TcMeet12025Slug = "tc-meet-1-2025";
-        internal const string TcMeet12026Slug = "tc-meet-1-2026";
-    }
 
     internal static class TestUser
     {
