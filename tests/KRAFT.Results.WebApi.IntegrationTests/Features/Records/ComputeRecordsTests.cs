@@ -205,7 +205,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -286,7 +285,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -518,7 +516,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -591,7 +588,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -656,7 +652,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -721,7 +716,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -785,7 +779,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -1019,7 +1012,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationAId, participationBId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -1141,7 +1133,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         finally
         {
             await CleanupEndpointTestParticipationsAsync(dbContext, participationAId, participationBId);
-            await RestoreSeedRecordStateAsync(dbContext);
         }
     }
 
@@ -1984,33 +1975,16 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
         }
         finally
         {
-            // Backfill may have modified global records; do a full restore
+            // Scoped cleanup: only remove records linked to the two test athletes' attempts
             string cleanupSql =
                 $"""
-                DELETE FROM Records;
+                DELETE FROM Records WHERE AttemptId IN ({athleteA.SquatAttemptId}, {athleteA.BenchAttemptId}, {athleteA.DeadliftAttemptId}, {athleteB.SquatAttemptId}, {athleteB.BenchAttemptId}, {athleteB.DeadliftAttemptId});
                 DELETE FROM Attempts WHERE AttemptId IN ({athleteA.SquatAttemptId}, {athleteA.BenchAttemptId}, {athleteA.DeadliftAttemptId}, {athleteB.SquatAttemptId}, {athleteB.BenchAttemptId}, {athleteB.DeadliftAttemptId});
                 DELETE FROM Participations WHERE ParticipationId IN ({athleteA.ParticipationId}, {athleteB.ParticipationId});
                 DELETE FROM Athletes WHERE AthleteId IN ({athleteA.AthleteId}, {athleteB.AthleteId});
                 """;
 
             await dbContext.Database.ExecuteSqlRawAsync(cleanupSql, TestContext.Current.CancellationToken);
-
-            await dbContext.Database.ExecuteSqlRawAsync(
-                BaseSeedSql.SeedBaseRecords(),
-                TestContext.Current.CancellationToken);
-
-            // Restore corruption test records that were seeded in DatabaseFixture
-            // but are not included in SeedBaseRecords() (they have auto-assigned IDs)
-            await dbContext.Database.ExecuteSqlRawAsync(
-                """
-                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES (2, 1, 2, 2, 150.0, '2025-06-01', 0, 2, 0, 0, 'seed');
-                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES (2, 1, 2, 2, 140.0, '2025-05-01', 0, 2, 1, 0, 'seed');
-                INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES (2, 1, 1, 5, 130.0, '2025-03-15', 1, 2, 1, 0, 'seed');
-                """,
-                TestContext.Current.CancellationToken);
         }
     }
 
@@ -2107,20 +2081,6 @@ public sealed class ComputeRecordsTests(CollectionFixture fixture) : IAsyncLifet
             """;
 
         await dbContext.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static async Task RestoreSeedRecordStateAsync(ResultsDbContext dbContext)
-    {
-        // Slot rebuilds may create additional record rows for seed attempts and flip IsCurrent flags.
-        // Delete all raw records for seed attempts, then restore the canonical seed record.
-        string sql =
-            $"""
-            DELETE FROM Records WHERE AttemptId IN (1, 2, 3) AND IsRaw = 1;
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, 195.0, '2025-03-15', 0, 1, 1, 1, 'seed');
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql, TestContext.Current.CancellationToken);
     }
 
     private async Task RecordAttempt(
