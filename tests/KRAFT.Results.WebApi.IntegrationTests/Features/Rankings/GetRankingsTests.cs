@@ -30,66 +30,49 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
     private readonly string _suffix = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
-
-    private string _meet1Slug = string.Empty;
-    private string _meet2Slug = string.Empty;
-    private int _meet1Id;
-    private int _meet2Id;
+    private readonly List<string> _meetSlugs = [];
 
     public async ValueTask InitializeAsync()
     {
         string athleteASlug = await CreateAthleteAsync("RnkA", "m");
         string athleteBSlug = await CreateAthleteAsync("RnkB", "m");
 
-        _meet1Slug = await CreateMeetAsync(new DateOnly(MeetYear, 6, 1));
-        MeetDetails? meet1Details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{_meet1Slug}", CancellationToken.None);
-        _meet1Id = meet1Details!.MeetId;
-
-        _meet2Slug = await CreateMeetAsync(new DateOnly(MeetYear, 9, 1));
-        MeetDetails? meet2Details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{_meet2Slug}", CancellationToken.None);
-        _meet2Id = meet2Details!.MeetId;
+        int meet1Id = await CreateMeetAndGetIdAsync(new DateOnly(MeetYear, 6, 1));
+        int meet2Id = await CreateMeetAndGetIdAsync(new DateOnly(MeetYear, 9, 1));
 
         // P1: athlete A in meet1, place 1, best result
-        int p1Id = await AddParticipantAsync(_meet1Id, athleteASlug);
+        int p1Id = await AddParticipantAsync(meet1Id, athleteASlug);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET Squat = {P1Squat}, Benchpress = {P1Bench}, Deadlift = {P1Deadlift}, Total = {P1Total}, Wilks = {P1Wilks}, Place = 1 WHERE ParticipationId = {p1Id}");
 
         // P2: athlete A in meet2, place 1, second-best result
-        int p2Id = await AddParticipantAsync(_meet2Id, athleteASlug);
+        int p2Id = await AddParticipantAsync(meet2Id, athleteASlug);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET Squat = 180.0, Benchpress = 120.0, Deadlift = 230.0, Total = {P2Total}, Wilks = {P2Wilks}, Place = 1 WHERE ParticipationId = {p2Id}");
 
         // P3: athlete B in meet1, disqualified
-        int p3Id = await AddParticipantAsync(_meet1Id, athleteBSlug);
+        int p3Id = await AddParticipantAsync(meet1Id, athleteBSlug);
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET Squat = 180.0, Benchpress = 120.0, Deadlift = 230.0, Total = 530.0, Wilks = 360.0, Place = 3, Disqualified = 1 WHERE ParticipationId = {p3Id}");
     }
 
     public async ValueTask DisposeAsync()
     {
-        // Clean up via SQL for reliability — cascade-deleting meets removes participations
-        if (_meet1Id != 0)
+        // Delete participations via SQL first (no cascade-delete endpoint exists)
+        foreach (string slug in _meetSlugs)
         {
             await fixture.ExecuteSqlAsync(
-                $"DELETE FROM Participations WHERE MeetId = {_meet1Id}");
-            await fixture.ExecuteSqlAsync(
-                $"DELETE FROM Meets WHERE MeetId = {_meet1Id}");
+                $"DELETE FROM Participations WHERE MeetId IN (SELECT MeetId FROM Meets WHERE Slug = {slug})");
         }
 
-        if (_meet2Id != 0)
+        foreach (string slug in _meetSlugs)
         {
-            await fixture.ExecuteSqlAsync(
-                $"DELETE FROM Participations WHERE MeetId = {_meet2Id}");
-            await fixture.ExecuteSqlAsync(
-                $"DELETE FROM Meets WHERE MeetId = {_meet2Id}");
+            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
         }
 
         foreach (string slug in _athleteSlugs)
         {
-            await fixture.ExecuteSqlAsync(
-                $"DELETE FROM Athletes WHERE Slug = {slug}");
+            await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
         }
 
         _authorizedHttpClient.Dispose();
@@ -349,7 +332,17 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         response.Items[0].Rank.ShouldBe(1);
     }
 
-    private async Task<string> CreateMeetAsync(DateOnly startDate)
+    private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate)
+    {
+        string slug = await CreateMeetSlugAsync(startDate);
+
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        return meetDetails!.MeetId;
+    }
+
+    private async Task<string> CreateMeetSlugAsync(DateOnly startDate)
     {
         CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithStartDate(startDate)
@@ -360,7 +353,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
             "/meets", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        return response.Headers.Location!.ToString().TrimStart('/');
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+        _meetSlugs.Add(slug);
+        return slug;
     }
 
     private async Task<string> CreateAthleteAsync(string prefix, string gender)
