@@ -24,31 +24,27 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     private readonly string _betaShortCode = UniqueShortCode.Next();
     private readonly string _gammaShortCode = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
+    private readonly List<string> _meetSlugs = [];
+    private readonly List<string> _teamSlugs = [];
 
     private string _alphaTeamName = string.Empty;
-    private string _alphaTeamSlug = string.Empty;
     private string _betaTeamName = string.Empty;
-    private string _betaTeamSlug = string.Empty;
     private string _gammaTeamSlug = string.Empty;
     private int _alphaTeamId;
     private int _betaTeamId;
     private int _gammaTeamId;
 
-    private int _tc2025MeetId;
     private string _tc2025MeetSlug = string.Empty;
-    private int _tc2026MeetId;
     private string _tc2026MeetSlug = string.Empty;
-    private string _nonTcMeetSlug = string.Empty;
+    private string _noParticipationsMeetSlug = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
         // Create teams
         _alphaTeamName = $"Alpha{_suffix}";
-        _alphaTeamSlug = Slug.Create(_alphaTeamName);
         _alphaTeamId = await CreateTeamAsync(_alphaTeamName, _alphaShortCode);
 
         _betaTeamName = $"Beta{_suffix}";
-        _betaTeamSlug = Slug.Create(_betaTeamName);
         _betaTeamId = await CreateTeamAsync(_betaTeamName, _betaShortCode);
 
         string gammaTeamName = $"Gamma{_suffix}";
@@ -56,17 +52,13 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         _gammaTeamId = await CreateTeamAsync(gammaTeamName, _gammaShortCode);
 
         // Create 3 meets
-        _tc2025MeetSlug = await CreateMeetAsync(new DateOnly(2025, 6, 1));
-        MeetDetails? tc2025Details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{_tc2025MeetSlug}", CancellationToken.None);
-        _tc2025MeetId = tc2025Details!.MeetId;
+        int tc2025MeetId = await CreateMeetAndGetIdAsync(new DateOnly(2025, 6, 1));
+        _tc2025MeetSlug = _meetSlugs[^1];
 
-        _tc2026MeetSlug = await CreateMeetAsync(new DateOnly(2026, 6, 1));
-        MeetDetails? tc2026Details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{_tc2026MeetSlug}", CancellationToken.None);
-        _tc2026MeetId = tc2026Details!.MeetId;
+        int tc2026MeetId = await CreateMeetAndGetIdAsync(new DateOnly(2026, 6, 1));
+        _tc2026MeetSlug = _meetSlugs[^1];
 
-        _nonTcMeetSlug = await CreateMeetAsync(new DateOnly(2025, 3, 1));
+        _noParticipationsMeetSlug = await CreateMeetSlugAsync(new DateOnly(2025, 3, 1));
 
         // Create athletes for 2025 meet (7 unique athletes)
         string alphaMaleSlug = await CreateAthleteAsync("AlphaM", "m");
@@ -78,15 +70,15 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         string zeroPtsSlug = await CreateAthleteAsync("ZeroPts", "m");
 
         // Add participations for 2025 meet
-        int alphaMalePid = await AddParticipantAsync(_tc2025MeetId, alphaMaleSlug, _alphaTeamId);
-        int betaMalePid = await AddParticipantAsync(_tc2025MeetId, betaMaleSlug, _betaTeamId);
-        int alphaFemalePid = await AddParticipantAsync(_tc2025MeetId, alphaFemaleSlug, _alphaTeamId, 57.0m);
-        int betaFemalePid = await AddParticipantAsync(_tc2025MeetId, betaFemaleSlug, _betaTeamId, 57.0m);
-        int dqAlphaMalePid = await AddParticipantAsync(_tc2025MeetId, dqAlphaMaleSlug, _alphaTeamId);
-        int noTeamPid = await AddParticipantAsync(_tc2025MeetId, noTeamSlug, teamId: null);
-        int zeroPtsPid = await AddParticipantAsync(_tc2025MeetId, zeroPtsSlug, _gammaTeamId);
+        int alphaMalePid = await AddParticipantAsync(tc2025MeetId, alphaMaleSlug, _alphaTeamId);
+        int betaMalePid = await AddParticipantAsync(tc2025MeetId, betaMaleSlug, _betaTeamId);
+        int alphaFemalePid = await AddParticipantAsync(tc2025MeetId, alphaFemaleSlug, _alphaTeamId, 57.0m);
+        int betaFemalePid = await AddParticipantAsync(tc2025MeetId, betaFemaleSlug, _betaTeamId, 57.0m);
+        int dqAlphaMalePid = await AddParticipantAsync(tc2025MeetId, dqAlphaMaleSlug, _alphaTeamId);
+        int noTeamPid = await AddParticipantAsync(tc2025MeetId, noTeamSlug, teamId: null);
+        int zeroPtsPid = await AddParticipantAsync(tc2025MeetId, zeroPtsSlug, _gammaTeamId);
 
-        // Set TeamPoints, Place, Disqualified via SQL for 2025 meet
+        // Set TeamPoints, Place, Disqualified via SQL (no computation endpoints exist)
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = 12, Place = 1 WHERE ParticipationId = {alphaMalePid}");
         await fixture.ExecuteSqlAsync(
@@ -106,7 +98,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         for (int i = 1; i <= 6; i++)
         {
             string slug = await CreateAthleteAsync($"Alpha26M{i}", "m");
-            int pid = await AddParticipantAsync(_tc2026MeetId, slug, _alphaTeamId);
+            int pid = await AddParticipantAsync(tc2026MeetId, slug, _alphaTeamId);
             await fixture.ExecuteSqlAsync(
                 $"UPDATE Participations SET TeamPoints = 12, Place = {i} WHERE ParticipationId = {pid}");
         }
@@ -115,19 +107,9 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     public async ValueTask DisposeAsync()
     {
         // Delete meets first (cascades participations)
-        if (!string.IsNullOrEmpty(_tc2025MeetSlug))
+        foreach (string slug in _meetSlugs)
         {
-            await _authorizedHttpClient.DeleteAsync($"/meets/{_tc2025MeetSlug}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_tc2026MeetSlug))
-        {
-            await _authorizedHttpClient.DeleteAsync($"/meets/{_tc2026MeetSlug}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_nonTcMeetSlug))
-        {
-            await _authorizedHttpClient.DeleteAsync($"/meets/{_nonTcMeetSlug}", CancellationToken.None);
+            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
         }
 
         // Delete athletes
@@ -137,19 +119,9 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         }
 
         // Delete teams
-        if (!string.IsNullOrEmpty(_alphaTeamSlug))
+        foreach (string slug in _teamSlugs)
         {
-            await _authorizedHttpClient.DeleteAsync($"/teams/{_alphaTeamSlug}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_betaTeamSlug))
-        {
-            await _authorizedHttpClient.DeleteAsync($"/teams/{_betaTeamSlug}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_gammaTeamSlug))
-        {
-            await _authorizedHttpClient.DeleteAsync($"/teams/{_gammaTeamSlug}", CancellationToken.None);
+            await _authorizedHttpClient.DeleteAsync($"/teams/{slug}", CancellationToken.None);
         }
 
         _authorizedHttpClient.Dispose();
@@ -231,7 +203,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
 
         // Act
         MeetTeamPointsResponse? response = await _httpClient.GetFromJsonAsync<MeetTeamPointsResponse>(
-            $"{BasePath}/{_nonTcMeetSlug}/team-points", CancellationToken.None);
+            $"{BasePath}/{_noParticipationsMeetSlug}/team-points", CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -323,11 +295,23 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
             "/teams", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
+        _teamSlugs.Add(Slug.Create(title));
+
         string location = response.Headers.Location!.ToString().TrimStart('/');
         return int.Parse(location, System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    private async Task<string> CreateMeetAsync(DateOnly startDate)
+    private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate)
+    {
+        string slug = await CreateMeetSlugAsync(startDate);
+
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        return meetDetails!.MeetId;
+    }
+
+    private async Task<string> CreateMeetSlugAsync(DateOnly startDate)
     {
         CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithStartDate(startDate)
@@ -339,7 +323,9 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
             "/meets", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        return response.Headers.Location!.ToString().TrimStart('/');
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+        _meetSlugs.Add(slug);
+        return slug;
     }
 
     private async Task<string> CreateAthleteAsync(string prefix, string gender)
@@ -363,7 +349,11 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         return slug;
     }
 
-    private async Task<int> AddParticipantAsync(int meetId, string athleteSlug, int? teamId, decimal bodyWeight = 82.0m)
+    private async Task<int> AddParticipantAsync(
+        int meetId,
+        string athleteSlug,
+        int? teamId,
+        decimal bodyWeight = 82.0m)
     {
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(athleteSlug)
