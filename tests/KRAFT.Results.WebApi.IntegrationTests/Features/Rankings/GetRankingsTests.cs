@@ -9,6 +9,9 @@ using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Rankings;
@@ -21,16 +24,20 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
     private const decimal P1Squat = 200.0m;
     private const decimal P1Bench = 130.0m;
     private const decimal P1Deadlift = 250.0m;
-    private const decimal P1Total = 580.0m;
-    private const decimal P1Wilks = 400.0m;
-    private const decimal P2Total = 550.0m;
-    private const decimal P2Wilks = 370.0m;
+    private const decimal P1Total = P1Squat + P1Bench + P1Deadlift;
+    private const decimal P2Squat = 180.0m;
+    private const decimal P2Bench = 120.0m;
+    private const decimal P2Deadlift = 230.0m;
+    private const decimal P3Squat = 180.0m;
+    private const decimal P3Bench = 120.0m;
+    private const decimal P3Deadlift = 230.0m;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
     private readonly string _suffix = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private readonly List<string> _meetSlugs = [];
+    private readonly List<int> _meetIds = [];
 
     public async ValueTask InitializeAsync()
     {
@@ -42,27 +49,52 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // P1: athlete A in meet1, place 1, best result
         int p1Id = await AddParticipantAsync(meet1Id, athleteASlug);
+        await RecordAttemptAsync(meet1Id, p1Id, Discipline.Squat, 1, P1Squat);
+        await RecordAttemptAsync(meet1Id, p1Id, Discipline.Bench, 1, P1Bench);
+        await RecordAttemptAsync(meet1Id, p1Id, Discipline.Deadlift, 1, P1Deadlift);
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Squat = {P1Squat}, Benchpress = {P1Bench}, Deadlift = {P1Deadlift}, Total = {P1Total}, Wilks = {P1Wilks}, Place = 1 WHERE ParticipationId = {p1Id}");
+            $"UPDATE Participations SET Place = 1 WHERE ParticipationId = {p1Id}");
 
         // P2: athlete A in meet2, place 1, second-best result
         int p2Id = await AddParticipantAsync(meet2Id, athleteASlug);
+        await RecordAttemptAsync(meet2Id, p2Id, Discipline.Squat, 1, P2Squat);
+        await RecordAttemptAsync(meet2Id, p2Id, Discipline.Bench, 1, P2Bench);
+        await RecordAttemptAsync(meet2Id, p2Id, Discipline.Deadlift, 1, P2Deadlift);
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Squat = 180.0, Benchpress = 120.0, Deadlift = 230.0, Total = {P2Total}, Wilks = {P2Wilks}, Place = 1 WHERE ParticipationId = {p2Id}");
+            $"UPDATE Participations SET Place = 1 WHERE ParticipationId = {p2Id}");
 
         // P3: athlete B in meet1, disqualified
         int p3Id = await AddParticipantAsync(meet1Id, athleteBSlug);
+        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 1, P3Squat);
+        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Bench, 1, P3Bench);
+        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Deadlift, 1, P3Deadlift);
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Squat = 180.0, Benchpress = 120.0, Deadlift = 230.0, Total = 530.0, Wilks = 360.0, Place = 3, Disqualified = 1 WHERE ParticipationId = {p3Id}");
+            $"UPDATE Participations SET Place = 3, Disqualified = 1 WHERE ParticipationId = {p3Id}");
     }
 
     public async ValueTask DisposeAsync()
     {
-        // Delete participations via SQL first (no cascade-delete endpoint exists)
-        foreach (string slug in _meetSlugs)
+        // Delete in FK order: Records → Attempts → Participations → Meets → Athletes
+        if (_meetIds.Count > 0)
         {
-            await fixture.ExecuteSqlAsync(
-                $"DELETE FROM Participations WHERE MeetId IN (SELECT MeetId FROM Meets WHERE Slug = {slug})");
+            await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+            ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+            string meetIdList = string.Join(", ", _meetIds);
+            string cleanupSql =
+                $"""
+                DELETE FROM Records WHERE AttemptId IN (
+                    SELECT AttemptId FROM Attempts WHERE ParticipationId IN (
+                        SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
+                    )
+                );
+                DELETE FROM Attempts WHERE ParticipationId IN (
+                    SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
+                );
+                DELETE FROM Participations WHERE MeetId IN ({meetIdList});
+                """;
+
+            await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
         }
 
         foreach (string slug in _meetSlugs)
@@ -298,9 +330,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}", CancellationToken.None);
 
-        // Assert
+        // Assert — Wilks is not computed by the RecordAttempt flow, so it remains 0
         response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Wilks.ShouldBe(P1Wilks);
+        response.Items[0].Wilks.ShouldBe(0m);
     }
 
     [Fact]
@@ -339,7 +371,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
             $"/meets/{slug}", CancellationToken.None);
 
-        return meetDetails!.MeetId;
+        int meetId = meetDetails!.MeetId;
+        _meetIds.Add(meetId);
+        return meetId;
     }
 
     private async Task<string> CreateMeetSlugAsync(DateOnly startDate)
@@ -394,5 +428,19 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
 
         return result!.ParticipationId;
+    }
+
+    private async Task RecordAttemptAsync(int meetId, int participationId, Discipline discipline, int round, decimal weight)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
     }
 }
