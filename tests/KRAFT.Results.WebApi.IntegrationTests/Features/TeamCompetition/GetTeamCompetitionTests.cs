@@ -45,11 +45,11 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
     private readonly string _betaShortCode = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private readonly List<string> _meetSlugs = [];
+    private readonly List<string> _teamSlugs = [];
 
     private string _alphaTeamName = string.Empty;
     private string _alphaTeamSlug = string.Empty;
     private string _betaTeamName = string.Empty;
-    private string _betaTeamSlug = string.Empty;
     private int _alphaTeamId;
     private int _betaTeamId;
 
@@ -61,7 +61,6 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         _alphaTeamId = await CreateTeamAsync(_alphaTeamName, _alphaShortCode);
 
         _betaTeamName = $"Beta{_suffix}";
-        _betaTeamSlug = Slug.Create(_betaTeamName);
         _betaTeamId = await CreateTeamAsync(_betaTeamName, _betaShortCode);
 
         // Create 2025 meets (two meets in same year for cross-meet totals)
@@ -159,14 +158,9 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         }
 
         // Delete teams
-        if (!string.IsNullOrEmpty(_alphaTeamSlug))
+        foreach (string slug in _teamSlugs)
         {
-            await _authorizedHttpClient.DeleteAsync($"/teams/{_alphaTeamSlug}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_betaTeamSlug))
-        {
-            await _authorizedHttpClient.DeleteAsync($"/teams/{_betaTeamSlug}", CancellationToken.None);
+            await _authorizedHttpClient.DeleteAsync($"/teams/{slug}", CancellationToken.None);
         }
 
         _authorizedHttpClient.Dispose();
@@ -368,11 +362,23 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
             "/teams", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
+        _teamSlugs.Add(Slug.Create(title));
+
         string location = response.Headers.Location!.ToString().TrimStart('/');
         return int.Parse(location, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate)
+    {
+        string slug = await CreateMeetSlugAsync(startDate);
+
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        return meetDetails!.MeetId;
+    }
+
+    private async Task<string> CreateMeetSlugAsync(DateOnly startDate)
     {
         CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithStartDate(startDate)
@@ -386,11 +392,7 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
 
         string slug = response.Headers.Location!.ToString().TrimStart('/');
         _meetSlugs.Add(slug);
-
-        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{slug}", CancellationToken.None);
-
-        return meetDetails!.MeetId;
+        return slug;
     }
 
     private async Task<string> CreateAthleteAsync(string prefix, string gender)
