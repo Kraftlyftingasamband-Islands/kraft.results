@@ -218,7 +218,6 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
             ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
             string meetIdList = string.Join(", ", _meetIds);
-            string sqlRecordIdList = string.Join(", ", _sqlRecordIds);
             string cleanupSql =
                 $"""
                 DELETE FROM Records WHERE AttemptId IN (
@@ -226,7 +225,16 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
                         SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
                     )
                 );
-                DELETE FROM Records WHERE RecordId IN ({sqlRecordIdList});
+                """;
+
+            if (_sqlRecordIds.Count > 0)
+            {
+                string sqlRecordIdList = string.Join(", ", _sqlRecordIds);
+                cleanupSql += $"DELETE FROM Records WHERE RecordId IN ({sqlRecordIdList});\n";
+            }
+
+            cleanupSql +=
+                $"""
                 DELETE FROM Attempts WHERE ParticipationId IN (
                     SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
                 );
