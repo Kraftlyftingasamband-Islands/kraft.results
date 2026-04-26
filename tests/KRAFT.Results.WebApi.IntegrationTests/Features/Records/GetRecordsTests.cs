@@ -10,9 +10,6 @@ using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
@@ -51,7 +48,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     private readonly string _suffix = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private readonly List<string> _meetSlugs = [];
-    private readonly List<int> _meetIds = [];
+    private readonly List<(int MeetId, int ParticipationId)> _participations = [];
     private HttpClient _authorizedHttpClient = null!;
     private RecordComputationChannel _channel = null!;
 
@@ -87,6 +84,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Meet 1: athlete A at 83kg, lower squat record
         int p1Id = await AddParticipantAsync(equippedMeet1Id, athleteASlug, 80.5m);
+        _participations.Add((equippedMeet1Id, p1Id));
         await RecordAttemptAsync(equippedMeet1Id, p1Id, Discipline.Squat, 1, Meet1SquatWeight);
         await RecordAttemptAsync(equippedMeet1Id, p1Id, Discipline.Bench, 1, Meet1BenchWeight);
         await RecordAttemptAsync(equippedMeet1Id, p1Id, Discipline.Deadlift, 1, Meet1DeadliftWeight);
@@ -94,6 +92,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Meet 2: athlete A at 83kg, higher squat record (supersedes meet 1)
         int p2Id = await AddParticipantAsync(equippedMeet2Id, athleteASlug, 80.5m);
+        _participations.Add((equippedMeet2Id, p2Id));
         await RecordAttemptAsync(equippedMeet2Id, p2Id, Discipline.Squat, 1, EquippedSquatWeight);
         await RecordAttemptAsync(equippedMeet2Id, p2Id, Discipline.Bench, 1, BenchWeight);
         await RecordAttemptAsync(equippedMeet2Id, p2Id, Discipline.Deadlift, 1, DeadliftWeight);
@@ -101,6 +100,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Classic meet: athlete A at 83kg
         int p3Id = await AddParticipantAsync(classicMeetId, athleteASlug, 80.5m);
+        _participations.Add((classicMeetId, p3Id));
         await RecordAttemptAsync(classicMeetId, p3Id, Discipline.Squat, 1, ClassicSquatWeight);
         await RecordAttemptAsync(classicMeetId, p3Id, Discipline.Bench, 1, ClassicBenchWeight);
         await RecordAttemptAsync(classicMeetId, p3Id, Discipline.Deadlift, 1, ClassicDeadliftWeight);
@@ -110,6 +110,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Junior 83kg equipped meet (full powerlifting — all 3 disciplines)
         int p4Id = await AddParticipantAsync(juniorMeet83Id, athleteBSlug, 80.5m);
+        _participations.Add((juniorMeet83Id, p4Id));
         await RecordAttemptAsync(juniorMeet83Id, p4Id, Discipline.Squat, 1, JuniorSquat83Weight);
         await RecordAttemptAsync(juniorMeet83Id, p4Id, Discipline.Bench, 1, JuniorBench83Weight);
         await RecordAttemptAsync(juniorMeet83Id, p4Id, Discipline.Deadlift, 1, JuniorDeadlift83Weight);
@@ -117,6 +118,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Junior 74kg equipped meet (JuniorsOnly weight category, full powerlifting)
         int p5Id = await AddParticipantAsync(juniorMeet74Id, athleteBSlug, 70.0m);
+        _participations.Add((juniorMeet74Id, p5Id));
         await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Squat, 1, JuniorSquat74Weight);
         await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Bench, 1, JuniorBench74Weight);
         await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Deadlift, 1, JuniorDeadlift74Weight);
@@ -125,30 +127,10 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
-        if (_meetIds.Count > 0)
+        foreach ((int meetId, int participationId) in _participations)
         {
-            await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
-            ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-            string meetIdList = string.Join(", ", _meetIds);
-            string cleanupSql =
-                $"""
-                DELETE FROM Records WHERE AttemptId IN (
-                    SELECT AttemptId FROM Attempts WHERE ParticipationId IN (
-                        SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
-                    )
-                );
-                """;
-
-            cleanupSql +=
-                $"""
-                DELETE FROM Attempts WHERE ParticipationId IN (
-                    SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
-                );
-                DELETE FROM Participations WHERE MeetId IN ({meetIdList});
-                """;
-
-            await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
+            await _authorizedHttpClient.DeleteAsync(
+                $"/meets/{meetId}/participants/{participationId}", CancellationToken.None);
         }
 
         foreach (string slug in _meetSlugs)
@@ -419,9 +401,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
         MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
             $"/meets/{slug}", CancellationToken.None);
 
-        int meetId = meetDetails!.MeetId;
-        _meetIds.Add(meetId);
-        return meetId;
+        return meetDetails!.MeetId;
     }
 
     private async Task<int> AddParticipantAsync(int meetId, string athleteSlug, decimal bodyWeight)
