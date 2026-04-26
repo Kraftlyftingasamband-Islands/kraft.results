@@ -1,34 +1,83 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Eras;
+using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Eras;
 
-[Collection(nameof(InfraCollection))]
+[Collection(nameof(GetErasTestsCollection))]
 public sealed class GetErasTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const string Path = "/eras";
-    private const string CreatedBy = "era-test";
-
-    // Owned IDs (5000+ range)
-    private const int OwnedAthleteId = 5000;
-    private const int OwnedHistoricalMeetId = 5000;
-    private const int OwnedCurrentMeetId = 5001;
-    private const int OwnedHistoricalParticipationId = 5000;
-    private const int OwnedCurrentParticipationId = 5001;
-    private const int OwnedHistoricalAttemptId = 5000;
-    private const int OwnedCurrentAttemptId = 5001;
-    private const int OwnedHistoricalRecordId = 5000;
-    private const int OwnedCurrentRecordId = 5001;
+    private const string ErasPath = "/eras";
+    private const decimal SquatWeight = 200.0m;
+    private const decimal BenchWeight = 130.0m;
+    private const decimal DeadliftWeight = 250.0m;
 
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
+    private readonly string _suffix = UniqueShortCode.Next();
+    private readonly List<string> _athleteSlugs = [];
+    private readonly List<string> _meetSlugs = [];
+    private readonly List<(int MeetId, int ParticipationId)> _participations = [];
+    private HttpClient _authorizedHttpClient = null!;
+    private RecordComputationChannel _channel = null!;
+
+    public async ValueTask InitializeAsync()
+    {
+        (_authorizedHttpClient, _channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+
+        string athleteSlug = await CreateAthleteAsync("Era", "m", new DateOnly(1990, 1, 1));
+
+        // Historical era meet (2011-01-01 to 2018-12-31)
+        int historicalMeetId = await CreateMeetAndGetIdAsync(new DateOnly(2017, 6, 15), isRaw: true);
+
+        int p1Id = await AddParticipantAsync(historicalMeetId, athleteSlug, 80.5m);
+        _participations.Add((historicalMeetId, p1Id));
+        await RecordAttemptAsync(historicalMeetId, p1Id, Discipline.Squat, 1, SquatWeight);
+        await RecordAttemptAsync(historicalMeetId, p1Id, Discipline.Bench, 1, BenchWeight);
+        await RecordAttemptAsync(historicalMeetId, p1Id, Discipline.Deadlift, 1, DeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Current era meet (2019-01-01 to 2099-12-31)
+        int currentMeetId = await CreateMeetAndGetIdAsync(new DateOnly(2025, 3, 15), isRaw: true);
+
+        int p2Id = await AddParticipantAsync(currentMeetId, athleteSlug, 80.5m);
+        _participations.Add((currentMeetId, p2Id));
+        await RecordAttemptAsync(currentMeetId, p2Id, Discipline.Squat, 1, SquatWeight);
+        await RecordAttemptAsync(currentMeetId, p2Id, Discipline.Bench, 1, BenchWeight);
+        await RecordAttemptAsync(currentMeetId, p2Id, Discipline.Deadlift, 1, DeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach ((int meetId, int participationId) in _participations)
+        {
+            await _authorizedHttpClient.DeleteAsync(
+                $"/meets/{meetId}/participants/{participationId}", CancellationToken.None);
+        }
+
+        foreach (string slug in _meetSlugs)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
+        }
+
+        foreach (string slug in _athleteSlugs)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
+        }
+
+        _authorizedHttpClient.Dispose();
+        _httpClient.Dispose();
+    }
 
     [Fact]
     public async Task ReturnsOk()
@@ -37,7 +86,7 @@ public sealed class GetErasTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Act
         HttpResponseMessage response = await _httpClient.GetAsync(
-            Path,
+            ErasPath,
             CancellationToken.None);
 
         // Assert
@@ -51,7 +100,7 @@ public sealed class GetErasTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Act
         List<EraSummary>? eras = await _httpClient.GetFromJsonAsync<List<EraSummary>>(
-            Path,
+            ErasPath,
             CancellationToken.None);
 
         // Assert
@@ -66,7 +115,7 @@ public sealed class GetErasTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Act
         List<EraSummary>? eras = await _httpClient.GetFromJsonAsync<List<EraSummary>>(
-            Path,
+            ErasPath,
             CancellationToken.None);
 
         // Assert
@@ -82,7 +131,7 @@ public sealed class GetErasTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Act
         List<EraSummary>? eras = await _httpClient.GetFromJsonAsync<List<EraSummary>>(
-            Path,
+            ErasPath,
             CancellationToken.None);
 
         // Assert
@@ -93,114 +142,80 @@ public sealed class GetErasTests(CollectionFixture fixture) : IAsyncLifetime
         historicalEra.EndDate.ShouldBe(new DateOnly(2018, 12, 31));
     }
 
-    public async ValueTask InitializeAsync()
+    private async Task<string> CreateAthleteAsync(string prefix, string gender, DateOnly dateOfBirth)
     {
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
-        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        string firstName = $"{prefix}{_suffix}";
+        string lastName = "Er";
 
-        string seedSql =
-            $"""
-            -- Athlete
-            IF NOT EXISTS (SELECT 1 FROM Athletes WHERE AthleteId = {OwnedAthleteId})
-            BEGIN
-                SET IDENTITY_INSERT Athletes ON;
-                INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
-                VALUES ({OwnedAthleteId}, 'Era', 'Test', '1990-01-01', 'm', 1, 'era-test');
-                SET IDENTITY_INSERT Athletes OFF;
-            END
+        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
+            .WithFirstName(firstName)
+            .WithLastName(lastName)
+            .WithGender(gender)
+            .WithDateOfBirth(dateOfBirth)
+            .Build();
 
-            -- Historical era meet (date within 2011-01-01 to 2018-12-31)
-            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedHistoricalMeetId})
-            BEGIN
-                SET IDENTITY_INSERT Meets ON;
-                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-                VALUES ({OwnedHistoricalMeetId}, 'Era Historical Meet', 'era-historical-meet', '2017-06-15', '2017-06-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
-                SET IDENTITY_INSERT Meets OFF;
-            END
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
 
-            -- Current era meet (date within 2019-01-01 to 2099-12-31)
-            IF NOT EXISTS (SELECT 1 FROM Meets WHERE MeetId = {OwnedCurrentMeetId})
-            BEGIN
-                SET IDENTITY_INSERT Meets ON;
-                INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-                VALUES ({OwnedCurrentMeetId}, 'Era Current Meet', 'era-current-meet', '2025-03-15', '2025-03-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
-                SET IDENTITY_INSERT Meets OFF;
-            END
-
-            -- Historical participation
-            IF NOT EXISTS (SELECT 1 FROM Participations WHERE ParticipationId = {OwnedHistoricalParticipationId})
-            BEGIN
-                SET IDENTITY_INSERT Participations ON;
-                INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-                VALUES ({OwnedHistoricalParticipationId}, {OwnedAthleteId}, {OwnedHistoricalMeetId}, 80.5, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.5, 1);
-                SET IDENTITY_INSERT Participations OFF;
-            END
-
-            -- Current participation
-            IF NOT EXISTS (SELECT 1 FROM Participations WHERE ParticipationId = {OwnedCurrentParticipationId})
-            BEGIN
-                SET IDENTITY_INSERT Participations ON;
-                INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-                VALUES ({OwnedCurrentParticipationId}, {OwnedAthleteId}, {OwnedCurrentMeetId}, 80.5, 1, 1, 1, 0, 200.0, 130.0, 250.0, 580.0, 400.0, 85.5, 1);
-                SET IDENTITY_INSERT Participations OFF;
-            END
-
-            -- Historical attempt
-            IF NOT EXISTS (SELECT 1 FROM Attempts WHERE AttemptId = {OwnedHistoricalAttemptId})
-            BEGIN
-                SET IDENTITY_INSERT Attempts ON;
-                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-                VALUES ({OwnedHistoricalAttemptId}, {OwnedHistoricalParticipationId}, 1, 1, 200.0, 1, '{CreatedBy}', '{CreatedBy}');
-                SET IDENTITY_INSERT Attempts OFF;
-            END
-
-            -- Current attempt
-            IF NOT EXISTS (SELECT 1 FROM Attempts WHERE AttemptId = {OwnedCurrentAttemptId})
-            BEGIN
-                SET IDENTITY_INSERT Attempts ON;
-                INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-                VALUES ({OwnedCurrentAttemptId}, {OwnedCurrentParticipationId}, 1, 1, 200.0, 1, '{CreatedBy}', '{CreatedBy}');
-                SET IDENTITY_INSERT Attempts OFF;
-            END
-
-            -- Historical record (EraId=1, IsCurrent=1, IsRaw=1)
-            IF NOT EXISTS (SELECT 1 FROM Records WHERE RecordId = {OwnedHistoricalRecordId})
-            BEGIN
-                SET IDENTITY_INSERT Records ON;
-                INSERT INTO Records (RecordId, EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES ({OwnedHistoricalRecordId}, 1, 1, 1, 1, 200.0, '2017-06-15', 0, {OwnedHistoricalAttemptId}, 1, 1, '{CreatedBy}');
-                SET IDENTITY_INSERT Records OFF;
-            END
-
-            -- Current record (EraId=2, IsCurrent=1, IsRaw=1)
-            IF NOT EXISTS (SELECT 1 FROM Records WHERE RecordId = {OwnedCurrentRecordId})
-            BEGIN
-                SET IDENTITY_INSERT Records ON;
-                INSERT INTO Records (RecordId, EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-                VALUES ({OwnedCurrentRecordId}, 2, 1, 1, 1, 200.0, '2025-03-15', 0, {OwnedCurrentAttemptId}, 1, 1, '{CreatedBy}');
-                SET IDENTITY_INSERT Records OFF;
-            END
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(seedSql);
+        string slug = Slug.Create($"{firstName} {lastName}");
+        _athleteSlugs.Add(slug);
+        return slug;
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate, bool isRaw)
     {
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
-        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(startDate)
+            .WithIsRaw(isRaw)
+            .Build();
 
-        string cleanupSql =
-            $"""
-            DELETE FROM Records WHERE CreatedBy = '{CreatedBy}';
-            DELETE FROM Attempts WHERE CreatedBy = '{CreatedBy}';
-            DELETE FROM Participations WHERE ParticipationId IN ({OwnedHistoricalParticipationId}, {OwnedCurrentParticipationId});
-            DELETE FROM Meets WHERE MeetId IN ({OwnedHistoricalMeetId}, {OwnedCurrentMeetId});
-            DELETE FROM Athletes WHERE AthleteId = {OwnedAthleteId};
-            """;
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
 
-        await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+        _meetSlugs.Add(slug);
 
-        _httpClient.Dispose();
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        return meetDetails!.MeetId;
+    }
+
+    private async Task<int> AddParticipantAsync(int meetId, string athleteSlug, decimal bodyWeight)
+    {
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .WithBodyWeight(bodyWeight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{meetId}/participants", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? result = await response.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        return result!.ParticipationId;
+    }
+
+    private async Task RecordAttemptAsync(
+        int meetId,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
     }
 }
