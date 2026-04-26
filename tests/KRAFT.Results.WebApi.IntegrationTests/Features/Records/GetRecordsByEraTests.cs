@@ -1,121 +1,110 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.Records;
-using KRAFT.Results.Tests.Shared;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
-[Collection(nameof(RecordsCollection))]
+[Collection(nameof(GetRecordsByEraTestsCollection))]
 public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const string Path = "/records";
+    private const string RecordsPath = "/records";
 
-    // Entity IDs — 3000+ range to avoid collisions with GetRecordsTests (2000+) and BackfillRecordsTests (500-1030)
-    private const int AthleteId = 3000;
-    private const int MeetId = 3000;
-    private const int ParticipationId = 3000;
-    private const int AttemptSquatId = 3000;
-
-    // Record IDs
-    private const int RecordCurrentSquat83 = 3001;
-    private const int RecordCurrentSquat93 = 3002;
-    private const int RecordCurrentSquat105 = 3003;
-    private const int RecordHistoricalSquat83 = 3004;
-    private const int RecordHistoricalSquat105 = 3005;
-
-    // Weight constants
+    // Squat weights per era and weight category (referenced by assertions)
     private const decimal CurrentSquatWeight83 = 210.0m;
     private const decimal CurrentSquatWeight93 = 225.0m;
-    private const decimal CurrentSquatWeight105 = 240.0m;
     private const decimal HistoricalSquatWeight83 = 185.0m;
     private const decimal HistoricalSquatWeight105 = 260.0m;
 
+    // Supporting lift weights (not directly asserted)
+    private const decimal BenchWeight = 130.0m;
+    private const decimal DeadliftWeight = 250.0m;
+    private const decimal HistoricalBenchWeight = 100.0m;
+    private const decimal HistoricalDeadliftWeight = 200.0m;
+
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
+    private readonly string _suffix = UniqueShortCode.Next();
+    private readonly List<string> _athleteSlugs = [];
+    private readonly List<string> _meetSlugs = [];
+    private readonly List<(int MeetId, int ParticipationId)> _participations = [];
+    private HttpClient _authorizedHttpClient = null!;
+    private RecordComputationChannel _channel = null!;
 
     public async ValueTask InitializeAsync()
     {
-        // Athlete
-        await fixture.ExecuteSqlAsync(
-            $"""
-            SET IDENTITY_INSERT Athletes ON;
-            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
-            VALUES ({AthleteId}, 'EraA', 'Test', '1985-07-02', 'm', {TestSeedConstants.Country.Id}, 'eraa-test');
-            SET IDENTITY_INSERT Athletes OFF;
-            """);
+        (_authorizedHttpClient, _channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
-        // Meet
-        await fixture.ExecuteSqlAsync(
-            $"""
-            SET IDENTITY_INSERT Meets ON;
-            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-            VALUES ({MeetId}, 'GetRecordsByEra Meet', 'getrecordsbyera-meet', '2025-03-15', '2025-03-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
-            SET IDENTITY_INSERT Meets OFF;
-            """);
+        string athleteSlug = await CreateAthleteAsync("EraA", "m", new DateOnly(1985, 7, 2));
 
-        // Participation
-        await fixture.ExecuteSqlAsync(
-            $"""
-            SET IDENTITY_INSERT Participations ON;
-            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({ParticipationId}, {AthleteId}, {MeetId}, 80.5, {TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.AgeCategory.OpenId}, 1, 0, {CurrentSquatWeight83}, 130.0, 250.0, 580.0, 400.0, 85.5, 1);
-            SET IDENTITY_INSERT Participations OFF;
-            """);
+        // Current era meets (2019+)
+        int currentMeet83Id = await CreateMeetAndGetIdAsync(new DateOnly(2025, 3, 15), isRaw: false);
+        int currentMeet93Id = await CreateMeetAndGetIdAsync(new DateOnly(2025, 3, 15), isRaw: false);
 
-        // Attempt
-        await fixture.ExecuteSqlAsync(
-            $"""
-            SET IDENTITY_INSERT Attempts ON;
-            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES ({AttemptSquatId}, {ParticipationId}, 1, 3, {CurrentSquatWeight83}, 1, 'test-setup', 'test-setup');
-            SET IDENTITY_INSERT Attempts OFF;
-            """);
+        // Historical era meets (2011-2018)
+        int historicalMeet83Id = await CreateMeetAndGetIdAsync(new DateOnly(2017, 6, 15), isRaw: false);
+        int historicalMeet105Id = await CreateMeetAndGetIdAsync(new DateOnly(2018, 3, 10), isRaw: false);
 
-        // Records
-        await fixture.ExecuteSqlAsync(
-            $"""
-            SET IDENTITY_INSERT Records ON;
-            INSERT INTO Records (RecordId, EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES
-                -- Current era: squat 83kg (open, male, equipped)
-                ({RecordCurrentSquat83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {CurrentSquatWeight83}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Current era: squat 93kg (open, male, equipped) — verifies exclusion from historical era
-                ({RecordCurrentSquat93}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 1, {CurrentSquatWeight93}, '2025-03-15', 1, NULL, 1, 0, 'test-setup'),
-                -- Current era: squat 105kg (open, male, equipped) — verifies exclusion from current era (no EraWeightCategory)
-                ({RecordCurrentSquat105}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id105Kg}, 1, {CurrentSquatWeight105}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Historical era: squat 83kg (open, male, equipped)
-                ({RecordHistoricalSquat83}, {TestSeedConstants.Era.HistoricalId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {HistoricalSquatWeight83}, '2017-06-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Historical era: squat 105kg (open, male, equipped)
-                ({RecordHistoricalSquat105}, {TestSeedConstants.Era.HistoricalId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id105Kg}, 1, {HistoricalSquatWeight105}, '2018-03-10', 0, {AttemptSquatId}, 1, 0, 'test-setup');
-            SET IDENTITY_INSERT Records OFF;
-            """);
+        // Current era, 83kg (body weight 80.5 -> 83kg category)
+        int p1Id = await AddParticipantAsync(currentMeet83Id, athleteSlug, 80.5m);
+        _participations.Add((currentMeet83Id, p1Id));
+        await RecordAttemptAsync(currentMeet83Id, p1Id, Discipline.Squat, 1, CurrentSquatWeight83);
+        await RecordAttemptAsync(currentMeet83Id, p1Id, Discipline.Bench, 1, BenchWeight);
+        await RecordAttemptAsync(currentMeet83Id, p1Id, Discipline.Deadlift, 1, DeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Current era, 93kg (body weight 90.0 -> 93kg category)
+        int p2Id = await AddParticipantAsync(currentMeet93Id, athleteSlug, 90.0m);
+        _participations.Add((currentMeet93Id, p2Id));
+        await RecordAttemptAsync(currentMeet93Id, p2Id, Discipline.Squat, 1, CurrentSquatWeight93);
+        await RecordAttemptAsync(currentMeet93Id, p2Id, Discipline.Bench, 1, BenchWeight);
+        await RecordAttemptAsync(currentMeet93Id, p2Id, Discipline.Deadlift, 1, DeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Historical era, 83kg (body weight 80.5 -> 83kg category)
+        int p3Id = await AddParticipantAsync(historicalMeet83Id, athleteSlug, 80.5m);
+        _participations.Add((historicalMeet83Id, p3Id));
+        await RecordAttemptAsync(historicalMeet83Id, p3Id, Discipline.Squat, 1, HistoricalSquatWeight83);
+        await RecordAttemptAsync(historicalMeet83Id, p3Id, Discipline.Bench, 1, HistoricalBenchWeight);
+        await RecordAttemptAsync(historicalMeet83Id, p3Id, Discipline.Deadlift, 1, HistoricalDeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Historical era, 105kg (body weight 100.0 -> 105kg category)
+        int p4Id = await AddParticipantAsync(historicalMeet105Id, athleteSlug, 100.0m);
+        _participations.Add((historicalMeet105Id, p4Id));
+        await RecordAttemptAsync(historicalMeet105Id, p4Id, Discipline.Squat, 1, HistoricalSquatWeight105);
+        await RecordAttemptAsync(historicalMeet105Id, p4Id, Discipline.Bench, 1, HistoricalBenchWeight);
+        await RecordAttemptAsync(historicalMeet105Id, p4Id, Discipline.Deadlift, 1, HistoricalDeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
     }
 
     public async ValueTask DisposeAsync()
     {
-        // Delete in FK-safe reverse order
-        await fixture.ExecuteSqlAsync(
-            $"""
-            DELETE FROM Records WHERE RecordId IN (
-                {RecordCurrentSquat83},{RecordCurrentSquat93},{RecordCurrentSquat105},
-                {RecordHistoricalSquat83},{RecordHistoricalSquat105})
-            """);
+        foreach ((int meetId, int participationId) in _participations)
+        {
+            await _authorizedHttpClient.DeleteAsync(
+                $"/meets/{meetId}/participants/{participationId}", CancellationToken.None);
+        }
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Attempts WHERE AttemptId IN ({AttemptSquatId})");
+        foreach (string slug in _meetSlugs)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
+        }
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Participations WHERE ParticipationId = {ParticipationId}");
+        foreach (string slug in _athleteSlugs)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
+        }
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Meets WHERE MeetId = {MeetId}");
-
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Athletes WHERE AthleteId = {AthleteId}");
-
+        _authorizedHttpClient.Dispose();
         _httpClient.Dispose();
     }
 
@@ -126,13 +115,13 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped",
             CancellationToken.None);
 
         // Assert
         groups.ShouldNotBeNull();
         groups.ShouldNotBeEmpty();
-        groups.ShouldContain(g => g.Category == "Hn\u00e9beygja");
+        groups.ShouldContain(g => g.Category == "Hnébeygja");
     }
 
     [Fact]
@@ -142,13 +131,13 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped&era=historical-era",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped&era=historical-era",
             CancellationToken.None);
 
         // Assert
         groups.ShouldNotBeNull();
         groups.ShouldNotBeEmpty();
-        RecordGroup squatGroup = groups.First(g => g.Category == "Hn\u00e9beygja");
+        RecordGroup squatGroup = groups.First(g => g.Category == "Hnébeygja");
         squatGroup.Records.ShouldNotBeEmpty();
     }
 
@@ -159,7 +148,7 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped&era=historical-era",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped&era=historical-era",
             CancellationToken.None);
 
         // Assert
@@ -176,7 +165,7 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped&era=historical-era",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped&era=historical-era",
             CancellationToken.None);
 
         // Assert
@@ -192,7 +181,7 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         HttpResponseMessage response = await _httpClient.GetAsync(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped&era=nonexistent-era",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped&era=nonexistent-era",
             CancellationToken.None);
 
         // Assert
@@ -206,13 +195,13 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped&era=current-era",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped&era=current-era",
             CancellationToken.None);
 
         // Assert
         groups.ShouldNotBeNull();
         groups.ShouldNotBeEmpty();
-        groups.ShouldContain(g => g.Category == "Hn\u00e9beygja");
+        groups.ShouldContain(g => g.Category == "Hnébeygja");
     }
 
     [Fact]
@@ -222,12 +211,89 @@ public sealed class GetRecordsByEraTests(CollectionFixture fixture) : IAsyncLife
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
+            $"{RecordsPath}?gender=m&ageCategory=open&equipmentType=equipped",
             CancellationToken.None);
 
         // Assert
         groups.ShouldNotBeNull();
         List<RecordEntry> allRecords = groups.SelectMany(g => g.Records).ToList();
         allRecords.ShouldNotContain(r => r.WeightCategory == "105");
+    }
+
+    private async Task<string> CreateAthleteAsync(string prefix, string gender, DateOnly dateOfBirth)
+    {
+        string firstName = $"{prefix}{_suffix}";
+        string lastName = "Rc";
+
+        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
+            .WithFirstName(firstName)
+            .WithLastName(lastName)
+            .WithGender(gender)
+            .WithDateOfBirth(dateOfBirth)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        string slug = Slug.Create($"{firstName} {lastName}");
+        _athleteSlugs.Add(slug);
+        return slug;
+    }
+
+    private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate, bool isRaw)
+    {
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(startDate)
+            .WithIsRaw(isRaw)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+        _meetSlugs.Add(slug);
+
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        return meetDetails!.MeetId;
+    }
+
+    private async Task<int> AddParticipantAsync(int meetId, string athleteSlug, decimal bodyWeight)
+    {
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .WithBodyWeight(bodyWeight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{meetId}/participants", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? result = await response.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        return result!.ParticipationId;
+    }
+
+    private async Task RecordAttemptAsync(
+        int meetId,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
     }
 }
