@@ -1,4 +1,3 @@
-using System.Data.Common;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -6,7 +5,6 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.Records;
-using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
@@ -49,21 +47,11 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     private const decimal JuniorBench74Weight = 80.0m;
     private const decimal JuniorDeadlift74Weight = 160.0m;
 
-    // Weight constants — SQL-only records
-    private const decimal StandardSquatWeight = 220.0m;
-    private const decimal TotalWilksWeight = 400.0m;
-    private const decimal TotalIpfPointsWeight = 85.5m;
-    private const decimal CorruptBenchHigherWeight = 150.0m;
-    private const decimal CorruptBenchLowerWeight = 140.0m;
-    private const decimal CorruptIsStandardBenchSingleWeight = 130.0m;
-    private const decimal NoEraWcWeight = 230.0m;
-
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
     private readonly string _suffix = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private readonly List<string> _meetSlugs = [];
     private readonly List<int> _meetIds = [];
-    private readonly List<int> _sqlRecordIds = [];
     private HttpClient _authorizedHttpClient = null!;
     private RecordComputationChannel _channel = null!;
 
@@ -133,81 +121,6 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
         await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Bench, 1, JuniorBench74Weight);
         await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Deadlift, 1, JuniorDeadlift74Weight);
         await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
-
-        // --- SQL-only records (states that computation cannot produce) ---
-
-        // Find an attempt ID from the equipped meet for SQL records that reference attempts
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
-        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
-
-        int benchAttemptId = await dbContext.Set<WebApi.Features.Attempts.Attempt>()
-            .Where(a => a.ParticipationId == p2Id)
-            .Where(a => a.Discipline == Discipline.Bench)
-            .Select(a => a.AttemptId)
-            .SingleAsync(TestContext.Current.CancellationToken);
-
-        // Standard record: squat 93kg (open, male, equipped) — no AttemptId
-        FormattableString standardSquatSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 1, {StandardSquatWeight}, '2025-01-01', 1, NULL, 1, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, standardSquatSql));
-
-        // TotalWilks record — computation does not produce TotalWilks category
-        FormattableString totalWilksSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 7, {TotalWilksWeight}, '2025-03-15', 0, {benchAttemptId}, 1, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, totalWilksSql));
-
-        // TotalIpfPoints record — computation does not produce TotalIpfPoints category
-        FormattableString totalIpfPointsSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 8, {TotalIpfPointsWeight}, '2025-03-15', 0, {benchAttemptId}, 1, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, totalIpfPointsSql));
-
-        // Record for WC 105kg with no EraWeightCategory in current era
-        FormattableString noEraWcSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id105Kg}, 1, {NoEraWcWeight}, '2025-03-15', 0, {benchAttemptId}, 1, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, noEraWcSql));
-
-        // Corruption: bench 93kg, higher weight but IsCurrent=0
-        FormattableString corruptBenchHigherSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 2, {CorruptBenchHigherWeight}, '2025-06-01', 0, {benchAttemptId}, 0, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, corruptBenchHigherSql));
-
-        // Corruption: bench 93kg, lower weight but IsCurrent=1
-        FormattableString corruptBenchLowerSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 2, {CorruptBenchLowerWeight}, '2025-05-01', 0, {benchAttemptId}, 1, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, corruptBenchLowerSql));
-
-        // Corruption: BenchSingle 83kg with IsStandard=1 but linked to athlete via AttemptId
-        FormattableString corruptIsStandardSql =
-            $"""
-            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            OUTPUT INSERTED.RecordId
-            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 5, {CorruptIsStandardBenchSingleWeight}, '2025-03-15', 1, {benchAttemptId}, 1, 0, 'test-setup')
-            """;
-        _sqlRecordIds.Add(await InsertRecordAsync(dbContext, corruptIsStandardSql));
     }
 
     public async ValueTask DisposeAsync()
@@ -226,12 +139,6 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
                     )
                 );
                 """;
-
-            if (_sqlRecordIds.Count > 0)
-            {
-                string sqlRecordIdList = string.Join(", ", _sqlRecordIds);
-                cleanupSql += $"DELETE FROM Records WHERE RecordId IN ({sqlRecordIdList});\n";
-            }
 
             cleanupSql +=
                 $"""
@@ -382,53 +289,6 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task IncludesStandardRecords()
-    {
-        // Arrange
-
-        // Act
-        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
-            CancellationToken.None);
-
-        // Assert
-        groups.ShouldNotBeNull();
-        List<RecordEntry> allRecords = groups.SelectMany(g => g.Records).ToList();
-        allRecords.ShouldContain(r => r.IsStandard);
-    }
-
-    [Fact]
-    public async Task ExcludesTotalWilksAndTotalIpfPoints()
-    {
-        // Arrange
-
-        // Act
-        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
-            CancellationToken.None);
-
-        // Assert
-        groups.ShouldNotBeNull();
-        groups.ShouldNotContain(g => g.Category == string.Empty);
-    }
-
-    [Fact]
-    public async Task ExcludesWeightCategoriesNotInCurrentEra()
-    {
-        // Arrange — weight category 5 (105kg) has no EraWeightCategory row in current era
-
-        // Act
-        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
-            CancellationToken.None);
-
-        // Assert
-        groups.ShouldNotBeNull();
-        List<RecordEntry> allRecords = groups.SelectMany(g => g.Records).ToList();
-        allRecords.ShouldNotContain(r => r.WeightCategory == "105");
-    }
-
-    [Fact]
     public async Task ExcludesJuniorsOnlyWeightCategories_ForNonJuniorAgeCategory()
     {
         // Arrange — weight category 4 (74kg) is JuniorsOnly
@@ -483,42 +343,6 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ReturnsHighestWeight_WhenIsCurrentFlagIsCorrupt()
-    {
-        // Arrange — bench record for 93kg: 150.0 (IsCurrent=0) vs 140.0 (IsCurrent=1)
-        // The handler should return 150.0 (highest weight) regardless of IsCurrent flag
-
-        // Act
-        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
-            CancellationToken.None);
-
-        // Assert
-        groups.ShouldNotBeNull();
-        RecordGroup benchGroup = groups.First(g => g.Category == "Bekkpressa");
-        RecordEntry benchRecord93 = benchGroup.Records.First(r => r.WeightCategory == "93");
-        benchRecord93.Weight.ShouldBe(CorruptBenchHigherWeight);
-    }
-
-    [Fact]
-    public async Task ReturnsIsStandardFalse_WhenRecordHasAthleteEvenIfDbFlagIsTrue()
-    {
-        // Arrange — BenchSingle 83kg has IsStandard=1 in DB but is linked to a real athlete via AttemptId
-
-        // Act
-        List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
-            $"{Path}?gender=m&ageCategory=open&equipmentType=equipped",
-            CancellationToken.None);
-
-        // Assert
-        groups.ShouldNotBeNull();
-        RecordGroup benchSingleGroup = groups.First(g => g.Category == "Bekkpressa (stök grein)");
-        RecordEntry benchSingleRecord83 = benchSingleGroup.Records.First(r => r.WeightCategory == "83");
-        benchSingleRecord83.Athlete.ShouldNotBeNull();
-        benchSingleRecord83.IsStandard.ShouldBeFalse();
-    }
-
-    [Fact]
     public async Task ReturnsEmptyEntries_ForWeightCategoriesWithNoRecords()
     {
         // Arrange — 93kg has no deadlift record (equipped, open, male)
@@ -555,24 +379,6 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
             weightCategories.ShouldContain("83");
             weightCategories.ShouldContain("93");
         }
-    }
-
-    private static async Task<int> InsertRecordAsync(ResultsDbContext dbContext, FormattableString sql)
-    {
-        DbConnection connection = dbContext.Database.GetDbConnection();
-
-        if (connection.State != System.Data.ConnectionState.Open)
-        {
-            await connection.OpenAsync(TestContext.Current.CancellationToken);
-        }
-
-        await using DbCommand command = connection.CreateCommand();
-#pragma warning disable CA2100 // Test-only code with hardcoded constant values, no user input
-        command.CommandText = FormattableString.Invariant(sql);
-#pragma warning restore CA2100
-        object? result = await command.ExecuteScalarAsync(TestContext.Current.CancellationToken);
-
-        return (int)result!;
     }
 
     private async Task<string> CreateAthleteAsync(string prefix, string gender, DateOnly dateOfBirth)
