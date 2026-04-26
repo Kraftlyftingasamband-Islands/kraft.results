@@ -1,177 +1,236 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.Records;
 using KRAFT.Results.Tests.Shared;
+using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
+using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
+using KRAFT.Results.WebApi.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 
-[Collection(nameof(RecordsCollection))]
+[Collection(nameof(GetRecordsTestsCollection))]
 public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const string Path = "/records";
 
-    // Entity IDs — 2000+ range to avoid collisions with BackfillRecordsTests (500–1030)
-    private const int AthleteId = 2000;
-    private const int MeetId = 2000;
-    private const int ParticipationId = 2000;
-    private const int AttemptSquatId = 2000;
-    private const int AttemptBenchId = 2001;
-    private const int AttemptDeadliftId = 2002;
+    // Weight constants — equipped meet 1 (earlier date, produces "lower" historical records)
+    private const decimal Meet1SquatWeight = 190.0m;
+    private const decimal Meet1BenchWeight = 100.0m;
+    private const decimal Meet1DeadliftWeight = 200.0m;
 
-    // Record IDs
-    private const int RecordSquatEquipped83 = 2001;
-    private const int RecordBench83 = 2002;
-    private const int RecordDeadlift83 = 2003;
-    private const int RecordTotal83 = 2004;
-    private const int RecordSquatClassic83 = 2005;
-    private const int RecordStandardSquat93 = 2006;
-    private const int RecordTotalWilks83 = 2007;
-    private const int RecordTotalIpfPoints83 = 2008;
-    private const int RecordJuniorSquat83 = 2009;
-    private const int RecordLowerSquat83 = 2010;
-    private const int RecordFemaleSquat63 = 2011;
-    private const int RecordJuniorsOnlyWcOpen74 = 2012;
-    private const int RecordJuniorsOnlyWcJunior74 = 2013;
-    private const int RecordNoEraWc105 = 2014;
-    private const int RecordCorruptBenchHigher93 = 2015;
-    private const int RecordCorruptBenchLower93 = 2016;
-    private const int RecordCorruptIsStandardBenchSingle83 = 2017;
-
-    // Weight constants
+    // Weight constants — equipped meet 2 (later date, produces current records)
     private const decimal EquippedSquatWeight = 200.0m;
     private const decimal BenchWeight = 130.0m;
     private const decimal DeadliftWeight = 250.0m;
-    private const decimal TotalWeight = 580.0m;
+
+    // Weight constants — classic meet
     private const decimal ClassicSquatWeight = 195.0m;
+    private const decimal ClassicBenchWeight = 130.0m;
+    private const decimal ClassicDeadliftWeight = 250.0m;
+
+    // Weight constants — junior meets (83kg weight category)
+    private const decimal JuniorSquat83Weight = 180.0m;
+    private const decimal JuniorBench83Weight = 90.0m;
+    private const decimal JuniorDeadlift83Weight = 180.0m;
+
+    // Weight constants — junior meets (74kg JuniorsOnly weight category)
+    private const decimal JuniorSquat74Weight = 170.0m;
+    private const decimal JuniorBench74Weight = 80.0m;
+    private const decimal JuniorDeadlift74Weight = 160.0m;
+
+    // Weight constants — SQL-only records
     private const decimal StandardSquatWeight = 220.0m;
     private const decimal TotalWilksWeight = 400.0m;
     private const decimal TotalIpfPointsWeight = 85.5m;
-    private const decimal JuniorSquatWeight = 180.0m;
-    private const decimal LowerSquatWeight = 190.0m;
-    private const decimal FemaleSquatWeight = 120.0m;
-    private const decimal JuniorsOnlyOpenWeight = 170.0m;
-    private const decimal JuniorsOnlyJuniorWeight = 165.0m;
-    private const decimal NoEraWcWeight = 230.0m;
     private const decimal CorruptBenchHigherWeight = 150.0m;
     private const decimal CorruptBenchLowerWeight = 140.0m;
     private const decimal CorruptIsStandardBenchSingleWeight = 130.0m;
+    private const decimal NoEraWcWeight = 230.0m;
 
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
+    private readonly string _suffix = UniqueShortCode.Next();
+    private readonly List<string> _athleteSlugs = [];
+    private readonly List<string> _meetSlugs = [];
+    private readonly List<int> _meetIds = [];
+    private HttpClient _authorizedHttpClient = null!;
+    private RecordComputationChannel _channel = null!;
 
     public async ValueTask InitializeAsync()
     {
-        // Athlete
+        (_authorizedHttpClient, _channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
+
+        // Athletes
+        string athleteASlug = await CreateAthleteAsync("RecA", "m", new DateOnly(1985, 7, 2));
+        string athleteBSlug = await CreateAthleteAsync("RecB", "m", new DateOnly(2003, 1, 1));
+
+        // Equipped meet 1 — earlier date, produces historical "lower" records
+        int equippedMeet1Id = await CreateMeetAndGetIdAsync(
+            new DateOnly(2024, 6, 1), isRaw: false);
+
+        // Equipped meet 2 — later date, produces current records
+        int equippedMeet2Id = await CreateMeetAndGetIdAsync(
+            new DateOnly(2025, 3, 15), isRaw: false);
+
+        // Classic meet — produces IsRaw=true (classic) records
+        int classicMeetId = await CreateMeetAndGetIdAsync(
+            new DateOnly(2025, 3, 15), isRaw: true);
+
+        // Junior equipped meet for 83kg
+        int juniorMeet83Id = await CreateMeetAndGetIdAsync(
+            new DateOnly(2025, 3, 15), isRaw: false);
+
+        // Junior equipped meet for 74kg JuniorsOnly
+        int juniorMeet74Id = await CreateMeetAndGetIdAsync(
+            new DateOnly(2025, 3, 15), isRaw: false);
+
+        // --- Athlete A participations ---
+
+        // Meet 1: athlete A at 83kg, lower squat record
+        int p1Id = await AddParticipantAsync(equippedMeet1Id, athleteASlug, 80.5m);
+        await RecordAttemptAsync(equippedMeet1Id, p1Id, Discipline.Squat, 1, Meet1SquatWeight);
+        await RecordAttemptAsync(equippedMeet1Id, p1Id, Discipline.Bench, 1, Meet1BenchWeight);
+        await RecordAttemptAsync(equippedMeet1Id, p1Id, Discipline.Deadlift, 1, Meet1DeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Meet 2: athlete A at 83kg, higher squat record (supersedes meet 1)
+        int p2Id = await AddParticipantAsync(equippedMeet2Id, athleteASlug, 80.5m);
+        await RecordAttemptAsync(equippedMeet2Id, p2Id, Discipline.Squat, 1, EquippedSquatWeight);
+        await RecordAttemptAsync(equippedMeet2Id, p2Id, Discipline.Bench, 1, BenchWeight);
+        await RecordAttemptAsync(equippedMeet2Id, p2Id, Discipline.Deadlift, 1, DeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Classic meet: athlete A at 83kg
+        int p3Id = await AddParticipantAsync(classicMeetId, athleteASlug, 80.5m);
+        await RecordAttemptAsync(classicMeetId, p3Id, Discipline.Squat, 1, ClassicSquatWeight);
+        await RecordAttemptAsync(classicMeetId, p3Id, Discipline.Bench, 1, ClassicBenchWeight);
+        await RecordAttemptAsync(classicMeetId, p3Id, Discipline.Deadlift, 1, ClassicDeadliftWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // --- Athlete B (junior) participations ---
+
+        // Junior 83kg equipped meet (full powerlifting — all 3 disciplines)
+        int p4Id = await AddParticipantAsync(juniorMeet83Id, athleteBSlug, 80.5m);
+        await RecordAttemptAsync(juniorMeet83Id, p4Id, Discipline.Squat, 1, JuniorSquat83Weight);
+        await RecordAttemptAsync(juniorMeet83Id, p4Id, Discipline.Bench, 1, JuniorBench83Weight);
+        await RecordAttemptAsync(juniorMeet83Id, p4Id, Discipline.Deadlift, 1, JuniorDeadlift83Weight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Junior 74kg equipped meet (JuniorsOnly weight category, full powerlifting)
+        int p5Id = await AddParticipantAsync(juniorMeet74Id, athleteBSlug, 70.0m);
+        await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Squat, 1, JuniorSquat74Weight);
+        await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Bench, 1, JuniorBench74Weight);
+        await RecordAttemptAsync(juniorMeet74Id, p5Id, Discipline.Deadlift, 1, JuniorDeadlift74Weight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // --- SQL-only records (states that computation cannot produce) ---
+
+        // Find an attempt ID from the equipped meet for SQL records that reference attempts
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int benchAttemptId = await dbContext.Set<WebApi.Features.Attempts.Attempt>()
+            .Where(a => a.ParticipationId == p2Id)
+            .Where(a => a.Discipline == Discipline.Bench)
+            .Select(a => a.AttemptId)
+            .SingleAsync(TestContext.Current.CancellationToken);
+
+        // Standard record: squat 93kg (open, male, equipped) — no AttemptId
         await fixture.ExecuteSqlAsync(
             $"""
-            SET IDENTITY_INSERT Athletes ON;
-            INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
-            VALUES ({AthleteId}, 'RecA', 'Test', '1985-07-02', 'm', {TestSeedConstants.Country.Id}, 'reca-test');
-            SET IDENTITY_INSERT Athletes OFF;
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 1, {StandardSquatWeight}, '2025-01-01', 1, NULL, 1, 0, 'test-setup')
             """);
 
-        // Meet
+        // TotalWilks record — computation does not produce TotalWilks category
         await fixture.ExecuteSqlAsync(
             $"""
-            SET IDENTITY_INSERT Meets ON;
-            INSERT INTO Meets (MeetId, Title, Slug, StartDate, EndDate, CalcPlaces, PublishedResults, ResultModeId, IsRaw, MeetTypeId, IsInTeamCompetition, ShowWilks, ShowTeamPoints, ShowBodyWeight, ShowTeams, RecordsPossible, PublishedInCalendar)
-            VALUES ({MeetId}, 'GetRecords Meet', 'getrecords-meet', '2025-03-15', '2025-03-15', 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1);
-            SET IDENTITY_INSERT Meets OFF;
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 7, {TotalWilksWeight}, '2025-03-15', 0, {benchAttemptId}, 1, 0, 'test-setup')
             """);
 
-        // Participation
+        // TotalIpfPoints record — computation does not produce TotalIpfPoints category
         await fixture.ExecuteSqlAsync(
             $"""
-            SET IDENTITY_INSERT Participations ON;
-            INSERT INTO Participations (ParticipationId, AthleteId, MeetId, Weight, WeightCategoryId, AgeCategoryId, Place, Disqualified, Squat, Benchpress, Deadlift, Total, Wilks, IPFPoints, LotNo)
-            VALUES ({ParticipationId}, {AthleteId}, {MeetId}, 80.5, {TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.AgeCategory.OpenId}, 1, 0, {EquippedSquatWeight}, {BenchWeight}, {DeadliftWeight}, {TotalWeight}, 400.0, 85.5, 1);
-            SET IDENTITY_INSERT Participations OFF;
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 8, {TotalIpfPointsWeight}, '2025-03-15', 0, {benchAttemptId}, 1, 0, 'test-setup')
             """);
 
-        // Attempts
+        // Record for WC 105kg with no EraWeightCategory in current era
         await fixture.ExecuteSqlAsync(
             $"""
-            SET IDENTITY_INSERT Attempts ON;
-            INSERT INTO Attempts (AttemptId, ParticipationId, DisciplineId, Round, Weight, Good, CreatedBy, ModifiedBy)
-            VALUES
-                ({AttemptSquatId}, {ParticipationId}, 1, 3, {EquippedSquatWeight}, 1, 'test-setup', 'test-setup'),
-                ({AttemptBenchId}, {ParticipationId}, 2, 3, {BenchWeight}, 1, 'test-setup', 'test-setup'),
-                ({AttemptDeadliftId}, {ParticipationId}, 3, 3, {DeadliftWeight}, 1, 'test-setup', 'test-setup');
-            SET IDENTITY_INSERT Attempts OFF;
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id105Kg}, 1, {NoEraWcWeight}, '2025-03-15', 0, {benchAttemptId}, 1, 0, 'test-setup')
             """);
 
-        // Records
+        // Corruption: bench 93kg, higher weight but IsCurrent=0
         await fixture.ExecuteSqlAsync(
             $"""
-            SET IDENTITY_INSERT Records ON;
-            INSERT INTO Records (RecordId, EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
-            VALUES
-                -- Equipped squat 83kg (open, male)
-                ({RecordSquatEquipped83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {EquippedSquatWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Bench 83kg (open, male, equipped)
-                ({RecordBench83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 2, {BenchWeight}, '2025-03-15', 0, {AttemptBenchId}, 1, 0, 'test-setup'),
-                -- Deadlift 83kg (open, male, equipped)
-                ({RecordDeadlift83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 3, {DeadliftWeight}, '2025-03-15', 0, {AttemptDeadliftId}, 1, 0, 'test-setup'),
-                -- Total 83kg (open, male, equipped)
-                ({RecordTotal83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 4, {TotalWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Classic squat 83kg (open, male)
-                ({RecordSquatClassic83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {ClassicSquatWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 1, 'test-setup'),
-                -- Standard record: squat 93kg (open, male, equipped), no AttemptId
-                ({RecordStandardSquat93}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 1, {StandardSquatWeight}, '2025-01-01', 1, NULL, 1, 0, 'test-setup'),
-                -- TotalWilks (should be excluded)
-                ({RecordTotalWilks83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 7, {TotalWilksWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- TotalIpfPoints (should be excluded)
-                ({RecordTotalIpfPoints83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 8, {TotalIpfPointsWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Junior squat 83kg (junior, male, equipped)
-                ({RecordJuniorSquat83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.JuniorId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {JuniorSquatWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Lower squat 83kg (open, male, equipped) — beaten by 200.0
-                ({RecordLowerSquat83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 1, {LowerSquatWeight}, '2024-01-01', 0, {AttemptSquatId}, 0, 0, 'test-setup'),
-                -- Female squat 63kg (open, female, equipped), no AttemptId
-                ({RecordFemaleSquat63}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id63Kg}, 1, {FemaleSquatWeight}, '2025-03-15', 0, NULL, 1, 0, 'test-setup'),
-                -- JuniorsOnly WC 74kg, open age category
-                ({RecordJuniorsOnlyWcOpen74}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id74KgJunior}, 1, {JuniorsOnlyOpenWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- JuniorsOnly WC 74kg, junior age category
-                ({RecordJuniorsOnlyWcJunior74}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.JuniorId}, {TestSeedConstants.WeightCategory.Id74KgJunior}, 1, {JuniorsOnlyJuniorWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Record for WC 105kg with no EraWeightCategory row in current era
-                ({RecordNoEraWc105}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id105Kg}, 1, {NoEraWcWeight}, '2025-03-15', 0, {AttemptSquatId}, 1, 0, 'test-setup'),
-                -- Corruption: bench 93kg, higher weight but IsCurrent=0
-                ({RecordCorruptBenchHigher93}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 2, {CorruptBenchHigherWeight}, '2025-06-01', 0, {AttemptBenchId}, 0, 0, 'test-setup'),
-                -- Corruption: bench 93kg, lower weight but IsCurrent=1
-                ({RecordCorruptBenchLower93}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 2, {CorruptBenchLowerWeight}, '2025-05-01', 0, {AttemptBenchId}, 1, 0, 'test-setup'),
-                -- Corruption: BenchSingle 83kg with IsStandard=1 but linked to athlete via AttemptId
-                ({RecordCorruptIsStandardBenchSingle83}, {TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 5, {CorruptIsStandardBenchSingleWeight}, '2025-03-15', 1, {AttemptBenchId}, 1, 0, 'test-setup');
-            SET IDENTITY_INSERT Records OFF;
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 2, {CorruptBenchHigherWeight}, '2025-06-01', 0, {benchAttemptId}, 0, 0, 'test-setup')
+            """);
+
+        // Corruption: bench 93kg, lower weight but IsCurrent=1
+        await fixture.ExecuteSqlAsync(
+            $"""
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id93Kg}, 2, {CorruptBenchLowerWeight}, '2025-05-01', 0, {benchAttemptId}, 1, 0, 'test-setup')
+            """);
+
+        // Corruption: BenchSingle 83kg with IsStandard=1 but linked to athlete via AttemptId
+        await fixture.ExecuteSqlAsync(
+            $"""
+            INSERT INTO Records (EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId, Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES ({TestSeedConstants.Era.CurrentId}, {TestSeedConstants.AgeCategory.OpenId}, {TestSeedConstants.WeightCategory.Id83Kg}, 5, {CorruptIsStandardBenchSingleWeight}, '2025-03-15', 1, {benchAttemptId}, 1, 0, 'test-setup')
             """);
     }
 
     public async ValueTask DisposeAsync()
     {
-        // Delete in FK-safe reverse order
-        await fixture.ExecuteSqlAsync(
-            $"""
-            DELETE FROM Records WHERE RecordId IN (
-                {RecordSquatEquipped83},{RecordBench83},{RecordDeadlift83},{RecordTotal83},
-                {RecordSquatClassic83},{RecordStandardSquat93},{RecordTotalWilks83},{RecordTotalIpfPoints83},
-                {RecordJuniorSquat83},{RecordLowerSquat83},{RecordFemaleSquat63},
-                {RecordJuniorsOnlyWcOpen74},{RecordJuniorsOnlyWcJunior74},{RecordNoEraWc105},
-                {RecordCorruptBenchHigher93},{RecordCorruptBenchLower93},{RecordCorruptIsStandardBenchSingle83})
-            """);
+        if (_meetIds.Count > 0)
+        {
+            await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+            ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Attempts WHERE AttemptId IN ({AttemptSquatId},{AttemptBenchId},{AttemptDeadliftId})");
+            string meetIdList = string.Join(", ", _meetIds);
+            string cleanupSql =
+                $"""
+                DELETE FROM Records WHERE AttemptId IN (
+                    SELECT AttemptId FROM Attempts WHERE ParticipationId IN (
+                        SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
+                    )
+                );
+                DELETE FROM Records WHERE CreatedBy = 'test-setup'
+                    AND WeightCategoryId IN ({TestSeedConstants.WeightCategory.Id83Kg}, {TestSeedConstants.WeightCategory.Id93Kg}, {TestSeedConstants.WeightCategory.Id105Kg});
+                DELETE FROM Attempts WHERE ParticipationId IN (
+                    SELECT ParticipationId FROM Participations WHERE MeetId IN ({meetIdList})
+                );
+                DELETE FROM Participations WHERE MeetId IN ({meetIdList});
+                """;
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Participations WHERE ParticipationId = {ParticipationId}");
+            await dbContext.Database.ExecuteSqlRawAsync(cleanupSql);
+        }
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Meets WHERE MeetId = {MeetId}");
+        foreach (string slug in _meetSlugs)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
+        }
 
-        await fixture.ExecuteSqlAsync(
-            $"DELETE FROM Athletes WHERE AthleteId = {AthleteId}");
+        foreach (string slug in _athleteSlugs)
+        {
+            await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
+        }
 
+        _authorizedHttpClient.Dispose();
         _httpClient.Dispose();
     }
 
@@ -202,9 +261,9 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
         // Assert
         groups.ShouldNotBeNull();
         groups.Count.ShouldBe(6);
-        groups.ShouldContain(g => g.Category == "Hn\u00e9beygja");
+        groups.ShouldContain(g => g.Category == "Hnébeygja");
         groups.ShouldContain(g => g.Category == "Bekkpressa");
-        groups.ShouldContain(g => g.Category == "R\u00e9ttst\u00f6\u00f0ulyfta");
+        groups.ShouldContain(g => g.Category == "Réttstöðulyfta");
         groups.ShouldContain(g => g.Category == "Samtala");
     }
 
@@ -229,7 +288,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task FiltersByGender_Female_ReturnsNoRecordsWithAthletes()
     {
-        // Arrange — female open equipped has one standard record (no athlete)
+        // Arrange — female open equipped has no athlete-linked records
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
@@ -245,7 +304,8 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task FiltersByAgeCategory_Junior_ReturnsOnlyJuniorRecords()
     {
-        // Arrange — junior equipped male has 2 records with athletes (squat 83kg + JuniorsOnly 74kg)
+        // Arrange — junior equipped male: 2 weight categories (83kg + 74kg JuniorsOnly)
+        // Each produces 6 record categories (Squat, Bench, Deadlift, BenchSingle, DeadliftSingle, Total)
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
@@ -258,7 +318,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
         int nonEmptyCount = groups
             .SelectMany(g => g.Records)
             .Count(r => r.Athlete != null);
-        nonEmptyCount.ShouldBe(2);
+        nonEmptyCount.ShouldBe(12);
     }
 
     [Fact]
@@ -363,7 +423,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task ReturnsHighestWeight_WhenMultipleRecordsExist()
     {
-        // Arrange — two squat records for (RecordCategoryId=1, WeightCategoryId=1): 200.0 and 190.0
+        // Arrange — squat 83kg has records at 190.0 (historical) and 200.0 (current)
 
         // Act
         List<RecordGroup>? groups = await _httpClient.GetFromJsonAsync<List<RecordGroup>>(
@@ -372,7 +432,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Assert
         groups.ShouldNotBeNull();
-        RecordGroup squatGroup = groups.First(g => g.Category == "Hn\u00e9beygja");
+        RecordGroup squatGroup = groups.First(g => g.Category == "Hnébeygja");
         RecordEntry squatRecord83 = squatGroup.Records.First(r => r.WeightCategory == "83");
         squatRecord83.Weight.ShouldBe(EquippedSquatWeight);
     }
@@ -389,7 +449,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Assert
         groups.ShouldNotBeNull();
-        RecordGroup squatGroup = groups.First(g => g.Category == "Hn\u00e9beygja");
+        RecordGroup squatGroup = groups.First(g => g.Category == "Hnébeygja");
         List<string> weightCategories = squatGroup.Records.Select(r => r.WeightCategory).ToList();
         weightCategories.Count.ShouldBe(2);
         weightCategories.ShouldBe(
@@ -446,7 +506,7 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Assert
         groups.ShouldNotBeNull();
-        RecordGroup deadliftGroup = groups.First(g => g.Category == "R\u00e9ttst\u00f6\u00f0ulyfta");
+        RecordGroup deadliftGroup = groups.First(g => g.Category == "Réttstöðulyfta");
         RecordEntry deadliftRecord93 = deadliftGroup.Records.First(r => r.WeightCategory == "93");
         deadliftRecord93.Athlete.ShouldBeNull();
         deadliftRecord93.Weight.ShouldBe(0m);
@@ -471,5 +531,84 @@ public sealed class GetRecordsTests(CollectionFixture fixture) : IAsyncLifetime
             weightCategories.ShouldContain("83");
             weightCategories.ShouldContain("93");
         }
+    }
+
+    private async Task<string> CreateAthleteAsync(string prefix, string gender, DateOnly dateOfBirth)
+    {
+        string firstName = $"{prefix}{_suffix}";
+        string lastName = "Rc";
+
+        CreateAthleteCommand command = new CreateAthleteCommandBuilder()
+            .WithFirstName(firstName)
+            .WithLastName(lastName)
+            .WithGender(gender)
+            .WithDateOfBirth(dateOfBirth)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        string slug = Slug.Create($"{firstName} {lastName}");
+        _athleteSlugs.Add(slug);
+        return slug;
+    }
+
+    private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate, bool isRaw)
+    {
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(startDate)
+            .WithIsRaw(isRaw)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+        _meetSlugs.Add(slug);
+
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        int meetId = meetDetails!.MeetId;
+        _meetIds.Add(meetId);
+        return meetId;
+    }
+
+    private async Task<int> AddParticipantAsync(int meetId, string athleteSlug, decimal bodyWeight)
+    {
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .WithBodyWeight(bodyWeight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{meetId}/participants", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? result = await response.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        return result!.ParticipationId;
+    }
+
+    private async Task RecordAttemptAsync(
+        int meetId,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
     }
 }
