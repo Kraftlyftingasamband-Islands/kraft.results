@@ -61,6 +61,14 @@ internal sealed class RemoveParticipantHandler
                     IsolationLevel.RepeatableRead,
                     cancellationToken);
 
+            List<Record> referencingRecords = await _dbContext.Set<Record>()
+                .Where(r => r.AttemptId != null)
+                .Where(r => attemptIds.Contains(r.AttemptId!.Value))
+                .ToListAsync(cancellationToken);
+
+            _dbContext.Set<Record>().RemoveRange(referencingRecords);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
             _dbContext.Set<Participation>().Remove(participation);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
