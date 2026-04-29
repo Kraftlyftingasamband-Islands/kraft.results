@@ -28,6 +28,8 @@ internal static class TestDataSeeder
     private const decimal SquatWeight = 200.0m;
     private const decimal BenchWeight = 130.0m;
     private const decimal DeadliftWeight = 250.0m;
+    private const decimal ClassicSquatWeight = 195.0m;
+    private const decimal HistoricalSquatWeight = 185.0m;
     private const decimal AthleteBodyWeight = 80.5m;
     private const int DefaultMeetTypeId = 1;
     private const int DefaultResultModeId = 1;
@@ -74,7 +76,12 @@ internal static class TestDataSeeder
 
         await CreateAthleteAsync(httpClient, teamId, cancellationToken);
 
-        string meetSlug = await CreateMeetAsync(httpClient, cancellationToken);
+        string meetSlug = await CreateMeetAsync(
+            httpClient,
+            SeededMeetTitle,
+            new DateOnly(SeededMeetYear, 3, 15),
+            isRaw: false,
+            cancellationToken);
         int meetId = await GetMeetIdAsync(httpClient, meetSlug, cancellationToken);
 
         int participationId = await AddParticipantAsync(httpClient, meetId, cancellationToken);
@@ -104,7 +111,24 @@ internal static class TestDataSeeder
             DeadliftWeight,
             cancellationToken);
 
-        await WaitForRecordsAsync(httpClient, cancellationToken);
+        await SeedAuxiliaryMeetAsync(
+            httpClient,
+            "Historical Meet",
+            new DateOnly(2017, 6, 15),
+            isRaw: false,
+            HistoricalSquatWeight,
+            cancellationToken);
+
+        await SeedAuxiliaryMeetAsync(
+            httpClient,
+            "Classic Meet",
+            new DateOnly(SeededMeetYear, 3, 16),
+            isRaw: true,
+            ClassicSquatWeight,
+            cancellationToken);
+
+        await WaitForRecordsAsync(httpClient, "equipped", cancellationToken);
+        await WaitForRecordsAsync(httpClient, "classic", cancellationToken);
     }
 
     private static async Task<string> LoginAsync(
@@ -164,13 +188,16 @@ internal static class TestDataSeeder
 
     private static async Task<string> CreateMeetAsync(
         HttpClient httpClient,
+        string title,
+        DateOnly startDate,
+        bool isRaw,
         CancellationToken cancellationToken)
     {
         CreateMeetCommand command = new(
-            Title: SeededMeetTitle,
-            StartDate: new DateOnly(SeededMeetYear, 3, 15),
+            Title: title,
+            StartDate: startDate,
             MeetTypeId: DefaultMeetTypeId,
-            EndDate: new DateOnly(SeededMeetYear, 3, 15),
+            EndDate: startDate,
             CalcPlaces: true,
             Text: null,
             Location: null,
@@ -183,7 +210,7 @@ internal static class TestDataSeeder
             ShowBodyWeight: true,
             ShowTeams: false,
             RecordsPossible: true,
-            IsRaw: false);
+            IsRaw: isRaw);
 
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(
             "/meets", command, cancellationToken);
@@ -248,14 +275,41 @@ internal static class TestDataSeeder
         response.EnsureSuccessStatusCode();
     }
 
+    private static async Task SeedAuxiliaryMeetAsync(
+        HttpClient httpClient,
+        string title,
+        DateOnly startDate,
+        bool isRaw,
+        decimal squatWeight,
+        CancellationToken cancellationToken)
+    {
+        string slug = await CreateMeetAsync(
+            httpClient,
+            title,
+            startDate,
+            isRaw,
+            cancellationToken);
+        int meetId = await GetMeetIdAsync(httpClient, slug, cancellationToken);
+        int participationId = await AddParticipantAsync(httpClient, meetId, cancellationToken);
+        await RecordAttemptAsync(
+            httpClient,
+            meetId,
+            participationId,
+            Discipline.Squat,
+            round: 1,
+            squatWeight,
+            cancellationToken);
+    }
+
     private static async Task WaitForRecordsAsync(
         HttpClient httpClient,
+        string equipmentType,
         CancellationToken cancellationToken)
     {
         for (int attempt = 0; attempt < MaxPollAttempts; attempt++)
         {
             List<RecordGroup>? groups = await httpClient.GetFromJsonAsync<List<RecordGroup>>(
-                "/records?gender=m&ageCategory=open&equipmentType=equipped",
+                $"/records?gender=m&ageCategory=open&equipmentType={equipmentType}",
                 cancellationToken);
 
             bool hasRecord = groups is not null
