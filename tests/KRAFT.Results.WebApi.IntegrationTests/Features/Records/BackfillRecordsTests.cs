@@ -61,10 +61,16 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         ResultsDbContext eraDb = eraScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await eraDb.Database.ExecuteSqlRawAsync(
-            """
-            IF NOT EXISTS (SELECT 1 FROM EraWeightCategories WHERE EraId = 2 AND WeightCategoryId = 5)
+            $"""
+            IF NOT EXISTS (
+                SELECT 1 FROM EraWeightCategories
+                WHERE EraId = {TestSeedConstants.Era.CurrentId}
+                AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id105Kg})
             INSERT INTO EraWeightCategories (EraId, WeightCategoryId, FromDate, ToDate)
-            VALUES (2, 5, '2019-01-01', '2099-12-31');
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.WeightCategory.Id105Kg},
+                '2019-01-01', '2099-12-31');
             """,
             TestContext.Current.CancellationToken);
 
@@ -216,6 +222,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
             .Where(r => r.IsCurrent)
             .ToListAsync(CancellationToken.None);
 
@@ -542,7 +549,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         int squat2AttemptId = await GetAttemptIdByRoundAsync(
             idDb, participation2Id, Discipline.Squat, 1, TestContext.Current.CancellationToken);
 
-        // Clear the slot so backfill rebuilds from scratch
+        // ClearSlotAsync is needed (not ResetRecordSlotAsync) because the compute pipeline
+        // cascades records to all eligible age categories — this clears them all at once.
         await SeedRecordAthlete.ClearSlotAsync(
             idDb, TestSeedConstants.WeightCategory.Id93Kg, TestContext.Current.CancellationToken);
 
@@ -1081,19 +1089,14 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         await dbContext.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Records WHERE CreatedBy = 'backfill-test';",
-            TestContext.Current.CancellationToken);
-
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Attempts WHERE Round = 4 AND CreatedBy = 'backfill-test';",
-            TestContext.Current.CancellationToken);
-
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Records WHERE CreatedBy = 'duplicate';",
-            TestContext.Current.CancellationToken);
-
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "DELETE FROM EraWeightCategories WHERE EraId = 2 AND WeightCategoryId = 5;",
+            $"""
+            DELETE FROM Records WHERE CreatedBy = 'backfill-test';
+            DELETE FROM Records WHERE CreatedBy = 'duplicate';
+            DELETE FROM Attempts WHERE Round = 4 AND CreatedBy = 'backfill-test';
+            DELETE FROM EraWeightCategories
+            WHERE EraId = {TestSeedConstants.Era.CurrentId}
+            AND WeightCategoryId = {TestSeedConstants.WeightCategory.Id105Kg};
+            """,
             TestContext.Current.CancellationToken);
     }
 
