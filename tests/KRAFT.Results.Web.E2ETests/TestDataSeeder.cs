@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -28,32 +29,37 @@ internal static class TestDataSeeder
     private const decimal BenchWeight = 130.0m;
     private const decimal DeadliftWeight = 250.0m;
     private const decimal AthleteBodyWeight = 80.5m;
+    private const int DefaultMeetTypeId = 1;
+    private const int DefaultResultModeId = 1;
 
     private const int MaxPollAttempts = 40;
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(30);
 
-    internal static async Task SeedAsync(string connectionString, string apiBaseUrl)
+    internal static async Task SeedAsync(
+        string connectionString,
+        string apiBaseUrl,
+        CancellationToken cancellationToken = default)
     {
-        await RunMigrationsAsync(connectionString);
+        await RunMigrationsAsync(connectionString, cancellationToken);
 
         await using SqlConnection connection = new(connectionString);
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
-        await ExecuteSqlAsync(connection, BaseSeedSql.CleanupSql());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedCountry());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedUsersAndRoles());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedAgeCategories());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedWeightCategories());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedEras());
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedEraWeightCategories());
+        await ExecuteSqlAsync(connection, BaseSeedSql.CleanupSql(), cancellationToken);
+        await ExecuteSqlAsync(connection, BaseSeedSql.SeedCountry(), cancellationToken);
+        await ExecuteSqlAsync(connection, BaseSeedSql.SeedUsersAndRoles(), cancellationToken);
+        await ExecuteSqlAsync(connection, BaseSeedSql.SeedAgeCategories(), cancellationToken);
+        await ExecuteSqlAsync(connection, BaseSeedSql.SeedWeightCategories(), cancellationToken);
+        await ExecuteSqlAsync(connection, BaseSeedSql.SeedEras(), cancellationToken);
+        await ExecuteSqlAsync(connection, BaseSeedSql.SeedEraWeightCategories(), cancellationToken);
 
+#pragma warning disable CA5400 // Cert revocation check not needed in E2E tests
         using HttpClientHandler handler = new()
         {
             ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
         };
 
-#pragma warning disable CA5400 // Cert revocation check not needed in E2E tests
         using HttpClient httpClient = new(handler, disposeHandler: false)
         {
             BaseAddress = new Uri(apiBaseUrl),
@@ -61,36 +67,66 @@ internal static class TestDataSeeder
         };
 #pragma warning restore CA5400
 
-        string token = await LoginAsync(httpClient);
+        string token = await LoginAsync(httpClient, cancellationToken);
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        int teamId = await CreateTeamAsync(httpClient);
+        int teamId = await CreateTeamAsync(httpClient, cancellationToken);
 
-        await CreateAthleteAsync(httpClient, teamId);
+        await CreateAthleteAsync(httpClient, teamId, cancellationToken);
 
-        string meetSlug = await CreateMeetAsync(httpClient);
-        int meetId = await GetMeetIdAsync(httpClient, meetSlug);
+        string meetSlug = await CreateMeetAsync(httpClient, cancellationToken);
+        int meetId = await GetMeetIdAsync(httpClient, meetSlug, cancellationToken);
 
-        int participationId = await AddParticipantAsync(httpClient, meetId);
+        int participationId = await AddParticipantAsync(httpClient, meetId, cancellationToken);
 
-        await RecordAttemptAsync(httpClient, meetId, participationId, Discipline.Squat, round: 1, SquatWeight);
-        await RecordAttemptAsync(httpClient, meetId, participationId, Discipline.Bench, round: 1, BenchWeight);
-        await RecordAttemptAsync(httpClient, meetId, participationId, Discipline.Deadlift, round: 1, DeadliftWeight);
+        await RecordAttemptAsync(
+            httpClient,
+            meetId,
+            participationId,
+            Discipline.Squat,
+            round: 1,
+            SquatWeight,
+            cancellationToken);
+        await RecordAttemptAsync(
+            httpClient,
+            meetId,
+            participationId,
+            Discipline.Bench,
+            round: 1,
+            BenchWeight,
+            cancellationToken);
+        await RecordAttemptAsync(
+            httpClient,
+            meetId,
+            participationId,
+            Discipline.Deadlift,
+            round: 1,
+            DeadliftWeight,
+            cancellationToken);
 
-        await WaitForRecordsAsync(httpClient);
+        await WaitForRecordsAsync(httpClient, cancellationToken);
     }
 
-    private static async Task<string> LoginAsync(HttpClient httpClient)
+    private static async Task<string> LoginAsync(
+        HttpClient httpClient,
+        CancellationToken cancellationToken)
     {
         LoginCommand command = new(TestSeedConstants.User.Username, TestSeedConstants.User.Password);
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/users/login", command, CancellationToken.None);
+
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync(
+            "/users/login", command, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        AuthenticatedResponse? auth = await response.Content.ReadFromJsonAsync<AuthenticatedResponse>(CancellationToken.None);
-        return auth!.AccessToken;
+        AuthenticatedResponse auth = await response.Content
+            .ReadFromJsonAsync<AuthenticatedResponse>(cancellationToken)
+            ?? throw new InvalidOperationException("Login response was null.");
+
+        return auth.AccessToken;
     }
 
-    private static async Task<int> CreateTeamAsync(HttpClient httpClient)
+    private static async Task<int> CreateTeamAsync(
+        HttpClient httpClient,
+        CancellationToken cancellationToken)
     {
         CreateTeamCommand command = new(
             Title: TestSeedConstants.Team.Title,
@@ -98,14 +134,20 @@ internal static class TestDataSeeder
             TitleFull: TestSeedConstants.Team.TitleFull,
             CountryId: SeededCountryId);
 
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/teams", command, CancellationToken.None);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync(
+            "/teams", command, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        TeamIdResponse? result = await response.Content.ReadFromJsonAsync<TeamIdResponse>(CancellationToken.None);
-        return result!.TeamId;
+        string location = response.Headers.Location?.ToString()
+            ?? throw new InvalidOperationException("POST /teams did not return a Location header.");
+
+        return int.Parse(location.TrimStart('/'), CultureInfo.InvariantCulture);
     }
 
-    private static async Task CreateAthleteAsync(HttpClient httpClient, int teamId)
+    private static async Task CreateAthleteAsync(
+        HttpClient httpClient,
+        int teamId,
+        CancellationToken cancellationToken)
     {
         CreateAthleteCommand command = new(
             FirstName: TestSeedConstants.Athlete.FirstName,
@@ -115,22 +157,25 @@ internal static class TestDataSeeder
             DateOfBirth: TestSeedConstants.Athlete.DateOfBirth,
             Gender: TestSeedConstants.Athlete.Gender);
 
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/athletes", command, CancellationToken.None);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync(
+            "/athletes", command, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 
-    private static async Task<string> CreateMeetAsync(HttpClient httpClient)
+    private static async Task<string> CreateMeetAsync(
+        HttpClient httpClient,
+        CancellationToken cancellationToken)
     {
         CreateMeetCommand command = new(
             Title: SeededMeetTitle,
             StartDate: new DateOnly(SeededMeetYear, 3, 15),
-            MeetTypeId: 1,
+            MeetTypeId: DefaultMeetTypeId,
             EndDate: new DateOnly(SeededMeetYear, 3, 15),
             CalcPlaces: true,
             Text: null,
             Location: null,
             PublishedResults: true,
-            ResultModeId: 1,
+            ResultModeId: DefaultResultModeId,
             PublishedInCalendar: true,
             IsInTeamCompetition: false,
             ShowWilks: true,
@@ -140,22 +185,32 @@ internal static class TestDataSeeder
             RecordsPossible: true,
             IsRaw: false);
 
-        HttpResponseMessage response = await httpClient.PostAsJsonAsync("/meets", command, CancellationToken.None);
+        HttpResponseMessage response = await httpClient.PostAsJsonAsync(
+            "/meets", command, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        string slug = response.Headers.Location!.ToString().TrimStart('/');
-        return slug;
+        string location = response.Headers.Location?.ToString()
+            ?? throw new InvalidOperationException("POST /meets did not return a Location header.");
+
+        return location.TrimStart('/');
     }
 
-    private static async Task<int> GetMeetIdAsync(HttpClient httpClient, string meetSlug)
+    private static async Task<int> GetMeetIdAsync(
+        HttpClient httpClient,
+        string meetSlug,
+        CancellationToken cancellationToken)
     {
-        MeetDetails? meetDetails = await httpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{meetSlug}", CancellationToken.None);
+        MeetDetails meetDetails = await httpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{meetSlug}", cancellationToken)
+            ?? throw new InvalidOperationException($"GET /meets/{meetSlug} returned null.");
 
-        return meetDetails!.MeetId;
+        return meetDetails.MeetId;
     }
 
-    private static async Task<int> AddParticipantAsync(HttpClient httpClient, int meetId)
+    private static async Task<int> AddParticipantAsync(
+        HttpClient httpClient,
+        int meetId,
+        CancellationToken cancellationToken)
     {
         AddParticipantCommand command = new(
             AthleteSlug: TestSeedConstants.Athlete.Slug,
@@ -164,13 +219,14 @@ internal static class TestDataSeeder
             AgeCategorySlug: null);
 
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(
-            $"/meets/{meetId}/participants", command, CancellationToken.None);
+            $"/meets/{meetId}/participants", command, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        AddParticipantResponse? result = await response.Content
-            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+        AddParticipantResponse result = await response.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(cancellationToken)
+            ?? throw new InvalidOperationException("POST /participants returned null.");
 
-        return result!.ParticipationId;
+        return result.ParticipationId;
     }
 
     private static async Task RecordAttemptAsync(
@@ -179,54 +235,65 @@ internal static class TestDataSeeder
         int participationId,
         Discipline discipline,
         int round,
-        decimal weight)
+        decimal weight,
+        CancellationToken cancellationToken)
     {
         RecordAttemptCommand command = new(weight, Good: true);
 
         HttpResponseMessage response = await httpClient.PutAsJsonAsync(
             $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
             command,
-            CancellationToken.None);
+            cancellationToken);
 
         response.EnsureSuccessStatusCode();
     }
 
-    private static async Task WaitForRecordsAsync(HttpClient httpClient)
+    private static async Task WaitForRecordsAsync(
+        HttpClient httpClient,
+        CancellationToken cancellationToken)
     {
         for (int attempt = 0; attempt < MaxPollAttempts; attempt++)
         {
             List<RecordGroup>? groups = await httpClient.GetFromJsonAsync<List<RecordGroup>>(
                 "/records?gender=m&ageCategory=open&equipmentType=equipped",
-                CancellationToken.None);
+                cancellationToken);
 
             bool hasRecord = groups is not null
-                && groups.SelectMany(g => g.Records).Any(r => r.Athlete != null);
+                && groups
+                    .SelectMany(g => g.Records)
+                    .Any(r => r.Athlete != null);
 
             if (hasRecord)
             {
                 return;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(PollInterval, cancellationToken);
         }
+
+        throw new TimeoutException(
+            $"Records were not computed within {MaxPollAttempts * PollInterval.TotalSeconds} seconds.");
     }
 
     [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "All SQL is composed from compile-time constants in BaseSeedSql")]
-    private static async Task ExecuteSqlAsync(SqlConnection connection, string sql)
+    private static async Task ExecuteSqlAsync(
+        SqlConnection connection,
+        string sql,
+        CancellationToken cancellationToken)
     {
         await using SqlCommand command = connection.CreateCommand();
         command.CommandText = sql;
-        await command.ExecuteNonQueryAsync();
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task RunMigrationsAsync(string connectionString)
+    private static async Task RunMigrationsAsync(
+        string connectionString,
+        CancellationToken cancellationToken)
     {
         DbContextOptions<ResultsDbContext> options = new DbContextOptionsBuilder<ResultsDbContext>()
             .UseSqlServer(connectionString)
             .Options;
         await using ResultsDbContext dbContext = new(options);
-        await dbContext.Database.MigrateAsync();
+        await dbContext.Database.MigrateAsync(cancellationToken);
     }
-
-    private sealed record TeamIdResponse(int TeamId);
 }
