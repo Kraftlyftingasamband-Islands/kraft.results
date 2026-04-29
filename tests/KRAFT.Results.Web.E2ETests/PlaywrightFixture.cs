@@ -116,7 +116,8 @@ public sealed class PlaywrightFixture : IAsyncLifetime
                 connectionString += ";TrustServerCertificate=True";
             }
 
-            await TestDataSeeder.SeedAsync(connectionString);
+            string apiBaseUrl = _app.GetEndpoint("api").ToString().TrimEnd('/');
+            await TestDataSeeder.SeedAsync(connectionString, apiBaseUrl);
         }
 
         BaseUrl = _app.GetEndpoint("web").ToString().TrimEnd('/');
