@@ -60,7 +60,7 @@ public static class TestSeedConstants
     public static class Meet
     {
         public const int Id = 1;
-        public const string Title = "Test Meet 2025";
+        public const string Title = "Test Meet";
         public const string Slug = "test-meet-2025";
         public const int Year = 2025;
     }
