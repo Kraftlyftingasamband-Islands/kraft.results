@@ -299,6 +299,22 @@ internal static class TestDataSeeder
             round: 1,
             squatWeight,
             cancellationToken);
+        await RecordAttemptAsync(
+            httpClient,
+            meetId,
+            participationId,
+            Discipline.Bench,
+            round: 1,
+            BenchWeight,
+            cancellationToken);
+        await RecordAttemptAsync(
+            httpClient,
+            meetId,
+            participationId,
+            Discipline.Deadlift,
+            round: 1,
+            DeadliftWeight,
+            cancellationToken);
     }
 
     private static async Task WaitForRecordsAsync(
