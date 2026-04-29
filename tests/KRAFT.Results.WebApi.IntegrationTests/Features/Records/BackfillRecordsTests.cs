@@ -55,6 +55,19 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
     {
         (_authorizedHttpClient, _channel) = fixture.CreateAuthorizedHttpClientWithRecordComputation();
 
+        // The 105kg weight category exists in seed data but is only linked to the historical era.
+        // Tests that need the 105kg slot in the current era require this temporary link.
+        await using AsyncServiceScope eraScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext eraDb = eraScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        await eraDb.Database.ExecuteSqlRawAsync(
+            """
+            IF NOT EXISTS (SELECT 1 FROM EraWeightCategories WHERE EraId = 2 AND WeightCategoryId = 5)
+            INSERT INTO EraWeightCategories (EraId, WeightCategoryId, FromDate, ToDate)
+            VALUES (2, 5, '2019-01-01', '2099-12-31');
+            """,
+            TestContext.Current.CancellationToken);
+
         // Raw/classic powerlifting meet
         _rawMeetId = await CreateMeetAndGetIdAsync(isRaw: true);
 
@@ -1077,6 +1090,10 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
 
         await dbContext.Database.ExecuteSqlRawAsync(
             "DELETE FROM Records WHERE CreatedBy = 'duplicate';",
+            TestContext.Current.CancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            "DELETE FROM EraWeightCategories WHERE EraId = 2 AND WeightCategoryId = 5;",
             TestContext.Current.CancellationToken);
     }
 
