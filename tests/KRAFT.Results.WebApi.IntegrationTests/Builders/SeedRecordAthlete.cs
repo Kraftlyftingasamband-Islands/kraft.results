@@ -1,4 +1,4 @@
-using KRAFT.Results.Tests.Shared;
+using KRAFT.Results.WebApi.Enums;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -11,13 +11,20 @@ internal static class SeedRecordAthlete
         int weightCategoryId,
         CancellationToken cancellationToken = default)
     {
-        string clearSql =
+        int squat = (int)RecordCategory.Squat;
+        int bench = (int)RecordCategory.Bench;
+        int deadlift = (int)RecordCategory.Deadlift;
+        int total = (int)RecordCategory.Total;
+        int benchSingle = (int)RecordCategory.BenchSingle;
+        int deadliftSingle = (int)RecordCategory.DeadliftSingle;
+
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
             $"""
             DELETE FROM Records
-            WHERE RecordCategoryId IN (1, 2, 3, 4, 5, 6) AND IsRaw = 1
+            WHERE RecordCategoryId IN ({squat}, {bench}, {deadlift}, {total}, {benchSingle}, {deadliftSingle})
+            AND IsRaw = 1
             AND WeightCategoryId = {weightCategoryId};
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(clearSql, cancellationToken);
+            """,
+            cancellationToken);
     }
 }
