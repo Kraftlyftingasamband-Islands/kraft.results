@@ -23,20 +23,20 @@ internal static class MeetServices
     {
         services.AddScoped<AddParticipantHandler>();
         services.AddScoped<CreateMeetHandler>();
-        services.AddScoped<GetMeetTypesHandler>();
-        services.AddScoped<GetMeetsHandler>();
+        services.AddScoped<DeleteMeetHandler>();
         services.AddScoped<GetMeetDetailsHandler>();
         services.AddScoped<GetMeetParticipationHandler>();
         services.AddScoped<GetMeetParticipationsHandler>();
-        services.AddScoped<GetMeetTeamPointsHandler>();
         services.AddScoped<GetMeetRecordsHandler>();
-        services.AddScoped<UpdateMeetHandler>();
-        services.AddScoped<UpdateAgeCategoryHandler>();
-        services.AddScoped<UpdateBodyWeightHandler>();
+        services.AddScoped<GetMeetsHandler>();
+        services.AddScoped<GetMeetTeamPointsHandler>();
+        services.AddScoped<GetMeetTypesHandler>();
         services.AddScoped<PlaceComputationService>();
         services.AddScoped<RecordAttemptHandler>();
         services.AddScoped<RemoveParticipantHandler>();
-        services.AddScoped<DeleteMeetHandler>();
+        services.AddScoped<UpdateAgeCategoryHandler>();
+        services.AddScoped<UpdateBodyWeightHandler>();
+        services.AddScoped<UpdateMeetHandler>();
 
         return services;
     }

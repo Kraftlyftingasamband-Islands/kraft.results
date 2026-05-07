@@ -148,7 +148,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
     }
 
     [Fact]
-    public async Task PlacedParticipantsAreRankedByTotalDescending()
+    public async Task RanksParticipantsByTotal_ThenByBodyWeight_ThenByLotNo()
     {
         // Arrange
 

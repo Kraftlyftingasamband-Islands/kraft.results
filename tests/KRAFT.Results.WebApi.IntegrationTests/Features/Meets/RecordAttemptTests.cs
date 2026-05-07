@@ -373,8 +373,6 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
                 CancellationToken.None);
 
         // Assert — Place defaults to -1; with CalcPlaces=false it must not be modified
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
-
         participations.ShouldNotBeNull();
         MeetParticipation? p1 = participations.FirstOrDefault(p => p.ParticipationId == participation1Id);
         MeetParticipation? p2 = participations.FirstOrDefault(p => p.ParticipationId == participation2Id);
@@ -383,6 +381,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         p2.ShouldNotBeNull();
         p1.Rank.ShouldBe(-1);
         p2.Rank.ShouldBe(-1);
+
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
     }
 
     [Fact]
@@ -413,8 +413,6 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
                 CancellationToken.None);
 
         // Assert
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
-
         participations.ShouldNotBeNull();
         MeetParticipation? dq = participations.FirstOrDefault(p => p.ParticipationId == dqParticipationId);
         MeetParticipation? ranked = participations.FirstOrDefault(p => p.ParticipationId == rankedParticipationId);
@@ -423,6 +421,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         ranked.ShouldNotBeNull();
         dq.Rank.ShouldBe(0);
         ranked.Rank.ShouldBe(1);
+
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
     }
 
     [Fact]
@@ -454,8 +454,6 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
                 CancellationToken.None);
 
         // Assert
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
-
         participations.ShouldNotBeNull();
         MeetParticipation? lighter = participations.FirstOrDefault(p => p.ParticipationId == lighterParticipationId);
         MeetParticipation? heavier = participations.FirstOrDefault(p => p.ParticipationId == heavierParticipationId);
@@ -464,6 +462,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         heavier.ShouldNotBeNull();
         lighter.Rank.ShouldBe(1);
         heavier.Rank.ShouldBe(2);
+
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
     }
 
     [Fact]
@@ -494,8 +494,6 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
             .ToListAsync(CancellationToken.None);
 
         // Assert
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
-
         Participation? higher = participationEntities.FirstOrDefault(p => p.ParticipationId == higherTotalParticipationId);
         Participation? lower = participationEntities.FirstOrDefault(p => p.ParticipationId == lowerTotalParticipationId);
 
@@ -503,6 +501,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         lower.ShouldNotBeNull();
         higher.TeamPoints.ShouldBe(12);
         lower.TeamPoints.ShouldBe(9);
+
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
     }
 
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>
