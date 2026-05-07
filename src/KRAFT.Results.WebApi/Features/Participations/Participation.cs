@@ -166,6 +166,7 @@ internal sealed class Participation : AggregateRoot
 
         bool bombedOut = bestSquat == 0 || bestBench == 0 || bestDeadlift == 0;
         Total = bombedOut ? 0 : bestSquat + bestBench + bestDeadlift;
+        Disqualified = bombedOut;
     }
 
     private decimal BestGoodLift(Discipline discipline)
