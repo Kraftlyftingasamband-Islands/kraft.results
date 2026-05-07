@@ -44,29 +44,23 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         int meet1Id = await CreateMeetAndGetIdAsync(new DateOnly(MeetYear, 6, 1));
         int meet2Id = await CreateMeetAndGetIdAsync(new DateOnly(MeetYear, 9, 1));
 
-        // P1: athlete A in meet1, place 1, best result
+        // P1: athlete A in meet1, place 1 (computed), best result
         int p1Id = await AddParticipantAsync(meet1Id, athleteASlug);
         await RecordAttemptAsync(meet1Id, p1Id, Discipline.Squat, 1, P1Squat);
         await RecordAttemptAsync(meet1Id, p1Id, Discipline.Bench, 1, P1Bench);
         await RecordAttemptAsync(meet1Id, p1Id, Discipline.Deadlift, 1, P1Deadlift);
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Place = 1 WHERE ParticipationId = {p1Id}");
 
-        // P2: athlete A in meet2, place 1, second-best result
+        // P2: athlete A in meet2, place 1 (computed), second-best result
         int p2Id = await AddParticipantAsync(meet2Id, athleteASlug);
         await RecordAttemptAsync(meet2Id, p2Id, Discipline.Squat, 1, P2Squat);
         await RecordAttemptAsync(meet2Id, p2Id, Discipline.Bench, 1, P2Bench);
         await RecordAttemptAsync(meet2Id, p2Id, Discipline.Deadlift, 1, P2Deadlift);
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Place = 1 WHERE ParticipationId = {p2Id}");
 
-        // P3: athlete B in meet1, disqualified (3 failed squats trigger automatic DQ via RecalculateTotals)
+        // P3: athlete B in meet1, disqualified (3 failed squats trigger automatic DQ via RecalculateTotals), place 0 (computed)
         int p3Id = await AddParticipantAsync(meet1Id, athleteBSlug);
         await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 1, 100.0m, good: false);
         await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 2, 100.0m, good: false);
         await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 3, 100.0m, good: false);
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Place = 3 WHERE ParticipationId = {p3Id}");
     }
 
     public async ValueTask DisposeAsync()
