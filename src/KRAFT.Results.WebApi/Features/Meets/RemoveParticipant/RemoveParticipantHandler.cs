@@ -2,6 +2,7 @@ using System.Data;
 
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Participations.ComputePlaces;
 using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
@@ -15,21 +16,25 @@ internal sealed class RemoveParticipantHandler
     private readonly ILogger<RemoveParticipantHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly RecordComputationService _recordComputationService;
+    private readonly PlaceComputationService _placeComputationService;
 
     public RemoveParticipantHandler(
         ILogger<RemoveParticipantHandler> logger,
         ResultsDbContext dbContext,
-        RecordComputationService recordComputationService)
+        RecordComputationService recordComputationService,
+        PlaceComputationService placeComputationService)
     {
         _logger = logger;
         _dbContext = dbContext;
         _recordComputationService = recordComputationService;
+        _placeComputationService = placeComputationService;
     }
 
     public async Task<Result> Handle(int meetId, int participationId, CancellationToken cancellationToken)
     {
         Participation? participation = await _dbContext.Set<Participation>()
             .Include(p => p.Attempts)
+            .Include(p => p.Meet)
             .Where(p => p.ParticipationId == participationId)
             .Where(p => p.MeetId == meetId)
             .FirstOrDefaultAsync(cancellationToken);
@@ -39,6 +44,11 @@ internal sealed class RemoveParticipantHandler
             _logger.LogWarning("Participation {ParticipationId} in meet {MeetId} was not found", participationId, meetId);
             return Result.Failure(MeetErrors.ParticipationNotFound);
         }
+
+        int groupMeetId = participation.MeetId;
+        int groupWeightCategoryId = participation.WeightCategoryId;
+        int groupAgeCategoryId = participation.AgeCategoryId;
+        bool calcPlaces = participation.Meet.CalcPlaces;
 
         List<int> attemptIds = participation.Attempts
             .Select(a => a.AttemptId)
@@ -70,6 +80,15 @@ internal sealed class RemoveParticipantHandler
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             _dbContext.Set<Participation>().Remove(participation);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            await _placeComputationService.RecomputeGroupAsync(
+                groupMeetId,
+                groupWeightCategoryId,
+                groupAgeCategoryId,
+                calcPlaces,
+                cancellationToken);
+
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             if (affectedSlots.Count > 0)
