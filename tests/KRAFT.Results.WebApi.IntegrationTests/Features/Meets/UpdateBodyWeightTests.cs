@@ -247,8 +247,8 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
         // Arrange — two participants with the same total; lighter (75.0kg) is initially rank 1
         (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
 
-        int lighterParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 75.0m);
-        int heavierParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 80.0m);
+        (int lighterParticipationId, string lighterAthleteSlug) = await AddParticipantToMeetAsync(meetId, bodyWeight: 75.0m);
+        (int heavierParticipationId, string heavierAthleteSlug) = await AddParticipantToMeetAsync(meetId, bodyWeight: 80.0m);
 
         // Both record the same total (240 kg)
         await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Squat, 1, 80.0m, true);
@@ -274,8 +274,6 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
                 $"/meets/{meetSlug}/participations",
                 CancellationToken.None);
 
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
-
         participations.ShouldNotBeNull();
         MeetParticipation? formerlyLighter = participations.FirstOrDefault(p => p.ParticipationId == lighterParticipationId);
         MeetParticipation? formerlyHeavier = participations.FirstOrDefault(p => p.ParticipationId == heavierParticipationId);
@@ -284,6 +282,13 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
         formerlyHeavier.ShouldNotBeNull();
         formerlyLighter.Rank.ShouldBe(2, "formerly lighter participant is now 85.0kg — should be rank 2");
         formerlyHeavier.Rank.ShouldBe(1, "formerly heavier participant is now the lightest — should be rank 1");
+
+        // Cleanup — reverse FK order: participants → meet → athletes
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{lighterParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{heavierParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{lighterAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{heavierAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
     }
 
     private static string Path(int meetId, int participationId) =>
@@ -309,7 +314,7 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
         return (details!.MeetId, slug);
     }
 
-    private async Task<int> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
+    private async Task<(int ParticipationId, string AthleteSlug)> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
     {
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
@@ -336,7 +341,7 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
         AddParticipantResponse? result = await participantResponse.Content
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
 
-        return result!.ParticipationId;
+        return (result!.ParticipationId, athleteSlug);
     }
 
     private async Task RecordAttemptForMeet(
