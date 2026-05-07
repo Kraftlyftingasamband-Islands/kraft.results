@@ -13,11 +13,11 @@ namespace KRAFT.Results.WebApi.IntegrationTests;
 
 public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
 {
-    private readonly DatabaseFixture _databaseFixture;
+    private readonly string _connectionString;
 
-    public IntegrationTestFactory(DatabaseFixture databaseFixture)
+    public IntegrationTestFactory(string connectionString)
     {
-        _databaseFixture = databaseFixture;
+        _connectionString = connectionString;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -66,7 +66,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>
 
         services.AddDbContext<ResultsDbContext>((IServiceProvider serviceProvider, DbContextOptionsBuilder options) =>
         {
-            options.UseSqlServer(_databaseFixture.ConnectionString);
+            options.UseSqlServer(_connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<DomainEventInterceptor>());
         });
     }
