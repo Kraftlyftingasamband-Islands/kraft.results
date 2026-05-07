@@ -1,6 +1,6 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Abstractions;
 
-namespace KRAFT.Results.WebApi.Features.Bans;
+namespace KRAFT.Results.WebApi.Features.Athletes;
 
 internal static class BanErrors
 {

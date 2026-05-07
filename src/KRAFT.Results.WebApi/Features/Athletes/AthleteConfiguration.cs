@@ -1,5 +1,4 @@
-﻿using KRAFT.Results.WebApi.Features.Bans;
-using KRAFT.Results.WebApi.ValueObjects;
+﻿using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
