@@ -119,9 +119,9 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLi
         // Arrange
         (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
 
-        int firstPlaceId = await AddParticipantToMeetAsync(meetId);
-        int secondPlaceId = await AddParticipantToMeetAsync(meetId);
-        int thirdPlaceId = await AddParticipantToMeetAsync(meetId);
+        (int firstPlaceId, string firstAthleteSlug) = await AddParticipantToMeetAsync(meetId);
+        (int secondPlaceId, string secondAthleteSlug) = await AddParticipantToMeetAsync(meetId);
+        (int thirdPlaceId, string thirdAthleteSlug) = await AddParticipantToMeetAsync(meetId);
 
         // First place — highest total (300 kg)
         await RecordAttemptForMeet(meetId, firstPlaceId, Discipline.Squat, 1, 100.0m, true);
@@ -150,8 +150,6 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLi
                 $"/meets/{meetSlug}/participations",
                 CancellationToken.None);
 
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
-
         participations.ShouldNotBeNull();
         MeetParticipation? first = participations.FirstOrDefault(p => p.ParticipationId == firstPlaceId);
         MeetParticipation? third = participations.FirstOrDefault(p => p.ParticipationId == thirdPlaceId);
@@ -162,6 +160,14 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLi
         removed.ShouldBeNull();
         first.Rank.ShouldBe(1);
         third.Rank.ShouldBe(2);
+
+        // Cleanup — secondPlaceId already removed during Act; delete remaining participants first
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{firstPlaceId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{thirdPlaceId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{firstAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{secondAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{thirdAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
     }
 
     private async Task<int> AddParticipantAsync(int meetId)
@@ -202,7 +208,7 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLi
         return (details!.MeetId, slug);
     }
 
-    private async Task<int> AddParticipantToMeetAsync(int meetId)
+    private async Task<(int ParticipationId, string AthleteSlug)> AddParticipantToMeetAsync(int meetId)
     {
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
@@ -228,7 +234,7 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLi
         AddParticipantResponse? result = await participantResponse.Content
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
 
-        return result!.ParticipationId;
+        return (result!.ParticipationId, athleteSlug);
     }
 
     private async Task RecordAttemptForMeet(

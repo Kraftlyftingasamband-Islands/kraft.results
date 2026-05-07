@@ -355,8 +355,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         (int meetId, string meetSlug) = await CreateMeetAsync(
             new CreateMeetCommandBuilder().WithCalcPlaces(false));
 
-        int participation1Id = await AddParticipantToMeetAsync(meetId);
-        int participation2Id = await AddParticipantToMeetAsync(meetId);
+        (int participation1Id, string athlete1Slug) = await AddParticipantToMeetAsync(meetId);
+        (int participation2Id, string athlete2Slug) = await AddParticipantToMeetAsync(meetId);
 
         await RecordAttemptForMeet(meetId, participation1Id, Discipline.Squat, 1, 100.0m, true);
         await RecordAttemptForMeet(meetId, participation1Id, Discipline.Bench, 1, 50.0m, true);
@@ -382,7 +382,12 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         p1.Rank.ShouldBe(-1);
         p2.Rank.ShouldBe(-1);
 
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+        // Cleanup — reverse FK order: participants → meet → athletes
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{participation1Id}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{participation2Id}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{athlete1Slug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{athlete2Slug}", CancellationToken.None)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -391,8 +396,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         // Arrange
         (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
 
-        int dqParticipationId = await AddParticipantToMeetAsync(meetId);
-        int rankedParticipationId = await AddParticipantToMeetAsync(meetId);
+        (int dqParticipationId, string dqAthleteSlug) = await AddParticipantToMeetAsync(meetId);
+        (int rankedParticipationId, string rankedAthleteSlug) = await AddParticipantToMeetAsync(meetId);
 
         // DQ participant — all bench attempts fail
         await RecordAttemptForMeet(meetId, dqParticipationId, Discipline.Squat, 1, 100.0m, true);
@@ -422,7 +427,12 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         dq.Rank.ShouldBe(0);
         ranked.Rank.ShouldBe(1);
 
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+        // Cleanup — reverse FK order: participants → meet → athletes
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{dqParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{rankedParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{dqAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{rankedAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -433,10 +443,10 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
 
         // Lighter participant (75.0 kg) — same total as heavier, should win tiebreaker
         // Both use body weights above 74.01 to land in the same 83 kg weight category
-        int lighterParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 75.0m);
+        (int lighterParticipationId, string lighterAthleteSlug) = await AddParticipantToMeetAsync(meetId, bodyWeight: 75.0m);
 
         // Heavier participant (80.0 kg)
-        int heavierParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 80.0m);
+        (int heavierParticipationId, string heavierAthleteSlug) = await AddParticipantToMeetAsync(meetId, bodyWeight: 80.0m);
 
         // Both record the same total (240 kg)
         await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Squat, 1, 80.0m, true);
@@ -463,7 +473,12 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         lighter.Rank.ShouldBe(1);
         heavier.Rank.ShouldBe(2);
 
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+        // Cleanup — reverse FK order: participants → meet → athletes
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{lighterParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{heavierParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{lighterAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{heavierAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -472,8 +487,8 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         // Arrange
         (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
 
-        int higherTotalParticipationId = await AddParticipantToMeetAsync(meetId);
-        int lowerTotalParticipationId = await AddParticipantToMeetAsync(meetId);
+        (int higherTotalParticipationId, string higherTotalAthleteSlug) = await AddParticipantToMeetAsync(meetId);
+        (int lowerTotalParticipationId, string lowerTotalAthleteSlug) = await AddParticipantToMeetAsync(meetId);
 
         // Higher total → place 1 → 12 TeamPoints
         await RecordAttemptForMeet(meetId, higherTotalParticipationId, Discipline.Squat, 1, 100.0m, true);
@@ -502,7 +517,12 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         higher.TeamPoints.ShouldBe(12);
         lower.TeamPoints.ShouldBe(9);
 
-        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+        // Cleanup — reverse FK order: participants → meet → athletes
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{higherTotalParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetId}/participants/{lowerTotalParticipationId}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{higherTotalAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
+        (await _authorizedHttpClient.DeleteAsync($"/athletes/{lowerTotalAthleteSlug}", CancellationToken.None)).EnsureSuccessStatusCode();
     }
 
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>
@@ -593,7 +613,7 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         return result!.ParticipationId;
     }
 
-    private async Task<int> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
+    private async Task<(int ParticipationId, string AthleteSlug)> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
     {
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
@@ -620,6 +640,6 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         AddParticipantResponse? result = await participantResponse.Content
             .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
 
-        return result!.ParticipationId;
+        return (result!.ParticipationId, athleteSlug);
     }
 }
