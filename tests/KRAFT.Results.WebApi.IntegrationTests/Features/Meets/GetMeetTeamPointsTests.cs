@@ -18,6 +18,30 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
 {
     private const string BasePath = "/meets";
 
+    // 2025 meet — men (body weight 82.0m): Place 1→12pts, Place 2→9pts, Place 3→8pts
+    private const decimal AlphaMaleSquat = 100.0m;
+    private const decimal AlphaMaleBench = 100.0m;
+    private const decimal AlphaMaleDeadlift = 100.0m;
+
+    private const decimal NoTeamSquat = 90.0m;
+    private const decimal NoTeamBench = 80.0m;
+    private const decimal NoTeamDeadlift = 80.0m;
+
+    private const decimal BetaMaleSquat = 70.0m;
+    private const decimal BetaMaleBench = 60.0m;
+    private const decimal BetaMaleDeadlift = 70.0m;
+
+    // 2025 meet — women (body weight 57.0m): Place 1→12pts, Place 2→9pts
+    private const decimal AlphaFemaleSquat = 90.0m;
+    private const decimal AlphaFemaleBench = 70.0m;
+    private const decimal AlphaFemaleDeadlift = 100.0m;
+
+    private const decimal BetaFemaleSquat = 80.0m;
+    private const decimal BetaFemaleBench = 60.0m;
+    private const decimal BetaFemaleDeadlift = 80.0m;
+
+    private const int ExpectedBestN2026TotalPoints = 42; // best 5 of 6: 12+9+8+7+6
+
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
     private readonly string _suffix = UniqueShortCode.Next();
@@ -77,37 +101,57 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         int betaFemalePid = await AddParticipantAsync(tc2025MeetId, betaFemaleSlug, _betaTeamId, 57.0m);
         int dqAlphaMalePid = await AddParticipantAsync(tc2025MeetId, dqAlphaMaleSlug, _alphaTeamId);
         int noTeamPid = await AddParticipantAsync(tc2025MeetId, noTeamSlug, teamId: null);
-        int zeroPtsPid = await AddParticipantAsync(tc2025MeetId, zeroPtsSlug, _gammaTeamId);
+        await AddParticipantAsync(tc2025MeetId, zeroPtsSlug, _gammaTeamId);
 
-        // DQ the Alpha male participant via 3 failed squat attempts (triggers automatic DQ via RecalculateTotals)
+        // DQ the dqAlphaMale participant via 3 failed squat attempts → Place=0, TeamPoints=0
         await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 1, 100.0m, good: false);
         await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 2, 100.0m, good: false);
         await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 3, 100.0m, good: false);
 
-        // Set TeamPoints and Place via SQL (no computation endpoints exist)
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 12, Place = 1 WHERE ParticipationId = {alphaMalePid}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 8, Place = 3 WHERE ParticipationId = {betaMalePid}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 12, Place = 1 WHERE ParticipationId = {alphaFemalePid}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 9, Place = 2 WHERE ParticipationId = {betaFemalePid}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 7 WHERE ParticipationId = {dqAlphaMalePid}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 5 WHERE ParticipationId = {noTeamPid}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET TeamPoints = 0 WHERE ParticipationId = {zeroPtsPid}");
+        // Record attempts for 2025 men (same weight category, 82.0m body weight)
+        // alphaMale: Total=300 → Place 1 → TeamPoints=12
+        await RecordFullTotalAsync(tc2025MeetId, alphaMalePid, AlphaMaleSquat, AlphaMaleBench, AlphaMaleDeadlift);
 
-        // Create 6 male athletes for 2026 meet and add participations
-        for (int i = 1; i <= 6; i++)
-        {
-            string slug = await CreateAthleteAsync($"Alpha26M{i}", "m");
-            int pid = await AddParticipantAsync(tc2026MeetId, slug, _alphaTeamId);
-            await fixture.ExecuteSqlAsync(
-                $"UPDATE Participations SET TeamPoints = 12, Place = {i} WHERE ParticipationId = {pid}");
-        }
+        // noTeam: Total=250 → Place 2 → TeamPoints=9 (no team, excluded from standings)
+        await RecordFullTotalAsync(tc2025MeetId, noTeamPid, NoTeamSquat, NoTeamBench, NoTeamDeadlift);
+
+        // betaMale: Total=200 → Place 3 → TeamPoints=8
+        await RecordFullTotalAsync(tc2025MeetId, betaMalePid, BetaMaleSquat, BetaMaleBench, BetaMaleDeadlift);
+
+        // zeroPts: no attempts → Total=0, TeamPoints=null → excluded from standings (Gamma hidden)
+
+        // Record attempts for 2025 women (same weight category, 57.0m body weight)
+        // alphaFemale: Total=260 → Place 1 → TeamPoints=12
+        await RecordFullTotalAsync(tc2025MeetId, alphaFemalePid, AlphaFemaleSquat, AlphaFemaleBench, AlphaFemaleDeadlift);
+
+        // betaFemale: Total=220 → Place 2 → TeamPoints=9
+        await RecordFullTotalAsync(tc2025MeetId, betaFemalePid, BetaFemaleSquat, BetaFemaleBench, BetaFemaleDeadlift);
+
+        // Create 6 male athletes for 2026 meet with descending totals → places 1–6 → points 12,9,8,7,6,5
+        // Best 5 of 6 points = 12+9+8+7+6 = 42 (ExpectedBestN2026TotalPoints)
+        string alpha26M1Slug = await CreateAthleteAsync("Alpha26M1", "m");
+        int alpha26M1Pid = await AddParticipantAsync(tc2026MeetId, alpha26M1Slug, _alphaTeamId);
+        await RecordFullTotalAsync(tc2026MeetId, alpha26M1Pid, 200.0m, 150.0m, 250.0m); // Total=600 → Place 1 → 12pts
+
+        string alpha26M2Slug = await CreateAthleteAsync("Alpha26M2", "m");
+        int alpha26M2Pid = await AddParticipantAsync(tc2026MeetId, alpha26M2Slug, _alphaTeamId);
+        await RecordFullTotalAsync(tc2026MeetId, alpha26M2Pid, 190.0m, 140.0m, 220.0m); // Total=550 → Place 2 → 9pts
+
+        string alpha26M3Slug = await CreateAthleteAsync("Alpha26M3", "m");
+        int alpha26M3Pid = await AddParticipantAsync(tc2026MeetId, alpha26M3Slug, _alphaTeamId);
+        await RecordFullTotalAsync(tc2026MeetId, alpha26M3Pid, 170.0m, 130.0m, 200.0m); // Total=500 → Place 3 → 8pts
+
+        string alpha26M4Slug = await CreateAthleteAsync("Alpha26M4", "m");
+        int alpha26M4Pid = await AddParticipantAsync(tc2026MeetId, alpha26M4Slug, _alphaTeamId);
+        await RecordFullTotalAsync(tc2026MeetId, alpha26M4Pid, 150.0m, 120.0m, 180.0m); // Total=450 → Place 4 → 7pts
+
+        string alpha26M5Slug = await CreateAthleteAsync("Alpha26M5", "m");
+        int alpha26M5Pid = await AddParticipantAsync(tc2026MeetId, alpha26M5Slug, _alphaTeamId);
+        await RecordFullTotalAsync(tc2026MeetId, alpha26M5Pid, 135.0m, 110.0m, 155.0m); // Total=400 → Place 5 → 6pts
+
+        string alpha26M6Slug = await CreateAthleteAsync("Alpha26M6", "m");
+        int alpha26M6Pid = await AddParticipantAsync(tc2026MeetId, alpha26M6Slug, _alphaTeamId);
+        await RecordFullTotalAsync(tc2026MeetId, alpha26M6Pid, 120.0m, 100.0m, 130.0m); // Total=350 → Place 6 → 5pts
     }
 
     public async ValueTask DisposeAsync()
@@ -233,7 +277,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     [Fact]
     public async Task AppliesBestNLimit_PerMeet()
     {
-        // Arrange — 6 male athletes all scoring 12 -> best 5 -> 5*12 = 60
+        // Arrange — 6 male athletes with places 1–6 → points 12,9,8,7,6,5; best 5 = 12+9+8+7+6 = 42
 
         // Act
         MeetTeamPointsResponse? response = await _httpClient.GetFromJsonAsync<MeetTeamPointsResponse>(
@@ -243,14 +287,14 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         response.ShouldNotBeNull();
         response.Men.ShouldNotBeEmpty();
         TeamCompetitionStanding alpha = response.Men.First(s => s.TeamName == _alphaTeamName);
-        alpha.TotalPoints.ShouldBe(60);
+        alpha.TotalPoints.ShouldBe(ExpectedBestN2026TotalPoints);
     }
 
     [Fact]
     public async Task ExcludesDisqualifiedParticipations()
     {
-        // Arrange — DQ'd participation with TeamPoints=7 for Alpha
-        // Alpha men should have 12 (not 12+7=19)
+        // Arrange — DQ'd Alpha male has Place=0, TeamPoints=0
+        // Alpha men total should be 12 (from Place 1 only, not including DQ'd participant)
 
         // Act
         MeetTeamPointsResponse? response = await _httpClient.GetFromJsonAsync<MeetTeamPointsResponse>(
@@ -277,16 +321,28 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     [Fact]
     public async Task ExcludesParticipationsWithZeroTeamPoints()
     {
-        // Arrange — Gamma has only a participation with TeamPoints=0
-        // If the TeamPoints > 0 filter were removed, Gamma would appear as a third team
+        // Arrange — Gamma has only a participation with no recorded attempts (TeamPoints=null)
+        // If the TeamPoints filter were removed, Gamma would appear as a third team
 
         // Act
         MeetTeamPointsResponse? response = await _httpClient.GetFromJsonAsync<MeetTeamPointsResponse>(
             $"{BasePath}/{_tc2025MeetSlug}/team-points", CancellationToken.None);
 
-        // Assert — only Alpha and Beta appear; Gamma (with zero points) is excluded
+        // Assert — only Alpha and Beta appear; Gamma (with no team points) is excluded
         response!.Men.Count.ShouldBe(2);
         response.Men.ShouldNotContain(s => s.TeamSlug == _gammaTeamSlug);
+    }
+
+    private async Task RecordFullTotalAsync(
+        int meetId,
+        int participationId,
+        decimal squat,
+        decimal bench,
+        decimal deadlift)
+    {
+        await RecordAttemptAsync(meetId, participationId, Discipline.Squat, 1, squat);
+        await RecordAttemptAsync(meetId, participationId, Discipline.Bench, 1, bench);
+        await RecordAttemptAsync(meetId, participationId, Discipline.Deadlift, 1, deadlift);
     }
 
     private async Task RecordAttemptAsync(int meetId, int participationId, Discipline discipline, int round, decimal weight, bool good = true)
