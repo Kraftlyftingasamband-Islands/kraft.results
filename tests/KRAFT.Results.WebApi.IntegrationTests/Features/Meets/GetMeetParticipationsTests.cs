@@ -61,18 +61,19 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         _bobParticipationId = await AddParticipantAsync(bobSlug);
         _annaParticipationId = await AddParticipantAsync(annaSlug);
 
+        // Charlie: Total=570 (195+125+250), BodyWeight=82.0 → Place=1 (added first, lower ParticipationId)
         await RecordFullTotalAsync(_charlieParticipationId, 195.0m, 125.0m, 250.0m);
+
+        // Delta: Total=570 (195+125+250), BodyWeight=82.0 → Place=2 (added second, higher ParticipationId)
         await RecordFullTotalAsync(_deltaParticipationId, 195.0m, 125.0m, 250.0m);
+
+        // Bob: Total=500 (170+110+220), BodyWeight=82.0 → Place=3
         await RecordFullTotalAsync(_bobParticipationId, 170.0m, 110.0m, 220.0m);
 
+        // Anna: 3 failed squats → Disqualified=true, Place=0
         await RecordAttempt(_annaParticipationId, Discipline.Squat, 1, 100.0m, false);
         await RecordAttempt(_annaParticipationId, Discipline.Squat, 2, 100.0m, false);
         await RecordAttempt(_annaParticipationId, Discipline.Squat, 3, 100.0m, false);
-
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Place = 1 WHERE ParticipationId IN ({_charlieParticipationId}, {_deltaParticipationId})");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Place = 3 WHERE ParticipationId = {_bobParticipationId}");
     }
 
     public async ValueTask DisposeAsync()
@@ -147,7 +148,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
     }
 
     [Fact]
-    public async Task ParticipantsWithSameRankAreSortedAlphabetically()
+    public async Task PlacedParticipantsAreRankedByTotalDescending()
     {
         // Arrange
 
@@ -157,12 +158,18 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
 
         // Assert
         participations.ShouldNotBeNull();
-        List<MeetParticipation> tiedAtFirst = participations
-            .Where(p => p.Rank == 1)
+        List<MeetParticipation> placed = participations
+            .Where(p => p.Rank > 0)
             .ToList();
-        tiedAtFirst.Count.ShouldBe(2);
-        tiedAtFirst[0].Athlete.ShouldBe(_charlieFullName);
-        tiedAtFirst[1].Athlete.ShouldBe(_deltaFullName);
+        placed.Count.ShouldBe(3);
+
+        // Charlie and Delta have the same total (570), so they occupy ranks 1 and 2 in insertion order
+        placed[0].Rank.ShouldBe(1);
+        placed[1].Rank.ShouldBe(2);
+
+        // Bob has a lower total (500) and gets rank 3
+        placed[2].Rank.ShouldBe(3);
+        placed[2].Athlete.ShouldBe(_bobFullName);
     }
 
     [Fact]
