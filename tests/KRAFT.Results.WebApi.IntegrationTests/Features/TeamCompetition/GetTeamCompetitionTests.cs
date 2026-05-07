@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
@@ -105,9 +106,13 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
             $"UPDATE Participations SET TeamPoints = {BetaWomenPoints}, Place = 2 WHERE ParticipationId = {betaFemalePid}");
 
         // DQ'd participation: Alpha male, meet1, TeamPoints=7 (should be excluded)
+        // 3 failed squat attempts trigger automatic DQ via RecalculateTotals
         int dqPid = await AddParticipantAsync(meet1In2025Id, dqAlphaMaleSlug, _alphaTeamId);
+        await RecordAttemptAsync(meet1In2025Id, dqPid, Discipline.Squat, 1, 100.0m, good: false);
+        await RecordAttemptAsync(meet1In2025Id, dqPid, Discipline.Squat, 2, 100.0m, good: false);
+        await RecordAttemptAsync(meet1In2025Id, dqPid, Discipline.Squat, 3, 100.0m, good: false);
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Disqualified = 1, TeamPoints = {DqPoints} WHERE ParticipationId = {dqPid}");
+            $"UPDATE Participations SET TeamPoints = {DqPoints} WHERE ParticipationId = {dqPid}");
 
         // No team participation: meet1, TeamPoints=5 (should be excluded)
         int noTeamPid = await AddParticipantAsync(meet1In2025Id, noTeamSlug, teamId: null);
@@ -348,6 +353,21 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         response!.Men.ShouldNotBeEmpty();
         TeamCompetitionStanding alpha = response.Men.First(s => s.TeamName == _alphaTeamName);
         alpha.TotalPoints.ShouldBe(BestNExpectedTotal);
+    }
+
+    private async Task RecordAttemptAsync(int meetId, int participationId, Discipline discipline, int round, decimal weight, bool good = true)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .WithGood(good)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
     }
 
     private async Task<int> CreateTeamAsync(string title, string titleShort)
