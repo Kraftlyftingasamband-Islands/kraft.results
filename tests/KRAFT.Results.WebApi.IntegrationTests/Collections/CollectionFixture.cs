@@ -1,21 +1,33 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
+using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Collections;
 
+[SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "All SQL is composed from compile-time constants in BaseSeedSql and local const fields")]
 public sealed class CollectionFixture : IAsyncLifetime
 {
-    private readonly ConcurrentBag<WebApplicationFactory<Program>> _childFactories = [];
+    private const int EditorRoleId = 2;
+    private const int UserRoleId = 3;
 
-    public DatabaseFixture? Database { get; private set; }
+    private readonly SqlServerFixture _sqlServer;
+    private readonly ConcurrentBag<WebApplicationFactory<Program>> _childFactories = [];
+    private string _databaseConnectionString = string.Empty;
+
+    public CollectionFixture(SqlServerFixture sqlServer)
+    {
+        _sqlServer = sqlServer;
+    }
 
     public IntegrationTestFactory? Factory { get; private set; }
 
@@ -83,11 +95,6 @@ public sealed class CollectionFixture : IAsyncLifetime
             await childFactory.DisposeAsync();
         }
 
-        if (Database is not null)
-        {
-            await Database.DisposeAsync();
-        }
-
         if (Factory is not null)
         {
             await Factory.DisposeAsync();
@@ -96,10 +103,40 @@ public sealed class CollectionFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        Database = new DatabaseFixture();
-        await Database.InitializeAsync();
+        SqlConnectionStringBuilder masterBuilder = new(_sqlServer.ConnectionString)
+        {
+            InitialCatalog = "master",
+        };
 
-        Factory = new IntegrationTestFactory(Database);
+        string databaseName = $"kraft_test_{Guid.NewGuid():N}"[..19];
+
+        await using (SqlConnection masterConnection = new(masterBuilder.ConnectionString))
+        {
+            await masterConnection.OpenAsync();
+
+            await using SqlCommand createCommand = new($"CREATE DATABASE [{databaseName}]", masterConnection);
+            await createCommand.ExecuteNonQueryAsync();
+        }
+
+        SqlConnectionStringBuilder dbBuilder = new(_sqlServer.ConnectionString)
+        {
+            InitialCatalog = databaseName,
+        };
+
+        _databaseConnectionString = dbBuilder.ConnectionString;
+
+        DbContextOptions<ResultsDbContext> options = new DbContextOptionsBuilder<ResultsDbContext>()
+            .UseSqlServer(_databaseConnectionString)
+            .Options;
+
+        await using ResultsDbContext dbContext = new(options);
+
+        await dbContext.Database.MigrateAsync();
+
+        await SeedBaseDataAsync(dbContext);
+        await SeedIntegrationRolesAsync(dbContext);
+
+        Factory = new IntegrationTestFactory(_databaseConnectionString);
     }
 
     // internal: RecordComputationChannel is internal, so the return type cannot be public
@@ -121,5 +158,35 @@ public sealed class CollectionFixture : IAsyncLifetime
         _childFactories.Add(childFactory);
         RecordComputationChannel channel = childFactory.Services.GetRequiredService<RecordComputationChannel>();
         return (childFactory.CreateClient(), channel);
+    }
+
+    private static async Task SeedBaseDataAsync(ResultsDbContext dbContext)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedCountry());
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            IF NOT EXISTS (SELECT 1 FROM Countries WHERE ISO3 = 'NOR')
+                INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
+                VALUES (2, 'NO', 'NOR', 'Norway');
+            """);
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedUsersAndRoles());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedTeam());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAthlete());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SetAthleteTeamSql());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAgeCategories());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedWeightCategories());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedEras());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedEraWeightCategories());
+    }
+
+    private static async Task SeedIntegrationRolesAsync(ResultsDbContext dbContext)
+    {
+        string sql =
+            $"""
+            INSERT INTO Roles (RoleId, RoleName)
+            VALUES ({EditorRoleId}, 'Editor'), ({UserRoleId}, 'User');
+            """;
+
+        await dbContext.Database.ExecuteSqlRawAsync(sql);
     }
 }
