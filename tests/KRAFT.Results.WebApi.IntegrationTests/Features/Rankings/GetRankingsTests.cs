@@ -28,9 +28,6 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
     private const decimal P2Squat = 180.0m;
     private const decimal P2Bench = 120.0m;
     private const decimal P2Deadlift = 230.0m;
-    private const decimal P3Squat = 180.0m;
-    private const decimal P3Bench = 120.0m;
-    private const decimal P3Deadlift = 230.0m;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
@@ -63,13 +60,13 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET Place = 1 WHERE ParticipationId = {p2Id}");
 
-        // P3: athlete B in meet1, disqualified
+        // P3: athlete B in meet1, disqualified (3 failed squats trigger automatic DQ via RecalculateTotals)
         int p3Id = await AddParticipantAsync(meet1Id, athleteBSlug);
-        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 1, P3Squat);
-        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Bench, 1, P3Bench);
-        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Deadlift, 1, P3Deadlift);
+        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 1, 100.0m, good: false);
+        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 2, 100.0m, good: false);
+        await RecordAttemptAsync(meet1Id, p3Id, Discipline.Squat, 3, 100.0m, good: false);
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Place = 3, Disqualified = 1 WHERE ParticipationId = {p3Id}");
+            $"UPDATE Participations SET Place = 3 WHERE ParticipationId = {p3Id}");
     }
 
     public async ValueTask DisposeAsync()
@@ -430,10 +427,11 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         return result!.ParticipationId;
     }
 
-    private async Task RecordAttemptAsync(int meetId, int participationId, Discipline discipline, int round, decimal weight)
+    private async Task RecordAttemptAsync(int meetId, int participationId, Discipline discipline, int round, decimal weight, bool good = true)
     {
         RecordAttemptCommand command = new RecordAttemptCommandBuilder()
             .WithWeight(weight)
+            .WithGood(good)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
