@@ -1,4 +1,4 @@
-using KRAFT.Results.WebApi.Features.Bans;
+using KRAFT.Results.WebApi.Features.Athletes;
 
 namespace KRAFT.Results.WebApi.UnitTests.Builders;
 

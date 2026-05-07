@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.WebApi.Features.Bans;
+namespace KRAFT.Results.WebApi.Features.Athletes;
 
 internal sealed class BanConfiguration : IEntityTypeConfiguration<Ban>
 {

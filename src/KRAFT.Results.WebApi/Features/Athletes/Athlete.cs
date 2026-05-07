@@ -1,5 +1,4 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Bans;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Teams;

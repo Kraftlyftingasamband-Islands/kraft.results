@@ -1,4 +1,4 @@
-using KRAFT.Results.WebApi.Features.Bans;
+using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;

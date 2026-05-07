@@ -1,9 +1,9 @@
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Bans;
+using KRAFT.Results.WebApi.Features.Athletes;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.UnitTests.Features.Bans.BanTests;
+namespace KRAFT.Results.WebApi.UnitTests.Features.Athletes.BanTests;
 
 public sealed class Create
 {

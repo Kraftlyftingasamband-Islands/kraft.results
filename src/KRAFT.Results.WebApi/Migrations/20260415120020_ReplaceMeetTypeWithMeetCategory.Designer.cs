@@ -223,7 +223,7 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.ToTable("Attempts", "dbo");
                 });
 
-            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Bans.Ban", b =>
+            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Athletes.Ban", b =>
                 {
                     b.Property<int>("BanId")
                         .ValueGeneratedOnAdd()
