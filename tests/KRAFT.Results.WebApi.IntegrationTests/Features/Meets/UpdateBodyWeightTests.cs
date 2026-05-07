@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
@@ -240,6 +241,122 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
+    [Fact]
+    public async Task UpdateBodyWeight_SwapsTiebreaker_WhenLighterParticipantBecomesHeavier()
+    {
+        // Arrange — two participants with the same total; lighter (75.0kg) is initially rank 1
+        (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
+
+        int lighterParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 75.0m);
+        int heavierParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 80.0m);
+
+        // Both record the same total (240 kg)
+        await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Deadlift, 1, 120.0m, true);
+
+        await RecordAttemptForMeet(meetId, heavierParticipationId, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, heavierParticipationId, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, heavierParticipationId, Discipline.Deadlift, 1, 120.0m, true);
+
+        // Act — update the lighter participant's body weight to 85.0kg (now heavier than the other)
+        UpdateBodyWeightCommand command = new(85.0m);
+        HttpResponseMessage updateResponse = await _authorizedHttpClient.PatchAsJsonAsync(
+            Path(meetId, lighterParticipationId),
+            command,
+            CancellationToken.None);
+
+        updateResponse.EnsureSuccessStatusCode();
+
+        // Assert — places must have swapped: heavier-at-registration (80.0kg) is now rank 1
+        IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
+            .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
+                $"/meets/{meetSlug}/participations",
+                CancellationToken.None);
+
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+
+        participations.ShouldNotBeNull();
+        MeetParticipation? formerlyLighter = participations.FirstOrDefault(p => p.ParticipationId == lighterParticipationId);
+        MeetParticipation? formerlyHeavier = participations.FirstOrDefault(p => p.ParticipationId == heavierParticipationId);
+
+        formerlyLighter.ShouldNotBeNull();
+        formerlyHeavier.ShouldNotBeNull();
+        formerlyLighter.Rank.ShouldBe(2, "formerly lighter participant is now 85.0kg — should be rank 2");
+        formerlyHeavier.Rank.ShouldBe(1, "formerly heavier participant is now the lightest — should be rank 1");
+    }
+
     private static string Path(int meetId, int participationId) =>
         $"/meets/{meetId}/participations/{participationId}";
+
+    private async Task<(int MeetId, string MeetSlug)> CreateMeetAsync(CreateMeetCommandBuilder builder)
+    {
+        CreateMeetCommand command = builder.Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
+
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}",
+            CancellationToken.None);
+
+        return (details!.MeetId, slug);
+    }
+
+    private async Task<int> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
+    {
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .WithBodyWeight(bodyWeight)
+            .Build();
+
+        HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{meetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? result = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        return result!.ParticipationId;
+    }
+
+    private async Task RecordAttemptForMeet(
+        int meetId,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight,
+        bool good)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .WithGood(good)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
 }

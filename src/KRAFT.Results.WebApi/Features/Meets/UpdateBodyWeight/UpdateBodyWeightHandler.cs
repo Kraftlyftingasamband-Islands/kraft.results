@@ -1,6 +1,7 @@
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Participations.ComputePlaces;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 
@@ -13,15 +14,18 @@ internal sealed class UpdateBodyWeightHandler
     private readonly ILogger<UpdateBodyWeightHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly IHttpContextService _httpContextService;
+    private readonly PlaceComputationService _placeComputationService;
 
     public UpdateBodyWeightHandler(
         ILogger<UpdateBodyWeightHandler> logger,
         ResultsDbContext dbContext,
-        IHttpContextService httpContextService)
+        IHttpContextService httpContextService,
+        PlaceComputationService placeComputationService)
     {
         _logger = logger;
         _dbContext = dbContext;
         _httpContextService = httpContextService;
+        _placeComputationService = placeComputationService;
     }
 
     public async Task<Result> Handle(
@@ -31,6 +35,7 @@ internal sealed class UpdateBodyWeightHandler
         CancellationToken cancellationToken)
     {
         Participation? participation = await _dbContext.Set<Participation>()
+            .Include(p => p.Meet)
             .FirstOrDefaultAsync(
                 p => p.ParticipationId == participationId && p.MeetId == meetId,
                 cancellationToken);
@@ -59,6 +64,8 @@ internal sealed class UpdateBodyWeightHandler
         {
             return updateResult;
         }
+
+        await _placeComputationService.ComputePlacesAsync(participation, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
