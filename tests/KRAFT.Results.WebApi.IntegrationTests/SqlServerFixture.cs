@@ -10,7 +10,7 @@ public sealed class SqlServerFixture : IAsyncLifetime
         .WithEnvironment("ACCEPT_EULA", "Y")
         .Build();
 
-    public string ConnectionString => _dbContainer.GetConnectionString();
+    internal string ConnectionString => _dbContainer.GetConnectionString();
 
     async ValueTask IAsyncLifetime.InitializeAsync()
     {

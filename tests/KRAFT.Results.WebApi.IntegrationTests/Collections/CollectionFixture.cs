@@ -14,12 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace KRAFT.Results.WebApi.IntegrationTests.Collections;
 
-[SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "All SQL is composed from compile-time constants in BaseSeedSql and local const fields")]
+[SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "SQL is composed from compile-time constants (BaseSeedSql, local consts) and a GUID-derived database name containing only hex characters")]
 public sealed class CollectionFixture : IAsyncLifetime
 {
-    private const int EditorRoleId = 2;
-    private const int UserRoleId = 3;
-
     private readonly SqlServerFixture _sqlServer;
     private readonly ConcurrentBag<WebApplicationFactory<Program>> _childFactories = [];
     private string _databaseConnectionString = string.Empty;
@@ -103,14 +100,14 @@ public sealed class CollectionFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        SqlConnectionStringBuilder masterBuilder = new(_sqlServer.ConnectionString)
+        string masterConnectionString = new SqlConnectionStringBuilder(_sqlServer.ConnectionString)
         {
             InitialCatalog = "master",
-        };
+        }.ConnectionString;
 
-        string databaseName = $"kraft_test_{Guid.NewGuid():N}"[..19];
+        string databaseName = $"kraft_test_{Guid.NewGuid():N}";
 
-        await using (SqlConnection masterConnection = new(masterBuilder.ConnectionString))
+        await using (SqlConnection masterConnection = new(masterConnectionString))
         {
             await masterConnection.OpenAsync();
 
@@ -118,12 +115,10 @@ public sealed class CollectionFixture : IAsyncLifetime
             await createCommand.ExecuteNonQueryAsync();
         }
 
-        SqlConnectionStringBuilder dbBuilder = new(_sqlServer.ConnectionString)
+        _databaseConnectionString = new SqlConnectionStringBuilder(_sqlServer.ConnectionString)
         {
             InitialCatalog = databaseName,
-        };
-
-        _databaseConnectionString = dbBuilder.ConnectionString;
+        }.ConnectionString;
 
         DbContextOptions<ResultsDbContext> options = new DbContextOptionsBuilder<ResultsDbContext>()
             .UseSqlServer(_databaseConnectionString)
@@ -181,12 +176,10 @@ public sealed class CollectionFixture : IAsyncLifetime
 
     private static async Task SeedIntegrationRolesAsync(ResultsDbContext dbContext)
     {
-        string sql =
-            $"""
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
             INSERT INTO Roles (RoleId, RoleName)
-            VALUES ({EditorRoleId}, 'Editor'), ({UserRoleId}, 'User');
-            """;
-
-        await dbContext.Database.ExecuteSqlRawAsync(sql);
+            VALUES (2, 'Editor'), (3, 'User');
+            """);
     }
 }
