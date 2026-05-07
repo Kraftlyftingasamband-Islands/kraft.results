@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
@@ -78,7 +79,12 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         int noTeamPid = await AddParticipantAsync(tc2025MeetId, noTeamSlug, teamId: null);
         int zeroPtsPid = await AddParticipantAsync(tc2025MeetId, zeroPtsSlug, _gammaTeamId);
 
-        // Set TeamPoints, Place, Disqualified via SQL (no computation endpoints exist)
+        // DQ the Alpha male participant via 3 failed squat attempts (triggers automatic DQ via RecalculateTotals)
+        await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 1, 100.0m, good: false);
+        await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 2, 100.0m, good: false);
+        await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 3, 100.0m, good: false);
+
+        // Set TeamPoints and Place via SQL (no computation endpoints exist)
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = 12, Place = 1 WHERE ParticipationId = {alphaMalePid}");
         await fixture.ExecuteSqlAsync(
@@ -88,7 +94,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = 9, Place = 2 WHERE ParticipationId = {betaFemalePid}");
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Disqualified = 1, TeamPoints = 7 WHERE ParticipationId = {dqAlphaMalePid}");
+            $"UPDATE Participations SET TeamPoints = 7 WHERE ParticipationId = {dqAlphaMalePid}");
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET TeamPoints = 5 WHERE ParticipationId = {noTeamPid}");
         await fixture.ExecuteSqlAsync(
@@ -281,6 +287,21 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         // Assert — only Alpha and Beta appear; Gamma (with zero points) is excluded
         response!.Men.Count.ShouldBe(2);
         response.Men.ShouldNotContain(s => s.TeamSlug == _gammaTeamSlug);
+    }
+
+    private async Task RecordAttemptAsync(int meetId, int participationId, Discipline discipline, int round, decimal weight, bool good = true)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .WithGood(good)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
     }
 
     private async Task<int> CreateTeamAsync(string title, string titleShort)
