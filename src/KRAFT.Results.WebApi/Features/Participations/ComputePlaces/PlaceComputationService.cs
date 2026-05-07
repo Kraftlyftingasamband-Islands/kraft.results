@@ -4,7 +4,7 @@ namespace KRAFT.Results.WebApi.Features.Participations.ComputePlaces;
 
 internal sealed class PlaceComputationService(ResultsDbContext dbContext)
 {
-    public async Task ComputePlacesAsync(Participation participation, CancellationToken cancellationToken)
+    internal async Task ComputePlacesAsync(Participation participation, CancellationToken cancellationToken)
     {
         if (!participation.Meet.CalcPlaces)
         {
@@ -19,7 +19,7 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
             cancellationToken);
     }
 
-    public async Task RecomputeGroupAsync(
+    internal async Task RecomputeGroupAsync(
         int meetId,
         int weightCategoryId,
         int ageCategoryId,
@@ -58,7 +58,7 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
             rank++;
         }
 
-        foreach (Participation p in groupParticipations.Where(p => p.Total == 0 && p.Disqualified))
+        foreach (Participation p in groupParticipations.Where(p => p.Total == 0))
         {
             p.UpdateRanking(0);
         }
