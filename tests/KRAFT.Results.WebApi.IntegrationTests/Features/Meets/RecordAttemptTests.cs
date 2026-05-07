@@ -4,9 +4,14 @@ using System.Net.Http.Json;
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.WebApi;
+using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
@@ -343,8 +348,185 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         p2.Rank.ShouldBe(2);
     }
 
+    [Fact]
+    public async Task PlaceNotComputed_WhenCalcPlacesFalse()
+    {
+        // Arrange
+        (int meetId, string meetSlug) = await CreateMeetAsync(
+            new CreateMeetCommandBuilder().WithCalcPlaces(false));
+
+        int participation1Id = await AddParticipantToMeetAsync(meetId);
+        int participation2Id = await AddParticipantToMeetAsync(meetId);
+
+        await RecordAttemptForMeet(meetId, participation1Id, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttemptForMeet(meetId, participation1Id, Discipline.Bench, 1, 50.0m, true);
+        await RecordAttemptForMeet(meetId, participation1Id, Discipline.Deadlift, 1, 150.0m, true);
+
+        await RecordAttemptForMeet(meetId, participation2Id, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, participation2Id, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, participation2Id, Discipline.Deadlift, 1, 120.0m, true);
+
+        // Act
+        IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
+            .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
+                $"/meets/{meetSlug}/participations",
+                CancellationToken.None);
+
+        // Assert — Place defaults to -1; with CalcPlaces=false it must not be modified
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+
+        participations.ShouldNotBeNull();
+        MeetParticipation? p1 = participations.FirstOrDefault(p => p.ParticipationId == participation1Id);
+        MeetParticipation? p2 = participations.FirstOrDefault(p => p.ParticipationId == participation2Id);
+
+        p1.ShouldNotBeNull();
+        p2.ShouldNotBeNull();
+        p1.Rank.ShouldBe(-1);
+        p2.Rank.ShouldBe(-1);
+    }
+
+    [Fact]
+    public async Task DisqualifiedParticipantReceivesPlaceZero_AfterBombOut()
+    {
+        // Arrange
+        (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
+
+        int dqParticipationId = await AddParticipantToMeetAsync(meetId);
+        int rankedParticipationId = await AddParticipantToMeetAsync(meetId);
+
+        // DQ participant — all bench attempts fail
+        await RecordAttemptForMeet(meetId, dqParticipationId, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttemptForMeet(meetId, dqParticipationId, Discipline.Bench, 1, 60.0m, false);
+        await RecordAttemptForMeet(meetId, dqParticipationId, Discipline.Bench, 2, 60.0m, false);
+        await RecordAttemptForMeet(meetId, dqParticipationId, Discipline.Bench, 3, 60.0m, false);
+        await RecordAttemptForMeet(meetId, dqParticipationId, Discipline.Deadlift, 1, 150.0m, true);
+
+        // Ranked participant — valid total
+        await RecordAttemptForMeet(meetId, rankedParticipationId, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, rankedParticipationId, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, rankedParticipationId, Discipline.Deadlift, 1, 120.0m, true);
+
+        // Act
+        IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
+            .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
+                $"/meets/{meetSlug}/participations",
+                CancellationToken.None);
+
+        // Assert
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+
+        participations.ShouldNotBeNull();
+        MeetParticipation? dq = participations.FirstOrDefault(p => p.ParticipationId == dqParticipationId);
+        MeetParticipation? ranked = participations.FirstOrDefault(p => p.ParticipationId == rankedParticipationId);
+
+        dq.ShouldNotBeNull();
+        ranked.ShouldNotBeNull();
+        dq.Rank.ShouldBe(0);
+        ranked.Rank.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task LighterParticipantRanksHigher_WhenTotalsAreEqual()
+    {
+        // Arrange
+        (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
+
+        // Lighter participant (75.0 kg) — same total as heavier, should win tiebreaker
+        // Both use body weights above 74.01 to land in the same 83 kg weight category
+        int lighterParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 75.0m);
+
+        // Heavier participant (80.0 kg)
+        int heavierParticipationId = await AddParticipantToMeetAsync(meetId, bodyWeight: 80.0m);
+
+        // Both record the same total (240 kg)
+        await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, lighterParticipationId, Discipline.Deadlift, 1, 120.0m, true);
+
+        await RecordAttemptForMeet(meetId, heavierParticipationId, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, heavierParticipationId, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, heavierParticipationId, Discipline.Deadlift, 1, 120.0m, true);
+
+        // Act
+        IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
+            .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
+                $"/meets/{meetSlug}/participations",
+                CancellationToken.None);
+
+        // Assert
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+
+        participations.ShouldNotBeNull();
+        MeetParticipation? lighter = participations.FirstOrDefault(p => p.ParticipationId == lighterParticipationId);
+        MeetParticipation? heavier = participations.FirstOrDefault(p => p.ParticipationId == heavierParticipationId);
+
+        lighter.ShouldNotBeNull();
+        heavier.ShouldNotBeNull();
+        lighter.Rank.ShouldBe(1);
+        heavier.Rank.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task TeamPoints_MapToTiebreakerPointValues_ByPlace()
+    {
+        // Arrange
+        (int meetId, string meetSlug) = await CreateMeetAsync(new CreateMeetCommandBuilder());
+
+        int higherTotalParticipationId = await AddParticipantToMeetAsync(meetId);
+        int lowerTotalParticipationId = await AddParticipantToMeetAsync(meetId);
+
+        // Higher total → place 1 → 12 TeamPoints
+        await RecordAttemptForMeet(meetId, higherTotalParticipationId, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttemptForMeet(meetId, higherTotalParticipationId, Discipline.Bench, 1, 50.0m, true);
+        await RecordAttemptForMeet(meetId, higherTotalParticipationId, Discipline.Deadlift, 1, 150.0m, true);
+
+        // Lower total → place 2 → 9 TeamPoints
+        await RecordAttemptForMeet(meetId, lowerTotalParticipationId, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttemptForMeet(meetId, lowerTotalParticipationId, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttemptForMeet(meetId, lowerTotalParticipationId, Discipline.Deadlift, 1, 120.0m, true);
+
+        // Act — read TeamPoints directly from the database (no read endpoint exposes per-participation TeamPoints)
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext dbContext = scope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<Participation> participationEntities = await dbContext.Set<Participation>()
+            .Where(p => p.ParticipationId == higherTotalParticipationId || p.ParticipationId == lowerTotalParticipationId)
+            .ToListAsync(CancellationToken.None);
+
+        // Assert
+        await _authorizedHttpClient.DeleteAsync($"/meets/{meetSlug}", CancellationToken.None);
+
+        Participation? higher = participationEntities.FirstOrDefault(p => p.ParticipationId == higherTotalParticipationId);
+        Participation? lower = participationEntities.FirstOrDefault(p => p.ParticipationId == lowerTotalParticipationId);
+
+        higher.ShouldNotBeNull();
+        lower.ShouldNotBeNull();
+        higher.TeamPoints.ShouldBe(12);
+        lower.TeamPoints.ShouldBe(9);
+    }
+
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>
         $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}";
+
+    private async Task<(int MeetId, string MeetSlug)> CreateMeetAsync(CreateMeetCommandBuilder builder)
+    {
+        CreateMeetCommand command = builder.Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets",
+            command,
+            CancellationToken.None);
+
+        response.EnsureSuccessStatusCode();
+
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? details = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}",
+            CancellationToken.None);
+
+        return (details!.MeetId, slug);
+    }
 
     private async Task RecordAttempt(int participationId, Discipline discipline, int round, decimal weight, bool good)
     {
@@ -355,6 +537,27 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
 
         HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
             Path(_meetId, participationId, discipline, round),
+            command,
+            CancellationToken.None);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    private async Task RecordAttemptForMeet(
+        int meetId,
+        int participationId,
+        Discipline discipline,
+        int round,
+        decimal weight,
+        bool good)
+    {
+        RecordAttemptCommand command = new RecordAttemptCommandBuilder()
+            .WithWeight(weight)
+            .WithGood(good)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync(
+            Path(meetId, participationId, discipline, round),
             command,
             CancellationToken.None);
 
@@ -379,6 +582,36 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
 
         HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(
             $"/meets/{_meetId}/participants",
+            participantCommand,
+            CancellationToken.None);
+
+        participantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? result = await participantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        return result!.ParticipationId;
+    }
+
+    private async Task<int> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
+    {
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes",
+            athleteCommand,
+            CancellationToken.None);
+
+        athleteResponse.EnsureSuccessStatusCode();
+
+        string athleteSlug = Slug.Create($"{athleteCommand.FirstName} {athleteCommand.LastName}");
+
+        AddParticipantCommand participantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(athleteSlug)
+            .WithBodyWeight(bodyWeight)
+            .Build();
+
+        HttpResponseMessage participantResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{meetId}/participants",
             participantCommand,
             CancellationToken.None);
 
