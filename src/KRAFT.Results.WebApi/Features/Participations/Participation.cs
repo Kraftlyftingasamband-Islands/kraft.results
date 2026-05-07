@@ -4,6 +4,7 @@ using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Meets;
+using KRAFT.Results.WebApi.Features.TeamCompetition;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
@@ -152,6 +153,22 @@ internal sealed class Participation : AggregateRoot
     {
         attempt.Update(weight, good, modifiedBy);
         Raise(new AttemptRecordedEvent(this, attempt));
+    }
+
+    internal void UpdateRanking(int place)
+    {
+        Place = place;
+
+        int[] pointValues = TeamStandingsBuilder.TiebreakerPointValues;
+
+        if (place <= 0 || place > pointValues.Length)
+        {
+            TeamPoints = 0;
+        }
+        else
+        {
+            TeamPoints = pointValues[place - 1];
+        }
     }
 
     internal void RecalculateTotals()
