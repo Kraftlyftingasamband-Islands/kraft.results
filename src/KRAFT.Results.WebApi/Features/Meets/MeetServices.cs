@@ -13,6 +13,7 @@ using KRAFT.Results.WebApi.Features.Meets.RemoveParticipant;
 using KRAFT.Results.WebApi.Features.Meets.Update;
 using KRAFT.Results.WebApi.Features.Meets.UpdateAgeCategory;
 using KRAFT.Results.WebApi.Features.Meets.UpdateBodyWeight;
+using KRAFT.Results.WebApi.Features.Participations.ComputePlaces;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -32,6 +33,7 @@ internal static class MeetServices
         services.AddScoped<UpdateMeetHandler>();
         services.AddScoped<UpdateAgeCategoryHandler>();
         services.AddScoped<UpdateBodyWeightHandler>();
+        services.AddScoped<PlaceComputationService>();
         services.AddScoped<RecordAttemptHandler>();
         services.AddScoped<RemoveParticipantHandler>();
         services.AddScoped<DeleteMeetHandler>();

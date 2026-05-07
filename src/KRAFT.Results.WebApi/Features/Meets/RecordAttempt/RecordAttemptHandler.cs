@@ -3,6 +3,7 @@ using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.Features.Participations.ComputePlaces;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 
@@ -18,15 +19,18 @@ internal sealed class RecordAttemptHandler
     private readonly ILogger<RecordAttemptHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly IHttpContextService _httpContextService;
+    private readonly PlaceComputationService _placeComputationService;
 
     public RecordAttemptHandler(
         ILogger<RecordAttemptHandler> logger,
         ResultsDbContext dbContext,
-        IHttpContextService httpContextService)
+        IHttpContextService httpContextService,
+        PlaceComputationService placeComputationService)
     {
         _logger = logger;
         _dbContext = dbContext;
         _httpContextService = httpContextService;
+        _placeComputationService = placeComputationService;
     }
 
     public async Task<Result> Handle(
@@ -45,6 +49,7 @@ internal sealed class RecordAttemptHandler
 
         Participation? participation = await _dbContext.Set<Participation>()
             .Include(p => p.Attempts)
+            .Include(p => p.Meet)
             .Where(p => p.ParticipationId == participationId)
             .FirstOrDefaultAsync(
                 p => p.MeetId == meetId,
@@ -99,6 +104,8 @@ internal sealed class RecordAttemptHandler
         }
 
         participation.RecalculateTotals();
+
+        await _placeComputationService.ComputePlacesAsync(participation, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

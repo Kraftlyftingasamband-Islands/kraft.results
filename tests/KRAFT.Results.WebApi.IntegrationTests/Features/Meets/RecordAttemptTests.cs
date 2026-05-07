@@ -309,6 +309,40 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
+    [Fact]
+    public async Task ComputesPlace_AfterAttemptRecorded()
+    {
+        // Arrange
+        int participation1Id = await AddParticipantAsync();
+        int participation2Id = await AddParticipantAsync();
+
+        // Participant 1 — higher total (300kg): should be rank 1
+        await RecordAttempt(participation1Id, Discipline.Squat, 1, 100.0m, true);
+        await RecordAttempt(participation1Id, Discipline.Bench, 1, 50.0m, true);
+        await RecordAttempt(participation1Id, Discipline.Deadlift, 1, 150.0m, true);
+
+        // Participant 2 — lower total (240kg): should be rank 2
+        await RecordAttempt(participation2Id, Discipline.Squat, 1, 80.0m, true);
+        await RecordAttempt(participation2Id, Discipline.Bench, 1, 40.0m, true);
+        await RecordAttempt(participation2Id, Discipline.Deadlift, 1, 120.0m, true);
+
+        // Act
+        IReadOnlyList<MeetParticipation>? participations = await _authorizedHttpClient
+            .GetFromJsonAsync<IReadOnlyList<MeetParticipation>>(
+                $"/meets/{_meetSlug}/participations",
+                CancellationToken.None);
+
+        // Assert
+        participations.ShouldNotBeNull();
+        MeetParticipation? p1 = participations.FirstOrDefault(p => p.ParticipationId == participation1Id);
+        MeetParticipation? p2 = participations.FirstOrDefault(p => p.ParticipationId == participation2Id);
+
+        p1.ShouldNotBeNull();
+        p2.ShouldNotBeNull();
+        p1.Rank.ShouldBe(1);
+        p2.Rank.ShouldBe(2);
+    }
+
     private static string Path(int meetId, int participationId, Discipline discipline, int round) =>
         $"/meets/{meetId}/participants/{participationId}/attempts/{(int)discipline}/{round}";
 

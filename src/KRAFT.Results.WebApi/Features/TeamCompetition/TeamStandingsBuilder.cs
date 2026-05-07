@@ -9,7 +9,7 @@ internal static class TeamStandingsBuilder
     internal const int BestNModern = 5;
     internal const int BestNLegacy = 6;
 
-    private static readonly int[] TiebreakerPointValues = [12, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    internal static readonly int[] TiebreakerPointValues = [12, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
     internal static int GetBestN(int year) =>
         year >= BestNThresholdYear ? BestNModern : BestNLegacy;
