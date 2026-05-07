@@ -73,8 +73,6 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
             $"UPDATE Participations SET Place = 1 WHERE ParticipationId IN ({_charlieParticipationId}, {_deltaParticipationId})");
         await fixture.ExecuteSqlAsync(
             $"UPDATE Participations SET Place = 3 WHERE ParticipationId = {_bobParticipationId}");
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Participations SET Disqualified = 1 WHERE ParticipationId = {_annaParticipationId}");
     }
 
     public async ValueTask DisposeAsync()
