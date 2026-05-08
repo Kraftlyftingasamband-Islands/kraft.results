@@ -1,8 +1,8 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
 
@@ -25,8 +25,6 @@ internal sealed class Team : AggregateRoot
 
     public string TitleFull { get; private set; } = null!;
 
-    public int? CountryId { get; private set; }
-
     public string? LogoImageFilename { get; private set; }
 
     public string Slug { get; private set; } = null!;
@@ -41,7 +39,7 @@ internal sealed class Team : AggregateRoot
 
     public ICollection<Athlete> Athletes { get; } = [];
 
-    public Country? Country { get; private set; }
+    public Country Country { get; private set; } = default!;
 
     public ICollection<Participation> Participations { get; } = [];
 

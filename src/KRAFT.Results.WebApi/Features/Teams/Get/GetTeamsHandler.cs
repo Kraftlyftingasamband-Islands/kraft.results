@@ -15,7 +15,7 @@ internal sealed class GetTeamsHandler
 
     public Task<List<TeamSummary>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<Team>()
-        .Where(x => x.Country != null && x.Country.Iso3 == "ISL")
+        .Where(x => x.Country.Value == "ISL")
         .OrderBy(x => x.Title)
         .Select(x => new TeamSummary(
             x.Slug,
