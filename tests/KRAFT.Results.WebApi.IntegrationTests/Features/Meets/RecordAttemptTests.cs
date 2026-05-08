@@ -586,7 +586,7 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
 
     private async Task<int> AddParticipantAsync()
     {
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryCode("NOR").Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes",
             athleteCommand,
@@ -615,7 +615,7 @@ public sealed class RecordAttemptTests(CollectionFixture fixture) : IAsyncLifeti
 
     private async Task<(int ParticipationId, string AthleteSlug)> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
     {
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryCode("NOR").Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes",
             athleteCommand,

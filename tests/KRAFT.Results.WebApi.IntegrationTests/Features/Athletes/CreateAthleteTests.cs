@@ -61,11 +61,11 @@ public sealed class CreateAthleteTests(CollectionFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenCountryIdDoesNotExist()
+    public async Task ReturnsBadRequest_WhenCountryCodeIsInvalid()
     {
         // Arrange
         CreateAthleteCommand command = new CreateAthleteCommandBuilder()
-            .WithCountryId(int.MaxValue)
+            .WithCountryCode("XYZ")
             .Build();
 
         // Act

@@ -35,7 +35,7 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
             $"/meets/{_meetSlug}", CancellationToken.None);
         _meetId = details!.MeetId;
 
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryCode("NOR").Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes",
             athleteCommand,
@@ -316,7 +316,7 @@ public sealed class UpdateBodyWeightTests(CollectionFixture fixture) : IAsyncLif
 
     private async Task<(int ParticipationId, string AthleteSlug)> AddParticipantToMeetAsync(int meetId, decimal bodyWeight = 80.5m)
     {
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryCode("NOR").Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes",
             athleteCommand,

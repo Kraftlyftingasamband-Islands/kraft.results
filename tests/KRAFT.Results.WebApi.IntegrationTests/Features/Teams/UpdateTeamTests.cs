@@ -130,12 +130,12 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenCountryDoesNotExist()
+    public async Task ReturnsBadRequest_WhenCountryCodeIsInvalid()
     {
         // Arrange
         string slug = await CreateTeamAsync();
         UpdateTeamCommand command = new UpdateTeamCommandBuilder()
-            .WithCountryId(int.MaxValue)
+            .WithCountryCode("XYZ")
             .Build();
 
         // Act
