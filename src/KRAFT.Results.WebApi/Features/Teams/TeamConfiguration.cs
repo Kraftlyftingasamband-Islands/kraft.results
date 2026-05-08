@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KRAFT.Results.WebApi.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KRAFT.Results.WebApi.Features.Teams;
@@ -41,9 +43,13 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.Property(e => e.TitleShort)
             .HasMaxLength(3);
 
-        builder.HasOne(d => d.Country)
-            .WithMany(p => p.Teams)
-            .HasForeignKey(d => d.CountryId)
-            .HasConstraintName("FK_Teams_Countries");
+        builder.Property(e => e.Country)
+            .HasConversion(x => x.Value, x => Country.Parse(x))
+            .HasColumnName("CountryCode")
+            .HasMaxLength(3)
+            .IsFixedLength()
+            .IsUnicode(true)
+            .IsRequired()
+            .HasDefaultValue(Country.Parse("ISL"), "DF_Teams_CountryCode");
     }
 }

@@ -15,7 +15,7 @@ internal sealed class GetTeamOptionsHandler
 
     public Task<List<TeamOption>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<Team>()
-        .Where(x => x.Country != null && x.Country.Iso3 == "ISL")
+        .Where(x => x.Country.Value == "ISL")
         .OrderBy(x => x.Title)
         .Select(x => new TeamOption(
             x.TeamId,
