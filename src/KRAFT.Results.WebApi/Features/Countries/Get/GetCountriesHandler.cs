@@ -15,6 +15,6 @@ internal sealed class GetCountriesHandler
 
     public Task<List<CountrySummary>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<Country>()
-        .Select(x => new CountrySummary(x.CountryId, x.Name))
+        .Select(x => new CountrySummary(x.Iso3, x.Name))
         .ToListAsync(cancellationToken);
 }
