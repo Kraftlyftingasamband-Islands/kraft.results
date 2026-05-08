@@ -25,7 +25,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Records;
 [Collection(nameof(BackfillRecordsTestsCollection))]
 public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLifetime
 {
-    private const int NorwayCountryId = 2;
+    private const string NorwayCountryCode = "NOR";
     private const int DeadliftMeetTypeId = 3;
 
     // Body weights used when adding participants
@@ -388,7 +388,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await ResetRecordSlotAsync(TestSeedConstants.AgeCategory.Masters4Id, weightCategoryId);
 
         string norwegianSlug = await CreateAthleteAsync(
-            "BkfNor", "m", new DateOnly(1950, 1, 1), countryId: NorwayCountryId);
+            "BkfNor", "m", new DateOnly(1950, 1, 1), countryCode: NorwayCountryCode);
         int participationId = await AddParticipantAsync(_rawMeetId, norwegianSlug, HeavyBodyWeight);
 
         await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Squat, 1, 300.0m);
@@ -1101,7 +1101,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
     }
 
     private async Task<string> CreateAthleteAsync(
-        string prefix, string gender, DateOnly dateOfBirth, int countryId = 1)
+        string prefix, string gender, DateOnly dateOfBirth, string countryCode = "ISL")
     {
         string firstName = $"{prefix}{_suffix}";
         string lastName = "Bf";
@@ -1111,7 +1111,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             .WithLastName(lastName)
             .WithGender(gender)
             .WithDateOfBirth(dateOfBirth)
-            .WithCountryId(countryId)
+            .WithCountryCode(countryCode)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(

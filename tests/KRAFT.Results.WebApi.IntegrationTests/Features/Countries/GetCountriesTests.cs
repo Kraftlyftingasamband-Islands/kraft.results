@@ -45,7 +45,7 @@ public sealed class GetCountriesTests
     }
 
     [Fact]
-    public async Task ReturnsTestTeam()
+    public async Task ReturnsIcelandWithIcelandicName()
     {
         // Arrange
 
@@ -53,6 +53,8 @@ public sealed class GetCountriesTests
         IReadOnlyList<CountrySummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<CountrySummary>>(Path, CancellationToken.None);
 
         // Assert
-        response!.ShouldContain(x => x.Name == Constants.TestCountryName);
+        CountrySummary? iceland = response!.FirstOrDefault(x => x.Code == "ISL");
+        iceland.ShouldNotBeNull();
+        iceland.Name.ShouldBe("Ísland");
     }
 }

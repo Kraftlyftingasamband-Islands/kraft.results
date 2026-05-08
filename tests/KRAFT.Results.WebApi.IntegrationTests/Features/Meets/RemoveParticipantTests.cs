@@ -210,7 +210,7 @@ public sealed class RemoveParticipantTests(CollectionFixture fixture) : IAsyncLi
 
     private async Task<(int ParticipationId, string AthleteSlug)> AddParticipantToMeetAsync(int meetId)
     {
-        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryId(2).Build();
+        CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder().WithCountryCode("NOR").Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
             "/athletes",
             athleteCommand,

@@ -135,12 +135,12 @@ public sealed class UpdateAthleteTests(CollectionFixture fixture)
     }
 
     [Fact]
-    public async Task ReturnsBadRequest_WhenCountryDoesNotExist()
+    public async Task ReturnsBadRequest_WhenCountryCodeIsInvalid()
     {
         // Arrange
         string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
-            .WithCountryId(int.MaxValue)
+            .WithCountryCode("XYZ")
             .Build();
 
         // Act
