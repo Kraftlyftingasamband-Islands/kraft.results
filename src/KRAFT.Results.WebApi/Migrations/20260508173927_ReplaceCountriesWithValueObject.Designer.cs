@@ -94,8 +94,8 @@ namespace KRAFT.Results.WebApi.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(3)
-                        .IsUnicode(true)
-                        .HasColumnType("nchar(3)")
+                        .IsUnicode(false)
+                        .HasColumnType("char(3)")
                         .HasColumnName("CountryCode")
                         .IsFixedLength()
                         .HasDefaultValue("ISL", "DF_Athletes_CountryCode");
@@ -828,8 +828,8 @@ namespace KRAFT.Results.WebApi.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(3)
-                        .IsUnicode(true)
-                        .HasColumnType("nchar(3)")
+                        .IsUnicode(false)
+                        .HasColumnType("char(3)")
                         .HasColumnName("CountryCode")
                         .IsFixedLength()
                         .HasDefaultValue("ISL", "DF_Teams_CountryCode");
