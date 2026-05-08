@@ -1,20 +1,10 @@
-﻿using KRAFT.Results.Contracts.Countries;
+using KRAFT.Results.Contracts.Countries;
 
-using Microsoft.EntityFrameworkCore;
+using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.Features.Countries.Get;
 
-internal sealed class GetCountriesHandler
+internal static class GetCountriesHandler
 {
-    private readonly ResultsDbContext _dbContext;
-
-    public GetCountriesHandler(ResultsDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
-    public Task<List<CountrySummary>> Handle(CancellationToken cancellationToken) =>
-        _dbContext.Set<Country>()
-        .Select(x => new CountrySummary(x.Iso3, x.Name))
-        .ToListAsync(cancellationToken);
+    internal static IReadOnlyList<CountrySummary> Handle() => Country.GetAll();
 }

@@ -1,5 +1,4 @@
 ﻿using KRAFT.Results.WebApi.Features.Athletes;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Dashboard;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Meets;
@@ -16,7 +15,6 @@ internal static class FeatureServices
     internal static IServiceCollection AddFeatures(this IServiceCollection services)
     {
         services.AddAthletes();
-        services.AddCountries();
         services.AddDashboard();
         services.AddEras();
         services.AddMeets();
