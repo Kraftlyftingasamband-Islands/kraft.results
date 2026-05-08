@@ -22,7 +22,7 @@ public sealed class MapDisciplineToRecordCategory
     }
 
     [Fact]
-    public void Bench_WhenFullMeet_ReturnsBench()
+    public void Bench_WhenPowerlifting_ReturnsBench()
     {
         // Arrange
         MeetCategory category = MeetCategory.Powerlifting;
@@ -48,7 +48,7 @@ public sealed class MapDisciplineToRecordCategory
     }
 
     [Fact]
-    public void Deadlift_WhenFullMeet_ReturnsDeadlift()
+    public void Deadlift_WhenPowerlifting_ReturnsDeadlift()
     {
         // Arrange
         MeetCategory category = MeetCategory.Powerlifting;
