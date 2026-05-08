@@ -71,16 +71,16 @@
                          class="form-input form-select"
                          aria-required="true"
                          aria-describedby="@GetAriaDescribedBy("country-error")"
-                         @bind-Value="_model.CountryId"
+                         @bind-Value="_model.CountryCode"
                          disabled="@IsLoading">
-                <option value="0">-- Veldu land --</option>
+                <option value="">-- Veldu land --</option>
                 @foreach (CountrySummary country in Countries)
                 {
                     <option value="@country.Code">@country.Name</option>
                 }
             </InputSelect>
             <div id="country-error">
-                <ValidationMessage For="@(() => _model.CountryId)" />
+                <ValidationMessage For="@(() => _model.CountryCode)" />
             </div>
         </div>
 
@@ -157,7 +157,7 @@
             _model.LastName = InitialValues.LastName;
             _model.DateOfBirth = InitialValues.DateOfBirth;
             _model.Gender = InitialValues.Gender;
-            _model.CountryId = InitialValues.CountryId;
+            _model.CountryCode = InitialValues.CountryCode;
             _model.TeamId = InitialValues.TeamId;
             _initialized = true;
         }
@@ -172,7 +172,7 @@
             _model.LastName,
             _model.DateOfBirth!.Value,
             _model.Gender,
-            _model.CountryId,
+            _model.CountryCode,
             teamId);
 
         await OnSubmit.InvokeAsync(values);
@@ -195,8 +195,8 @@
         [Required(ErrorMessage = "Vinsamlegast veldu kyn")]
         public string Gender { get; set; } = string.Empty;
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vinsamlegast veldu land")]
-        public int CountryId { get; set; }
+        [Required(ErrorMessage = "Vinsamlegast veldu land")]
+        public string CountryCode { get; set; } = string.Empty;
 
         public int TeamId { get; set; }
     }

@@ -77,7 +77,7 @@ else if (_errorMessage is not null)
                 athlete.LastName,
                 athlete.DateOfBirth,
                 athlete.Gender,
-                athlete.CountryId,
+                athlete.CountryCode,
                 athlete.TeamId ?? 0);
         }
         catch (HttpRequestException)
@@ -100,7 +100,7 @@ else if (_errorMessage is not null)
             UpdateAthleteCommand command = new(
                 values.FirstName,
                 values.LastName,
-                values.CountryId,
+                values.CountryCode,
                 values.TeamId,
                 values.DateOfBirth,
                 values.Gender);

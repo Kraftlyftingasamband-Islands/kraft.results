@@ -63,7 +63,7 @@ else
                 values.Title,
                 values.TitleShort,
                 values.TitleFull,
-                values.CountryId);
+                values.CountryCode);
 
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/teams", command);
 
