@@ -19,21 +19,21 @@ namespace KRAFT.Results.WebApi.Migrations
                 name: "MeetTypes",
                 schema: "dbo");
 
-            migrationBuilder.RenameIndex(
-                name: "IX_Meets_MeetTypeId",
-                schema: "dbo",
-                table: "Meets",
-                newName: "IX_Meets_Category");
+            migrationBuilder.Sql("""
+                IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Meets_MeetTypeId' AND object_id = OBJECT_ID('dbo.Meets'))
+                    EXEC sp_rename N'[dbo].[Meets].[IX_Meets_MeetTypeId]', N'IX_Meets_Category', 'INDEX';
+                ELSE IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Meets_Category' AND object_id = OBJECT_ID('dbo.Meets'))
+                    CREATE INDEX IX_Meets_Category ON dbo.Meets (MeetTypeId);
+                """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameIndex(
-                name: "IX_Meets_Category",
-                schema: "dbo",
-                table: "Meets",
-                newName: "IX_Meets_MeetTypeId");
+            migrationBuilder.Sql("""
+                IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Meets_Category' AND object_id = OBJECT_ID('dbo.Meets'))
+                    EXEC sp_rename N'[dbo].[Meets].[IX_Meets_Category]', N'IX_Meets_MeetTypeId', 'INDEX';
+                """);
 
             migrationBuilder.CreateTable(
                 name: "MeetTypes",
