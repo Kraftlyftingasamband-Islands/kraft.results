@@ -1,8 +1,8 @@
-using KRAFT.Results.Contracts.Teams;
+﻿using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -42,15 +42,19 @@ internal sealed class UpdateTeamHandler
             return Result.Failure(TeamErrors.TeamNotFound);
         }
 
-        if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
+        Result<Country> countryResult = Country.FromCode(command.CountryCode);
+
+        if (countryResult.IsFailure)
         {
             _logger.LogWarning(
-                "Failed to update team {Slug}: Country with Id {CountryId} does not exist",
+                "Failed to update team {Slug}: Country code '{CountryCode}' is invalid",
                 slug,
-                command.CountryId);
+                command.CountryCode);
 
-            return CountryErrors.CountryDoesNotExist(command.CountryId);
+            return Result.Failure(countryResult.Error);
         }
+
+        Country country = countryResult.FromResult();
 
         if (await IsDuplicateShortTitleAsync(slug, command.TitleShort, cancellationToken))
         {
