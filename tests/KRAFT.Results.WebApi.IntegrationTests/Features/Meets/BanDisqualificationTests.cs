@@ -64,8 +64,9 @@ public sealed class BanDisqualificationTests(CollectionFixture fixture) : IAsync
     public async Task BannedAthlete_IsDisqualified_WithPreservedTotal()
     {
         // Arrange
-        (HttpClient recordClient, RecordComputationChannel channel) =
+        (HttpClient recordClientRaw, RecordComputationChannel channel) =
             fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        using HttpClient recordClient = recordClientRaw;
 
         string athleteSlug = await CreateAthleteAsync("BanDq", "m", new DateOnly(1990, 6, 15));
         _banAthleteSlugsToClear.Add(athleteSlug);
@@ -93,17 +94,15 @@ public sealed class BanDisqualificationTests(CollectionFixture fixture) : IAsync
         banned.ShouldNotBeNull();
         banned.Disqualified.ShouldBeTrue();
         banned.Total.ShouldBeGreaterThan(0m);
-
-        // Cleanup
-        recordClient.Dispose();
     }
 
     [Fact]
     public async Task BannedAthlete_IsExcludedFromRankings_WhileUnbannedAthleteIsRanked()
     {
         // Arrange
-        (HttpClient recordClient, RecordComputationChannel channel) =
+        (HttpClient recordClientRaw, RecordComputationChannel channel) =
             fixture.CreateAuthorizedHttpClientWithRecordComputation();
+        using HttpClient recordClient = recordClientRaw;
 
         string bannedSlug = await CreateAthleteAsync("BanEx1", "m", new DateOnly(1988, 3, 10));
         string unbannedSlug = await CreateAthleteAsync("BanEx2", "m", new DateOnly(1985, 5, 20));
@@ -143,9 +142,6 @@ public sealed class BanDisqualificationTests(CollectionFixture fixture) : IAsync
         unbanned.ShouldNotBeNull();
         banned.Rank.ShouldBe(0);
         unbanned.Rank.ShouldBe(1);
-
-        // Cleanup
-        recordClient.Dispose();
     }
 
     private static async Task RecordAttemptAsync(

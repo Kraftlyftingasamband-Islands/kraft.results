@@ -71,7 +71,7 @@ When a ban is added or removed, a domain event is raised on the `Athlete` aggreg
 2. `PlaceComputationService.ComputePlacesAsync()` — recomputes meet placements, excluding disqualified athletes from ranked positions
 3. `RecordComputationService.RebuildSlotsAsync()` — rebuilds record slots for affected age/weight/discipline combinations
 
-The cascade runs within a single `SaveChangesAsync` call per event.
+The cascade runs with one `SaveChangesAsync` call per participation iteration (to persist `Disqualified` before place computation queries) plus a trailing `SaveChangesAsync` for place and rank updates.
 
 ---
 
