@@ -21,7 +21,7 @@ internal sealed class GetTeamDetailsHandler
             x.Title,
             x.TitleShort,
             x.TitleFull,
-            x.CountryId,
+            x.Country.Value,
             x.Athletes
                 .OrderBy(x => x.Firstname)
                 .ThenBy(x => x.Lastname)
