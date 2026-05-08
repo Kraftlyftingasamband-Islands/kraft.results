@@ -88,11 +88,16 @@ internal sealed class Athlete : AggregateRoot
         return athlete;
     }
 
+    internal bool HasActiveBan(DateOnly date)
+    {
+        return Bans.Any(ban =>
+            date >= DateOnly.FromDateTime(ban.FromDate)
+            && date <= DateOnly.FromDateTime(ban.ToDate));
+    }
+
     internal bool IsEligibleForRecord(DateOnly meetDate)
     {
-        return !Bans.Any(ban =>
-            meetDate >= DateOnly.FromDateTime(ban.FromDate)
-            && meetDate <= DateOnly.FromDateTime(ban.ToDate));
+        return !HasActiveBan(meetDate);
     }
 
     internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
