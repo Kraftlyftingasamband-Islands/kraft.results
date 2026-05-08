@@ -3,7 +3,7 @@
 public sealed record class CreateAthleteCommand(
     string FirstName,
     string LastName,
-    int CountryId,
+    string CountryCode,
     int? TeamId,
     DateOnly DateOfBirth,
     string Gender);

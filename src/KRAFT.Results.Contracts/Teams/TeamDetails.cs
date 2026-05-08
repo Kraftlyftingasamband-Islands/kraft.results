@@ -5,5 +5,5 @@ public sealed record class TeamDetails(
     string Title,
     string ShortTitle,
     string FullTitle,
-    int? CountryId,
+    string CountryCode,
     IReadOnlyList<TeamMember> Members);
