@@ -150,6 +150,7 @@ internal sealed class BanEventHandler(
                 .ThenInclude(a => a.Bans)
             .Include(p => p.Attempts)
             .Include(p => p.AgeCategory)
+            .AsSingleQuery()
             .Where(p => p.AthleteId == athleteId)
             .Where(p => p.Meet.StartDate >= fromDate)
             .Where(p => p.Meet.StartDate <= toDate)

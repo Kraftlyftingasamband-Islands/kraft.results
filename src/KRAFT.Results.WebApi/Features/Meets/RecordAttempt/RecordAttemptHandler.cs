@@ -51,7 +51,8 @@ internal sealed class RecordAttemptHandler
             .Include(p => p.Attempts)
             .Include(p => p.Meet)
             .Include(p => p.Athlete)
-            .ThenInclude(a => a.Bans)
+                .ThenInclude(a => a.Bans)
+            .AsSingleQuery()
             .Where(p => p.ParticipationId == participationId)
             .FirstOrDefaultAsync(
                 p => p.MeetId == meetId,
