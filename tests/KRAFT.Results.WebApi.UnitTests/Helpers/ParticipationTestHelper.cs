@@ -1,8 +1,8 @@
 using System.Reflection;
 
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Users;
+using KRAFT.Results.WebApi.ValueObjects;
 
 namespace KRAFT.Results.WebApi.UnitTests.Helpers;
 
@@ -19,7 +19,7 @@ internal static class ParticipationTestHelper
         if (athlete is null)
         {
             athlete = WebApi.Features.Athletes.Athlete.Create(
-                creator, "John", "Doe", "m", new Country(), null, null).FromResult();
+                creator, "John", "Doe", "m", Country.Parse("ISL"), null, null).FromResult();
         }
 
         DateTime resolvedStartDate = meetStartDate ?? new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc);

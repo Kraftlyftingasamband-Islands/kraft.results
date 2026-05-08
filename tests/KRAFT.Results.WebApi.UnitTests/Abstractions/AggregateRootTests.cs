@@ -1,7 +1,7 @@
 using KRAFT.Results.WebApi.Features.Athletes;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -14,7 +14,7 @@ public sealed class AggregateRootTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        Country country = new();
+        Country country = Country.Parse("ISL");
         Athlete athlete = Athlete.Create(creator, "John", "Doe", "m", country, null, null).FromResult();
         athlete.DomainEvents.ShouldNotBeEmpty();
 
