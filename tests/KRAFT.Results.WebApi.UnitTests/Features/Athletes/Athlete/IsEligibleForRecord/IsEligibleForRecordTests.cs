@@ -1,7 +1,7 @@
 using KRAFT.Results.WebApi.Features.Athletes;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -115,7 +115,7 @@ public sealed class IsEligibleForRecordTests
     private static WebApi.Features.Athletes.Athlete CreateAthlete()
     {
         User creator = new UserBuilder().Build();
-        Country country = new();
+        Country country = Country.Parse("ISL");
         return WebApi.Features.Athletes.Athlete.Create(
             creator, "John", "Doe", "m", country, null, null).FromResult();
     }

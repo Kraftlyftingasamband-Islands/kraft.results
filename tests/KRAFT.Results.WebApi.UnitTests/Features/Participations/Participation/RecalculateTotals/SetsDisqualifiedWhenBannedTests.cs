@@ -1,8 +1,8 @@
 using KRAFT.Results.Contracts;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;
 using KRAFT.Results.WebApi.UnitTests.Helpers;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -102,7 +102,7 @@ public sealed class SetsDisqualifiedWhenBannedTests
         DateTime banTo)
     {
         WebApi.Features.Athletes.Athlete athlete = WebApi.Features.Athletes.Athlete.Create(
-            creator, "Jane", "Doe", "f", new Country(), null, null).FromResult();
+            creator, "Jane", "Doe", "f", Country.Parse("ISL"), null, null).FromResult();
 
         WebApi.Features.Athletes.Ban ban = new BanBuilder()
             .WithFromDate(banFrom)

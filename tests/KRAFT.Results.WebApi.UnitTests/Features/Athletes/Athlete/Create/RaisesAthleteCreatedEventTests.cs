@@ -1,8 +1,8 @@
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -15,7 +15,7 @@ public sealed class RaisesAthleteCreatedEventTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        Country country = new();
+        Country country = Country.Parse("ISL");
 
         // Act
         WebApi.Features.Athletes.Athlete athlete = WebApi.Features.Athletes.Athlete.Create(
