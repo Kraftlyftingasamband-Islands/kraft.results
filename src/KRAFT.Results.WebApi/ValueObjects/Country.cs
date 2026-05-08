@@ -131,7 +131,6 @@ internal sealed class Country : ValueObject<string>
             .Values
             .DistinctBy(r => r.ThreeLetterISORegionName)
             .Select(r => ToSummary(r.ThreeLetterISORegionName, r.EnglishName))
-            .OrderBy(c => c.Name)
             .ToList();
 
         foreach (KeyValuePair<string, (string Alpha3, string Alpha2, string EnglishName)> obsolete in ObsoleteCodes)
