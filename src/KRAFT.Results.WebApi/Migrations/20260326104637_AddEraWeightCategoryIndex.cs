@@ -10,31 +10,25 @@ namespace KRAFT.Results.WebApi.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_EraWeightCategories_EraId",
-                schema: "dbo",
-                table: "EraWeightCategories");
+            migrationBuilder.Sql("""
+                IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_EraWeightCategories_EraId' AND object_id = OBJECT_ID('dbo.EraWeightCategories'))
+                    DROP INDEX [IX_EraWeightCategories_EraId] ON [dbo].[EraWeightCategories];
 
-            migrationBuilder.CreateIndex(
-                name: "IX_EraWeightCategories_EraId_WeightCategoryId",
-                schema: "dbo",
-                table: "EraWeightCategories",
-                columns: new[] { "EraId", "WeightCategoryId" });
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_EraWeightCategories_EraId_WeightCategoryId' AND object_id = OBJECT_ID('dbo.EraWeightCategories'))
+                    CREATE INDEX [IX_EraWeightCategories_EraId_WeightCategoryId] ON [dbo].[EraWeightCategories] ([EraId], [WeightCategoryId]);
+                """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_EraWeightCategories_EraId_WeightCategoryId",
-                schema: "dbo",
-                table: "EraWeightCategories");
+            migrationBuilder.Sql("""
+                IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_EraWeightCategories_EraId_WeightCategoryId' AND object_id = OBJECT_ID('dbo.EraWeightCategories'))
+                    DROP INDEX [IX_EraWeightCategories_EraId_WeightCategoryId] ON [dbo].[EraWeightCategories];
 
-            migrationBuilder.CreateIndex(
-                name: "IX_EraWeightCategories_EraId",
-                schema: "dbo",
-                table: "EraWeightCategories",
-                column: "EraId");
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_EraWeightCategories_EraId' AND object_id = OBJECT_ID('dbo.EraWeightCategories'))
+                    CREATE INDEX [IX_EraWeightCategories_EraId] ON [dbo].[EraWeightCategories] ([EraId]);
+                """);
         }
     }
 }
