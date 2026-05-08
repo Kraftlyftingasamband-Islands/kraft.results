@@ -173,6 +173,16 @@ internal sealed class Participation : AggregateRoot
 
     internal void RecalculateTotals()
     {
+        if (Athlete is null)
+        {
+            throw new InvalidOperationException("Athlete navigation property must be loaded before calling RecalculateTotals.");
+        }
+
+        if (Meet is null)
+        {
+            throw new InvalidOperationException("Meet navigation property must be loaded before calling RecalculateTotals.");
+        }
+
         decimal bestSquat = BestGoodLift(Discipline.Squat);
         decimal bestBench = BestGoodLift(Discipline.Bench);
         decimal bestDeadlift = BestGoodLift(Discipline.Deadlift);
@@ -183,7 +193,7 @@ internal sealed class Participation : AggregateRoot
 
         bool bombedOut = bestSquat == 0 || bestBench == 0 || bestDeadlift == 0;
         Total = bombedOut ? 0 : bestSquat + bestBench + bestDeadlift;
-        Disqualified = bombedOut;
+        Disqualified = bombedOut || Athlete.HasActiveBan(DateOnly.FromDateTime(Meet.StartDate));
     }
 
     private decimal BestGoodLift(Discipline discipline)
