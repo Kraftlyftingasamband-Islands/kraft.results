@@ -10,7 +10,7 @@ internal static class ParticipationTestHelper
 {
     internal static WebApi.Features.Participations.Participation CreateParticipationWithNavigations(
         User creator,
-        DateTime meetStartDate = default,
+        DateTime? meetStartDate = null,
         WebApi.Features.Athletes.Athlete? athlete = null)
     {
         WebApi.Features.Participations.Participation participation = WebApi.Features.Participations.Participation.Create(
@@ -22,9 +22,7 @@ internal static class ParticipationTestHelper
                 creator, "John", "Doe", "m", new Country(), null, null).FromResult();
         }
 
-        DateTime resolvedStartDate = meetStartDate == default
-            ? new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc)
-            : meetStartDate;
+        DateTime resolvedStartDate = meetStartDate ?? new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc);
 
         WebApi.Features.Meets.Meet meet = WebApi.Features.Meets.Meet.Create(
             creator,

@@ -15,7 +15,7 @@ public sealed class SetsDisqualifiedTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        WebApi.Features.Participations.Participation participation = CreateParticipationWithNavigations(creator);
+        WebApi.Features.Participations.Participation participation = ParticipationTestHelper.CreateParticipationWithNavigations(creator);
 
         participation.RecordAttempt(Discipline.Squat, round: 1, weight: 100m, good: false, createdBy: "test");
         participation.RecordAttempt(Discipline.Squat, round: 2, weight: 100m, good: false, createdBy: "test");
@@ -33,7 +33,7 @@ public sealed class SetsDisqualifiedTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        WebApi.Features.Participations.Participation participation = CreateParticipationWithNavigations(creator);
+        WebApi.Features.Participations.Participation participation = ParticipationTestHelper.CreateParticipationWithNavigations(creator);
 
         participation.RecordAttempt(Discipline.Squat, round: 1, weight: 100m, good: true, createdBy: "test");
         participation.RecordAttempt(Discipline.Bench, round: 1, weight: 60m, good: true, createdBy: "test");
@@ -51,7 +51,7 @@ public sealed class SetsDisqualifiedTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        WebApi.Features.Participations.Participation participation = CreateParticipationWithNavigations(creator);
+        WebApi.Features.Participations.Participation participation = ParticipationTestHelper.CreateParticipationWithNavigations(creator);
 
         participation.RecordAttempt(Discipline.Squat, round: 1, weight: 100m, good: false, createdBy: "test");
         participation.RecordAttempt(Discipline.Squat, round: 2, weight: 100m, good: false, createdBy: "test");
@@ -69,13 +69,5 @@ public sealed class SetsDisqualifiedTests
 
         // Assert
         participation.Disqualified.ShouldBeFalse();
-    }
-
-    internal static WebApi.Features.Participations.Participation CreateParticipationWithNavigations(
-        User creator,
-        DateTime meetStartDate = default,
-        WebApi.Features.Athletes.Athlete? athlete = null)
-    {
-        return ParticipationTestHelper.CreateParticipationWithNavigations(creator, meetStartDate, athlete);
     }
 }
