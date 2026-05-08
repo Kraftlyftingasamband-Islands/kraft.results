@@ -53,16 +53,16 @@
                          class="form-input form-select"
                          aria-required="true"
                          aria-describedby="@GetAriaDescribedBy("country-error")"
-                         @bind-Value="_model.CountryId"
+                         @bind-Value="_model.CountryCode"
                          disabled="@IsLoading">
-                <option value="0">-- Veldu land --</option>
+                <option value="">-- Veldu land --</option>
                 @foreach (CountrySummary country in Countries)
                 {
                     <option value="@country.Code">@country.Name</option>
                 }
             </InputSelect>
             <div id="country-error">
-                <ValidationMessage For="@(() => _model.CountryId)" />
+                <ValidationMessage For="@(() => _model.CountryCode)" />
             </div>
         </div>
 
@@ -119,7 +119,7 @@
             _model.Title = InitialValues.Title;
             _model.TitleShort = InitialValues.TitleShort;
             _model.TitleFull = InitialValues.TitleFull;
-            _model.CountryId = InitialValues.CountryId;
+            _model.CountryCode = InitialValues.CountryCode;
             _initialized = true;
         }
     }
@@ -130,7 +130,7 @@
             _model.Title,
             _model.TitleShort,
             _model.TitleFull,
-            _model.CountryId);
+            _model.CountryCode);
 
         await OnSubmit.InvokeAsync(values);
     }
@@ -149,7 +149,7 @@
         [MaxLength(100, ErrorMessage = "Fullt nafn má ekki vera lengra en 100 stafir")]
         public string TitleFull { get; set; } = string.Empty;
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vinsamlegast veldu land")]
-        public int CountryId { get; set; }
+        [Required(ErrorMessage = "Vinsamlegast veldu land")]
+        public string CountryCode { get; set; } = string.Empty;
     }
 }

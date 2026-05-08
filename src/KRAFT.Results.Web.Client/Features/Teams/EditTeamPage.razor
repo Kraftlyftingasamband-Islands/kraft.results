@@ -65,7 +65,7 @@ else if (_errorMessage is not null)
                 team.Title,
                 team.ShortTitle,
                 team.FullTitle,
-                team.CountryId ?? 0);
+                team.CountryCode);
         }
         catch (HttpRequestException)
         {
@@ -88,7 +88,7 @@ else if (_errorMessage is not null)
                 values.Title,
                 values.TitleShort,
                 values.TitleFull,
-                values.CountryId);
+                values.CountryCode);
 
             HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/teams/{Slug}", command);
 
