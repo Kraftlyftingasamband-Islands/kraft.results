@@ -8,6 +8,7 @@ public static class Constants
     public const string Total = "Samtala";
     public const string SingeLift = "stök grein";
     public const string Powerlifting = "Kraftlyftingar";
+    public const string PushPull = "Bekkpressa og réttstaða";
 
     public static readonly char[] AgeCategoryOrder = ['S', 'J', 'O', 'M'];
 }

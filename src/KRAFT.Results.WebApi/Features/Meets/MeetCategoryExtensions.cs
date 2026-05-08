@@ -34,7 +34,7 @@ internal static class MeetCategoryExtensions
         MeetCategory.Powerlifting => Constants.Powerlifting,
         MeetCategory.Benchpress => $"{Constants.Bench} ({Constants.SingeLift})",
         MeetCategory.Deadlift => $"{Constants.Deadlift} ({Constants.SingeLift})",
-        MeetCategory.PushPull => "PushPull",
+        MeetCategory.PushPull => Constants.PushPull,
         _ => throw new ArgumentOutOfRangeException(nameof(category), category, null),
     };
 }
