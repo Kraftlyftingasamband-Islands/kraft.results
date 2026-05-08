@@ -12,7 +12,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 public sealed class GetMeetTypesTests
 {
     private const string Path = "/meets/types";
-    private const int ExpectedCount = 5;
+    private const int ExpectedCount = 4;
 
     private readonly HttpClient _unauthorizedHttpClient;
 
@@ -34,7 +34,7 @@ public sealed class GetMeetTypesTests
     }
 
     [Fact]
-    public async Task ReturnsFiveItems()
+    public async Task ReturnsFourItems()
     {
         // Arrange
 
@@ -58,6 +58,8 @@ public sealed class GetMeetTypesTests
         MeetTypeSummary first = response.ShouldNotBeNull()[0];
         first.ShouldSatisfyAllConditions(
             () => first.Id.ShouldBe(1),
-            () => first.Title.ShouldBe("Powerlifting"));
+            () => first.Title.ShouldBe("Powerlifting"),
+            () => first.DisplayName.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting),
+            () => first.Disciplines.ShouldBe(["Squat", "Bench", "Deadlift"]));
     }
 }

@@ -5,7 +5,13 @@ namespace KRAFT.Results.WebApi.Features.Meets.GetMeetTypes;
 internal sealed class GetMeetTypesHandler
 {
     private static readonly List<MeetTypeSummary> MeetTypes = Enum.GetValues<MeetCategory>()
-        .Select(c => new MeetTypeSummary((int)c, c.ToString()))
+        .Select(c => new MeetTypeSummary(
+            (int)c,
+            c.ToString(),
+            c.ToDisplayName(),
+            c.GetDisciplines()
+                .Select(d => d.ToString())
+                .ToList()))
         .ToList();
 
 #pragma warning disable CA1822, S2325 // Kept as instance method for DI resolution
