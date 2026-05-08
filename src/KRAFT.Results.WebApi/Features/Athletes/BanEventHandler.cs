@@ -55,12 +55,17 @@ internal sealed class BanEventHandler(
 
     public Task HandleAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        return domainEvent switch
+        if (domainEvent is BanAddedEvent banAddedEvent)
         {
-            BanAddedEvent addedEvent => HandleAsync(addedEvent, cancellationToken),
-            BanRemovedEvent removedEvent => HandleAsync(removedEvent, cancellationToken),
-            _ => Task.CompletedTask,
-        };
+            return HandleAsync(banAddedEvent, cancellationToken);
+        }
+
+        if (domainEvent is BanRemovedEvent banRemovedEvent)
+        {
+            return HandleAsync(banRemovedEvent, cancellationToken);
+        }
+
+        return Task.CompletedTask;
     }
 
     private static List<SlotKey> DetermineAffectedSlots(
@@ -177,6 +182,8 @@ internal sealed class BanEventHandler(
         foreach (Participation participation in affectedParticipations)
         {
             participation.RecalculateTotals();
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             await _placeComputationService.ComputePlacesAsync(participation, cancellationToken);
 
