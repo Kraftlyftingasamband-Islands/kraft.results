@@ -218,7 +218,7 @@ else
 }
 }
 
-<div class="toast-stack" aria-live="assertive">
+<div class="toast-stack" aria-live="polite">
     @foreach (ToastItem toast in _toasts)
     {
         <div class="toast-item @(toast.IsExiting ? "toast-item-exiting" : null)" @key="toast.Id">
