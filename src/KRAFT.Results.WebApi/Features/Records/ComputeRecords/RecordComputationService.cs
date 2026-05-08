@@ -80,7 +80,7 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        if (athlete.Country.Value != RecordConstants.IcelandIso3)
+        if (athlete.Country != Country.Iceland)
         {
             _logger.LogWarning(
                 "Skipping record computation: athlete {AthleteId} is not Icelandic (AttemptId: {AttemptId})",
