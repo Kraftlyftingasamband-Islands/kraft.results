@@ -1,9 +1,8 @@
-using System.Reflection;
-
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;
+using KRAFT.Results.WebApi.UnitTests.Helpers;
 
 using Shouldly;
 
@@ -36,18 +35,12 @@ public sealed class ThrowsWhenNavigationNotLoadedTests
 
         WebApi.Features.Athletes.Athlete athlete = WebApi.Features.Athletes.Athlete.Create(
             creator, "John", "Doe", "m", new Country(), null, null).FromResult();
-        SetProperty(participation, nameof(WebApi.Features.Participations.Participation.Athlete), athlete);
+        ParticipationTestHelper.SetProperty(participation, nameof(WebApi.Features.Participations.Participation.Athlete), athlete);
 
         // Act
         Action act = () => participation.RecalculateTotals();
 
         // Assert
         Should.Throw<InvalidOperationException>(act);
-    }
-
-    private static void SetProperty<T>(object target, string propertyName, T value)
-    {
-        PropertyInfo property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!;
-        property.SetValue(target, value);
     }
 }

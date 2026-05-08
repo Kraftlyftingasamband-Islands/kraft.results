@@ -2,6 +2,7 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.UnitTests.Builders;
+using KRAFT.Results.WebApi.UnitTests.Helpers;
 
 using Shouldly;
 
@@ -22,7 +23,7 @@ public sealed class SetsDisqualifiedWhenBannedTests
             banTo: new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc));
 
         DateTime meetDate = new(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc);
-        WebApi.Features.Participations.Participation participation = SetsDisqualifiedTests.CreateParticipationWithNavigations(
+        WebApi.Features.Participations.Participation participation = ParticipationTestHelper.CreateParticipationWithNavigations(
             creator, meetDate, athlete);
 
         participation.RecordAttempt(Discipline.Squat, round: 1, weight: 100m, good: true, createdBy: "test");
@@ -50,7 +51,7 @@ public sealed class SetsDisqualifiedWhenBannedTests
             banTo: new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc));
 
         DateTime meetDate = new(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc);
-        WebApi.Features.Participations.Participation participation = SetsDisqualifiedTests.CreateParticipationWithNavigations(
+        WebApi.Features.Participations.Participation participation = ParticipationTestHelper.CreateParticipationWithNavigations(
             creator, meetDate, athlete);
 
         participation.RecordAttempt(Discipline.Squat, round: 1, weight: 100m, good: true, createdBy: "test");
@@ -77,7 +78,7 @@ public sealed class SetsDisqualifiedWhenBannedTests
             banTo: new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc));
 
         DateTime meetDate = new(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc);
-        WebApi.Features.Participations.Participation participation = SetsDisqualifiedTests.CreateParticipationWithNavigations(
+        WebApi.Features.Participations.Participation participation = ParticipationTestHelper.CreateParticipationWithNavigations(
             creator, meetDate, athlete);
 
         // All squat attempts failed — bomb-out
