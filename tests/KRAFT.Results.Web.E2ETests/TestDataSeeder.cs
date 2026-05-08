@@ -23,7 +23,7 @@ internal static class TestDataSeeder
     public const string SeededMeetSlug = TestSeedConstants.Meet.Slug;
 
     private const string SeededMeetTitle = TestSeedConstants.Meet.Title;
-    private const int SeededCountryId = TestSeedConstants.Country.Id;
+    private const string SeededCountryCode = TestSeedConstants.Country.Code;
 
     private const decimal SquatWeight = 200.0m;
     private const decimal BenchWeight = 130.0m;
@@ -49,7 +49,6 @@ internal static class TestDataSeeder
         await connection.OpenAsync(cancellationToken);
 
         await ExecuteSqlAsync(connection, BaseSeedSql.CleanupSql(), cancellationToken);
-        await ExecuteSqlAsync(connection, BaseSeedSql.SeedCountry(), cancellationToken);
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedUsersAndRoles(), cancellationToken);
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedAgeCategories(), cancellationToken);
         await ExecuteSqlAsync(connection, BaseSeedSql.SeedWeightCategories(), cancellationToken);
@@ -156,7 +155,7 @@ internal static class TestDataSeeder
             Title: TestSeedConstants.Team.Title,
             TitleShort: TestSeedConstants.Team.TitleShort,
             TitleFull: TestSeedConstants.Team.TitleFull,
-            CountryId: SeededCountryId);
+            CountryCode: SeededCountryCode);
 
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(
             "/teams", command, cancellationToken);
@@ -176,7 +175,7 @@ internal static class TestDataSeeder
         CreateAthleteCommand command = new(
             FirstName: TestSeedConstants.Athlete.FirstName,
             LastName: TestSeedConstants.Athlete.LastName,
-            CountryId: SeededCountryId,
+            CountryCode: SeededCountryCode,
             TeamId: teamId,
             DateOfBirth: TestSeedConstants.Athlete.DateOfBirth,
             Gender: TestSeedConstants.Athlete.Gender);
