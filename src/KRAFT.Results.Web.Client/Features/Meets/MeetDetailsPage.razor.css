@@ -131,3 +131,71 @@
 .card-section {
     margin-block-end: 1.5rem;
 }
+
+/* ===== Toast stack ===== */
+
+.toast-stack {
+    position: fixed;
+    inset-block-end: 1.25rem;
+    inset-inline-end: 1.25rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+    max-width: 24rem;
+}
+
+.toast-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-danger);
+    color: var(--color-white);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+    pointer-events: auto;
+    transition: opacity var(--transition-base) ease,
+                transform var(--transition-base) ease;
+}
+
+.toast-item-exiting {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.75;
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast-close:focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+}
+
+@media (max-width: 30rem) {
+    .toast-stack {
+        inset-inline-start: 1.25rem;
+        max-width: none;
+    }
+}

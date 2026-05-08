@@ -6,6 +6,8 @@
 @using KRAFT.Results.Web.Client.Features.TeamCompetition
 @using Microsoft.AspNetCore.Components.Authorization
 
+@implements IAsyncDisposable
+
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -149,7 +151,8 @@ else
                                        DesktopGridTemplate="@ResultsGridTemplate"
                                        IsAdmin="_isAdmin"
                                        OnParticipantRemoved="ReloadParticipations"
-                                       OnBodyWeightUpdated="ReloadParticipations" />
+                                       OnBodyWeightUpdated="ReloadParticipations"
+                                       OnSaveError="AddToast" />
                 }
             }
         </section>
@@ -215,6 +218,16 @@ else
 }
 }
 
+<div class="toast-stack" aria-live="polite">
+    @foreach (ToastItem toast in _toasts)
+    {
+        <div class="toast-item @(toast.IsExiting ? "toast-item-exiting" : null)" role="alert">
+            <span>@toast.Message</span>
+            <button class="toast-close" @onclick="() => DismissToast(toast.Id)" aria-label="Loka">×</button>
+        </div>
+    }
+</div>
+
 <ConfirmDialog @ref="_deleteDialog"
                Id="delete-meet-dialog"
                Title="Eyða móti"
@@ -225,6 +238,18 @@ else
                IsLoading="_isDeleting" />
 
 @code {
+    private sealed record ToastItem(Guid Id, string Message)
+    {
+        public bool IsExiting { get; set; }
+    }
+
+    private const int MaxToasts = 5;
+    private const int ToastDurationMs = 4000;
+    private const int ToastExitDurationMs = 300;
+
+    private readonly List<ToastItem> _toasts = [];
+    private readonly Dictionary<Guid, CancellationTokenSource> _toastTimers = [];
+
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
     private bool _isLoading = true;
@@ -259,6 +284,76 @@ else
                 ? $"22px 280px {clubPart}{discPart} 63px 68px"
                 : $"22px 280px {clubPart}{discPart} 63px";
         }
+    }
+
+    private async Task AddToast(string message)
+    {
+        if (_toasts.Count >= MaxToasts)
+        {
+            ToastItem oldest = _toasts[0];
+            await RemoveToast(oldest.Id);
+        }
+
+        Guid id = Guid.NewGuid();
+        CancellationTokenSource cts = new();
+        _toastTimers[id] = cts;
+        _toasts.Add(new ToastItem(id, message));
+        StateHasChanged();
+
+        try
+        {
+            await Task.Delay(ToastDurationMs, cts.Token);
+            await RemoveToast(id);
+        }
+        catch (OperationCanceledException)
+        {
+            // Dismissed manually or page disposed
+        }
+    }
+
+    private async Task DismissToast(Guid id)
+    {
+        if (_toastTimers.TryGetValue(id, out CancellationTokenSource? cts))
+        {
+            await cts.CancelAsync();
+        }
+
+        await RemoveToast(id);
+    }
+
+    private async Task RemoveToast(Guid id)
+    {
+        ToastItem? toast = _toasts.FirstOrDefault(t => t.Id == id);
+        if (toast is null)
+        {
+            return;
+        }
+
+        toast.IsExiting = true;
+        StateHasChanged();
+
+        await Task.Delay(ToastExitDurationMs);
+
+        _toasts.Remove(toast);
+
+        if (_toastTimers.TryGetValue(id, out CancellationTokenSource? cts))
+        {
+            cts.Dispose();
+            _toastTimers.Remove(id);
+        }
+
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        foreach (CancellationTokenSource cts in _toastTimers.Values)
+        {
+            await cts.CancelAsync();
+            cts.Dispose();
+        }
+
+        _toastTimers.Clear();
     }
 
     private async Task ReloadMeetRecords()
