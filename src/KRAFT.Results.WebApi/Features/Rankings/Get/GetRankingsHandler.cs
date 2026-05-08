@@ -14,7 +14,7 @@ internal sealed class GetRankingsHandler
         [MeetCategory.Powerlifting, MeetCategory.Benchpress, MeetCategory.PushPull];
 
     private static readonly MeetCategory[] SquatMeetCategories =
-        [MeetCategory.Powerlifting, MeetCategory.Squat];
+        [MeetCategory.Powerlifting];
 
     private static readonly MeetCategory[] DeadliftMeetCategories =
         [MeetCategory.Powerlifting, MeetCategory.Deadlift];

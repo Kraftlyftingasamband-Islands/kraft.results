@@ -28,7 +28,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
                 .OrderByDescending(a => a.Weight)
                 .Select(a => new PersonalBest(
                     a.Participation.Meet.IsRaw,
-                    a.Participation.Meet.Category != MeetCategory.Powerlifting && a.Participation.Meet.Category != MeetCategory.Squat,
+                    a.Participation.Meet.Category != MeetCategory.Powerlifting,
                     a.Discipline,
                     a.Weight,
                     a.Participation.WeightCategory.Title,

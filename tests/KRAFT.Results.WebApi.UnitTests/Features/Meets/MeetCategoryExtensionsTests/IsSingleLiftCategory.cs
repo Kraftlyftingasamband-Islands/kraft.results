@@ -11,7 +11,6 @@ public sealed class IsSingleLiftCategory
     [InlineData(3, true)]
     [InlineData(5, true)]
     [InlineData(1, false)]
-    [InlineData(4, false)]
     public void ReturnsExpected(int categoryId, bool expected)
     {
         // Arrange

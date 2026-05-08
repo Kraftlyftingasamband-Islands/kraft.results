@@ -8,7 +8,6 @@ public sealed class IsFullMeet
 {
     [Theory]
     [InlineData(1, true)]
-    [InlineData(4, true)]
     [InlineData(2, false)]
     [InlineData(3, false)]
     [InlineData(5, false)]

@@ -100,19 +100,6 @@ public sealed class MapDisciplineToRecordCategory
     }
 
     [Fact]
-    public void Deadlift_WhenSquatCategory_ReturnsDeadlift()
-    {
-        // Arrange
-        MeetCategory category = MeetCategory.Squat;
-
-        // Act
-        RecordCategory result = category.MapDisciplineToRecordCategory(Discipline.Deadlift);
-
-        // Assert
-        result.ShouldBe(RecordCategory.Deadlift);
-    }
-
-    [Fact]
     public void None_ReturnsNone()
     {
         // Arrange

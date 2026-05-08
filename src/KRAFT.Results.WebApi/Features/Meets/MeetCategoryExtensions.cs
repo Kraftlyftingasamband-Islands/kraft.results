@@ -17,7 +17,7 @@ internal static class MeetCategoryExtensions
         category is MeetCategory.Benchpress or MeetCategory.PushPull;
 
     internal static bool IsFullMeet(this MeetCategory category) =>
-        category is MeetCategory.Powerlifting or MeetCategory.Squat;
+        category is MeetCategory.Powerlifting;
 
     internal static bool IsSingleLiftCategory(this MeetCategory category) =>
         !category.IsFullMeet();
@@ -38,7 +38,6 @@ internal static class MeetCategoryExtensions
         MeetCategory.Powerlifting => Constants.Powerlifting,
         MeetCategory.Benchpress => $"{Constants.Bench} ({Constants.SingeLift})",
         MeetCategory.Deadlift => $"{Constants.Deadlift} ({Constants.SingeLift})",
-        MeetCategory.Squat => $"{Constants.Squat} ({Constants.SingeLift})",
         MeetCategory.PushPull => "PushPull",
         _ => category.ToString(),
     };
