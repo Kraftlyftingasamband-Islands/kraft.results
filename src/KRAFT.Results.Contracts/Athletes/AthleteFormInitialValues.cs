@@ -5,5 +5,5 @@ public sealed record class AthleteFormInitialValues(
     string LastName,
     DateOnly? DateOfBirth,
     string Gender,
-    int CountryId,
+    string CountryCode,
     int TeamId);
