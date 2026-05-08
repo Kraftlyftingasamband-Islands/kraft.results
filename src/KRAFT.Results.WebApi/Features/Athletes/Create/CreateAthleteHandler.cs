@@ -1,9 +1,9 @@
 ﻿using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -43,16 +43,20 @@ internal sealed class CreateAthleteHandler
             return AthleteErrors.AlreadyExists;
         }
 
-        if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
+        Result<Country> countryResult = Country.FromCode(command.CountryCode);
+
+        if (countryResult.IsFailure)
         {
             _logger.LogWarning(
-                "Failed to create athlete {First} {Last}: Country with Id {CountryId} does not exist",
+                "Failed to create athlete {First} {Last}: Country code '{CountryCode}' is invalid",
                 command.FirstName,
                 command.LastName,
-                command.CountryId);
+                command.CountryCode);
 
-            return CountryErrors.CountryDoesNotExist(command.CountryId);
+            return countryResult.Error;
         }
+
+        Country country = countryResult.FromResult();
 
         Team? team = command.TeamId is int teamId
             ? await GetTeamAsync(teamId, cancellationToken)

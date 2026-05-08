@@ -1,8 +1,8 @@
 ﻿using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -32,15 +32,19 @@ internal sealed class CreateTeamHandler
 
         User creator = creatorResult.FromResult();
 
-        if (await _dbContext.GetCountryAsync(command.CountryId, cancellationToken) is not Country country)
+        Result<Country> countryResult = Country.FromCode(command.CountryCode);
+
+        if (countryResult.IsFailure)
         {
             _logger.LogWarning(
-                "Failed to create team {Title}: Country with Id {CountryId} does not exist",
+                "Failed to create team {Title}: Country code '{CountryCode}' is invalid",
                 command.Title,
-                command.CountryId);
+                command.CountryCode);
 
-            return CountryErrors.CountryDoesNotExist(command.CountryId);
+            return countryResult.Error;
         }
+
+        Country country = countryResult.FromResult();
 
         if (await _dbContext.Set<Team>().AnyAsync(x => x.TitleShort == command.TitleShort, cancellationToken: cancellationToken))
         {
