@@ -45,6 +45,7 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
     {
         List<Participation> ranked = groupParticipations
             .Where(p => p.Total > 0)
+            .Where(p => !p.Disqualified)
             .OrderByDescending(p => p.Total)
             .ThenBy(p => p.Weight.Value)
             .ThenBy(p => p.LotNo)
@@ -58,7 +59,7 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
             rank++;
         }
 
-        foreach (Participation p in groupParticipations.Where(p => p.Total == 0))
+        foreach (Participation p in groupParticipations.Where(p => p.Total == 0 || p.Disqualified))
         {
             p.UpdateRanking(0);
         }

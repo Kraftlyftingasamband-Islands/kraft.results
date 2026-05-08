@@ -50,6 +50,8 @@ internal sealed class RecordAttemptHandler
         Participation? participation = await _dbContext.Set<Participation>()
             .Include(p => p.Attempts)
             .Include(p => p.Meet)
+            .Include(p => p.Athlete)
+            .ThenInclude(a => a.Bans)
             .Where(p => p.ParticipationId == participationId)
             .FirstOrDefaultAsync(
                 p => p.MeetId == meetId,
