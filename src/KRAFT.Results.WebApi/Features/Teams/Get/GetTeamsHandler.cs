@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +16,7 @@ internal sealed class GetTeamsHandler
 
     public Task<List<TeamSummary>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<Team>()
-        .Where(x => x.Country.Value == "ISL")
+        .Where(x => x.Country == Country.Iceland)
         .OrderBy(x => x.Title)
         .Select(x => new TeamSummary(
             x.Slug,

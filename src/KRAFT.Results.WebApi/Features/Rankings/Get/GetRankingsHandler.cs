@@ -42,7 +42,7 @@ internal sealed class GetRankingsHandler
 
         IQueryable<Participation> query = _dbContext.Set<Participation>()
             .Where(p => !p.Disqualified)
-            .Where(p => p.Athlete.Country.Value == "ISL");
+            .Where(p => p.Athlete.Country == Country.Iceland);
 
         query = disciplineKey switch
         {
