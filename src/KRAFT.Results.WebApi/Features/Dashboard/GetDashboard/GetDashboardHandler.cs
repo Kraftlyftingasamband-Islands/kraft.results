@@ -88,7 +88,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
     {
         List<RawRankingRow> rows = await dbContext.Set<Participation>()
             .Where(p => !p.Disqualified)
-            .Where(p => p.Athlete.Country.Value == "ISL")
+            .Where(p => p.Athlete.Country == Country.Iceland)
             .Where(p => p.Meet.IsRaw)
             .Where(p => p.Meet.Category == MeetCategory.Powerlifting)
             .Where(p => p.Meet.StartDate.Year == year)

@@ -8,6 +8,7 @@ using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -42,9 +43,6 @@ internal sealed class RecordComputationService(
             .Include(a => a.Participation)
                 .ThenInclude(p => p.Athlete)
                     .ThenInclude(a => a.Bans)
-            .Include(a => a.Participation)
-                .ThenInclude(p => p.Athlete)
-                    .ThenInclude(a => a.Country)
             .Include(a => a.Participation)
                 .ThenInclude(p => p.AgeCategory)
             .FirstOrDefaultAsync(a => a.AttemptId == attemptId, cancellationToken);
@@ -345,7 +343,7 @@ internal sealed class RecordComputationService(
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
                 .Where(a => a.Participation.Meet.RecordsPossible)
-                .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
+                .Where(a => a.Participation.Athlete.Country == Country.Iceland)
                 .Where(a => weightCategoryIds.Contains(
                     a.Participation.WeightCategoryId))
                 .Where(a => isRawValues.Contains(
@@ -431,7 +429,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
-            .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country == Country.Iceland)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
@@ -489,7 +487,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
-            .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country == Country.Iceland)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))

@@ -85,7 +85,18 @@ namespace KRAFT.Results.WebApi.Migrations
                 schema: "dbo",
                 table: "Teams");
 
-            // Step 8: Drop old CountryId columns
+            // Step 8: Drop indexes that depend on CountryId (must precede column drop)
+            migrationBuilder.DropIndex(
+                name: "_dta_index_Athletes_20_971150505__K8_K1",
+                schema: "dbo",
+                table: "Athletes");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Teams_CountryId",
+                schema: "dbo",
+                table: "Teams");
+
+            // Step 9: Drop old CountryId columns
             migrationBuilder.DropColumn(
                 name: "CountryId",
                 schema: "dbo",
@@ -94,18 +105,6 @@ namespace KRAFT.Results.WebApi.Migrations
 
             migrationBuilder.DropColumn(
                 name: "CountryId",
-                schema: "dbo",
-                table: "Teams");
-
-            // Step 9: Drop old index that referenced CountryId
-            migrationBuilder.DropIndex(
-                name: "_dta_index_Athletes_20_971150505__K8_K1",
-                schema: "dbo",
-                table: "Athletes");
-
-            // Also drop the Teams CountryId index
-            migrationBuilder.DropIndex(
-                name: "IX_Teams_CountryId",
                 schema: "dbo",
                 table: "Teams");
 

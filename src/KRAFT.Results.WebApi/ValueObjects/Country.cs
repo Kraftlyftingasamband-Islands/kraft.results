@@ -99,6 +99,8 @@ internal sealed class Country : ValueObject<string>
 
     public string DisplayName => IcelandicName;
 
+    internal static Country Iceland { get; } = Parse("ISL");
+
     internal static Result<Country> FromCode(string code)
     {
         if (string.IsNullOrWhiteSpace(code))

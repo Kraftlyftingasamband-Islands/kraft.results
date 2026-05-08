@@ -8,6 +8,7 @@ using KRAFT.Results.WebApi.Features.Attempts;
 using KRAFT.Results.WebApi.Features.Eras;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Participations;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -63,7 +64,7 @@ internal sealed class BackfillRecordsJob(
                     .ThenInclude(p => p.AgeCategory)
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
-                .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
+                .Where(a => a.Participation.Athlete.Country == Country.Iceland)
                 .Where(a => a.Participation.Meet.RecordsPossible)
                 .Where(a => a.Participation.Meet.IsRaw == group.Key.IsRaw)
                 .Where(a => a.Participation.WeightCategoryId == group.Key.WeightCategoryId)
@@ -225,7 +226,7 @@ internal sealed class BackfillRecordsJob(
             .AsNoTracking()
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
-            .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country == Country.Iceland)
             .Where(a => a.Participation.Meet.RecordsPossible)
             .Select(a => new AttemptProjection(
                 a.Discipline,
@@ -296,7 +297,7 @@ internal sealed class BackfillRecordsJob(
 
         List<TotalProjection> totalProjections = await dbContext.Set<Participation>()
             .AsNoTracking()
-            .Where(p => p.Athlete.Country.Value == RecordConstants.IcelandIso3)
+            .Where(p => p.Athlete.Country == Country.Iceland)
             .Where(p => p.Meet.RecordsPossible)
             .Where(p => p.Total > 0)
             .Select(p => new TotalProjection(
