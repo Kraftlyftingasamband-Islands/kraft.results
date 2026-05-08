@@ -157,13 +157,6 @@ public sealed class CollectionFixture : IAsyncLifetime
 
     private static async Task SeedBaseDataAsync(ResultsDbContext dbContext)
     {
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedCountry());
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            IF NOT EXISTS (SELECT 1 FROM Countries WHERE ISO3 = 'NOR')
-                INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
-                VALUES (2, 'NO', 'NOR', 'Norway');
-            """);
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedUsersAndRoles());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedTeam());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAthlete());

@@ -4,9 +4,7 @@ public static class TestSeedConstants
 {
     public static class Country
     {
-        public const int Id = 1;
-        public const string ISO2 = "IS";
-        public const string ISO3 = "ISL";
+        public const string Code = "ISL";
         public const string Name = "Iceland";
     }
 

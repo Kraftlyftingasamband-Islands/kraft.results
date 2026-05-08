@@ -7,7 +7,7 @@ internal sealed class UpdateTeamCommandBuilder
     private string _title = Guid.NewGuid().ToString();
     private string _titleShort = UniqueShortCode.Next();
     private string _titleFull = Guid.NewGuid().ToString();
-    private int _countryId = 1;
+    private string _countryCode = "ISL";
 
     public UpdateTeamCommandBuilder WithTitle(string title)
     {
@@ -27,12 +27,12 @@ internal sealed class UpdateTeamCommandBuilder
         return this;
     }
 
-    public UpdateTeamCommandBuilder WithCountryId(int countryId)
+    public UpdateTeamCommandBuilder WithCountryCode(string countryCode)
     {
-        _countryId = countryId;
+        _countryCode = countryCode;
         return this;
     }
 
     public UpdateTeamCommand Build() =>
-        new(_title, _titleShort, _titleFull, _countryId);
+        new(_title, _titleShort, _titleFull, _countryCode);
 }
