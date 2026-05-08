@@ -4,8 +4,6 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Globalization
 
-@implements IAsyncDisposable
-
 @inject HttpClient HttpClient
 @inject IJSRuntime JS
 
@@ -186,14 +184,6 @@
                ErrorMessage="@_removeErrorMessage"
                IsLoading="_isRemoving" />
 
-@if (_saveErrorMessage is not null)
-{
-    <div class="attempt-save-toast" role="alert">
-        <span>@_saveErrorMessage</span>
-        <button class="attempt-save-toast-close" @onclick="DismissSaveError" aria-label="Loka">×</button>
-    </div>
-}
-
 @code {
     private EditBodyWeightDialog _editDialog = null!;
     private ConfirmDialog _removeDialog = null!;
@@ -208,8 +198,6 @@
     private readonly Dictionary<(Discipline, short), string> _attemptErrors = [];
     private MeetParticipation? _lastParticipation;
     private MeetParticipation? _freshParticipation;
-    private string? _saveErrorMessage;
-    private CancellationTokenSource? _errorDismissCtx;
 
     [Parameter, EditorRequired]
     public MeetParticipation Participation { get; init; } = null!;
@@ -234,6 +222,9 @@
 
     [Parameter]
     public EventCallback OnBodyWeightUpdated { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSaveError { get; set; }
 
     private string _metaLine = string.Empty;
     private string _rankDisplay = string.Empty;
@@ -463,7 +454,7 @@
             if (!response.IsSuccessStatusCode)
             {
                 _savedAttempts.Remove((discipline, round));
-                await ShowSaveErrorToast();
+                await OnSaveError.InvokeAsync("Villa kom upp. Reyndu aftur.");
                 return;
             }
 
@@ -473,37 +464,8 @@
         catch (HttpRequestException)
         {
             _savedAttempts.Remove((discipline, round));
-            await ShowSaveErrorToast();
+            await OnSaveError.InvokeAsync("Villa kom upp. Reyndu aftur.");
         }
-    }
-
-    private async Task ShowSaveErrorToast()
-    {
-        if (_errorDismissCtx is not null)
-        {
-            await _errorDismissCtx.CancelAsync();
-            _errorDismissCtx.Dispose();
-        }
-        _errorDismissCtx = new CancellationTokenSource();
-        _saveErrorMessage = "Villa kom upp. Reyndu aftur.";
-        StateHasChanged();
-
-        try
-        {
-            await Task.Delay(4000, _errorDismissCtx.Token);
-            _saveErrorMessage = null;
-            StateHasChanged();
-        }
-        catch (OperationCanceledException)
-        {
-            // Dismissed manually or component disposed
-        }
-    }
-
-    private void DismissSaveError()
-    {
-        _errorDismissCtx?.Cancel();
-        _saveErrorMessage = null;
     }
 
     private decimal GetEffectiveAttemptWeight(Discipline discipline, short round)
@@ -627,14 +589,5 @@
 
     private string GetInputId(Discipline discipline, short round) =>
         $"attempt-input-{Participation.ParticipationId}-{(int)discipline}-{round}";
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_errorDismissCtx is not null)
-        {
-            await _errorDismissCtx.CancelAsync();
-            _errorDismissCtx.Dispose();
-        }
-    }
 
 }
