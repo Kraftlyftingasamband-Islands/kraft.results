@@ -145,7 +145,6 @@
     pointer-events: none;
     max-width: 24rem;
     max-height: calc(100dvh - 2.5rem);
-    overflow-y: auto;
 }
 
 .toast-item {
@@ -168,6 +167,11 @@
 .toast-item-exiting {
     opacity: 0;
     transform: translateX(100%);
+}
+
+.toast-item > span:first-child {
+    flex: 1;
+    min-width: 0;
 }
 
 .toast-close {
@@ -215,6 +219,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .toast-item {
+        animation: none;
+    }
+
     .toast-item-exiting {
         transform: none;
     }
