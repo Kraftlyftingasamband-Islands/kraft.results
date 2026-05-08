@@ -39,7 +39,7 @@ internal sealed class Team : AggregateRoot
 
     public ICollection<Athlete> Athletes { get; } = [];
 
-    public Country Country { get; private set; } = default!;
+    public Country Country { get; private set; } = Country.Iceland;
 
     public ICollection<Participation> Participations { get; } = [];
 

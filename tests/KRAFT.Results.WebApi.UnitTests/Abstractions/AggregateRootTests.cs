@@ -14,7 +14,7 @@ public sealed class AggregateRootTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
         Athlete athlete = Athlete.Create(creator, "John", "Doe", "m", country, null, null).FromResult();
         athlete.DomainEvents.ShouldNotBeEmpty();
 

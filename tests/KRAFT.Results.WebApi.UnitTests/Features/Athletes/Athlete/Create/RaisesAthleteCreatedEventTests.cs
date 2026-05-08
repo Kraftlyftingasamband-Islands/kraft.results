@@ -15,7 +15,7 @@ public sealed class RaisesAthleteCreatedEventTests
     {
         // Arrange
         User creator = new UserBuilder().Build();
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act
         WebApi.Features.Athletes.Athlete athlete = WebApi.Features.Athletes.Athlete.Create(

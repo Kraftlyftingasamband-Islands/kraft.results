@@ -115,7 +115,7 @@ public sealed class HasActiveBanTests
     private static WebApi.Features.Athletes.Athlete CreateAthlete()
     {
         User creator = new UserBuilder().Build();
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
         return WebApi.Features.Athletes.Athlete.Create(
             creator, "John", "Doe", "m", country, null, null).FromResult();
     }

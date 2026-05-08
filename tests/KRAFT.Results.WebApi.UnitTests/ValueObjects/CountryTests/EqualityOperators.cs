@@ -10,8 +10,8 @@ public sealed class EqualityOperators
     public void EqualOperator_ReturnsTrue_WhenSameCode()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
-        Country b = Country.Parse("ISL");
+        Country a = Country.Iceland;
+        Country b = Country.Iceland;
 
         // Act & Assert
         (a == b).ShouldBeTrue();
@@ -21,7 +21,7 @@ public sealed class EqualityOperators
     public void InequalityOperator_ReturnsTrue_WhenDifferentCode()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
+        Country a = Country.Iceland;
         Country b = Country.Parse("NOR");
 
         // Act & Assert
@@ -32,7 +32,7 @@ public sealed class EqualityOperators
     public void EqualOperator_ReturnsFalse_WhenOneIsNull()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
+        Country a = Country.Iceland;
         Country? b = null;
 
         // Act & Assert

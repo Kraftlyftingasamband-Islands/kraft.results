@@ -22,9 +22,9 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
             .HasColumnName("CountryCode")
             .HasMaxLength(3)
             .IsFixedLength()
-            .IsUnicode(true)
+            .IsUnicode(false)
             .IsRequired()
-            .HasDefaultValue(Country.Parse("ISL"), "DF_Athletes_CountryCode");
+            .HasDefaultValue(Country.Iceland, "DF_Athletes_CountryCode");
 
         builder.Property(e => e.CreatedBy)
             .HasMaxLength(50)
