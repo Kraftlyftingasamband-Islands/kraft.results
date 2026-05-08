@@ -7,20 +7,15 @@ internal static class MeetCategoryExtensions
 {
     internal static IReadOnlyList<Discipline> GetDisciplines(this MeetCategory category) => category switch
     {
+        MeetCategory.Powerlifting => [Discipline.Squat, Discipline.Bench, Discipline.Deadlift],
         MeetCategory.Benchpress => [Discipline.Bench],
         MeetCategory.Deadlift => [Discipline.Deadlift],
         MeetCategory.PushPull => [Discipline.Bench, Discipline.Deadlift],
-        _ => [Discipline.Squat, Discipline.Bench, Discipline.Deadlift],
+        _ => throw new ArgumentOutOfRangeException(nameof(category), category, null),
     };
 
     internal static bool IsBenchCategory(this MeetCategory category) =>
         category is MeetCategory.Benchpress or MeetCategory.PushPull;
-
-    internal static bool IsFullMeet(this MeetCategory category) =>
-        category is MeetCategory.Powerlifting;
-
-    internal static bool IsSingleLiftCategory(this MeetCategory category) =>
-        !category.IsFullMeet();
 
     internal static RecordCategory MapDisciplineToRecordCategory(
         this MeetCategory category,
@@ -28,9 +23,10 @@ internal static class MeetCategoryExtensions
         discipline switch
         {
             Discipline.Squat => RecordCategory.Squat,
-            Discipline.Bench => category.IsFullMeet() ? RecordCategory.Bench : RecordCategory.BenchSingle,
-            Discipline.Deadlift => category.IsFullMeet() ? RecordCategory.Deadlift : RecordCategory.DeadliftSingle,
-            _ => RecordCategory.None,
+            Discipline.Bench => category is MeetCategory.Powerlifting ? RecordCategory.Bench : RecordCategory.BenchSingle,
+            Discipline.Deadlift => category is MeetCategory.Powerlifting ? RecordCategory.Deadlift : RecordCategory.DeadliftSingle,
+            Discipline.None => RecordCategory.None,
+            _ => throw new ArgumentOutOfRangeException(nameof(discipline), discipline, null),
         };
 
     internal static string ToDisplayName(this MeetCategory category) => category switch
@@ -39,6 +35,6 @@ internal static class MeetCategoryExtensions
         MeetCategory.Benchpress => $"{Constants.Bench} ({Constants.SingeLift})",
         MeetCategory.Deadlift => $"{Constants.Deadlift} ({Constants.SingeLift})",
         MeetCategory.PushPull => "PushPull",
-        _ => category.ToString(),
+        _ => throw new ArgumentOutOfRangeException(nameof(category), category, null),
     };
 }
