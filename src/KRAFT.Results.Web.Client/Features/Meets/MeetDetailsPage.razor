@@ -218,12 +218,12 @@ else
 }
 }
 
-<div class="toast-stack" aria-live="polite">
+<div class="toast-stack" aria-live="assertive">
     @foreach (ToastItem toast in _toasts)
     {
-        <div class="toast-item @(toast.IsExiting ? "toast-item-exiting" : null)" role="alert">
+        <div class="toast-item @(toast.IsExiting ? "toast-item-exiting" : null)" @key="toast.Id">
             <span>@toast.Message</span>
-            <button class="toast-close" @onclick="() => DismissToast(toast.Id)" aria-label="Loka">×</button>
+            <button class="toast-close" @onclick="() => DismissToast(toast.Id)" aria-label="Loka"><span aria-hidden="true">×</span></button>
         </div>
     }
 </div>
@@ -238,8 +238,10 @@ else
                IsLoading="_isDeleting" />
 
 @code {
-    private sealed record ToastItem(Guid Id, string Message)
+    private sealed class ToastItem(Guid Id, string Message)
     {
+        public Guid Id { get; } = Id;
+        public string Message { get; } = Message;
         public bool IsExiting { get; set; }
     }
 
@@ -249,6 +251,7 @@ else
 
     private readonly List<ToastItem> _toasts = [];
     private readonly Dictionary<Guid, CancellationTokenSource> _toastTimers = [];
+    private readonly CancellationTokenSource _disposeCts = new();
 
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
@@ -291,7 +294,14 @@ else
         if (_toasts.Count >= MaxToasts)
         {
             ToastItem oldest = _toasts[0];
-            await RemoveToast(oldest.Id);
+            if (_toastTimers.TryGetValue(oldest.Id, out CancellationTokenSource? oldestCts))
+            {
+                await oldestCts.CancelAsync();
+                oldestCts.Dispose();
+                _toastTimers.Remove(oldest.Id);
+            }
+
+            _toasts.Remove(oldest);
         }
 
         Guid id = Guid.NewGuid();
@@ -324,7 +334,7 @@ else
     private async Task RemoveToast(Guid id)
     {
         ToastItem? toast = _toasts.FirstOrDefault(t => t.Id == id);
-        if (toast is null)
+        if (toast is null || toast.IsExiting)
         {
             return;
         }
@@ -332,7 +342,15 @@ else
         toast.IsExiting = true;
         StateHasChanged();
 
-        await Task.Delay(ToastExitDurationMs);
+        try
+        {
+            await Task.Delay(ToastExitDurationMs, _disposeCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Page disposed — stop without further UI updates
+            return;
+        }
 
         _toasts.Remove(toast);
 
@@ -347,6 +365,8 @@ else
 
     public async ValueTask DisposeAsync()
     {
+        await _disposeCts.CancelAsync();
+
         foreach (CancellationTokenSource cts in _toastTimers.Values)
         {
             await cts.CancelAsync();
@@ -354,6 +374,8 @@ else
         }
 
         _toastTimers.Clear();
+        _toasts.Clear();
+        _disposeCts.Dispose();
     }
 
     private async Task ReloadMeetRecords()
