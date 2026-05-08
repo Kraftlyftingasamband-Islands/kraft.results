@@ -23,8 +23,7 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
         {
             x.Date,
             IsClassic = x.Attempt!.Participation.Meet.IsRaw,
-            IsSingleLift = x.Attempt!.Participation.Meet.Category != MeetCategory.Powerlifting
-                && x.Attempt!.Participation.Meet.Category != MeetCategory.Squat,
+            IsSingleLift = x.Attempt!.Participation.Meet.Category != MeetCategory.Powerlifting,
             WeightCategory = x.WeightCategory.Title,
             AgeCategory = x.AgeCategory.Slug ?? x.AgeCategory.Title,
             x.Attempt!.Participation.Total,

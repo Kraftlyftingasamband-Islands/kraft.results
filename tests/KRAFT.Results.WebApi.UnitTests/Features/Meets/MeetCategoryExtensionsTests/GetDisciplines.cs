@@ -52,22 +52,6 @@ public sealed class GetDisciplines
     }
 
     [Fact]
-    public void Squat_ReturnsAllThree()
-    {
-        // Arrange
-        MeetCategory category = MeetCategory.Squat;
-
-        // Act
-        IReadOnlyList<Discipline> result = category.GetDisciplines();
-
-        // Assert
-        result.Count.ShouldBe(3);
-        result[0].ShouldBe(Discipline.Squat);
-        result[1].ShouldBe(Discipline.Bench);
-        result[2].ShouldBe(Discipline.Deadlift);
-    }
-
-    [Fact]
     public void PushPull_ReturnsBenchAndDeadlift()
     {
         // Arrange
