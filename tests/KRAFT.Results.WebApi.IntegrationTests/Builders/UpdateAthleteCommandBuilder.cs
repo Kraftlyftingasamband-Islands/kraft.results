@@ -8,7 +8,7 @@ internal sealed class UpdateAthleteCommandBuilder
     private string _lastName = Guid.NewGuid().ToString()[..20];
     private string _gender = "m";
     private DateOnly _dateOfBirth = DateOnly.FromDateTime(DateTime.Today.AddYears(-14));
-    private int _countryId = 1;
+    private string _countryCode = "ISL";
     private int? _teamId;
 
     public UpdateAthleteCommandBuilder WithFirstName(string firstName)
@@ -35,9 +35,9 @@ internal sealed class UpdateAthleteCommandBuilder
         return this;
     }
 
-    public UpdateAthleteCommandBuilder WithCountryId(int countryId)
+    public UpdateAthleteCommandBuilder WithCountryCode(string countryCode)
     {
-        _countryId = countryId;
+        _countryCode = countryCode;
         return this;
     }
 
@@ -48,5 +48,5 @@ internal sealed class UpdateAthleteCommandBuilder
     }
 
     public UpdateAthleteCommand Build() =>
-        new(_firstName, _lastName, _countryId, _teamId, _dateOfBirth, _gender);
+        new(_firstName, _lastName, _countryCode, _teamId, _dateOfBirth, _gender);
 }

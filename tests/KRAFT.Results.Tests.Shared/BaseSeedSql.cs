@@ -3,7 +3,7 @@ namespace KRAFT.Results.Tests.Shared;
 /// <summary>
 /// Returns raw SQL strings for seeding base test data.
 /// Methods must be called in FK-safe order:
-/// <see cref="SeedCountry"/> → <see cref="SeedUsersAndRoles"/>
+/// <see cref="SeedUsersAndRoles"/>
 /// → <see cref="SeedTeam"/> → <see cref="SeedAthlete"/> → <see cref="SeedAgeCategories"/>
 /// → <see cref="SeedWeightCategories"/> → <see cref="SeedEras"/> → <see cref="SeedEraWeightCategories"/>
 /// → <see cref="SeedMeet"/> → <see cref="SeedBaseParticipations"/> → <see cref="SeedBaseAttempts"/>
@@ -11,12 +11,6 @@ namespace KRAFT.Results.Tests.Shared;
 /// </summary>
 public static class BaseSeedSql
 {
-    public static string SeedCountry() =>
-        $"""
-        INSERT INTO Countries (CountryId, ISO2, ISO3, Name)
-        VALUES ({TestSeedConstants.Country.Id}, '{TestSeedConstants.Country.ISO2}', '{TestSeedConstants.Country.ISO3}', '{TestSeedConstants.Country.Name}');
-        """;
-
     public static string SeedUsersAndRoles() =>
         $"""
         INSERT INTO Users (Username, Password, Email)
@@ -34,16 +28,16 @@ public static class BaseSeedSql
     public static string SeedTeam() =>
         $"""
         SET IDENTITY_INSERT Teams ON;
-        INSERT INTO Teams (TeamId, Title, TitleShort, TitleFull, CountryId, Slug)
-        VALUES ({TestSeedConstants.Team.Id}, '{TestSeedConstants.Team.Title}', '{TestSeedConstants.Team.TitleShort}', '{TestSeedConstants.Team.TitleFull}', {TestSeedConstants.Country.Id}, '{TestSeedConstants.Team.Slug}');
+        INSERT INTO Teams (TeamId, Title, TitleShort, TitleFull, CountryCode, Slug)
+        VALUES ({TestSeedConstants.Team.Id}, '{TestSeedConstants.Team.Title}', '{TestSeedConstants.Team.TitleShort}', '{TestSeedConstants.Team.TitleFull}', '{TestSeedConstants.Country.Code}', '{TestSeedConstants.Team.Slug}');
         SET IDENTITY_INSERT Teams OFF;
         """;
 
     public static string SeedAthlete() =>
         $"""
         SET IDENTITY_INSERT Athletes ON;
-        INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryId, Slug)
-        VALUES ({TestSeedConstants.Athlete.Id}, '{TestSeedConstants.Athlete.FirstName}', '{TestSeedConstants.Athlete.LastName}', '{TestSeedConstants.Athlete.DateOfBirth:yyyy-MM-dd}', '{TestSeedConstants.Athlete.Gender}', {TestSeedConstants.Country.Id}, '{TestSeedConstants.Athlete.Slug}');
+        INSERT INTO Athletes (AthleteId, Firstname, Lastname, DateOfBirth, Gender, CountryCode, Slug)
+        VALUES ({TestSeedConstants.Athlete.Id}, '{TestSeedConstants.Athlete.FirstName}', '{TestSeedConstants.Athlete.LastName}', '{TestSeedConstants.Athlete.DateOfBirth:yyyy-MM-dd}', '{TestSeedConstants.Athlete.Gender}', '{TestSeedConstants.Country.Code}', '{TestSeedConstants.Athlete.Slug}');
         SET IDENTITY_INSERT Athletes OFF;
         """;
 
@@ -199,6 +193,5 @@ public static class BaseSeedSql
         DELETE FROM Roles;
         DELETE FROM WeightCategories;
         DELETE FROM AgeCategories;
-        DELETE FROM Countries;
         """;
 }
