@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Athletes.Create;
+﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Athletes.Create;
 using KRAFT.Results.WebApi.Features.Athletes.Delete;
 using KRAFT.Results.WebApi.Features.Athletes.Get;
 using KRAFT.Results.WebApi.Features.Athletes.GetDetails;
@@ -23,6 +24,8 @@ internal static class AthleteServices
         services.AddScoped<GetAthleteRecordsHandler>();
         services.AddScoped<GetAthleteParticipationsHandler>();
         services.AddScoped<UpdateAthleteHandler>();
+        services.AddScoped<IDomainEventHandler<BanAddedEvent>, BanEventHandler>();
+        services.AddScoped<IDomainEventHandler<BanRemovedEvent>, BanEventHandler>();
 
         return services;
     }

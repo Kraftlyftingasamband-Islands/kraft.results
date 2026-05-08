@@ -88,6 +88,12 @@ internal sealed class Athlete : AggregateRoot
         return athlete;
     }
 
+    internal void AddBan(Ban ban)
+    {
+        Bans.Add(ban);
+        Raise(new BanAddedEvent(AthleteId, ban.FromDate, ban.ToDate));
+    }
+
     internal bool HasActiveBan(DateOnly date)
     {
         return Bans.Any(ban =>
