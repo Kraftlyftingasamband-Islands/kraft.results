@@ -1,7 +1,5 @@
 ﻿using KRAFT.Results.Contracts.Countries;
 
-using Microsoft.AspNetCore.Mvc;
-
 namespace KRAFT.Results.WebApi.Features.Countries.Get;
 
 internal static class GetCountriesEndpoint
@@ -10,11 +8,9 @@ internal static class GetCountriesEndpoint
 
     internal static RouteGroupBuilder MapGetCountriesEndpoint(this RouteGroupBuilder endpoints)
     {
-        endpoints.MapGet("/", static async (
-            [FromServices] GetCountriesHandler handler,
-            CancellationToken cancellationToken) =>
+        endpoints.MapGet("/", static () =>
         {
-            IReadOnlyList<CountrySummary> result = await handler.Handle(cancellationToken);
+            IReadOnlyList<CountrySummary> result = GetCountriesHandler.Handle();
 
             return result;
         })
