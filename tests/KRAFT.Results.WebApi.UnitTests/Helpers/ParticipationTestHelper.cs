@@ -19,7 +19,7 @@ internal static class ParticipationTestHelper
         if (athlete is null)
         {
             athlete = WebApi.Features.Athletes.Athlete.Create(
-                creator, "John", "Doe", "m", Country.Parse("ISL"), null, null).FromResult();
+                creator, "John", "Doe", "m", Country.Iceland, null, null).FromResult();
         }
 
         DateTime resolvedStartDate = meetStartDate ?? new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc);

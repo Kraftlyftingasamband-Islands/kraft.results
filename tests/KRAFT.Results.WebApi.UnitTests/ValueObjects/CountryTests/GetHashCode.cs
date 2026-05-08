@@ -10,8 +10,8 @@ public sealed class GetHashCode
     public void ReturnsSameHashCode_WhenSameCode()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
-        Country b = Country.Parse("ISL");
+        Country a = Country.Iceland;
+        Country b = Country.Iceland;
 
         // Act & Assert
         a.GetHashCode().ShouldBe(b.GetHashCode());
@@ -21,7 +21,7 @@ public sealed class GetHashCode
     public void ReturnsDifferentHashCode_WhenDifferentCode()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
+        Country a = Country.Iceland;
         Country b = Country.Parse("NOR");
 
         // Act & Assert

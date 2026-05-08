@@ -10,7 +10,7 @@ public sealed class Equals
     public void ReturnsFalse_WhenOtherIsNull()
     {
         // Arrange
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act & Assert
         country.Equals(null).ShouldBeFalse();
@@ -20,7 +20,7 @@ public sealed class Equals
     public void ReturnsTrue_WhenSameInstance()
     {
         // Arrange
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act & Assert
         country.Equals(country).ShouldBeTrue();
@@ -30,8 +30,8 @@ public sealed class Equals
     public void ReturnsTrue_WhenSameCode()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
-        Country b = Country.Parse("ISL");
+        Country a = Country.Iceland;
+        Country b = Country.Iceland;
 
         // Act & Assert
         a.Equals(b).ShouldBeTrue();
@@ -41,7 +41,7 @@ public sealed class Equals
     public void ReturnsFalse_WhenDifferentCode()
     {
         // Arrange
-        Country a = Country.Parse("ISL");
+        Country a = Country.Iceland;
         Country b = Country.Parse("NOR");
 
         // Act & Assert

@@ -34,7 +34,7 @@ public sealed class ThrowsWhenNavigationNotLoadedTests
             creator, athleteId: 1, meetId: 1, weightCategoryId: 1, ageCategoryId: 1, bodyWeight: 83.5m).FromResult();
 
         WebApi.Features.Athletes.Athlete athlete = WebApi.Features.Athletes.Athlete.Create(
-            creator, "John", "Doe", "m", Country.Parse("ISL"), null, null).FromResult();
+            creator, "John", "Doe", "m", Country.Iceland, null, null).FromResult();
         ParticipationTestHelper.SetProperty(participation, nameof(WebApi.Features.Participations.Participation.Athlete), athlete);
 
         // Act

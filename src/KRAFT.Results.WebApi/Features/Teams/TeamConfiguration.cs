@@ -48,8 +48,8 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
             .HasColumnName("CountryCode")
             .HasMaxLength(3)
             .IsFixedLength()
-            .IsUnicode(true)
+            .IsUnicode(false)
             .IsRequired()
-            .HasDefaultValue(Country.Parse("ISL"), "DF_Teams_CountryCode");
+            .HasDefaultValue(Country.Iceland, "DF_Teams_CountryCode");
     }
 }

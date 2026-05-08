@@ -10,7 +10,7 @@ public sealed class Properties
     public void Alpha2_ReturnsExpectedCode()
     {
         // Arrange
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act & Assert
         country.Alpha2.ShouldBe("IS");
@@ -20,7 +20,7 @@ public sealed class Properties
     public void EnglishName_ReturnsExpectedName()
     {
         // Arrange
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act & Assert
         country.EnglishName.ShouldBe("Iceland");
@@ -30,7 +30,7 @@ public sealed class Properties
     public void IcelandicName_ReturnsIcelandicName_WhenCodeIsInDictionary()
     {
         // Arrange
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act & Assert
         country.IcelandicName.ShouldBe("Ísland");
@@ -51,7 +51,7 @@ public sealed class Properties
     public void DisplayName_ReturnsIcelandicName()
     {
         // Arrange
-        Country country = Country.Parse("ISL");
+        Country country = Country.Iceland;
 
         // Act & Assert
         country.DisplayName.ShouldBe("Ísland");

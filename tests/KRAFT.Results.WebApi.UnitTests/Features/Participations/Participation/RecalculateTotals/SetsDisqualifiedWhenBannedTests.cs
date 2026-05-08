@@ -102,7 +102,7 @@ public sealed class SetsDisqualifiedWhenBannedTests
         DateTime banTo)
     {
         WebApi.Features.Athletes.Athlete athlete = WebApi.Features.Athletes.Athlete.Create(
-            creator, "Jane", "Doe", "f", Country.Parse("ISL"), null, null).FromResult();
+            creator, "Jane", "Doe", "f", Country.Iceland, null, null).FromResult();
 
         WebApi.Features.Athletes.Ban ban = new BanBuilder()
             .WithFromDate(banFrom)

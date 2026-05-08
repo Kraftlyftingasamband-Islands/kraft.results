@@ -70,9 +70,12 @@ namespace KRAFT.Results.WebApi.Migrations
                 oldMaxLength: 3,
                 oldNullable: true);
 
-            // Step 6: Add default constraint for Athletes CountryCode = 'ISL'
+            // Step 6: Add default constraints for CountryCode = 'ISL'
             migrationBuilder.Sql(
                 "ALTER TABLE dbo.Athletes ADD CONSTRAINT DF_Athletes_CountryCode DEFAULT N'ISL' FOR CountryCode");
+
+            migrationBuilder.Sql(
+                "ALTER TABLE dbo.Teams ADD CONSTRAINT DF_Teams_CountryCode DEFAULT N'ISL' FOR CountryCode");
 
             // Step 7: Drop FK constraints
             migrationBuilder.DropForeignKey(
