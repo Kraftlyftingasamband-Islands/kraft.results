@@ -4,8 +4,6 @@ using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.ValueObjects;
 
-using CountryEntity = KRAFT.Results.WebApi.Features.Countries.Country;
-
 namespace KRAFT.Results.WebApi.Features.Athletes;
 
 internal sealed class Athlete : AggregateRoot
@@ -37,9 +35,7 @@ internal sealed class Athlete : AggregateRoot
 
     public string CreatedBy { get; private set; } = default!;
 
-    public int CountryId { get; private set; }
-
-    public CountryEntity Country { get; private set; } = default!;
+    public Country Country { get; private set; } = default!;
 
     public int? TeamId { get; private set; }
 
@@ -49,7 +45,7 @@ internal sealed class Athlete : AggregateRoot
 
     public ICollection<Ban> Bans { get; } = [];
 
-    internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, CountryEntity country, DateOnly? dateOfBirth, Team? team)
+    internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -107,7 +103,7 @@ internal sealed class Athlete : AggregateRoot
         return !HasActiveBan(meetDate);
     }
 
-    internal Result Update(User modifier, string firstName, string lastName, string gender, CountryEntity country, DateOnly? dateOfBirth, Team? team)
+    internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {

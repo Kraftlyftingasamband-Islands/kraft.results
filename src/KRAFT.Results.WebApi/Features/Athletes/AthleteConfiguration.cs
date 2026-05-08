@@ -17,10 +17,14 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
         builder.HasIndex(e => e.Slug, "IX_Athletes_Slug_Unique")
             .IsUnique();
 
-        builder.HasIndex(e => new { e.CountryId, e.AthleteId }, "_dta_index_Athletes_20_971150505__K8_K1");
-
-        builder.Property(e => e.CountryId)
-            .HasDefaultValue(352, "DF_Athletes_CountryId");
+        builder.Property(e => e.Country)
+            .HasConversion(x => x.Value, x => Country.Parse(x))
+            .HasColumnName("CountryCode")
+            .HasMaxLength(3)
+            .IsFixedLength()
+            .IsUnicode(true)
+            .IsRequired()
+            .HasDefaultValue(Country.Parse("ISL"), "DF_Athletes_CountryCode");
 
         builder.Property(e => e.CreatedBy)
             .HasMaxLength(50)
@@ -57,12 +61,6 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
 
         builder.Property(e => e.Slug)
             .HasMaxLength(50);
-
-        builder.HasOne(d => d.Country)
-            .WithMany(p => p.Athletes)
-            .HasForeignKey(d => d.CountryId)
-            .OnDelete(DeleteBehavior.ClientSetNull)
-            .HasConstraintName("FK_Athletes_Countries");
 
         builder.HasOne(d => d.Team)
             .WithMany(p => p.Athletes)

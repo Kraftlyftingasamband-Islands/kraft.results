@@ -82,7 +82,7 @@ internal sealed class RecordComputationService(
             return;
         }
 
-        if (athlete.Country?.Iso3 != RecordConstants.IcelandIso3)
+        if (athlete.Country.Value != RecordConstants.IcelandIso3)
         {
             _logger.LogWarning(
                 "Skipping record computation: athlete {AthleteId} is not Icelandic (AttemptId: {AttemptId})",
@@ -345,7 +345,7 @@ internal sealed class RecordComputationService(
                 .Where(a => a.Good)
                 .Where(a => a.Weight > 0)
                 .Where(a => a.Participation.Meet.RecordsPossible)
-                .Where(a => a.Participation.Athlete.Country.Iso3 == RecordConstants.IcelandIso3)
+                .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
                 .Where(a => weightCategoryIds.Contains(
                     a.Participation.WeightCategoryId))
                 .Where(a => isRawValues.Contains(
@@ -431,7 +431,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
-            .Where(a => a.Participation.Athlete.Country.Iso3 == RecordConstants.IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
@@ -489,7 +489,7 @@ internal sealed class RecordComputationService(
             .Where(a => a.Good)
             .Where(a => a.Weight > 0)
             .Where(a => a.Participation.Meet.RecordsPossible)
-            .Where(a => a.Participation.Athlete.Country.Iso3 == RecordConstants.IcelandIso3)
+            .Where(a => a.Participation.Athlete.Country.Value == RecordConstants.IcelandIso3)
             .Where(a => weightCategoryIds.Contains(
                 a.Participation.WeightCategoryId))
             .Where(a => isRawValues.Contains(a.Participation.Meet.IsRaw))
