@@ -11,7 +11,7 @@ internal sealed class RecordConfiguration : IEntityTypeConfiguration<Record>
 
         builder.HasIndex(e => new { e.IsCurrent, e.EraId }, "nci_wi_Records_3CB8ADEAD69A6DA29B4DC80D395ABC87");
 
-        builder.HasIndex(e => new { e.AgeCategoryId, e.EraId, e.RecordCategoryId, e.WeightCategoryId, e.IsRaw, e.Date }, "nci_wi_Records_40FB705E-F1AE-4E31-998B-DE4A0332DA61");
+        builder.HasIndex(e => new { e.EraId, e.AgeCategoryId, e.WeightCategoryId, e.RecordCategoryId, e.IsRaw, e.IsStandard, e.Date }, "IX_Records_Slot");
 
         builder.HasIndex(e => new { e.AttemptId, e.EraId, e.IsCurrent }, "nci_wi_Records_FCB2C18B-AF9A-44EE-BAE9-051E384EC259");
 
