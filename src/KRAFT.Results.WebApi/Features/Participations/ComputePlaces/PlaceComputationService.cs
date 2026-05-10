@@ -28,12 +28,20 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
 
         if (calcPlaces)
         {
-            return;
-        }
+            IEnumerable<IGrouping<(int WeightCategoryId, int AgeCategoryId), Participation>> groups = participations
+                .GroupBy(p => (p.WeightCategoryId, p.AgeCategoryId));
 
-        foreach (Participation participation in participations)
+            foreach (IGrouping<(int WeightCategoryId, int AgeCategoryId), Participation> group in groups)
+            {
+                RankGroup(group.ToList());
+            }
+        }
+        else
         {
-            participation.ClearRanking();
+            foreach (Participation participation in participations)
+            {
+                participation.ClearRanking();
+            }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
