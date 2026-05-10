@@ -1,4 +1,4 @@
-﻿@page "/meets/{slug}/edit"
+@page "/meets/{slug}/edit"
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -6,6 +6,7 @@
 
 @using System.Net
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -13,81 +14,63 @@
 <PageTitle>Breyta móti</PageTitle>
 <h3>Breyta móti</h3>
 
-@if (_isInitializing)
-{
-    <LoadingSpinner Label="Sæki mót..." />
-}
-else if (_initialValues is not null)
-{
-    <MeetForm MeetTypes="_meetTypes"
-              OnSubmit="HandleSubmit"
-              IsLoading="_isLoading"
-              ErrorMessage="@_errorMessage"
-              SubmitLabel="Vista breytingar"
-              BackUrl="@($"/meets/{Slug}")"
-              InitialValues="_initialValues" />
-}
-else if (_errorMessage is not null)
-{
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-        <a href="/meets">Til baka í mótslista</a>
-    </div>
-}
+<DataLoader T="EditMeetData" Loader="LoadAsync" Noun="gögn">
+    <ChildContent Context="data">
+        <MeetForm MeetTypes="data.MeetTypes"
+                  OnSubmit="HandleSubmit"
+                  IsLoading="_isLoading"
+                  ErrorMessage="@_errorMessage"
+                  SubmitLabel="Vista breytingar"
+                  BackUrl="@($"/meets/{Slug}")"
+                  InitialValues="data.InitialValues" />
+    </ChildContent>
+</DataLoader>
 
 @code {
+    private sealed record EditMeetData(
+        MeetFormInitialValues InitialValues,
+        IReadOnlyList<MeetTypeSummary> MeetTypes);
+
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    private IReadOnlyList<MeetTypeSummary> _meetTypes = [];
-    private MeetFormInitialValues? _initialValues;
-    private bool _isInitializing = true;
     private bool _isLoading;
     private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+    private async Task<EditMeetData?> LoadAsync()
     {
-        try
-        {
-            MeetDetails? meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
-            _meetTypes = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetTypeSummary>>("/meets/types") ?? [];
+        MeetDetails? meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
+        IReadOnlyList<MeetTypeSummary> meetTypes =
+            await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetTypeSummary>>("/meets/types") ?? [];
 
-            if (meet is null)
-            {
-                _errorMessage = "Mót fannst ekki.";
-                return;
-            }
-
-            DateOnly? endDate = meet.EndDate == new DateOnly(1, 1, 1) ? null : meet.EndDate;
-
-            _initialValues = new MeetFormInitialValues(
-                meet.Title,
-                meet.StartDate,
-                meet.MeetTypeId,
-                endDate,
-                meet.Location,
-                meet.Text,
-                meet.CalculatePlaces,
-                MapResultModeToId(meet.ResultMode),
-                meet.PublishedResults,
-                meet.PublishedInCalendar,
-                meet.IsInTeamCompetition,
-                meet.ShowWilks,
-                meet.ShowTeamPoints,
-                meet.ShowBodyWeight,
-                meet.ShowTeams,
-                meet.RecordsPossible,
-                // IsClassic carries the IsRaw value (naming mismatch in MeetDetails — see issue tracker)
-                meet.IsClassic);
-        }
-        catch (HttpRequestException)
+        if (meet is null)
         {
-            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
+            return null;
         }
-        finally
-        {
-            _isInitializing = false;
-        }
+
+        DateOnly? endDate = meet.EndDate == new DateOnly(1, 1, 1) ? null : meet.EndDate;
+
+        MeetFormInitialValues initialValues = new(
+            meet.Title,
+            meet.StartDate,
+            meet.MeetTypeId,
+            endDate,
+            meet.Location,
+            meet.Text,
+            meet.CalculatePlaces,
+            MapResultModeToId(meet.ResultMode),
+            meet.PublishedResults,
+            meet.PublishedInCalendar,
+            meet.IsInTeamCompetition,
+            meet.ShowWilks,
+            meet.ShowTeamPoints,
+            meet.ShowBodyWeight,
+            meet.ShowTeams,
+            meet.RecordsPossible,
+            // IsClassic carries the IsRaw value (naming mismatch in MeetDetails — see issue tracker)
+            meet.IsClassic);
+
+        return new EditMeetData(initialValues, meetTypes);
     }
 
     private static int MapResultModeToId(string resultMode)

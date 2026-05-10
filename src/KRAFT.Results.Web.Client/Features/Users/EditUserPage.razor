@@ -8,6 +8,7 @@
 @using System.Net
 @using System.Security.Claims
 @using KRAFT.Results.Contracts.Users
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -16,125 +17,126 @@
 <PageTitle>Breyta notanda</PageTitle>
 <h3>Breyta notanda</h3>
 
-@if (_isInitializing)
-{
-    <LoadingSpinner Label="Sæki gögn..." />
-}
-else if (_model is not null)
-{
-    <div class="form-card">
-        <EditForm Model="_model" OnValidSubmit="HandleSubmit" FormName="edit-user">
-            <DataAnnotationsValidator />
-
-            <div class="form-field">
-                <label class="form-label" for="firstname">Fornafn</label>
-                <InputText id="firstname"
-                           class="form-input"
-                           autocomplete="given-name"
-                           aria-describedby="@(HasError ? "edit-error" : null)"
-                           @bind-Value="_model.FirstName"
-                           disabled="@_isLoading" />
-                <ValidationMessage For="@(() => _model.FirstName)" />
-            </div>
-
-            <div class="form-field">
-                <label class="form-label" for="lastname">Eftirnafn</label>
-                <InputText id="lastname"
-                           class="form-input"
-                           autocomplete="family-name"
-                           aria-describedby="@(HasError ? "edit-error" : null)"
-                           @bind-Value="_model.LastName"
-                           disabled="@_isLoading" />
-                <ValidationMessage For="@(() => _model.LastName)" />
-            </div>
-
-            <div class="form-field">
-                <label class="form-label" for="email">Tölvupóstfang</label>
-                <InputText type="email"
-                           id="email"
-                           class="form-input"
-                           autocomplete="email"
-                           aria-describedby="@(HasError ? "edit-error" : null)"
-                           @bind-Value="_model.Email"
-                           disabled="@_isLoading" />
-                <ValidationMessage For="@(() => _model.Email)" />
-            </div>
-
-            <fieldset class="form-field role-field" aria-describedby="@(_rolesError is not null ? "roles-error" : null)">
-                <legend class="form-label">Hlutverk</legend>
-                <div class="role-checkbox-group">
-                    @foreach (string role in _availableRoles)
-                    {
-                        <label class="role-checkbox-label" for="@($"role-{role.ToLowerInvariant()}")">
-                            <input type="checkbox"
-                                   id="@($"role-{role.ToLowerInvariant()}")"
-                                   class="role-checkbox"
-                                   checked="@IsRoleSelected(role)"
-                                   disabled="@(_isSelfEdit || _isLoading)"
-                                   @onchange="@(e => ToggleRole(role, e))" />
-                            <span class="role-checkbox-text">@role</span>
-                        </label>
-                    }
-                </div>
-                @if (_isSelfEdit)
-                {
-                    <p class="role-note">Þú getur ekki breytt hlutverki þíns eigin aðgangs</p>
-                }
-                @if (_rolesError is not null)
-                {
-                    <p id="roles-error" class="role-error" role="alert">@_rolesError</p>
-                }
-            </fieldset>
-
-            <div class="form-actions">
-                <div class="form-actions-primary">
-                    <SubmitButton Label="Vista breytingar" IsLoading="@_isLoading" />
-                    <a href="/users" class="btn-cancel">Til baka</a>
-                </div>
-
-                <hr class="form-actions-divider" />
-
-                <div class="form-actions-danger">
-                    @if (_showDeleteConfirmation)
-                    {
-                        <p class="delete-confirm-text">Ertu viss um að þú viljir eyða þessum notanda?</p>
-                        <div class="danger-actions">
-                            <button type="button" class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
-                            <button type="button" class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
-                        </div>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn-delete-ghost" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
-                    }
-                    @if (!string.IsNullOrEmpty(_deleteErrorMessage))
-                    {
-                        <ErrorMessage Message="@_deleteErrorMessage" />
-                    }
-                </div>
-            </div>
-
-            @if (!string.IsNullOrEmpty(_errorMessage))
+<DataLoader T="EditUserData" Loader="LoadAsync" Noun="gögn">
+    <ChildContent Context="data">
+        @{
+            if (!_modelCaptured)
             {
-                <ErrorMessage Id="edit-error" Message="@_errorMessage" />
+                _model = data.Model;
+                _isSelfEdit = data.IsSelfEdit;
+                _modelCaptured = true;
             }
-        </EditForm>
-    </div>
-}
-else if (_errorMessage is not null)
-{
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-        <a href="/users">Til baka í notandalista</a>
-    </div>
-}
+        }
+
+        <div class="form-card">
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit" FormName="edit-user">
+                <DataAnnotationsValidator />
+
+                <div class="form-field">
+                    <label class="form-label" for="firstname">Fornafn</label>
+                    <InputText id="firstname"
+                               class="form-input"
+                               autocomplete="given-name"
+                               aria-describedby="@(HasError ? "edit-error" : null)"
+                               @bind-Value="_model!.FirstName"
+                               disabled="@_isLoading" />
+                    <ValidationMessage For="@(() => _model!.FirstName)" />
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label" for="lastname">Eftirnafn</label>
+                    <InputText id="lastname"
+                               class="form-input"
+                               autocomplete="family-name"
+                               aria-describedby="@(HasError ? "edit-error" : null)"
+                               @bind-Value="_model!.LastName"
+                               disabled="@_isLoading" />
+                    <ValidationMessage For="@(() => _model!.LastName)" />
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label" for="email">Tölvupóstfang</label>
+                    <InputText type="email"
+                               id="email"
+                               class="form-input"
+                               autocomplete="email"
+                               aria-describedby="@(HasError ? "edit-error" : null)"
+                               @bind-Value="_model!.Email"
+                               disabled="@_isLoading" />
+                    <ValidationMessage For="@(() => _model!.Email)" />
+                </div>
+
+                <fieldset class="form-field role-field" aria-describedby="@(_rolesError is not null ? "roles-error" : null)">
+                    <legend class="form-label">Hlutverk</legend>
+                    <div class="role-checkbox-group">
+                        @foreach (string role in _availableRoles)
+                        {
+                            <label class="role-checkbox-label" for="@($"role-{role.ToLowerInvariant()}")">
+                                <input type="checkbox"
+                                       id="@($"role-{role.ToLowerInvariant()}")"
+                                       class="role-checkbox"
+                                       checked="@IsRoleSelected(role)"
+                                       disabled="@(_isSelfEdit || _isLoading)"
+                                       @onchange="@(e => ToggleRole(role, e))" />
+                                <span class="role-checkbox-text">@role</span>
+                            </label>
+                        }
+                    </div>
+                    @if (_isSelfEdit)
+                    {
+                        <p class="role-note">Þú getur ekki breytt hlutverki þíns eigin aðgangs</p>
+                    }
+                    @if (_rolesError is not null)
+                    {
+                        <p id="roles-error" class="role-error" role="alert">@_rolesError</p>
+                    }
+                </fieldset>
+
+                <div class="form-actions">
+                    <div class="form-actions-primary">
+                        <SubmitButton Label="Vista breytingar" IsLoading="@_isLoading" />
+                        <a href="/users" class="btn-cancel">Til baka</a>
+                    </div>
+
+                    <hr class="form-actions-divider" />
+
+                    <div class="form-actions-danger">
+                        @if (_showDeleteConfirmation)
+                        {
+                            <p class="delete-confirm-text">Ertu viss um að þú viljir eyða þessum notanda?</p>
+                            <div class="danger-actions">
+                                <button type="button" class="btn-danger" @onclick="HandleDelete" disabled="@_isLoading">Já, eyða</button>
+                                <button type="button" class="btn-cancel-danger" @ref="_cancelDeleteButton" @onclick="CancelDelete" disabled="@_isLoading">Hætta við</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn-delete-ghost" @onclick="ConfirmDelete" disabled="@_isLoading">Eyða notanda</button>
+                        }
+                        @if (!string.IsNullOrEmpty(_deleteErrorMessage))
+                        {
+                            <ErrorMessage Message="@_deleteErrorMessage" />
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <ErrorMessage Id="edit-error" Message="@_errorMessage" />
+                }
+            </EditForm>
+        </div>
+    </ChildContent>
+</DataLoader>
 
 @code {
+    private sealed record EditUserData(EditUserModel Model, bool IsSelfEdit);
+
     [Parameter]
     public int UserId { get; set; }
 
     private EditUserModel? _model;
-    private bool _isInitializing = true;
+    private bool _modelCaptured;
     private bool _isLoading;
     private string? _errorMessage;
     private string? _deleteErrorMessage;
@@ -175,40 +177,32 @@ else if (_errorMessage is not null)
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task<EditUserData?> LoadAsync()
     {
-        try
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string? currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? authState.User.FindFirst("sub")?.Value;
+
+        bool isSelfEdit = currentUserId is not null
+            && int.TryParse(currentUserId, out int parsedId)
+            && parsedId == UserId;
+
+        UserEditDetails? user = await HttpClient.GetFromJsonAsync<UserEditDetails>($"/users/{UserId}/edit");
+
+        if (user is null)
         {
-            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            string? currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? authState.User.FindFirst("sub")?.Value;
-
-            _isSelfEdit = currentUserId is not null && int.TryParse(currentUserId, out int parsedId) && parsedId == UserId;
-
-            UserEditDetails? user = await HttpClient.GetFromJsonAsync<UserEditDetails>($"/users/{UserId}/edit");
-
-            if (user is null)
-            {
-                _errorMessage = "Notandi fannst ekki.";
-                return;
-            }
-
-            _model = new EditUserModel
-            {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email ?? string.Empty,
-                Roles = [..user.Roles],
-            };
+            return null;
         }
-        catch (HttpRequestException)
+
+        EditUserModel model = new()
         {
-            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isInitializing = false;
-        }
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            Roles = [..user.Roles],
+        };
+
+        return new EditUserData(model, isSelfEdit);
     }
 
     private async Task HandleSubmit()
@@ -340,7 +334,7 @@ else if (_errorMessage is not null)
         }
     }
 
-    private sealed class EditUserModel
+    internal sealed class EditUserModel
     {
         [Required]
         public string FirstName { get; set; } = string.Empty;
