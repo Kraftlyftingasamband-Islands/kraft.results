@@ -16,35 +16,31 @@
                 CurrentEraSlug="@_currentEraSlug"
                 InitialEquipmentType="@_equipmentType"
                 InitialEraSlug="@_eraSlug"
-                Disabled="@(_isLoading || !RendererInfo.IsInteractive)"
+                Disabled="@(!RendererInfo.IsInteractive)"
                 OnEquipmentTypeChanged="HandleEquipmentTypeChanged"
                 OnEraChanged="HandleEraChanged" />
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki met..." />
-}
-else if (_hasError)
-{
-    <ErrorMessage Message="Villa kom upp. Reyndu aftur." OnRetry="LoadDataAsync" />
-}
-else if (_groups is not null && _groups.Count > 0)
-{
-    @foreach (RecordGroup group in _groups)
-    {
-        <section class="record-section">
-            <h2>@group.Category</h2>
-            @foreach (RecordEntry record in group.Records)
+<DataLoader @key="@($"{_eraSlug}|{_equipmentType}")" T="List<RecordGroup>" Loader="LoadAsync" Noun="met">
+    <ChildContent Context="groups">
+        @if (groups.Count > 0)
+        {
+            @foreach (RecordGroup group in groups)
             {
-                <RecordCard Record="record" />
+                <section class="record-section">
+                    <h2>@group.Category</h2>
+                    @foreach (RecordEntry record in group.Records)
+                    {
+                        <RecordCard Record="record" />
+                    }
+                </section>
             }
-        </section>
-    }
-}
-else
-{
-    <EmptyState Message="Engin met fundust." />
-}
+        }
+        else
+        {
+            <EmptyState Message="Engin met fundust." />
+        }
+    </ChildContent>
+</DataLoader>
 
 @code {
     [Parameter]
@@ -64,9 +60,6 @@ else
     private string _currentEraSlug = "";
     private List<EraSummary>? _eras;
     private EraSummary? _selectedEra;
-    private bool _isLoading = true;
-    private bool _hasError;
-    private List<RecordGroup>? _groups;
 
     private string GenderLabel => Gender is not null ? Gender.ToGenderGroupLabel() : "";
     private string AgeCategoryLabel => AgeCategory is not null ? AgeCategory.ToAgeCategoryLabel(Gender) : "";
@@ -103,19 +96,17 @@ else
         {
             _eras = null;
         }
-
-        await LoadDataAsync();
     }
 
-    private async Task HandleEraChanged(string slug)
+    private void HandleEraChanged(string slug)
     {
         _eraSlug = slug;
         _selectedEra = _eras?.FirstOrDefault(e => e.Slug == _eraSlug);
         UpdateUrl(replace: true);
-        await LoadDataAsync();
+        StateHasChanged();
     }
 
-    private async Task HandleEquipmentTypeChanged(string type)
+    private void HandleEquipmentTypeChanged(string type)
     {
         if (_equipmentType == type)
         {
@@ -124,7 +115,7 @@ else
 
         _equipmentType = type;
         UpdateUrl(replace: true);
-        await LoadDataAsync();
+        StateHasChanged();
     }
 
     private void UpdateUrl(bool replace)
@@ -142,29 +133,15 @@ else
         NavigationManager.NavigateTo(url, replace: replace);
     }
 
-    private async Task LoadDataAsync()
+    private async Task<List<RecordGroup>?> LoadAsync()
     {
-        _isLoading = true;
-        _hasError = false;
+        string url = $"/records?gender={Uri.EscapeDataString(Gender)}&ageCategory={Uri.EscapeDataString(AgeCategory)}&equipmentType={Uri.EscapeDataString(_equipmentType)}";
 
-        try
+        if (!string.IsNullOrEmpty(_eraSlug))
         {
-            string url = $"/records?gender={Uri.EscapeDataString(Gender)}&ageCategory={Uri.EscapeDataString(AgeCategory)}&equipmentType={Uri.EscapeDataString(_equipmentType)}";
+            url += $"&era={Uri.EscapeDataString(_eraSlug)}";
+        }
 
-            if (!string.IsNullOrEmpty(_eraSlug))
-            {
-                url += $"&era={Uri.EscapeDataString(_eraSlug)}";
-            }
-
-            _groups = await HttpClient.GetFromJsonAsync<List<RecordGroup>>(url);
-        }
-        catch
-        {
-            _hasError = true;
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        return await HttpClient.GetFromJsonAsync<List<RecordGroup>>(url);
     }
 }

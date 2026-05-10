@@ -14,7 +14,7 @@
 <div class="filter-bar">
     <div class="filter-group">
         <label class="filter-label" for="discipline">Grein</label>
-        <select id="discipline" class="filter-select" @bind="Discipline" @bind:after="OnFilterChangedAsync">
+        <select id="discipline" class="filter-select" @bind="Discipline" @bind:after="OnFilterChanged">
             <option value="total">@Constants.Total</option>
             <option value="squat">@Constants.Squat</option>
             <option value="bench">@Constants.Bench</option>
@@ -24,7 +24,7 @@
 
     <div class="filter-group">
         <label class="filter-label" for="year">Ár</label>
-        <select id="year" class="filter-select" @bind="Year" @bind:after="OnFilterChangedAsync">
+        <select id="year" class="filter-select" @bind="Year" @bind:after="OnFilterChanged">
             <option value="">Öll ár</option>
             @for (int y = DateTime.Now.Year; y >= 1985; y--)
             {
@@ -35,7 +35,7 @@
 
     <div class="filter-group">
         <label class="filter-label" for="equipmentType">Flokkur</label>
-        <select id="equipmentType" class="filter-select" @bind="EquipmentType" @bind:after="OnFilterChangedAsync">
+        <select id="equipmentType" class="filter-select" @bind="EquipmentType" @bind:after="OnFilterChanged">
             <option value="">Allir</option>
             <option value="classic">@DisplayNames.EquipmentType(true)</option>
             <option value="equipped">@DisplayNames.EquipmentType(false)</option>
@@ -44,7 +44,7 @@
 
     <div class="filter-group">
         <label class="filter-label" for="gender">Kyn</label>
-        <select id="gender" class="filter-select" @bind="Gender" @bind:after="OnFilterChangedAsync">
+        <select id="gender" class="filter-select" @bind="Gender" @bind:after="OnFilterChanged">
             <option value="">Allir</option>
             <option value="m">@("m".ToGenderGroupLabel())</option>
             <option value="f">@("f".ToGenderGroupLabel())</option>
@@ -52,46 +52,46 @@
     </div>
 </div>
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki stigatöflur..." />
-}
-else if (_hasError)
-{
-    <ErrorMessage Message="Villa kom upp. Reyndu aftur." OnRetry="LoadDataAsync" />
-}
-else if (_response is not null && _response.Items.Count > 0)
-{
-    <div class="rankings-list">
-        @foreach (RankingEntry entry in _response.Items)
+<DataLoader @key="FilterKey" T="PagedResponse<RankingEntry>" Loader="LoadAsync" Noun="stigatöflur">
+    <ChildContent Context="response">
+        @if (response.Items.Count > 0)
         {
-            <RankingCard Entry="entry" DisciplineLabel="@DisciplineLabel" />
+            int totalPages = response.TotalCount == 0
+                ? 1
+                : (int)Math.Ceiling((double)response.TotalCount / PageSize);
+
+            <div class="rankings-list">
+                @foreach (RankingEntry entry in response.Items)
+                {
+                    <RankingCard Entry="entry" DisciplineLabel="@DisciplineLabel" />
+                }
+            </div>
+
+            if (totalPages > 1)
+            {
+                <div class="pagination">
+                    <button class="page-btn" disabled="@(_page <= 1)" @onclick="OnPreviousPage" aria-label="Fyrri síða">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+                        </svg>
+                    </button>
+
+                    <span class="page-info">Síða @_page af @totalPages</span>
+
+                    <button class="page-btn" disabled="@(_page >= totalPages)" @onclick="() => OnNextPage(totalPages)" aria-label="Næsta síða">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+                        </svg>
+                    </button>
+                </div>
+            }
         }
-    </div>
-
-    @if (TotalPages > 1)
-    {
-        <div class="pagination">
-            <button class="page-btn" disabled="@(_page <= 1)" @onclick="OnPreviousPageAsync" aria-label="Fyrri síða">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
-                </svg>
-            </button>
-
-            <span class="page-info">Síða @_page af @TotalPages</span>
-
-            <button class="page-btn" disabled="@(_page >= TotalPages)" @onclick="OnNextPageAsync" aria-label="Næsta síða">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
-                </svg>
-            </button>
-        </div>
-    }
-}
-else
-{
-    <EmptyState Message="Engar niðurstöður fundust." />
-}
+        else
+        {
+            <EmptyState Message="Engar niðurstöður fundust." />
+        }
+    </ChildContent>
+</DataLoader>
 
 @code {
     private const int PageSize = 50;
@@ -112,13 +112,8 @@ else
     public int? PageParam { get; set; }
 
     private int _page = 1;
-    private bool _isLoading = true;
-    private bool _hasError;
-    private PagedResponse<RankingEntry>? _response;
 
-    private int TotalPages => _response is null || _response.TotalCount == 0
-        ? 1
-        : (int)Math.Ceiling((double)_response.TotalCount / PageSize);
+    private string FilterKey => $"{Discipline}|{Year}|{EquipmentType}|{Gender}|{_page}";
 
     private string DisciplineLabel => Discipline?.ToLowerInvariant() switch
     {
@@ -128,40 +123,38 @@ else
         _ => Constants.Total,
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         Discipline ??= "total";
         Year ??= DateTime.Now.Year.ToString();
         EquipmentType ??= "classic";
         _page = PageParam ?? 1;
-
-        await LoadDataAsync();
     }
 
-    private async Task OnFilterChangedAsync()
+    private void OnFilterChanged()
     {
         _page = 1;
         UpdateUrl();
-        await LoadDataAsync();
+        StateHasChanged();
     }
 
-    private async Task OnPreviousPageAsync()
+    private void OnPreviousPage()
     {
         if (_page > 1)
         {
             _page--;
             UpdateUrl();
-            await LoadDataAsync();
+            StateHasChanged();
         }
     }
 
-    private async Task OnNextPageAsync()
+    private void OnNextPage(int totalPages)
     {
-        if (_page < TotalPages)
+        if (_page < totalPages)
         {
             _page++;
             UpdateUrl();
-            await LoadDataAsync();
+            StateHasChanged();
         }
     }
 
@@ -179,39 +172,25 @@ else
         NavigationManager.NavigateTo(url, replace: true);
     }
 
-    private async Task LoadDataAsync()
+    private async Task<PagedResponse<RankingEntry>?> LoadAsync()
     {
-        _isLoading = true;
-        _hasError = false;
+        string url = $"/rankings?discipline={Uri.EscapeDataString(Discipline ?? "total")}&page={_page}&pageSize={PageSize}";
 
-        try
+        if (!string.IsNullOrEmpty(Year))
         {
-            string url = $"/rankings?discipline={Uri.EscapeDataString(Discipline ?? "total")}&page={_page}&pageSize={PageSize}";
-
-            if (!string.IsNullOrEmpty(Year))
-            {
-                url += $"&year={Uri.EscapeDataString(Year)}";
-            }
-
-            if (!string.IsNullOrEmpty(EquipmentType))
-            {
-                url += $"&equipmentType={Uri.EscapeDataString(EquipmentType)}";
-            }
-
-            if (!string.IsNullOrEmpty(Gender))
-            {
-                url += $"&gender={Uri.EscapeDataString(Gender)}";
-            }
-
-            _response = await HttpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(url);
+            url += $"&year={Uri.EscapeDataString(Year)}";
         }
-        catch
+
+        if (!string.IsNullOrEmpty(EquipmentType))
         {
-            _hasError = true;
+            url += $"&equipmentType={Uri.EscapeDataString(EquipmentType)}";
         }
-        finally
+
+        if (!string.IsNullOrEmpty(Gender))
         {
-            _isLoading = false;
+            url += $"&gender={Uri.EscapeDataString(Gender)}";
         }
+
+        return await HttpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(url);
     }
 }
