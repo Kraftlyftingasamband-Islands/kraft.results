@@ -19,6 +19,26 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
             cancellationToken);
     }
 
+    internal async Task RecomputeMeetAsync(int meetId, bool calcPlaces, CancellationToken cancellationToken)
+    {
+        List<Participation> participations = await dbContext.Set<Participation>()
+            .Include(p => p.Attempts)
+            .Where(p => p.MeetId == meetId)
+            .ToListAsync(cancellationToken);
+
+        if (calcPlaces)
+        {
+            return;
+        }
+
+        foreach (Participation participation in participations)
+        {
+            participation.ClearRanking();
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     internal async Task RecomputeGroupAsync(
         int meetId,
         int weightCategoryId,

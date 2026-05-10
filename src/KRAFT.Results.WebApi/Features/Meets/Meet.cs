@@ -157,6 +157,7 @@ internal sealed class Meet : AggregateRoot
     }
 
     internal Result Update(
+        int meetId,
         User modifier,
         MeetCategory category,
         string title,
@@ -217,6 +218,8 @@ internal sealed class Meet : AggregateRoot
             return MeetErrors.TextTooLong;
         }
 
+        bool calcPlacesChanged = CalcPlaces != calcPlaces;
+
         DateTime startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
 
         Title = title;
@@ -238,6 +241,11 @@ internal sealed class Meet : AggregateRoot
         IsRaw = isRaw;
         ModifiedOn = DateTime.UtcNow;
         ModifiedBy = modifier.Username;
+
+        if (calcPlacesChanged)
+        {
+            Raise(new CalcPlacesChangedEvent(meetId, calcPlaces));
+        }
 
         return Result.Success();
     }
