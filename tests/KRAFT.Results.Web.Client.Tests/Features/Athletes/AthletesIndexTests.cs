@@ -247,6 +247,23 @@ public sealed class AthletesIndexTests : IDisposable
         });
     }
 
+    [Fact]
+    public void ShowsErrorWithRetryButton_WhenHttpRequestFails()
+    {
+        // Arrange
+        RegisterFailingHttpClient();
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").ShouldNotBeNull();
+            cut.Find(".retry-btn").ShouldNotBeNull();
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -255,9 +272,26 @@ public sealed class AthletesIndexTests : IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
     private void RegisterHttpClient(List<AthleteSummary> athletes, bool delay = false)
     {
-        MockHttpMessageHandler handler = new(athletes, delay);
+        MockHttpMessageHandler<AthleteSummary> handler = new(athletes, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         _context.AddAuthorization();
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
+    private void RegisterFailingHttpClient()
+    {
+        FailingHttpMessageHandler handler = new();
+        HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
+        _context.Services.AddSingleton(httpClient);
+        _context.AddAuthorization();
+    }
+
+    private sealed class FailingHttpMessageHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            throw new HttpRequestException("Server error");
+        }
     }
 }
