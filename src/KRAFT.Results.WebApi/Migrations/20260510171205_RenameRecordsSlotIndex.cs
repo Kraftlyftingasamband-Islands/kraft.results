@@ -11,11 +11,6 @@ namespace KRAFT.Results.WebApi.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
-                name: "IX_Records_EraId",
-                schema: "dbo",
-                table: "Records");
-
-            migrationBuilder.DropIndex(
                 name: "nci_wi_Records_40FB705E-F1AE-4E31-998B-DE4A0332DA61",
                 schema: "dbo",
                 table: "Records");
@@ -45,12 +40,6 @@ namespace KRAFT.Results.WebApi.Migrations
                 name: "IX_Records_Slot",
                 schema: "dbo",
                 table: "Records");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Records_EraId",
-                schema: "dbo",
-                table: "Records",
-                column: "EraId");
 
             migrationBuilder.CreateIndex(
                 name: "nci_wi_Records_40FB705E-F1AE-4E31-998B-DE4A0332DA61",
