@@ -55,7 +55,11 @@ internal sealed class UpdateMeetHandler
             return Result.Failure(MeetErrors.MeetTypeNotFound);
         }
 
-        int meetId = (int)_dbContext.Entry(meet).Property("MeetId").CurrentValue!;
+        if (_dbContext.Entry(meet).Property("MeetId").CurrentValue is not int meetId)
+        {
+            _logger.LogError("MeetId shadow property missing or wrong type for slug {Slug}", slug);
+            return Result.Failure(MeetErrors.MeetNotFound);
+        }
 
         Result result = meet.Update(
             meetId,
