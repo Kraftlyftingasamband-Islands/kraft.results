@@ -2,15 +2,21 @@
 
 @if (_state == State.Loading)
 {
-    <LoadingSpinner Label="@($"Sæki {Noun}...")" />
+    <div class="data-loader-status">
+        <LoadingSpinner Label="@($"Sæki {Noun}...")" />
+    </div>
 }
 else if (_state == State.Error)
 {
-    <ErrorMessage Message="@($"Villa kom upp við að sækja {Noun}. Reyndu aftur síðar.")" OnRetry="RetryAsync" />
+    <div class="data-loader-status">
+        <ErrorMessage Message="@($"Villa kom upp við að sækja {Noun}. Reyndu aftur síðar.")" OnRetry="RetryAsync" />
+    </div>
 }
 else if (_state == State.NotFound)
 {
-    <ErrorMessage Message="@($"{CapitalizedNoun} fannst ekki.")" />
+    <div class="data-loader-status">
+        <ErrorMessage Message="@($"{CapitalizedNoun} fannst ekki.")" />
+    </div>
 }
 else if (_state == State.Loaded && _data is not null)
 {
