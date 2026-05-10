@@ -19,11 +19,9 @@ public sealed class RaisesCalcPlacesChangedEventTests
             title: "Test Meet",
             startDate: new DateOnly(2025, 6, 1),
             calcPlaces: true).FromResult();
-        int meetId = 42;
 
         // Act
         meet.Update(
-            meetId,
             creator,
             MeetCategory.Powerlifting,
             title: "Test Meet",
@@ -35,7 +33,7 @@ public sealed class RaisesCalcPlacesChangedEventTests
             .OfType<CalcPlacesChangedEvent>()
             .FirstOrDefault();
         raisedEvent.ShouldNotBeNull();
-        raisedEvent.MeetId.ShouldBe(meetId);
+        raisedEvent.Slug.ShouldBe(meet.Slug);
         raisedEvent.CalcPlaces.ShouldBeFalse();
     }
 
@@ -50,11 +48,9 @@ public sealed class RaisesCalcPlacesChangedEventTests
             title: "Test Meet",
             startDate: new DateOnly(2025, 6, 1),
             calcPlaces: true).FromResult();
-        int meetId = 42;
 
         // Act
         meet.Update(
-            meetId,
             creator,
             MeetCategory.Powerlifting,
             title: "Test Meet",
@@ -78,11 +74,9 @@ public sealed class RaisesCalcPlacesChangedEventTests
             title: "Test Meet",
             startDate: new DateOnly(2025, 6, 1),
             calcPlaces: true).FromResult();
-        int meetId = 42;
 
         // Act — empty title fails validation
         meet.Update(
-            meetId,
             creator,
             MeetCategory.Powerlifting,
             title: string.Empty,

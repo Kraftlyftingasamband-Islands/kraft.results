@@ -157,7 +157,6 @@ internal sealed class Meet : AggregateRoot
     }
 
     internal Result Update(
-        int meetId,
         User modifier,
         MeetCategory category,
         string title,
@@ -244,7 +243,7 @@ internal sealed class Meet : AggregateRoot
 
         if (calcPlacesChanged)
         {
-            Raise(new CalcPlacesChangedEvent(meetId, calcPlaces));
+            Raise(new CalcPlacesChangedEvent(Slug, calcPlaces));
         }
 
         return Result.Success();
