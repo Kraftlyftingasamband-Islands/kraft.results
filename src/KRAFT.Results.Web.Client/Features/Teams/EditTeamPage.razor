@@ -9,6 +9,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Countries
 @using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -16,65 +17,47 @@
 <PageTitle>Breyta félagi</PageTitle>
 <h3>Breyta félagi</h3>
 
-@if (_isInitializing)
-{
-    <LoadingSpinner Label="Sæki gögn..." />
-}
-else if (_initialValues is not null)
-{
-    <TeamForm Countries="_countries"
-              OnSubmit="HandleSubmit"
-              IsLoading="_isLoading"
-              ErrorMessage="@_errorMessage"
-              SubmitLabel="Vista breytingar"
-              BackUrl="@($"/teams/{Slug}")"
-              InitialValues="_initialValues" />
-}
-else if (_errorMessage is not null)
-{
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-        <a href="/teams">Til baka í félagalista</a>
-    </div>
-}
+<DataLoader T="EditTeamData" Loader="LoadAsync" Noun="gögn">
+    <ChildContent Context="data">
+        <TeamForm Countries="data.Countries"
+                  OnSubmit="HandleSubmit"
+                  IsLoading="_isLoading"
+                  ErrorMessage="@_errorMessage"
+                  SubmitLabel="Vista breytingar"
+                  BackUrl="@($"/teams/{Slug}")"
+                  InitialValues="data.InitialValues" />
+    </ChildContent>
+</DataLoader>
 
 @code {
+    private sealed record EditTeamData(
+        TeamFormInitialValues InitialValues,
+        IReadOnlyCollection<CountrySummary> Countries);
+
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    private IReadOnlyCollection<CountrySummary> _countries = [];
-    private TeamFormInitialValues? _initialValues;
-    private bool _isInitializing = true;
     private bool _isLoading;
     private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+    private async Task<EditTeamData?> LoadAsync()
     {
-        try
-        {
-            TeamDetails? team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
-            _countries = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
+        TeamDetails? team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+        IReadOnlyCollection<CountrySummary> countries =
+            await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
 
-            if (team is null)
-            {
-                _errorMessage = "Félag fannst ekki.";
-                return;
-            }
+        if (team is null)
+        {
+            return null;
+        }
 
-            _initialValues = new TeamFormInitialValues(
-                team.Title,
-                team.ShortTitle,
-                team.FullTitle,
-                team.CountryCode);
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isInitializing = false;
-        }
+        TeamFormInitialValues initialValues = new(
+            team.Title,
+            team.ShortTitle,
+            team.FullTitle,
+            team.CountryCode);
+
+        return new EditTeamData(initialValues, countries);
     }
 
     private async Task HandleSubmit(TeamFormValues values)
