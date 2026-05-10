@@ -9,6 +9,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Countries
 @using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -16,40 +17,29 @@
 <PageTitle>Nýtt félag</PageTitle>
 <h3>Nýtt félag</h3>
 
-@if (_isInitializing)
-{
-    <LoadingSpinner Label="Sæki gögn..." />
-}
-else
-{
-    <TeamForm Countries="_countries"
-              OnSubmit="HandleSubmit"
-              IsLoading="_isLoading"
-              ErrorMessage="@_errorMessage"
-              SubmitLabel="Stofna félag"
-              BackUrl="/teams" />
-}
+<DataLoader T="CreateTeamData" Loader="LoadAsync" Noun="gögn">
+    <ChildContent Context="data">
+        <TeamForm Countries="data.Countries"
+                  OnSubmit="HandleSubmit"
+                  IsLoading="_isLoading"
+                  ErrorMessage="@_errorMessage"
+                  SubmitLabel="Stofna félag"
+                  BackUrl="/teams" />
+    </ChildContent>
+</DataLoader>
 
 @code {
-    private IReadOnlyCollection<CountrySummary> _countries = [];
-    private bool _isInitializing = true;
+    private sealed record CreateTeamData(IReadOnlyCollection<CountrySummary> Countries);
+
     private bool _isLoading;
     private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+    private async Task<CreateTeamData?> LoadAsync()
     {
-        try
-        {
-            _countries = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Gat ekki sótt lönd. Reyndu að endurhlaða síðuna.";
-        }
-        finally
-        {
-            _isInitializing = false;
-        }
+        IReadOnlyCollection<CountrySummary> countries =
+            await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
+
+        return new CreateTeamData(countries);
     }
 
     private async Task HandleSubmit(TeamFormValues values)
