@@ -43,6 +43,115 @@ public sealed class CalcPlacesToggleTests(CollectionFixture fixture) : IAsyncLif
     }
 
     [Fact]
+    public async Task ClearsPlacesAndTeamPoints_WhenToggledFromTrueToFalse()
+    {
+        // Arrange — create a meet with CalcPlaces=true so attempts trigger place computation
+        (int meetId, string meetSlug) = await CreateMeetAsync(calcPlaces: true);
+
+        string athlete1Slug = await CreateAthleteAsync();
+        int participation1Id = await AddParticipantAsync(meetId, athlete1Slug, bodyWeight: 80.5m);
+        await RecordFullTotalAsync(meetId, participation1Id, squat: 200.0m, bench: 130.0m, deadlift: 250.0m);
+
+        string athlete2Slug = await CreateAthleteAsync();
+        int participation2Id = await AddParticipantAsync(meetId, athlete2Slug, bodyWeight: 88.0m);
+        await RecordFullTotalAsync(meetId, participation2Id, squat: 180.0m, bench: 110.0m, deadlift: 210.0m);
+
+        // Verify places are computed before toggling
+        List<MeetParticipation>? before = await _authorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
+            $"/meets/{meetSlug}/participations",
+            CancellationToken.None);
+
+        before.ShouldNotBeNull();
+        before.ShouldAllBe(p => p.Rank > 0);
+
+        // Act — toggle CalcPlaces to false; this triggers RecomputeMeetAsync(calcPlaces: false)
+        UpdateMeetCommand updateCommand = new UpdateMeetCommandBuilder()
+            .WithCalcPlaces(false)
+            .Build();
+
+        HttpResponseMessage updateResponse = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetSlug}",
+            updateCommand,
+            CancellationToken.None);
+
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        // Assert — all participations have rank 0
+        List<MeetParticipation>? participations = await _authorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
+            $"/meets/{meetSlug}/participations",
+            CancellationToken.None);
+
+        participations.ShouldNotBeNull();
+        participations.ShouldAllBe(p => p.Rank == 0);
+    }
+
+    [Fact]
+    public async Task PreservesExistingPlaces_WhenCalcPlacesUnchanged()
+    {
+        // Arrange — create a meet with CalcPlaces=true so attempts trigger place computation
+        (int meetId, string meetSlug) = await CreateMeetAsync(calcPlaces: true);
+
+        string athlete1Slug = await CreateAthleteAsync();
+        int participation1Id = await AddParticipantAsync(meetId, athlete1Slug, bodyWeight: 80.5m);
+        await RecordFullTotalAsync(meetId, participation1Id, squat: 200.0m, bench: 130.0m, deadlift: 250.0m);
+
+        string athlete2Slug = await CreateAthleteAsync();
+        int participation2Id = await AddParticipantAsync(meetId, athlete2Slug, bodyWeight: 80.5m);
+        await RecordFullTotalAsync(meetId, participation2Id, squat: 180.0m, bench: 110.0m, deadlift: 210.0m);
+
+        // Read ranks before the no-op update
+        List<MeetParticipation>? before = await _authorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
+            $"/meets/{meetSlug}/participations",
+            CancellationToken.None);
+
+        before.ShouldNotBeNull();
+        int rankBefore1 = before.First(p => p.ParticipationId == participation1Id).Rank;
+        int rankBefore2 = before.First(p => p.ParticipationId == participation2Id).Rank;
+
+        // Act — update with a different title but same CalcPlaces=true
+        UpdateMeetCommand updateCommand = new UpdateMeetCommandBuilder()
+            .WithTitle(Guid.NewGuid().ToString())
+            .WithCalcPlaces(true)
+            .Build();
+
+        HttpResponseMessage updateResponse = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetSlug}",
+            updateCommand,
+            CancellationToken.None);
+
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        // Assert — ranks remain unchanged
+        List<MeetParticipation>? after = await _authorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
+            $"/meets/{meetSlug}/participations",
+            CancellationToken.None);
+
+        after.ShouldNotBeNull();
+        after.First(p => p.ParticipationId == participation1Id).Rank.ShouldBe(rankBefore1);
+        after.First(p => p.ParticipationId == participation2Id).Rank.ShouldBe(rankBefore2);
+    }
+
+    [Fact]
+    public async Task Succeeds_WhenTogglingCalcPlacesOnMeetWithNoParticipations()
+    {
+        // Arrange — create a meet with no participations
+        (int _, string meetSlug) = await CreateMeetAsync(calcPlaces: true);
+
+        // Act — toggle CalcPlaces to false on an empty meet
+        UpdateMeetCommand updateCommand = new UpdateMeetCommandBuilder()
+            .WithCalcPlaces(false)
+            .Build();
+
+        // Assert — the update succeeds without error
+        HttpResponseMessage updateResponse = await _authorizedHttpClient.PutAsJsonAsync(
+            $"/meets/{meetSlug}",
+            updateCommand,
+            CancellationToken.None);
+
+        updateResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task RecomputesPlacesPerWeightCategoryGroup_WhenToggledFromFalseToTrue()
     {
         // Arrange — create a meet with CalcPlaces=false so attempts do not trigger place computation
