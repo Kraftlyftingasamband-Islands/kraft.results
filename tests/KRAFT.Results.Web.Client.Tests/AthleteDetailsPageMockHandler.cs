@@ -8,7 +8,8 @@ namespace KRAFT.Results.Web.Client.Tests;
 internal sealed class AthleteDetailsPageMockHandler(
     List<AthleteRecord> records,
     List<AthletePersonalBest> personalBests,
-    List<AthleteParticipation> participations) : HttpMessageHandler
+    List<AthleteParticipation> participations,
+    bool delay = false) : HttpMessageHandler
 {
     private static readonly AthleteDetails DefaultAthlete = new(
         Slug: "test-athlete",
@@ -18,8 +19,13 @@ internal sealed class AthleteDetailsPageMockHandler(
         ClubSlug: "test-club",
         RecordCount: 0);
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        if (delay)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+        }
+
         string path = request.RequestUri?.AbsolutePath ?? string.Empty;
 
         HttpResponseMessage response;
@@ -41,6 +47,6 @@ internal sealed class AthleteDetailsPageMockHandler(
             response = new(HttpStatusCode.OK) { Content = JsonContent.Create(DefaultAthlete) };
         }
 
-        return Task.FromResult(response);
+        return response;
     }
 }
