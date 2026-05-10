@@ -15,8 +15,9 @@
 <DataLoader T="MeetPageData" Loader="LoadAsync" Noun="mót">
     <ChildContent Context="pageData">
         @{
-            if (!_pageDataCopied)
+            if (!ReferenceEquals(_lastPageData, pageData))
             {
+                _lastPageData = pageData;
                 Meet = pageData.Meet;
                 Participations = pageData.Participations;
                 IncludedDisciplines = pageData.IncludedDisciplines;
@@ -29,7 +30,6 @@
                 _meetRecords = pageData.MeetRecords;
                 _navLinks = pageData.NavLinks;
                 _isAdmin = pageData.IsAdmin;
-                _pageDataCopied = true;
             }
         }
 
@@ -280,7 +280,7 @@
     private bool _isDeleting;
     private string? _deleteErrorMessage;
     private bool _isAdmin;
-    private bool _pageDataCopied;
+    private MeetPageData? _lastPageData;
     private IReadOnlyList<MeetRecordEntry> _meetRecords = [];
     private IReadOnlyList<SectionNav.SectionNavLink> _navLinks = [];
     private MeetTeamPointsResponse? _teamPointsResponse;

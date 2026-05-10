@@ -39,6 +39,11 @@
         IReadOnlyCollection<CountrySummary> countries =
             await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
 
+        if (countries.Count == 0)
+        {
+            throw new HttpRequestException("Required reference data is unavailable.");
+        }
+
         return new CreateTeamData(countries);
     }
 

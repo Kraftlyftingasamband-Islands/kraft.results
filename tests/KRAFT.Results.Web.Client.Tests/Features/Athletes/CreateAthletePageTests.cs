@@ -127,12 +127,4 @@ public sealed class CreateAthletePageTests : IDisposable
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
     }
-
-    private sealed class FailingHttpMessageHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            throw new HttpRequestException("Server error");
-        }
-    }
 }
