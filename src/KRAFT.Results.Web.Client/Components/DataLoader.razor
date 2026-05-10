@@ -38,6 +38,9 @@ else if (_state == State.Loaded && _data is not null)
     [Parameter, EditorRequired]
     public RenderFragment<T> ChildContent { get; set; } = null!;
 
+    [Parameter]
+    public EventCallback OnLoaded { get; set; }
+
     private string CapitalizedNoun =>
         Noun.Length == 0 ? Noun : char.ToUpper(Noun[0]) + Noun[1..];
 
@@ -59,6 +62,11 @@ else if (_state == State.Loaded && _data is not null)
         {
             _data = await Loader();
             _state = _data is null ? State.NotFound : State.Loaded;
+
+            if (_state == State.Loaded)
+            {
+                await OnLoaded.InvokeAsync();
+            }
         }
         catch (Exception)
         {
