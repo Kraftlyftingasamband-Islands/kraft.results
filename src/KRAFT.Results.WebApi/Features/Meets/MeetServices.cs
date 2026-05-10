@@ -1,4 +1,5 @@
-﻿using KRAFT.Results.WebApi.Features.Meets.AddParticipant;
+﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Meets.AddParticipant;
 using KRAFT.Results.WebApi.Features.Meets.Create;
 using KRAFT.Results.WebApi.Features.Meets.Delete;
 using KRAFT.Results.WebApi.Features.Meets.Get;
@@ -37,6 +38,7 @@ internal static class MeetServices
         services.AddScoped<UpdateAgeCategoryHandler>();
         services.AddScoped<UpdateBodyWeightHandler>();
         services.AddScoped<UpdateMeetHandler>();
+        services.AddScoped<IDomainEventHandler<CalcPlacesChangedEvent>, CalcPlacesChangedEventHandler>();
 
         return services;
     }

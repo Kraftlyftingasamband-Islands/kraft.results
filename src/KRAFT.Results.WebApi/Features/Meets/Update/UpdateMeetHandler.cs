@@ -55,7 +55,10 @@ internal sealed class UpdateMeetHandler
             return Result.Failure(MeetErrors.MeetTypeNotFound);
         }
 
+        int meetId = (int)_dbContext.Entry(meet).Property("MeetId").CurrentValue!;
+
         Result result = meet.Update(
+            meetId,
             modifier,
             category,
             command.Title,

@@ -155,6 +155,12 @@ internal sealed class Participation : AggregateRoot
         Raise(new AttemptRecordedEvent(this, attempt));
     }
 
+    internal void ClearRanking()
+    {
+        Place = 0;
+        TeamPoints = null;
+    }
+
     internal void UpdateRanking(int place)
     {
         Place = place;
