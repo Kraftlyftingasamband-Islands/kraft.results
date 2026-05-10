@@ -1,0 +1,61 @@
+@typeparam T where T : class
+
+@if (_state == State.Loading)
+{
+    <LoadingSpinner Label="@($"Sæki {Noun}...")" />
+}
+else if (_state == State.Error)
+{
+    <ErrorMessage Message="@($"Villa kom upp við að sækja {Noun}. Reyndu aftur síðar.")" OnRetry="RetryAsync" />
+}
+else if (_state == State.NotFound)
+{
+    <ErrorMessage Message="@($"{CapitalizedNoun} fannst ekki.")" />
+}
+else if (_state == State.Loaded && _data is not null)
+{
+    @ChildContent(_data)
+}
+
+@code {
+    private enum State { Loading, Loaded, Error, NotFound }
+
+    private State _state = State.Loading;
+    private T? _data;
+
+    [Parameter, EditorRequired]
+    public Func<Task<T?>> Loader { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public string Noun { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public RenderFragment<T> ChildContent { get; set; } = null!;
+
+    private string CapitalizedNoun =>
+        Noun.Length == 0 ? Noun : char.ToUpper(Noun[0]) + Noun[1..];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task RetryAsync()
+    {
+        _state = State.Loading;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _data = await Loader();
+            _state = _data is null ? State.NotFound : State.Loaded;
+        }
+        catch (HttpRequestException)
+        {
+            _state = State.Error;
+        }
+    }
+}

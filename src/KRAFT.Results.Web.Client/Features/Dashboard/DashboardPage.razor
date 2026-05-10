@@ -12,215 +12,193 @@
 
 <PageTitle>Forsíða — KRAFT Results</PageTitle>
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki forsíðu..." />
-}
-else if (_hasError)
-{
-    <ErrorMessage Message="Villa kom upp við að sækja gögn. Reyndu aftur síðar." />
-}
-else if (_dashboard is not null)
-{
-    <section class="season-stats" aria-label="Tölur ársins @_year">
-        <h2 class="section-label">Tölur ársins @_year</h2>
-        <div class="stat-bar">
-            <div class="stat-card">
-                <span class="stat-number">@_dashboard.SeasonStats.Meets</span>
-                <span class="stat-label">Mót</span>
+<DataLoader T="DashboardSummary" Loader="LoadAsync" Noun="forsíðu">
+    <ChildContent Context="context">
+        <section class="season-stats" aria-label="Tölur ársins @_year">
+            <h2 class="section-label">Tölur ársins @_year</h2>
+            <div class="stat-bar">
+                <div class="stat-card">
+                    <span class="stat-number">@context.SeasonStats.Meets</span>
+                    <span class="stat-label">Mót</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">@context.SeasonStats.Athletes</span>
+                    <span class="stat-label">Keppendur</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">@context.SeasonStats.Records</span>
+                    <span class="stat-label">Met</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">@context.SeasonStats.Clubs</span>
+                    <span class="stat-label">Félög</span>
+                </div>
             </div>
-            <div class="stat-card">
-                <span class="stat-number">@_dashboard.SeasonStats.Athletes</span>
-                <span class="stat-label">Keppendur</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number">@_dashboard.SeasonStats.Records</span>
-                <span class="stat-label">Met</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number">@_dashboard.SeasonStats.Clubs</span>
-                <span class="stat-label">Félög</span>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <div class="widget-grid">
-    <div class="widget">
-        <div class="widget-header">
-            <h2 class="widget-title">Mót</h2>
-            <NavLink class="widget-link" href="/meets">Mótaskrá →</NavLink>
-        </div>
-        <div class="split-columns">
-            <div class="split-col">
-                <div class="split-col-header">Síðustu mót</div>
-                @foreach (MeetSummary meet in _dashboard.RecentMeets)
-                {
-                    <article class="meet-item">
-                        <div class="date-box date-box--recent">@meet.StartDate.Day.ToString("D2")</div>
-                        <div>
-                            <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
-                            <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
-                        </div>
-                    </article>
-                }
+        <div class="widget-grid">
+        <div class="widget">
+            <div class="widget-header">
+                <h2 class="widget-title">Mót</h2>
+                <NavLink class="widget-link" href="/meets">Mótaskrá →</NavLink>
             </div>
-            <div class="split-col">
-                <div class="split-col-header">Næstu mót</div>
-                @if (_dashboard.UpcomingMeets.Count == 0)
-                {
-                    <p class="empty-col">Engin mót skráð í dagatal</p>
-                }
-                else
-                {
-                    @foreach (MeetSummary meet in _dashboard.UpcomingMeets)
+            <div class="split-columns">
+                <div class="split-col">
+                    <div class="split-col-header">Síðustu mót</div>
+                    @foreach (MeetSummary meet in context.RecentMeets)
                     {
                         <article class="meet-item">
-                            <div class="date-box date-box--upcoming">@meet.StartDate.Day.ToString("D2")</div>
+                            <div class="date-box date-box--recent">@meet.StartDate.Day.ToString("D2")</div>
                             <div>
                                 <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
                                 <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
                             </div>
                         </article>
                     }
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="widget">
-        <div class="widget-header">
-            <h2 class="widget-title">Stigatafla @_year — Klassík</h2>
-            <NavLink class="widget-link" href="/rankings">Allt →</NavLink>
-        </div>
-        <div class="split-columns">
-            <div class="split-col">
-                <div class="split-col-header">Karlar</div>
-                <div class="ranking-list">
-                    @foreach (RankingEntry entry in _dashboard.TopRankingsMen)
-                    {
-                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
-                    }
                 </div>
-            </div>
-            <div class="split-col">
-                <div class="split-col-header">Konur</div>
-                <div class="ranking-list">
-                    @foreach (RankingEntry entry in _dashboard.TopRankingsWomen)
+                <div class="split-col">
+                    <div class="split-col-header">Næstu mót</div>
+                    @if (context.UpcomingMeets.Count == 0)
                     {
-                        <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
+                        <p class="empty-col">Engin mót skráð í dagatal</p>
+                    }
+                    else
+                    {
+                        @foreach (MeetSummary meet in context.UpcomingMeets)
+                        {
+                            <article class="meet-item">
+                                <div class="date-box date-box--upcoming">@meet.StartDate.Day.ToString("D2")</div>
+                                <div>
+                                    <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
+                                    <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
+                                </div>
+                            </article>
+                        }
                     }
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="widget">
-        <div class="widget-header">
-            <h2 class="widget-title">Ný met</h2>
-            <NavLink class="widget-link" href="/records">Allt →</NavLink>
-        </div>
-        <div class="split-columns">
-            <div class="split-col">
-                <div class="split-col-header">Karlar</div>
-                @foreach (DashboardRecordEntry record in _dashboard.RecentRecordsMen)
-                {
-                    <div class="record-item">
-                        <div class="record-left">
-                            <div class="record-top">
-                                <span class="record-lift">@record.Lift</span>
-                                <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
-                            </div>
-                            <div class="record-meta">
-                                <span class="badge">@record.WeightCategory</span>
-                                <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
-                                <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
-                            </div>
-                        </div>
-                        <div class="record-right">
-                            <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")">@record.Weight kg</NavLink>
-                            <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
-                        </div>
-                    </div>
-                }
-            </div>
-            <div class="split-col">
-                <div class="split-col-header">Konur</div>
-                @foreach (DashboardRecordEntry record in _dashboard.RecentRecordsWomen)
-                {
-                    <div class="record-item">
-                        <div class="record-left">
-                            <div class="record-top">
-                                <span class="record-lift">@record.Lift</span>
-                                <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
-                            </div>
-                            <div class="record-meta">
-                                <span class="badge">@record.WeightCategory</span>
-                                <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
-                                <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
-                            </div>
-                        </div>
-                        <div class="record-right">
-                            <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")">@record.Weight kg</NavLink>
-                            <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    @if (_dashboard.TeamStandingsMen.Count > 0 || _dashboard.TeamStandingsWomen.Count > 0)
-    {
         <div class="widget">
             <div class="widget-header">
-                <h2 class="widget-title">Liðakeppni @_year</h2>
-                <NavLink class="widget-link" href="/team-competition">Allt →</NavLink>
+                <h2 class="widget-title">Stigatafla @_year — Klassík</h2>
+                <NavLink class="widget-link" href="/rankings">Allt →</NavLink>
             </div>
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Karlar</div>
-                    <div class="team-list">
-                        @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsMen)
+                    <div class="ranking-list">
+                        @foreach (RankingEntry entry in context.TopRankingsMen)
                         {
-                            <StandingsCard Standing="team" />
+                            <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
                         }
                     </div>
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Konur</div>
-                    <div class="team-list">
-                        @foreach (TeamCompetitionStanding team in _dashboard.TeamStandingsWomen)
+                    <div class="ranking-list">
+                        @foreach (RankingEntry entry in context.TopRankingsWomen)
                         {
-                            <StandingsCard Standing="team" />
+                            <RankingCard Entry="entry" DisciplineLabel="Kraftlyftingar" IpfPointsHref="@($"/meets/{entry.MeetSlug}")" />
                         }
                     </div>
                 </div>
             </div>
         </div>
-    }
-    </div>
-}
+
+        <div class="widget">
+            <div class="widget-header">
+                <h2 class="widget-title">Ný met</h2>
+                <NavLink class="widget-link" href="/records">Allt →</NavLink>
+            </div>
+            <div class="split-columns">
+                <div class="split-col">
+                    <div class="split-col-header">Karlar</div>
+                    @foreach (DashboardRecordEntry record in context.RecentRecordsMen)
+                    {
+                        <div class="record-item">
+                            <div class="record-left">
+                                <div class="record-top">
+                                    <span class="record-lift">@record.Lift</span>
+                                    <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
+                                </div>
+                                <div class="record-meta">
+                                    <span class="badge">@record.WeightCategory</span>
+                                    <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
+                                    <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
+                                </div>
+                            </div>
+                            <div class="record-right">
+                                <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")">@record.Weight kg</NavLink>
+                                <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="split-col">
+                    <div class="split-col-header">Konur</div>
+                    @foreach (DashboardRecordEntry record in context.RecentRecordsWomen)
+                    {
+                        <div class="record-item">
+                            <div class="record-left">
+                                <div class="record-top">
+                                    <span class="record-lift">@record.Lift</span>
+                                    <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
+                                </div>
+                                <div class="record-meta">
+                                    <span class="badge">@record.WeightCategory</span>
+                                    <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
+                                    <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
+                                </div>
+                            </div>
+                            <div class="record-right">
+                                <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")">@record.Weight kg</NavLink>
+                                <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (context.TeamStandingsMen.Count > 0 || context.TeamStandingsWomen.Count > 0)
+        {
+            <div class="widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">Liðakeppni @_year</h2>
+                    <NavLink class="widget-link" href="/team-competition">Allt →</NavLink>
+                </div>
+                <div class="split-columns">
+                    <div class="split-col">
+                        <div class="split-col-header">Karlar</div>
+                        <div class="team-list">
+                            @foreach (TeamCompetitionStanding team in context.TeamStandingsMen)
+                            {
+                                <StandingsCard Standing="team" />
+                            }
+                        </div>
+                    </div>
+                    <div class="split-col">
+                        <div class="split-col-header">Konur</div>
+                        <div class="team-list">
+                            @foreach (TeamCompetitionStanding team in context.TeamStandingsWomen)
+                            {
+                                <StandingsCard Standing="team" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    </ChildContent>
+</DataLoader>
 
 @code {
-    private bool _isLoading = true;
-    private bool _hasError;
-    private DashboardSummary? _dashboard;
     private readonly int _year = DateTime.Now.Year;
 
-    protected override async Task OnInitializedAsync()
+    private async Task<DashboardSummary?> LoadAsync()
     {
-        try
-        {
-            _dashboard = await HttpClient.GetFromJsonAsync<DashboardSummary>("/dashboard");
-        }
-        catch (HttpRequestException)
-        {
-            _hasError = true;
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        return await HttpClient.GetFromJsonAsync<DashboardSummary>("/dashboard");
     }
-
 }
