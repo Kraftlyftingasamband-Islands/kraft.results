@@ -10,7 +10,7 @@
 
 <PageHeader Title="Keppendur" ActionHref="/athletes/create" ActionLabel="Stofna keppanda" />
 
-<DataLoader T="IReadOnlyCollection<AthleteSummary>" Loader="LoadAsync" Noun="keppendur">
+<DataLoader T="IReadOnlyCollection<AthleteSummary>" Loader="LoadAsync" Noun="keppendur" OnLoaded="HandleDataLoaded">
     <ChildContent Context="context">
         @{ InitializeAthletes(context); }
         <div class="search-container">
@@ -66,6 +66,11 @@
 
     private CancellationTokenSource _debounceCts = new();
 
+    private void HandleDataLoaded()
+    {
+        _shouldFocusSearch = true;
+    }
+
     private void InitializeAthletes(IReadOnlyCollection<AthleteSummary> context)
     {
         if (_athletes == context)
@@ -75,7 +80,6 @@
 
         _athletes = context;
         _filteredAthletes = context;
-        _shouldFocusSearch = true;
     }
 
     private void ApplyFilter()
