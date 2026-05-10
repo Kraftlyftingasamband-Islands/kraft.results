@@ -12,211 +12,229 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki mót..." />
-}
-else if (_errorMessage is not null)
-{
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-        <a href="/meets">Til baka í mótslista</a>
-    </div>
-}
-else
-{
-<div class="page-header">
-    <h1>@Meet?.Title</h1>
-    <AuthorizeView Roles="Admin">
-        <div class="admin-actions">
-            <a href="/meets/@Slug/edit" class="btn-action" aria-label="Breyta móti">
-                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                    <path d="m15 5 4 4"/>
-                </svg>
-                Breyta
-            </a>
-            <button class="btn-action btn-danger" aria-label="Eyða móti" @onclick="ShowDeleteDialog">
-                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                    <line x1="10" x2="10" y1="11" y2="17"/>
-                    <line x1="14" x2="14" y1="11" y2="17"/>
-                </svg>
-                Eyða
-            </button>
-        </div>
-    </AuthorizeView>
-</div>
-<p>
-    @($"{Meet?.StartDate:dd-MM-yyyy}")
-    @if (Meet?.EndDate is DateOnly endDate && endDate != Meet?.StartDate)
-    {
-        <span> - @($"{endDate:dd-MM-yyyy}")</span>
-    }
-    <br />
-    @Meet?.Location<br />
-</p>
-
-<AuthorizeView Roles="Admin">
-    <AddParticipantForm MeetId="Meet!.MeetId"
-                        IncludedDisciplines="IncludedDisciplines"
-                        MeetStartDate="Meet!.StartDate"
-                        RegisteredAthletes="@Participations.Select(p => p.AthleteSlug).ToHashSet()"
-                        OnParticipantAdded="ReloadParticipations" />
-</AuthorizeView>
-
-<SectionNav Links="_navLinks" />
-
-@if (ShowIpfPointLeaders)
-{
-    <h2 id="stigahaestu">Stigahæstu keppendur</h2>
-    <div class="leaders-section">
-        <div class="leaders-grid">
-            @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
+<DataLoader T="MeetPageData" Loader="LoadAsync" Noun="mót">
+    <ChildContent Context="pageData">
+        @{
+            if (!_pageDataCopied)
             {
-                <div class="leaders-gender-col">
-                    <h3 class="leaders-gender-heading">@gender.Key</h3>
-                    @foreach (var leader in gender.OrderByDescending(x => x.IpfPoints).Take(3).Select((x, i) => (Participation: x, Index: i)))
+                Meet = pageData.Meet;
+                Participations = pageData.Participations;
+                IncludedDisciplines = pageData.IncludedDisciplines;
+                ShowIpfPoints = pageData.ShowIpfPoints;
+                ShowClubs = pageData.ShowClubs;
+                ShowIpfPointLeaders = pageData.ShowIpfPointLeaders;
+                _teamPointsResponse = pageData.TeamPointsResponse;
+                ShowTeamStandings = pageData.ShowTeamStandings;
+                IsPreGenderSplit = pageData.IsPreGenderSplit;
+                _meetRecords = pageData.MeetRecords;
+                _navLinks = pageData.NavLinks;
+                _isAdmin = pageData.IsAdmin;
+                _pageDataCopied = true;
+            }
+        }
+
+        <div class="page-header">
+            <h1>@Meet?.Title</h1>
+            <AuthorizeView Roles="Admin">
+                <div class="admin-actions">
+                    <a href="/meets/@Slug/edit" class="btn-action" aria-label="Breyta móti">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                        </svg>
+                        Breyta
+                    </a>
+                    <button class="btn-action btn-danger" aria-label="Eyða móti" @onclick="ShowDeleteDialog">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <line x1="10" x2="10" y1="11" y2="17"/>
+                            <line x1="14" x2="14" y1="11" y2="17"/>
+                        </svg>
+                        Eyða
+                    </button>
+                </div>
+            </AuthorizeView>
+        </div>
+        <p>
+            @($"{Meet?.StartDate:dd-MM-yyyy}")
+            @if (Meet?.EndDate is DateOnly endDate && endDate != Meet?.StartDate)
+            {
+                <span> - @($"{endDate:dd-MM-yyyy}")</span>
+            }
+            <br />
+            @Meet?.Location<br />
+        </p>
+
+        <AuthorizeView Roles="Admin">
+            <AddParticipantForm MeetId="Meet!.MeetId"
+                                IncludedDisciplines="IncludedDisciplines"
+                                MeetStartDate="Meet!.StartDate"
+                                RegisteredAthletes="@Participations.Select(p => p.AthleteSlug).ToHashSet()"
+                                OnParticipantAdded="ReloadParticipations" />
+        </AuthorizeView>
+
+        <SectionNav Links="_navLinks" />
+
+        @if (ShowIpfPointLeaders)
+        {
+            <h2 id="stigahaestu">Stigahæstu keppendur</h2>
+            <div class="leaders-section">
+                <div class="leaders-grid">
+                    @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
                     {
-                        <div class="leader-row">
-                            <span class="leader-medal" aria-hidden="true">
-                                @((leader.Index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
-                            </span>
-                            <div class="leader-info">
-                                <NavLink class="leader-name" href="@($"/athletes/{leader.Participation.AthleteSlug}")">@leader.Participation.Athlete</NavLink>
-                                <span class="leader-meta">
-                                    @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @($"{leader.Participation.BodyWeight:F2}") kg
-                                </span>
-                            </div>
-                            <span class="leader-pts">@($"{leader.Participation.IpfPoints:F2}")</span>
+                        <div class="leaders-gender-col">
+                            <h3 class="leaders-gender-heading">@gender.Key</h3>
+                            @foreach (var leader in gender.OrderByDescending(x => x.IpfPoints).Take(3).Select((x, i) => (Participation: x, Index: i)))
+                            {
+                                <div class="leader-row">
+                                    <span class="leader-medal" aria-hidden="true">
+                                        @((leader.Index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
+                                    </span>
+                                    <div class="leader-info">
+                                        <NavLink class="leader-name" href="@($"/athletes/{leader.Participation.AthleteSlug}")">@leader.Participation.Athlete</NavLink>
+                                        <span class="leader-meta">
+                                            @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @($"{leader.Participation.BodyWeight:F2}") kg
+                                        </span>
+                                    </div>
+                                    <span class="leader-pts">@($"{leader.Participation.IpfPoints:F2}")</span>
+                                </div>
+                            }
                         </div>
                     }
                 </div>
+            </div>
+            <br />
+        }
+
+        <h2 id="urslit">Úrslit</h2>
+
+        <div class="results-container">
+            @foreach (var genderAgeAgeCategory in Participations
+                .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
+                .GroupBy(x => new { x.Gender, x.AgeCategory, x.AgeCategorySlug })
+                .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategorySlug.Length > 0 ? char.ToUpperInvariant(x.Key.AgeCategorySlug[0]) : ' '))
+                .ThenBy(x => x.Key.AgeCategorySlug)
+                .ThenByDescending(x => x.Key.Gender))
+            {
+                <section class="card-section">
+                    <h4>@genderAgeAgeCategory.Key.Gender — @genderAgeAgeCategory.Key.AgeCategory</h4>
+                    <br />
+
+                    @foreach (IGrouping<string, MeetParticipation> weightCategory in genderAgeAgeCategory
+                        .GroupBy(x => x.WeightCategory)
+                        .OrderBy(x => x.Max(y => y.BodyWeight)))
+                    {
+                        <h5>@weightCategory.Key kg</h5>
+
+                        <div class="card-col-headers" style="@($"--grid-template: {ResultsGridTemplate}")" aria-hidden="true">
+                            <span></span>
+                            <span>Nafn</span>
+                            @if (ShowClubs)
+                            {
+                                <span>Félag</span>
+                            }
+                            @foreach (Discipline disc in IncludedDisciplines.Keys.OrderBy(d => (byte)d))
+                            {
+                                <span class="col-header-center">@disc.ToDisplayName()</span>
+                            }
+                            <span class="col-header-right">@Constants.Total</span>
+                            @if (ShowIpfPoints)
+                            {
+                                <span class="col-header-right">IPF stig</span>
+                            }
+                        </div>
+
+                        @foreach (MeetParticipation p in weightCategory
+                            .OrderBy(x => x.Disqualified)
+                            .ThenBy(x => x.Rank <= 0)
+                            .ThenBy(x => x.Rank)
+                            .ThenBy(x => x.Athlete))
+                        {
+                            <ParticipationCard Participation="p"
+                                               ShowIpfPoints="ShowIpfPoints"
+                                               ShowClub="ShowClubs"
+                                               IncludedDisciplines="IncludedDisciplines"
+                                               DesktopGridTemplate="@ResultsGridTemplate"
+                                               IsAdmin="_isAdmin"
+                                               OnParticipantRemoved="ReloadParticipations"
+                                               OnBodyWeightUpdated="ReloadParticipations"
+                                               OnSaveError="AddToast" />
+                        }
+                    }
+                </section>
+                <br />
             }
         </div>
-    </div>
-    <br />
-}
 
-<h2 id="urslit">Úrslit</h2>
-
-<div class="results-container">
-    @foreach (var genderAgeAgeCategory in Participations
-        .Where(x => !string.IsNullOrEmpty(x.AgeCategory))
-        .GroupBy(x => new { x.Gender, x.AgeCategory, x.AgeCategorySlug })
-        .OrderBy(x => Array.IndexOf(Constants.AgeCategoryOrder, x.Key.AgeCategorySlug.Length > 0 ? char.ToUpperInvariant(x.Key.AgeCategorySlug[0]) : ' '))
-        .ThenBy(x => x.Key.AgeCategorySlug)
-        .ThenByDescending(x => x.Key.Gender))
-    {
-        <section class="card-section">
-            <h4>@genderAgeAgeCategory.Key.Gender — @genderAgeAgeCategory.Key.AgeCategory</h4>
-            <br />
-
-            @foreach (IGrouping<string, MeetParticipation> weightCategory in genderAgeAgeCategory
-                .GroupBy(x => x.WeightCategory)
-                .OrderBy(x => x.Max(y => y.BodyWeight)))
-            {
-                <h5>@weightCategory.Key kg</h5>
-
-                <div class="card-col-headers" style="@($"--grid-template: {ResultsGridTemplate}")" aria-hidden="true">
-                    <span></span>
-                    <span>Nafn</span>
-                    @if (ShowClubs)
-                    {
-                        <span>Félag</span>
-                    }
-                    @foreach (Discipline disc in IncludedDisciplines.Keys.OrderBy(d => (byte)d))
-                    {
-                        <span class="col-header-center">@disc.ToDisplayName()</span>
-                    }
-                    <span class="col-header-right">@Constants.Total</span>
-                    @if (ShowIpfPoints)
-                    {
-                        <span class="col-header-right">IPF stig</span>
-                    }
-                </div>
-
-                @foreach (MeetParticipation p in weightCategory
-                    .OrderBy(x => x.Disqualified)
-                    .ThenBy(x => x.Rank <= 0)
-                    .ThenBy(x => x.Rank)
-                    .ThenBy(x => x.Athlete))
-                {
-                    <ParticipationCard Participation="p"
-                                       ShowIpfPoints="ShowIpfPoints"
-                                       ShowClub="ShowClubs"
-                                       IncludedDisciplines="IncludedDisciplines"
-                                       DesktopGridTemplate="@ResultsGridTemplate"
-                                       IsAdmin="_isAdmin"
-                                       OnParticipantRemoved="ReloadParticipations"
-                                       OnBodyWeightUpdated="ReloadParticipations"
-                                       OnSaveError="AddToast" />
-                }
-            }
-        </section>
-        <br />
-    }
-</div>
-
-@if (ShowTeamStandings)
-{
-    <h2 id="lidakeppni">Liðakeppni</h2>
-
-    <div class="standings-container">
-        @if (IsPreGenderSplit)
+        @if (ShowTeamStandings)
         {
-            <ol class="standings-list">
-                @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Combined)
-                {
-                    <li><StandingsCard Standing="standing" /></li>
-                }
-            </ol>
-        }
-        else
-        {
-            <div class="standings-grid">
-                @if (_teamPointsResponse!.Women.Count > 0)
-                {
-                    <section class="standings-gender">
-                        <h4>@("f".ToGenderGroupLabel())</h4>
-                        <ol class="standings-list">
-                            @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
-                            {
-                                <li><StandingsCard Standing="standing" /></li>
-                            }
-                        </ol>
-                    </section>
-                }
+            <h2 id="lidakeppni">Liðakeppni</h2>
 
-                @if (_teamPointsResponse!.Men.Count > 0)
+            <div class="standings-container">
+                @if (IsPreGenderSplit)
                 {
-                    <section class="standings-gender">
-                        <h4>@("m".ToGenderGroupLabel())</h4>
-                        <ol class="standings-list">
-                            @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
-                            {
-                                <li><StandingsCard Standing="standing" /></li>
-                            }
-                        </ol>
-                    </section>
+                    <ol class="standings-list">
+                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Combined)
+                        {
+                            <li><StandingsCard Standing="standing" /></li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <div class="standings-grid">
+                        @if (_teamPointsResponse!.Women.Count > 0)
+                        {
+                            <section class="standings-gender">
+                                <h4>@("f".ToGenderGroupLabel())</h4>
+                                <ol class="standings-list">
+                                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
+                                    {
+                                        <li><StandingsCard Standing="standing" /></li>
+                                    }
+                                </ol>
+                            </section>
+                        }
+
+                        @if (_teamPointsResponse!.Men.Count > 0)
+                        {
+                            <section class="standings-gender">
+                                <h4>@("m".ToGenderGroupLabel())</h4>
+                                <ol class="standings-list">
+                                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
+                                    {
+                                        <li><StandingsCard Standing="standing" /></li>
+                                    }
+                                </ol>
+                            </section>
+                        }
+                    </div>
+
+                    @if (_teamPointsResponse!.Women.Count == 0 && _teamPointsResponse!.Men.Count == 0)
+                    {
+                        <div class="empty-section">Engar niðurstöður.</div>
+                    }
                 }
             </div>
-
-            @if (_teamPointsResponse!.Women.Count == 0 && _teamPointsResponse!.Men.Count == 0)
-            {
-                <div class="empty-section">Engar niðurstöður.</div>
-            }
         }
-    </div>
-}
 
-@if (_meetRecords.Count > 0)
-{
-    <MeetRecordsSection Records="_meetRecords" />
-}
-}
+        @if (_meetRecords.Count > 0)
+        {
+            <MeetRecordsSection Records="_meetRecords" />
+        }
+
+        <ConfirmDialog @ref="_deleteDialog"
+                       Id="delete-meet-dialog"
+                       Title="Eyða móti"
+                       Message="@($"Ertu viss um að þú viljir eyða mótinu \"{Meet?.Title}\"?")"
+                       ConfirmLabel="Eyða móti"
+                       OnConfirm="HandleDelete"
+                       ErrorMessage="@_deleteErrorMessage"
+                       IsLoading="_isDeleting" />
+    </ChildContent>
+</DataLoader>
 
 <div class="toast-stack" aria-live="polite">
     @foreach (ToastItem toast in _toasts)
@@ -228,15 +246,6 @@ else
     }
 </div>
 
-<ConfirmDialog @ref="_deleteDialog"
-               Id="delete-meet-dialog"
-               Title="Eyða móti"
-               Message="@($"Ertu viss um að þú viljir eyða mótinu \"{Meet?.Title}\"?")"
-               ConfirmLabel="Eyða móti"
-               OnConfirm="HandleDelete"
-               ErrorMessage="@_deleteErrorMessage"
-               IsLoading="_isDeleting" />
-
 @code {
     private sealed class ToastItem(Guid Id, string Message)
     {
@@ -244,6 +253,20 @@ else
         public string Message { get; } = Message;
         public bool IsExiting { get; set; }
     }
+
+    private sealed record MeetPageData(
+        MeetDetails Meet,
+        IReadOnlyList<MeetParticipation> Participations,
+        Dictionary<Discipline, bool> IncludedDisciplines,
+        bool ShowIpfPoints,
+        bool ShowClubs,
+        bool ShowIpfPointLeaders,
+        MeetTeamPointsResponse? TeamPointsResponse,
+        bool ShowTeamStandings,
+        bool IsPreGenderSplit,
+        IReadOnlyList<MeetRecordEntry> MeetRecords,
+        IReadOnlyList<SectionNav.SectionNavLink> NavLinks,
+        bool IsAdmin);
 
     private const int MaxToasts = 5;
     private const int ToastDurationMs = 4000;
@@ -255,11 +278,12 @@ else
 
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
-    private bool _isLoading = true;
     private string? _deleteErrorMessage;
     private bool _isAdmin;
+    private bool _pageDataCopied;
     private IReadOnlyList<MeetRecordEntry> _meetRecords = [];
     private IReadOnlyList<SectionNav.SectionNavLink> _navLinks = [];
+    private MeetTeamPointsResponse? _teamPointsResponse;
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -267,13 +291,11 @@ else
     private MeetDetails? Meet;
     private IReadOnlyList<MeetParticipation> Participations = [];
     private Dictionary<Discipline, bool> IncludedDisciplines = new();
-    private MeetTeamPointsResponse? _teamPointsResponse;
     private bool ShowIpfPoints;
     private bool ShowIpfPointLeaders;
     private bool ShowClubs;
     private bool ShowTeamStandings;
     private bool IsPreGenderSplit;
-    private string? _errorMessage;
 
     private string ResultsGridTemplate
     {
@@ -287,6 +309,71 @@ else
                 ? $"22px 280px {clubPart}{discPart} 63px 68px"
                 : $"22px 280px {clubPart}{discPart} 63px";
         }
+    }
+
+    private async Task<MeetPageData?> LoadAsync()
+    {
+        MeetDetails? meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
+
+        if (meet is null)
+        {
+            return null;
+        }
+
+        IReadOnlyList<MeetParticipation> participations =
+            await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
+
+        Dictionary<Discipline, bool> attemptWeights = participations
+            .SelectMany(p => p.Attempts)
+            .GroupBy(a => a.Discipline)
+            .ToDictionary(g => g.Key, g => g.Any(a => a.Weight > 0));
+
+        Dictionary<Discipline, bool> includedDisciplines = meet.Disciplines
+            .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
+
+        bool showIpfPoints = participations.Any(x => x.IpfPoints > 0);
+        bool showClubs = participations.Any(p => !string.IsNullOrWhiteSpace(p.Club));
+        bool showIpfPointLeaders = meet.CalculatePlaces && showIpfPoints;
+
+        MeetTeamPointsResponse? teamPointsResponse = null;
+        bool showTeamStandings = false;
+        bool isPreGenderSplit = false;
+
+        if (meet.ShowTeamPoints)
+        {
+            teamPointsResponse = await HttpClient.GetFromJsonAsync<MeetTeamPointsResponse>($"/meets/{Slug}/team-points");
+            showTeamStandings = teamPointsResponse is not null
+                && (teamPointsResponse.Women.Count > 0
+                    || teamPointsResponse.Men.Count > 0
+                    || teamPointsResponse.Combined.Count > 0);
+            isPreGenderSplit = meet.StartDate.Year < 2015;
+        }
+
+        IReadOnlyList<MeetRecordEntry> meetRecords =
+            await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetRecordEntry>>($"/meets/{Slug}/records") ?? [];
+
+        List<SectionNav.SectionNavLink> navLinks = [];
+        if (showIpfPointLeaders) { navLinks.Add(new SectionNav.SectionNavLink("Stigahæstu keppendur", $"/meets/{Slug}#stigahaestu")); }
+        navLinks.Add(new SectionNav.SectionNavLink("Úrslit", $"/meets/{Slug}#urslit"));
+        if (showTeamStandings) { navLinks.Add(new SectionNav.SectionNavLink("Liðakeppni", $"/meets/{Slug}#lidakeppni")); }
+        if (meetRecords.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Met", $"/meets/{Slug}#met")); }
+
+        AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        bool isAdmin = authState.User.IsInRole("Admin");
+
+        return new MeetPageData(
+            meet,
+            participations,
+            includedDisciplines,
+            showIpfPoints,
+            showClubs,
+            showIpfPointLeaders,
+            teamPointsResponse,
+            showTeamStandings,
+            isPreGenderSplit,
+            meetRecords,
+            navLinks,
+            isAdmin);
     }
 
     private async Task AddToast(string message)
@@ -454,63 +541,6 @@ else
         finally
         {
             _isDeleting = false;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            Meet = await HttpClient.GetFromJsonAsync<MeetDetails>($"/meets/{Slug}");
-            Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<MeetParticipation>>($"/meets/{Slug}/participations") ?? [];
-
-            if (Meet is null)
-            {
-                _errorMessage = "Mót fannst ekki.";
-                return;
-            }
-
-            Dictionary<Discipline, bool> attemptWeights = Participations
-                .SelectMany(p => p.Attempts)
-                .GroupBy(a => a.Discipline)
-                .ToDictionary(g => g.Key, g => g.Any(a => a.Weight > 0));
-
-            IncludedDisciplines = Meet!.Disciplines
-                .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
-
-            ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
-            ShowClubs = Participations.Any(p => !string.IsNullOrWhiteSpace(p.Club));
-            ShowIpfPointLeaders = Meet?.CalculatePlaces is true && ShowIpfPoints;
-
-            if (Meet?.ShowTeamPoints is true)
-            {
-                _teamPointsResponse = await HttpClient.GetFromJsonAsync<MeetTeamPointsResponse>($"/meets/{Slug}/team-points");
-                ShowTeamStandings = _teamPointsResponse is not null
-                    && (_teamPointsResponse.Women.Count > 0
-                        || _teamPointsResponse.Men.Count > 0
-                        || _teamPointsResponse.Combined.Count > 0);
-                IsPreGenderSplit = Meet.StartDate.Year < 2015;
-            }
-
-            await ReloadMeetRecords();
-
-            List<SectionNav.SectionNavLink> navLinks = [];
-            if (ShowIpfPointLeaders) { navLinks.Add(new SectionNav.SectionNavLink("Stigahæstu keppendur", $"/meets/{Slug}#stigahaestu")); }
-            navLinks.Add(new SectionNav.SectionNavLink("Úrslit", $"/meets/{Slug}#urslit"));
-            if (ShowTeamStandings) { navLinks.Add(new SectionNav.SectionNavLink("Liðakeppni", $"/meets/{Slug}#lidakeppni")); }
-            if (_meetRecords.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Met", $"/meets/{Slug}#met")); }
-            _navLinks = navLinks;
-
-            AuthenticationState authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            _isAdmin = authState.User.IsInRole("Admin");
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp við að sækja mót. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
         }
     }
 }
