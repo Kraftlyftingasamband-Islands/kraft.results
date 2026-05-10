@@ -22,11 +22,6 @@ internal sealed class CalcPlacesChangedEventHandler(
 
     public Task HandleAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        if (domainEvent is CalcPlacesChangedEvent calcPlacesChangedEvent)
-        {
-            return HandleAsync(calcPlacesChangedEvent, cancellationToken);
-        }
-
-        return Task.CompletedTask;
+        return HandleAsync((CalcPlacesChangedEvent)domainEvent, cancellationToken);
     }
 }

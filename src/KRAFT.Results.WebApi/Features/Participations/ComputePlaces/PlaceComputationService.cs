@@ -22,7 +22,6 @@ internal sealed class PlaceComputationService(ResultsDbContext dbContext)
     internal async Task RecomputeMeetAsync(int meetId, bool calcPlaces, CancellationToken cancellationToken)
     {
         List<Participation> participations = await dbContext.Set<Participation>()
-            .Include(p => p.Attempts)
             .Where(p => p.MeetId == meetId)
             .ToListAsync(cancellationToken);
 
