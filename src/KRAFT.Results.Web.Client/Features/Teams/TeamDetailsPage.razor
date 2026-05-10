@@ -1,6 +1,5 @@
-﻿@page "/teams/{slug}"
+@page "/teams/{slug}"
 
-@using KRAFT
 @using KRAFT.Results.Contracts.Teams
 @using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
@@ -8,87 +7,78 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki félag..." />
-}
-else if (_errorMessage is not null)
-{
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-        <a href="/teams">Til baka í félagslista</a>
-    </div>
-}
-else
-{
-    <div class="page-header">
-        <h1>@Team?.FullTitle (@Team?.ShortTitle)</h1>
-        <AuthorizeView Roles="Admin">
-            <div class="admin-actions">
-                <a href="/teams/@Slug/edit" class="btn-action" aria-label="Breyta félagi">
-                    <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                        <path d="m15 5 4 4"/>
-                    </svg>
-                    Breyta
-                </a>
-                <button class="btn-action btn-danger" aria-label="Eyða félagi" @onclick="ShowDeleteDialog">
-                    <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                        <line x1="10" x2="10" y1="11" y2="17"/>
-                        <line x1="14" x2="14" y1="11" y2="17"/>
-                    </svg>
-                    Eyða
-                </button>
-            </div>
-        </AuthorizeView>
-    </div>
+<DataLoader T="TeamDetails" Loader="LoadAsync" Noun="félag">
+    <ChildContent Context="team">
+        <div class="page-header">
+            <h1>@team.FullTitle (@team.ShortTitle)</h1>
+            <AuthorizeView Roles="Admin">
+                <div class="admin-actions">
+                    <a href="/teams/@Slug/edit" class="btn-action" aria-label="Breyta félagi">
+                        <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                        </svg>
+                        Breyta
+                    </a>
+                    <button class="btn-action btn-danger" aria-label="Eyða félagi" @onclick="ShowDeleteDialog">
+                        <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <line x1="10" x2="10" y1="11" y2="17"/>
+                            <line x1="14" x2="14" y1="11" y2="17"/>
+                        </svg>
+                        Eyða
+                    </button>
+                </div>
+            </AuthorizeView>
+        </div>
 
-    <br/>
+        <br/>
 
-    <h2>Meðlimir</h2>
+        <h2>Meðlimir</h2>
 
-    @if (Team?.Members is { Count: > 0 } members)
-    {
-        <ul class="member-list">
-            @foreach (TeamMember member in members)
-            {
-                <li>
-                    <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
-                        @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
-                    </NavLink>
-                </li>
-            }
-        </ul>
-    }
-    else
-    {
-        <p>Engir meðlimir skráðir.</p>
-    }
+        @if (team.Members is { Count: > 0 } members)
+        {
+            <ul class="member-list">
+                @foreach (TeamMember member in members)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
+                            @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>Engir meðlimir skráðir.</p>
+        }
 
-    <ConfirmDialog @ref="_deleteDialog"
-                   Id="delete-team-dialog"
-                   Title="Eyða liði"
-                   Message="@($"Ertu viss um að þú viljir eyða liðinu \"{Team?.FullTitle}\"?")"
-                   ConfirmLabel="Eyða liði"
-                   OnConfirm="HandleDelete"
-                   ErrorMessage="@_deleteErrorMessage"
-                   IsLoading="_isDeleting" />
-}
+        <ConfirmDialog @ref="_deleteDialog"
+                       Id="delete-team-dialog"
+                       Title="Eyða liði"
+                       Message="@($"Ertu viss um að þú viljir eyða liðinu \"{team.FullTitle}\"?")"
+                       ConfirmLabel="Eyða liði"
+                       OnConfirm="HandleDelete"
+                       ErrorMessage="@_deleteErrorMessage"
+                       IsLoading="_isDeleting" />
+    </ChildContent>
+</DataLoader>
 
 @code {
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
     private string? _deleteErrorMessage;
-    private bool _isLoading = true;
-    private string? _errorMessage;
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    private TeamDetails? Team;
+    private async Task<TeamDetails?> LoadAsync()
+    {
+        return await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+    }
 
     private async Task ShowDeleteDialog()
     {
@@ -130,27 +120,6 @@ else
         finally
         {
             _isDeleting = false;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            Team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
-
-            if (Team is null)
-            {
-                _errorMessage = "Félag fannst ekki.";
-            }
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp við að sækja félag. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
         }
     }
 }

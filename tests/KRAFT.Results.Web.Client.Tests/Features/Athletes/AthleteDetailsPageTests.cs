@@ -302,6 +302,75 @@ public sealed class AthleteDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void ShowsLoadingStateInitially()
+    {
+        // Arrange
+        RegisterHttpClient(delay: true);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.Find("[role='status']").ShouldNotBeNull();
+        cut.Find(".visually-hidden").TextContent.ShouldBe("Sæki keppanda...");
+    }
+
+    [Fact]
+    public void ShowsNotFoundMessage_WhenAthleteReturnsNull()
+    {
+        // Arrange
+        RegisterNullAthleteHttpClient();
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "nonexistent"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").ShouldNotBeNull();
+            cut.Find("[role='alert']").TextContent.ShouldContain("keppanda");
+            cut.Find("[role='alert']").TextContent.ShouldContain("fannst ekki");
+        });
+    }
+
+    [Fact]
+    public void ShowsErrorWithRetryButton_WhenHttpRequestFails()
+    {
+        // Arrange
+        RegisterFailingHttpClient();
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("[role='alert']").ShouldNotBeNull();
+            cut.Find(".retry-btn").ShouldNotBeNull();
+        });
+    }
+
+    [Fact]
+    public void ShowsAthleteName_WhenLoaded()
+    {
+        // Arrange
+        RegisterHttpClient();
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("h1").TextContent.ShouldBe("Test Athlete");
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -311,15 +380,54 @@ public sealed class AthleteDetailsPageTests : IDisposable
     private void RegisterHttpClient(
         List<AthleteRecord>? records = null,
         List<AthletePersonalBest>? personalBests = null,
-        List<AthleteParticipation>? participations = null)
+        List<AthleteParticipation>? participations = null,
+        bool delay = false)
     {
         AthleteDetailsPageMockHandler handler = new(
             records ?? [],
             personalBests ?? [],
-            participations ?? []);
+            participations ?? [],
+            delay);
 
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         _context.AddAuthorization();
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
+    private void RegisterNullAthleteHttpClient()
+    {
+        NullAthleteHttpMessageHandler handler = new();
+        HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
+        _context.Services.AddSingleton(httpClient);
+        _context.AddAuthorization();
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
+    private void RegisterFailingHttpClient()
+    {
+        FailingAthleteHttpMessageHandler handler = new();
+        HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
+        _context.Services.AddSingleton(httpClient);
+        _context.AddAuthorization();
+    }
+
+    private sealed class NullAthleteHttpMessageHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json"),
+            });
+        }
+    }
+
+    private sealed class FailingAthleteHttpMessageHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            throw new HttpRequestException("Server error");
+        }
     }
 }

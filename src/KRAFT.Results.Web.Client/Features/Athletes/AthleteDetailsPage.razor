@@ -8,153 +8,168 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki keppanda..." />
-}
-else if (_errorMessage is not null)
-{
-    <div role="alert" class="error-message">
-        <p>@_errorMessage</p>
-        <a href="/athletes">Til baka í keppendur</a>
-    </div>
-}
-else
-{
-<div class="page-header">
-    <h1>@Athlete?.Name</h1>
-    <AuthorizeView Roles="Admin">
-        <div class="admin-actions">
-            <a href="/athletes/@Slug/edit" class="btn-action" aria-label="Breyta keppanda">
-                <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                    <path d="m15 5 4 4"/>
-                </svg>
-                Breyta
-            </a>
-            <button class="btn-action btn-danger" aria-label="Eyða keppanda" @onclick="ShowDeleteDialog">
-                <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                    <line x1="10" x2="10" y1="11" y2="17"/>
-                    <line x1="14" x2="14" y1="11" y2="17"/>
-                </svg>
-                Eyða
-            </button>
+<DataLoader T="AthletePageData" Loader="LoadAsync" Noun="keppanda">
+    <ChildContent Context="pageData">
+        <div class="page-header">
+            <h1>@pageData.Athlete.Name</h1>
+            <AuthorizeView Roles="Admin">
+                <div class="admin-actions">
+                    <a href="/athletes/@Slug/edit" class="btn-action" aria-label="Breyta keppanda">
+                        <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                        </svg>
+                        Breyta
+                    </a>
+                    <button class="btn-action btn-danger" aria-label="Eyða keppanda" @onclick="ShowDeleteDialog">
+                        <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <line x1="10" x2="10" y1="11" y2="17"/>
+                            <line x1="14" x2="14" y1="11" y2="17"/>
+                        </svg>
+                        Eyða
+                    </button>
+                </div>
+            </AuthorizeView>
         </div>
-    </AuthorizeView>
-</div>
-<div class="athlete-meta">
-    <span>Fæðingarár: @Athlete?.YearOfBirth</span>
-    @if (ShowClubs)
-    {
-        <span class="meta-separator">&middot;</span>
-        <NavLink class="nav-link" href="@SlugSanitizer.SlugHref("/teams/", Athlete?.ClubSlug ?? string.Empty)">
-            @Athlete?.Club
-        </NavLink>
-    }
-</div>
+        <div class="athlete-meta">
+            <span>Fæðingarár: @pageData.Athlete.YearOfBirth</span>
+            @if (pageData.ShowClubs)
+            {
+                <span class="meta-separator">&middot;</span>
+                <NavLink class="nav-link" href="@SlugSanitizer.SlugHref("/teams/", pageData.Athlete.ClubSlug ?? string.Empty)">
+                    @pageData.Athlete.Club
+                </NavLink>
+            }
+        </div>
 
-@if (PersonalBests.Count > 0 || Records.Count > 0 || Participations.Count > 0)
-{
-    <SectionNav Links="@_navLinks" />
-}
-
-@if (PersonalBests.Count > 0)
-{
-    <h3 id="bestaragangur">Besti árangur</h3>
-    <div class="pb-group-container">
-        @foreach (IGrouping<bool, AthletePersonalBest> group in PersonalBests.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
+        @if (pageData.PersonalBests.Count > 0 || pageData.Records.Count > 0 || pageData.Participations.Count > 0)
         {
-            <AthletePersonalBestGroupCard
-                Title="@($"Besti árangur {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()}")"
-                PersonalBests="@group.ToList()"
-                Records="@Records" />
+            <SectionNav Links="@pageData.NavLinks" />
         }
-    </div>
-}
 
-@if (Records.Count > 0)
-{
-    <h3 id="islandsmet">Núverandi íslandsmet (@Records.Count)</h3>
-    <div class="pb-group-container">
-        @foreach (IGrouping<bool, AthleteRecord> group in Records.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
+        @if (pageData.PersonalBests.Count > 0)
         {
-            <AthleteRecordGroupCard
-                Title="@($"Íslandsmet {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()} ({group.Count()})")"
-                Records="@group.ToList()" />
+            <h3 id="bestaragangur">Besti árangur</h3>
+            <div class="pb-group-container">
+                @foreach (IGrouping<bool, AthletePersonalBest> group in pageData.PersonalBests.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
+                {
+                    <AthletePersonalBestGroupCard
+                        Title="@($"Besti árangur {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()}")"
+                        PersonalBests="@group.ToList()"
+                        Records="@pageData.Records" />
+                }
+            </div>
         }
-    </div>
-}
 
-@if (Participations.Count > 0)
-{
-    <h3 id="ferill">Ferill (@Participations.Count)</h3>
-
-    int groupIndex = 0;
-    @foreach (IGrouping<string, AthleteParticipation> meetType in Participations.GroupBy(x => x.MeetType))
-    {
-        if (groupIndex == 0)
+        @if (pageData.Records.Count > 0)
         {
-            <details class="career-group" open>
-                <summary class="career-group-summary">@meetType.Key</summary>
-                <div class="card-list">
-                    @foreach (AthleteParticipation p in meetType)
-                    {
-                        <AthleteParticipationCard
-                            Participation="p"
-                            MeetType="@meetType.Key"
-                            ShowIpfPoints="@true" />
-                    }
-                </div>
-            </details>
+            <h3 id="islandsmet">Núverandi íslandsmet (@pageData.Records.Count)</h3>
+            <div class="pb-group-container">
+                @foreach (IGrouping<bool, AthleteRecord> group in pageData.Records.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
+                {
+                    <AthleteRecordGroupCard
+                        Title="@($"Íslandsmet {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()} ({group.Count()})")"
+                        Records="@group.ToList()" />
+                }
+            </div>
         }
-        else
-        {
-            <details class="career-group">
-                <summary class="career-group-summary">@meetType.Key</summary>
-                <div class="card-list">
-                    @foreach (AthleteParticipation p in meetType)
-                    {
-                        <AthleteParticipationCard
-                            Participation="p"
-                            MeetType="@meetType.Key"
-                            ShowIpfPoints="@true" />
-                    }
-                </div>
-            </details>
-        }
-        groupIndex++;
-    }
-}
 
-<ConfirmDialog @ref="_deleteDialog"
-               Id="delete-athlete-dialog"
-               Title="Eyða keppanda"
-               Message="Ertu viss um að þú viljir eyða þessum keppanda?"
-               ConfirmLabel="Eyða keppanda"
-               OnConfirm="HandleDelete"
-               ErrorMessage="@_deleteErrorMessage"
-               IsLoading="_isDeleting" />
-}
+        @if (pageData.Participations.Count > 0)
+        {
+            <h3 id="ferill">Ferill (@pageData.Participations.Count)</h3>
+
+            int groupIndex = 0;
+            @foreach (IGrouping<string, AthleteParticipation> meetType in pageData.Participations.GroupBy(x => x.MeetType))
+            {
+                if (groupIndex == 0)
+                {
+                    <details class="career-group" open>
+                        <summary class="career-group-summary">@meetType.Key</summary>
+                        <div class="card-list">
+                            @foreach (AthleteParticipation p in meetType)
+                            {
+                                <AthleteParticipationCard
+                                    Participation="p"
+                                    MeetType="@meetType.Key"
+                                    ShowIpfPoints="@true" />
+                            }
+                        </div>
+                    </details>
+                }
+                else
+                {
+                    <details class="career-group">
+                        <summary class="career-group-summary">@meetType.Key</summary>
+                        <div class="card-list">
+                            @foreach (AthleteParticipation p in meetType)
+                            {
+                                <AthleteParticipationCard
+                                    Participation="p"
+                                    MeetType="@meetType.Key"
+                                    ShowIpfPoints="@true" />
+                            }
+                        </div>
+                    </details>
+                }
+                groupIndex++;
+            }
+        }
+
+        <ConfirmDialog @ref="_deleteDialog"
+                       Id="delete-athlete-dialog"
+                       Title="Eyða keppanda"
+                       Message="Ertu viss um að þú viljir eyða þessum keppanda?"
+                       ConfirmLabel="Eyða keppanda"
+                       OnConfirm="HandleDelete"
+                       ErrorMessage="@_deleteErrorMessage"
+                       IsLoading="_isDeleting" />
+    </ChildContent>
+</DataLoader>
 
 @code {
+    private sealed record AthletePageData(
+        AthleteDetails Athlete,
+        IReadOnlyList<AthletePersonalBest> PersonalBests,
+        IReadOnlyList<AthleteRecord> Records,
+        IReadOnlyList<AthleteParticipation> Participations,
+        List<SectionNav.SectionNavLink> NavLinks,
+        bool ShowClubs);
+
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
-    private bool _isLoading = true;
     private string? _deleteErrorMessage;
-    private string? _errorMessage;
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    private AthleteDetails? Athlete;
-    private bool ShowClubs;
-    private IReadOnlyList<AthletePersonalBest> PersonalBests = [];
-    private IReadOnlyList<AthleteRecord> Records = [];
-    private IReadOnlyList<AthleteParticipation> Participations = [];
-    private IReadOnlyList<SectionNav.SectionNavLink> _navLinks = [];
+    private async Task<AthletePageData?> LoadAsync()
+    {
+        AthleteDetails? athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
+
+        if (athlete is null)
+        {
+            return null;
+        }
+
+        IReadOnlyList<AthletePersonalBest> personalBests =
+            await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
+        IReadOnlyList<AthleteRecord> records =
+            await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
+        IReadOnlyList<AthleteParticipation> participations =
+            await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
+
+        bool showClubs = !string.IsNullOrWhiteSpace(athlete.Club);
+
+        List<SectionNav.SectionNavLink> navLinks = [];
+        if (personalBests.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Besti árangur", $"/athletes/{Slug}#bestaragangur")); }
+        if (records.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Íslandsmet", $"/athletes/{Slug}#islandsmet")); }
+        if (participations.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Ferill", $"/athletes/{Slug}#ferill")); }
+
+        return new AthletePageData(athlete, personalBests, records, participations, navLinks, showClubs);
+    }
 
     private async Task ShowDeleteDialog()
     {
@@ -196,32 +211,6 @@ else
         finally
         {
             _isDeleting = false;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            Athlete = await HttpClient.GetFromJsonAsync<AthleteDetails>($"/athletes/{Slug}");
-            PersonalBests = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthletePersonalBest>>($"/athletes/{Slug}/personalbests") ?? [];
-            Records = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteRecord>>($"/athletes/{Slug}/records") ?? [];
-            Participations = await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
-            ShowClubs = !string.IsNullOrWhiteSpace(Athlete?.Club);
-
-            List<SectionNav.SectionNavLink> navLinks = [];
-            if (PersonalBests.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Besti árangur", $"/athletes/{Slug}#bestaragangur")); }
-            if (Records.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Íslandsmet", $"/athletes/{Slug}#islandsmet")); }
-            if (Participations.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Ferill", $"/athletes/{Slug}#ferill")); }
-            _navLinks = navLinks;
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp við að sækja keppanda. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
         }
     }
 }
