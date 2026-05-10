@@ -1,12 +1,11 @@
 @page "/records/{Id:int}/history"
 
 @using KRAFT.Results.Contracts.Records
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
-
-<PageTitle>Saga metsins@(_response is not null ? $" - {_response.Category} {_response.WeightCategory}" : "")</PageTitle>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol>
@@ -19,75 +18,49 @@
 
 <h1>Saga metsins</h1>
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki sögu..." />
-}
-else if (_hasError)
-{
-    <ErrorMessage Message="Villa kom upp. Reyndu aftur." OnRetry="LoadDataAsync" />
-}
-else if (_response is not null && _response.Entries.Count > 0)
-{
-    <div class="record-meta">
-        <span>@_response.Category</span>
-        <span class="meta-separator">&middot;</span>
-        <span>@_response.WeightCategory</span>
-        <span class="meta-separator">&middot;</span>
-        <span>@_response.AgeCategory</span>
-        <span class="meta-separator">&middot;</span>
-        <span>@_response.Gender</span>
-        <span class="meta-separator">&middot;</span>
-        <span>@_response.EquipmentType</span>
-        @if (_response.Era is not null)
-        {
-            <span class="meta-separator">&middot;</span>
-            <span>@_response.Era</span>
-        }
-    </div>
+<DataLoader T="RecordHistoryResponse" Loader="LoadAsync" Noun="sögu">
+    <ChildContent Context="response">
+        <PageTitle>Saga metsins - @response.Category @response.WeightCategory</PageTitle>
 
-    <div class="rhc-list">
-        @foreach (RecordHistoryEntry entry in _response.Entries)
+        @if (response.Entries.Count > 0)
         {
-            <RecordHistoryCard Entry="entry" />
+            <div class="record-meta">
+                <span>@response.Category</span>
+                <span class="meta-separator">&middot;</span>
+                <span>@response.WeightCategory</span>
+                <span class="meta-separator">&middot;</span>
+                <span>@response.AgeCategory</span>
+                <span class="meta-separator">&middot;</span>
+                <span>@response.Gender</span>
+                <span class="meta-separator">&middot;</span>
+                <span>@response.EquipmentType</span>
+                @if (response.Era is not null)
+                {
+                    <span class="meta-separator">&middot;</span>
+                    <span>@response.Era</span>
+                }
+            </div>
+
+            <div class="rhc-list">
+                @foreach (RecordHistoryEntry entry in response.Entries)
+                {
+                    <RecordHistoryCard Entry="entry" />
+                }
+            </div>
         }
-    </div>
-}
-else
-{
-    <EmptyState Message="Engar færslur fundust." />
-}
+        else
+        {
+            <EmptyState Message="Engar færslur fundust." />
+        }
+    </ChildContent>
+</DataLoader>
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
-    private RecordHistoryResponse? _response;
-    private bool _isLoading = true;
-    private bool _hasError;
-
-    protected override async Task OnInitializedAsync()
+    private async Task<RecordHistoryResponse?> LoadAsync()
     {
-        await LoadDataAsync();
-    }
-
-    private async Task LoadDataAsync()
-    {
-        _isLoading = true;
-        _hasError = false;
-
-        try
-        {
-            _response = await HttpClient.GetFromJsonAsync<RecordHistoryResponse>(
-                $"/records/{Id}/history");
-        }
-        catch
-        {
-            _hasError = true;
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        return await HttpClient.GetFromJsonAsync<RecordHistoryResponse>($"/records/{Id}/history");
     }
 }
