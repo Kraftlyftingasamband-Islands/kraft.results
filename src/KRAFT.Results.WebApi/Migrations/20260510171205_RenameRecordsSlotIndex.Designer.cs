@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KRAFT.Results.WebApi.Migrations
 {
     [DbContext(typeof(ResultsDbContext))]
-    [Migration("20260510165518_RenameRecordsSlotIndex")]
+    [Migration("20260510171205_RenameRecordsSlotIndex")]
     partial class RenameRecordsSlotIndex
     {
         /// <inheritdoc />
