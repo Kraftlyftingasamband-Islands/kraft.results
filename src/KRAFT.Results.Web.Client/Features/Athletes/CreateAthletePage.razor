@@ -50,6 +50,11 @@
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
         IReadOnlyCollection<TeamOption> teams = await teamsTask ?? [];
 
+        if (countries.Count == 0)
+        {
+            throw new HttpRequestException("Required reference data is unavailable.");
+        }
+
         return new CreateAthleteData(countries, teams);
     }
 

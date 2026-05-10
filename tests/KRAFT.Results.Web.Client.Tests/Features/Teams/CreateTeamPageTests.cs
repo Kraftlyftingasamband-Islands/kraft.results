@@ -106,12 +106,4 @@ public sealed class CreateTeamPageTests : IDisposable
             };
         }
     }
-
-    private sealed class FailingHttpMessageHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            throw new HttpRequestException("Server error");
-        }
-    }
 }

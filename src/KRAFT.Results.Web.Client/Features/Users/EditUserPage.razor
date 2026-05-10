@@ -20,11 +20,11 @@
 <DataLoader T="EditUserData" Loader="LoadAsync" Noun="gögn">
     <ChildContent Context="data">
         @{
-            if (!_modelCaptured)
+            if (!ReferenceEquals(_lastUserData, data))
             {
+                _lastUserData = data;
                 _model = data.Model;
                 _isSelfEdit = data.IsSelfEdit;
-                _modelCaptured = true;
             }
         }
 
@@ -136,7 +136,7 @@
     public int UserId { get; set; }
 
     private EditUserModel? _model;
-    private bool _modelCaptured;
+    private EditUserData? _lastUserData;
     private bool _isLoading;
     private string? _errorMessage;
     private string? _deleteErrorMessage;

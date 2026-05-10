@@ -107,12 +107,4 @@ public sealed class MeetIndexTests : IDisposable
         _context.Services.AddSingleton(httpClient);
         _context.AddAuthorization();
     }
-
-    private sealed class FailingHttpMessageHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            throw new HttpRequestException("Server error");
-        }
-    }
 }
