@@ -9,51 +9,28 @@
 
 <PageHeader Title="Félög" ActionHref="/teams/create" ActionLabel="Stofna félag" />
 
-@if (_errorMessage is not null)
-{
-    <ErrorMessage Message="@_errorMessage" />
-}
-
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki félög..." />
-}
-else
-{
-    <div class="card-grid">
-        @foreach (TeamSummary team in Teams)
-        {
-            <Card>
-                <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
-                <div class="team-name">@team.Title</div>
-                <div class="team-short">@team.ShortTitle</div>
-                <div class="team-count">
-                    <span class="count-value">@team.AthleteCount</span>
-                    <span class="count-label">meðlimir</span>
-                </div>
-            </Card>
-        }
-    </div>
-}
+<DataLoader T="IReadOnlyCollection<TeamSummary>" Loader="LoadAsync" Noun="félög">
+    <ChildContent Context="context">
+        <div class="card-grid">
+            @foreach (TeamSummary team in context)
+            {
+                <Card>
+                    <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
+                    <div class="team-name">@team.Title</div>
+                    <div class="team-short">@team.ShortTitle</div>
+                    <div class="team-count">
+                        <span class="count-value">@team.AthleteCount</span>
+                        <span class="count-label">meðlimir</span>
+                    </div>
+                </Card>
+            }
+        </div>
+    </ChildContent>
+</DataLoader>
 
 @code {
-    private bool _isLoading = true;
-    private IReadOnlyCollection<TeamSummary> Teams = [];
-    private string? _errorMessage;
-
-    protected override async Task OnInitializedAsync()
+    private async Task<IReadOnlyCollection<TeamSummary>?> LoadAsync()
     {
-        try
-        {
-            Teams = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams") ?? [];
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp við að sækja félög. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams");
     }
 }

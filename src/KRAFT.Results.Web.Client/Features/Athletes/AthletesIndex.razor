@@ -1,6 +1,7 @@
 @page "/athletes"
 
 @using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
 
 @implements IAsyncDisposable
@@ -9,69 +10,73 @@
 
 <PageHeader Title="Keppendur" ActionHref="/athletes/create" ActionLabel="Stofna keppanda" />
 
-@if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki keppendur..." />
-}
-else if (_errorMessage is not null)
-{
-    <ErrorMessage Message="@_errorMessage" />
-}
-else
-{
-    <div class="search-container">
-        <input @ref="_searchInput"
-               type="search"
-               class="search-input"
-               placeholder="Finna keppanda..."
-               aria-label="Finna keppanda"
-               @bind="_searchTerm"
-               @bind:event="oninput"
-               @bind:after="OnSearchInputAsync" />
-    </div>
+<DataLoader T="IReadOnlyCollection<AthleteSummary>" Loader="LoadAsync" Noun="keppendur">
+    <ChildContent Context="context">
+        @{ InitializeAthletes(context); }
+        <div class="search-container">
+            <input @ref="_searchInput"
+                   type="search"
+                   class="search-input"
+                   placeholder="Finna keppanda..."
+                   aria-label="Finna keppanda"
+                   @bind="_searchTerm"
+                   @bind:event="oninput"
+                   @bind:after="OnSearchInputAsync" />
+        </div>
 
-    @if (_filteredAthletes.Count > 0)
-    {
-        <table>
-            <thead>
-                <tr>
-                    <th>Nafn</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (AthleteSummary athlete in _filteredAthletes)
-                {
+        @if (_filteredAthletes.Count > 0)
+        {
+            <table>
+                <thead>
                     <tr>
-                        <td>
-                            <NavLink class="nav-link" href="@($"/athletes/{athlete.Slug}")">
-                                @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
-                            </NavLink>
-                        </td>
+                        <th>Nafn</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    }
+                </thead>
 
-    @if (_filteredAthletes.Count == 0 && _athletes.Count > 0)
-    {
-        <EmptyState Message="Enginn keppandi fannst." />
-    }
-}
+                <tbody>
+                    @foreach (AthleteSummary athlete in _filteredAthletes)
+                    {
+                        <tr>
+                            <td>
+                                <NavLink class="nav-link" href="@($"/athletes/{athlete.Slug}")">
+                                    @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
+                                </NavLink>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @if (_filteredAthletes.Count == 0 && _athletes.Count > 0)
+        {
+            <EmptyState Message="Enginn keppandi fannst." />
+        }
+    </ChildContent>
+</DataLoader>
 
 @code {
 
     private IReadOnlyCollection<AthleteSummary> _athletes = [];
     private string _searchTerm = string.Empty;
-    private bool _isLoading = true;
-    private string? _errorMessage;
     private bool _shouldFocusSearch;
     private ElementReference _searchInput;
 
     private IReadOnlyCollection<AthleteSummary> _filteredAthletes = [];
 
     private CancellationTokenSource _debounceCts = new();
+
+    private void InitializeAthletes(IReadOnlyCollection<AthleteSummary> context)
+    {
+        if (_athletes == context)
+        {
+            return;
+        }
+
+        _athletes = context;
+        _filteredAthletes = context;
+        _shouldFocusSearch = true;
+    }
 
     private void ApplyFilter()
     {
@@ -82,23 +87,9 @@ else
                 .ToList();
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task<IReadOnlyCollection<AthleteSummary>?> LoadAsync()
     {
-        try
-        {
-            await base.OnInitializedAsync();
-            _athletes = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes") ?? [];
-            ApplyFilter();
-            _shouldFocusSearch = true;
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp við að sækja keppendur. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<AthleteSummary>>("/athletes");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

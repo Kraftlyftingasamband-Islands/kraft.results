@@ -5,80 +5,67 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @using KRAFT.Results.Contracts.Users
+@using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient;
 @inject NavigationManager NavigationManager;
 
 <div class="page-header">
     <h3>Notendur</h3>
-    @if (!_isLoading)
-    {
-        <button class="btn-action" @onclick="NavigateToCreate">
-            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
-            </svg>
-            Stofna notanda
-        </button>
-    }
+    <button class="btn-action" @onclick="NavigateToCreate">
+        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+        </svg>
+        Stofna notanda
+    </button>
 </div>
 
-@if (!string.IsNullOrEmpty(_errorMessage))
-{
-    <ErrorMessage Message="@_errorMessage" />
-}
-else if (_isLoading)
-{
-    <LoadingSpinner Label="Sæki notendur..." />
-}
-else
-{
-    <table>
-        <thead>
-            <tr>
-                <th>Nafn</th>
-                <th>Tölvupóstfang</th>
-                <th>Hlutverk</th>
-                <th>Stofnaður</th>
-                <th><span class="visually-hidden">Aðgerðir</span></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @if (!Users.Any())
-            {
+<DataLoader T="IReadOnlyCollection<UserSummary>" Loader="LoadAsync" Noun="notendur">
+    <ChildContent Context="context">
+        <table>
+            <thead>
                 <tr>
-                    <td colspan="5">Engir notendur fundust.</td>
+                    <th>Nafn</th>
+                    <th>Tölvupóstfang</th>
+                    <th>Hlutverk</th>
+                    <th>Stofnaður</th>
+                    <th><span class="visually-hidden">Aðgerðir</span></th>
                 </tr>
-            }
-            else
-            {
-                @foreach (UserSummary User in Users)
+            </thead>
+
+            <tbody>
+                @if (!context.Any())
                 {
                     <tr>
-                        <td>@User.Name</td>
-                        <td>@User.Email</td>
-                        <td>@string.Join(", ", User.Roles)</td>
-                        <td>@User.CreatedOn.ToShortDateString()</td>
-                        <td>
-                            <button type="button" class="btn-edit" @onclick="@(() => NavigateToEdit(User.UserId))" aria-label="@($"Breyta {User.Name}")">
-                                <svg class="btn-edit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/>
-                                </svg>
-                                <span>Breyta</span>
-                            </button>
-                        </td>
+                        <td colspan="5">Engir notendur fundust.</td>
                     </tr>
                 }
-            }
-        </tbody>
-    </table>
-}
+                else
+                {
+                    @foreach (UserSummary User in context)
+                    {
+                        <tr>
+                            <td>@User.Name</td>
+                            <td>@User.Email</td>
+                            <td>@string.Join(", ", User.Roles)</td>
+                            <td>@User.CreatedOn.ToShortDateString()</td>
+                            <td>
+                                <button type="button" class="btn-edit" @onclick="@(() => NavigateToEdit(User.UserId))" aria-label="@($"Breyta {User.Name}")">
+                                    <svg class="btn-edit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/>
+                                    </svg>
+                                    <span>Breyta</span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </ChildContent>
+</DataLoader>
 
 @code {
-    private IReadOnlyCollection<UserSummary> Users = [];
-    private bool _isLoading = true;
-    private string? _errorMessage;
-
     private void NavigateToCreate()
     {
         NavigationManager.NavigateTo("/users/create");
@@ -89,25 +76,8 @@ else
         NavigationManager.NavigateTo($"/users/{userId}/edit");
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task<IReadOnlyCollection<UserSummary>?> LoadAsync()
     {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        try
-        {
-            Users = await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users") ?? [];
-        }
-        catch (HttpRequestException)
-        {
-            _errorMessage = "Villa kom upp við að sækja notendur. Reyndu aftur síðar.";
-        }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+        return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users");
     }
 }
