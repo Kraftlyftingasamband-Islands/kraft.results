@@ -13,11 +13,11 @@ internal sealed class CalcPlacesChangedEventHandler(
     public async Task HandleAsync(CalcPlacesChangedEvent domainEvent, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Processing CalcPlacesChangedEvent for meet {MeetId}, CalcPlaces={CalcPlaces}",
-            domainEvent.MeetId,
+            "Processing CalcPlacesChangedEvent for meet {Slug}, CalcPlaces={CalcPlaces}",
+            domainEvent.Slug,
             domainEvent.CalcPlaces);
 
-        await _placeComputationService.RecomputeMeetAsync(domainEvent.MeetId, domainEvent.CalcPlaces, cancellationToken);
+        await _placeComputationService.RecomputeMeetAsync(domainEvent.Slug, domainEvent.CalcPlaces, cancellationToken);
     }
 
     public Task HandleAsync(IDomainEvent domainEvent, CancellationToken cancellationToken)
