@@ -75,14 +75,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .ToListAsync(cancellationToken);
 
         return raw
-            .Select(m => new MeetSummary(
-                m.Slug,
-                m.Title,
-                m.Location,
-                m.StartDate,
-                m.Category.ToDisplayName(),
-                m.IsRaw,
-                m.ParticipantCount))
+            .Select(m => m.ToMeetSummary())
             .ToList();
     }
 

@@ -71,7 +71,7 @@
                         <div class="meet-card-list">
                             @foreach (MeetSummary meet in context.UpcomingMeets)
                             {
-                                <MeetCard Meet="meet" IsFuture="true" />
+                                <MeetCard @key="meet.Slug" Meet="meet" IsFuture="true" />
                             }
                         </div>
                     }
