@@ -4,10 +4,20 @@
     border: 1px solid var(--color-border);
     border-inline-start: 4px solid var(--color-primary);
     border-radius: var(--radius-md);
-    padding: 1rem 1.25rem;
+    padding-block: 1rem;
+    padding-inline: 1.25rem;
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition-base) ease,
                 box-shadow var(--transition-base) ease;
+    cursor: default;
+
+    &:focus-within {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+}
+
+.meet-card--linked {
     cursor: pointer;
 
     &:hover,
@@ -34,26 +44,21 @@
     }
 }
 
-.meet-card--static {
-    cursor: default;
-
+.meet-card--ghost.meet-card--linked {
     &:hover,
     &:focus-within {
         transform: none;
-        box-shadow: var(--shadow-sm);
-    }
-}
-
-.meet-card--ghost.meet-card--static {
-    &:hover,
-    &:focus-within {
         box-shadow: none;
     }
 }
 
+::deep a.meet-card-title-link:focus {
+    outline: none;
+}
+
 .meet-card-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.5rem;
     margin-block-end: 0.5rem;
@@ -89,12 +94,12 @@
 
 .pill-classic {
     background: #eff6ff;
-    color: #2563eb;
+    color: #1d4ed8;
 }
 
 .pill-equipped {
     background: #fef3c7;
-    color: #d97706;
+    color: #92400e;
 }
 
 .meet-card-title-text {
