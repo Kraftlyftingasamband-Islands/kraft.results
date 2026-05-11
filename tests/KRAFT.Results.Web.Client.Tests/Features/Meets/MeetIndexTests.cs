@@ -50,7 +50,7 @@ public sealed class MeetIndexTests : IDisposable
     }
 
     [Fact]
-    public void ShowsMeetItems_WhenMeetsAreLoaded()
+    public void ShowsMeetCards_WhenMeetsAreLoaded()
     {
         // Arrange
         List<MeetSummary> meets =
@@ -67,7 +67,7 @@ public sealed class MeetIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".meet-item").Count.ShouldBe(2);
+            cut.FindAll(".meet-card").Count.ShouldBe(2);
         });
     }
 
