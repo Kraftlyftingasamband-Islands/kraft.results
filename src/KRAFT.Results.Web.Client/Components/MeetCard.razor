@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 
-<article class="meet-card @(IsFuture ? "meet-card--ghost" : "") @(_isLinked ? "meet-card--linked" : "")">
+<article class="meet-card @(_variant) @(_isLinked ? "meet-card--linked" : "")">
     <div class="meet-card-header">
         <time class="meet-card-date" datetime="@Meet.StartDate.ToString("yyyy-MM-dd")">
             @Meet.StartDate.ToString("dd. MMM yyyy")
@@ -70,11 +70,19 @@
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     private bool _hasParticipants;
+    private string _variant = "";
     private bool _isLinked;
 
     protected override void OnParametersSet()
     {
         _hasParticipants = Meet.ParticipantCount > 0;
+        _variant = (IsFuture, _hasParticipants) switch
+        {
+            (true, true) => "meet-card--active",
+            (true, false) => "meet-card--ghost",
+            (false, false) => "meet-card--ghost",
+            _ => "",
+        };
     }
 
     protected override async Task OnParametersSetAsync()
