@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 
-<article class="meet-card @(IsFuture ? "meet-card--ghost" : "") @(_isLinked ? "" : "meet-card--static")">
+<article class="meet-card @(IsFuture ? "meet-card--ghost" : "") @(_isLinked ? "meet-card--linked" : "")">
     <div class="meet-card-header">
         <time class="meet-card-date" datetime="@Meet.StartDate.ToString("yyyy-MM-dd")">
             @Meet.StartDate.ToString("dd. MMM yyyy")
