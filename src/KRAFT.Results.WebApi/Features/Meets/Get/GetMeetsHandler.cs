@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Meets;
+﻿using KRAFT.Results.Contracts.Meets;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -28,14 +28,7 @@ internal sealed class GetMeetsHandler(ResultsDbContext dbContext)
             .ToListAsync(cancellationToken);
 
         return raw
-            .Select(x => new MeetSummary(
-                x.Slug,
-                x.Title,
-                x.Location,
-                x.StartDate,
-                x.Category.ToDisplayName(),
-                x.IsRaw,
-                x.ParticipantCount))
+            .Select(x => x.ToMeetSummary())
             .ToList();
     }
 }
