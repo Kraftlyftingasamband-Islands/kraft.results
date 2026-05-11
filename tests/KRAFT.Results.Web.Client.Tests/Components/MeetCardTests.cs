@@ -36,7 +36,7 @@ public sealed class MeetCardTests : IDisposable
     public void DoesNotHaveGhostModifier_WhenPastMeet()
     {
         // Arrange
-        MeetSummary meet = MakePastMeet();
+        MeetSummary meet = MakePastMeet(participantCount: 10);
 
         // Act
         IRenderedComponent<MeetCard> cut = _context.Render<MeetCard>(
@@ -47,7 +47,21 @@ public sealed class MeetCardTests : IDisposable
     }
 
     [Fact]
-    public void HasGhostModifier_WhenFutureMeet()
+    public void HasGhostModifier_WhenPastMeetWithNoParticipants()
+    {
+        // Arrange
+        MeetSummary meet = MakePastMeet();
+
+        // Act
+        IRenderedComponent<MeetCard> cut = _context.Render<MeetCard>(
+            p => p.Add(c => c.Meet, meet));
+
+        // Assert
+        cut.FindAll("article.meet-card--ghost").Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void HasGhostModifier_WhenFutureMeetWithNoParticipants()
     {
         // Arrange
         MeetSummary meet = MakeFutureMeet();
@@ -59,6 +73,21 @@ public sealed class MeetCardTests : IDisposable
 
         // Assert
         cut.Find("article.meet-card--ghost").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void HasActiveModifier_WhenFutureMeetWithParticipants()
+    {
+        // Arrange
+        MeetSummary meet = MakeFutureMeet(participantCount: 15);
+
+        // Act
+        IRenderedComponent<MeetCard> cut = _context.Render<MeetCard>(
+            p => p.Add(c => c.Meet, meet)
+                  .Add(c => c.IsFuture, true));
+
+        // Assert
+        cut.Find("article.meet-card--active").ShouldNotBeNull();
     }
 
     [Fact]
