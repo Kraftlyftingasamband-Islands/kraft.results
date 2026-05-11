@@ -1,0 +1,90 @@
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Meets
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+
+<article class="meet-card @(IsFuture ? "meet-card--ghost" : "") @(_isLinked ? "" : "meet-card--static")">
+    <div class="meet-card-header">
+        <time class="meet-card-date" datetime="@Meet.StartDate.ToString("yyyy-MM-dd")">
+            @Meet.StartDate.ToString("dd. MMM yyyy")
+        </time>
+        <div class="meet-card-pills">
+            <span class="pill pill-discipline">@Meet.Discipline</span>
+            <span class="pill @(Meet.IsClassic ? "pill-classic" : "pill-equipped")">@DisplayNames.EquipmentType(Meet.IsClassic)</span>
+        </div>
+    </div>
+
+    @if (Meet.ParticipantCount > 0)
+    {
+        <NavLink class="meet-card-title-link" href="@($"/meets/{Meet.Slug}")" title="@Meet.Title">@Meet.Title</NavLink>
+    }
+    else
+    {
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <NavLink class="meet-card-title-link" href="@($"/meets/{Meet.Slug}")" title="@Meet.Title">@Meet.Title</NavLink>
+            </Authorized>
+            <NotAuthorized>
+                <span class="meet-card-title-text" title="@Meet.Title">@Meet.Title</span>
+            </NotAuthorized>
+        </AuthorizeView>
+    }
+
+    <div class="meet-card-footer">
+        <span class="meet-card-location">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A32 32 0 0 1 8 14.58a32 32 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10" />
+                <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4m0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
+            </svg>
+            @Meet.Location
+        </span>
+        @if (Meet.ParticipantCount > 0)
+        {
+            <span class="meet-card-count">
+                @Meet.ParticipantCount @(IsFuture ? "skráðir" : "keppendur")
+            </span>
+        }
+        else
+        {
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <span class="meet-card-count">
+                        @Meet.ParticipantCount @(IsFuture ? "skráðir" : "keppendur")
+                    </span>
+                </Authorized>
+            </AuthorizeView>
+        }
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public MeetSummary Meet { get; set; } = default!;
+
+    [Parameter]
+    public bool IsFuture { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    private bool _isLinked;
+    private bool _isAdmin;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Meet.ParticipantCount > 0)
+        {
+            _isLinked = true;
+            return;
+        }
+
+        if (AuthenticationStateTask is not null)
+        {
+            AuthenticationState authState = await AuthenticationStateTask;
+            _isAdmin = authState.User.IsInRole("Admin");
+        }
+
+        _isLinked = _isAdmin;
+    }
+}
