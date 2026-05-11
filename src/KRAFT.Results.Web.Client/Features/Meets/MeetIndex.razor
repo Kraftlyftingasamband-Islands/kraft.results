@@ -19,13 +19,15 @@
             <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
             @foreach (MeetSummary meet in group)
             {
-                <MeetCard @key="meet.Slug" Meet="meet" IsFuture="meet.StartDate > DateOnly.FromDateTime(DateTime.Now)" />
+                <MeetCard @key="meet.Slug" Meet="meet" IsFuture="meet.StartDate > _today" />
             }
         }
     </ChildContent>
 </DataLoader>
 
 @code {
+    private DateOnly _today = DateOnly.FromDateTime(DateTime.Now);
+
     [Parameter]
     public int Year { get; set; }
 

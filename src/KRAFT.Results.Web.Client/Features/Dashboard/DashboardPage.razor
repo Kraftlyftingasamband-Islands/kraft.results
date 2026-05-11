@@ -46,12 +46,19 @@
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Síðustu mót</div>
-                    <div class="meet-card-list">
-                        @foreach (MeetSummary meet in context.RecentMeets)
-                        {
-                            <MeetCard Meet="meet" />
-                        }
-                    </div>
+                    @if (context.RecentMeets.Count == 0)
+                    {
+                        <p class="empty-col">Engin nýleg mót</p>
+                    }
+                    else
+                    {
+                        <div class="meet-card-list">
+                            @foreach (MeetSummary meet in context.RecentMeets)
+                            {
+                                <MeetCard @key="meet.Slug" Meet="meet" />
+                            }
+                        </div>
+                    }
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Næstu mót</div>
