@@ -1,4 +1,4 @@
-﻿using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.Contracts.Meets;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +13,7 @@ internal sealed class GetMeetsHandler
         _dbContext = dbContext;
     }
 
-    public Task<List<MeetSummary>> Handle(int? year, CancellationToken cancellationToken)
+    public async Task<List<MeetSummary>> Handle(int? year, CancellationToken cancellationToken)
     {
         IQueryable<Meet> query = _dbContext.Set<Meet>();
 
@@ -22,9 +22,36 @@ internal sealed class GetMeetsHandler
             query = query.Where(x => x.StartDate.Year == year);
         }
 
-        return query
+        List<MeetProjection> raw = await query
             .OrderBy(x => x.StartDate)
-            .Select(x => new MeetSummary(x.Slug, x.Title, x.Location, DateOnly.FromDateTime(x.StartDate)))
+            .Select(x => new MeetProjection(
+                x.Slug,
+                x.Title,
+                x.Location,
+                DateOnly.FromDateTime(x.StartDate),
+                x.Category,
+                x.IsRaw,
+                x.Participations.Count))
             .ToListAsync(cancellationToken);
+
+        return raw
+            .Select(x => new MeetSummary(
+                x.Slug,
+                x.Title,
+                x.Location,
+                x.StartDate,
+                x.Category.ToDisplayName(),
+                x.IsRaw,
+                x.ParticipantCount))
+            .ToList();
     }
+
+    private sealed record MeetProjection(
+        string Slug,
+        string Title,
+        string? Location,
+        DateOnly StartDate,
+        MeetCategory Category,
+        bool IsRaw,
+        int ParticipantCount);
 }
