@@ -5,6 +5,7 @@
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Contracts.Rankings
 @using KRAFT.Results.Contracts.TeamCompetition
+@using KRAFT.Results.Web.Client.Components
 @using KRAFT.Results.Web.Client.Features.Rankings
 @using KRAFT.Results.Web.Client.Features.TeamCompetition
 
@@ -45,16 +46,12 @@
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Síðustu mót</div>
-                    @foreach (MeetSummary meet in context.RecentMeets)
-                    {
-                        <article class="meet-item">
-                            <div class="date-box date-box--recent">@meet.StartDate.Day.ToString("D2")</div>
-                            <div>
-                                <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
-                                <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
-                            </div>
-                        </article>
-                    }
+                    <div class="meet-card-list">
+                        @foreach (MeetSummary meet in context.RecentMeets)
+                        {
+                            <MeetCard Meet="meet" />
+                        }
+                    </div>
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Næstu mót</div>
@@ -64,16 +61,12 @@
                     }
                     else
                     {
-                        @foreach (MeetSummary meet in context.UpcomingMeets)
-                        {
-                            <article class="meet-item">
-                                <div class="date-box date-box--upcoming">@meet.StartDate.Day.ToString("D2")</div>
-                                <div>
-                                    <NavLink class="meet-title" href="@($"/meets/{meet.Slug}")">@meet.Title</NavLink>
-                                    <div class="meet-meta">@meet.StartDate.ToString("MMM", System.Globalization.CultureInfo.CurrentCulture) · @meet.Location</div>
-                                </div>
-                            </article>
-                        }
+                        <div class="meet-card-list">
+                            @foreach (MeetSummary meet in context.UpcomingMeets)
+                            {
+                                <MeetCard Meet="meet" IsFuture="true" />
+                            }
+                        </div>
                     }
                 </div>
             </div>
