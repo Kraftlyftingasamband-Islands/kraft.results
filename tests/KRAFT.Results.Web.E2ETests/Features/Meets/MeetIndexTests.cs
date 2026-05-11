@@ -51,7 +51,7 @@ public class MeetIndexTests(PlaywrightFixture fixture)
             TestDataSeeder.SeededMeetYear.ToString(CultureInfo.InvariantCulture),
             new LocatorAssertionsToHaveTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        ILocator meetItems = page.Locator("article.meet-item");
+        ILocator meetItems = page.Locator("article.meet-card");
         await Expect(meetItems.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(meetItems).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
