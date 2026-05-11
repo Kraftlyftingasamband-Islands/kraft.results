@@ -4,18 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Meets.Get;
 
-internal sealed class GetMeetsHandler
+internal sealed class GetMeetsHandler(ResultsDbContext dbContext)
 {
-    private readonly ResultsDbContext _dbContext;
-
-    public GetMeetsHandler(ResultsDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
     public async Task<List<MeetSummary>> Handle(int? year, CancellationToken cancellationToken)
     {
-        IQueryable<Meet> query = _dbContext.Set<Meet>();
+        IQueryable<Meet> query = dbContext.Set<Meet>();
 
         if (year is not null && year > 0)
         {
@@ -45,13 +38,4 @@ internal sealed class GetMeetsHandler
                 x.ParticipantCount))
             .ToList();
     }
-
-    private sealed record MeetProjection(
-        string Slug,
-        string Title,
-        string? Location,
-        DateOnly StartDate,
-        MeetCategory Category,
-        bool IsRaw,
-        int ParticipantCount);
 }
