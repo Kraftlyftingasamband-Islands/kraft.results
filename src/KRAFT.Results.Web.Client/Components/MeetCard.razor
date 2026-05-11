@@ -15,7 +15,8 @@
         </div>
     </div>
 
-    @if (Meet.ParticipantCount > 0)
+    @* No interactive children inside a linked card — ::after overlay covers the full card area *@
+    @if (_hasParticipants)
     {
         <NavLink class="meet-card-title-link" href="@($"/meets/{Meet.Slug}")" title="@Meet.Title">@Meet.Title</NavLink>
     }
@@ -33,13 +34,13 @@
 
     <div class="meet-card-footer">
         <span class="meet-card-location">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-label="Staðsetning">
                 <path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A32 32 0 0 1 8 14.58a32 32 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10" />
                 <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4m0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6" />
             </svg>
             @Meet.Location
         </span>
-        @if (Meet.ParticipantCount > 0)
+        @if (_hasParticipants)
         {
             <span class="meet-card-count">
                 @Meet.ParticipantCount @(IsFuture ? "skráðir" : "keppendur")
@@ -68,12 +69,17 @@
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
+    private bool _hasParticipants;
     private bool _isLinked;
-    private bool _isAdmin;
+
+    protected override void OnParametersSet()
+    {
+        _hasParticipants = Meet.ParticipantCount > 0;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Meet.ParticipantCount > 0)
+        if (_hasParticipants)
         {
             _isLinked = true;
             return;
@@ -82,9 +88,10 @@
         if (AuthenticationStateTask is not null)
         {
             AuthenticationState authState = await AuthenticationStateTask;
-            _isAdmin = authState.User.IsInRole("Admin");
+            _isLinked = authState.User.IsInRole("Admin");
+            return;
         }
 
-        _isLinked = _isAdmin;
+        _isLinked = false;
     }
 }
