@@ -113,10 +113,8 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     }
 
     [Fact]
-    public async Task RecentMeets_HaveDisciplineIsClassicAndParticipantCount()
+    public async Task RecentMeet_ReturnsDisciplineIsClassicAndParticipantCount()
     {
-        // Arrange
-
         // Act
         DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
 
@@ -131,10 +129,8 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     }
 
     [Fact]
-    public async Task UpcomingMeets_HaveDisciplineIsClassicAndParticipantCount()
+    public async Task UpcomingMeet_ReturnsDisciplineIsClassicAndParticipantCount()
     {
-        // Arrange
-
         // Act
         DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
 
