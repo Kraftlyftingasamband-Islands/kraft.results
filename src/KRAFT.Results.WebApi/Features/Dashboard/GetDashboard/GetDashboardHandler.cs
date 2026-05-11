@@ -22,19 +22,55 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
 
         DashboardSeasonStats stats = await GetSeasonStatsAsync(currentYear, cancellationToken);
 
-        List<MeetSummary> recentMeets = await dbContext.Set<Meet>()
+        List<MeetSummary> recentMeets = (await dbContext.Set<Meet>()
             .Where(m => m.PublishedResults && m.StartDate <= today)
             .OrderByDescending(m => m.StartDate)
             .Take(3)
-            .Select(m => new MeetSummary(m.Slug, m.Title, m.Location, DateOnly.FromDateTime(m.StartDate)))
-            .ToListAsync(cancellationToken);
+            .Select(m => new
+            {
+                m.Slug,
+                m.Title,
+                m.Location,
+                m.StartDate,
+                m.Category,
+                m.IsRaw,
+                ParticipantCount = m.Participations.Count,
+            })
+            .ToListAsync(cancellationToken))
+            .Select(m => new MeetSummary(
+                m.Slug,
+                m.Title,
+                m.Location,
+                DateOnly.FromDateTime(m.StartDate),
+                m.Category.ToDisplayName(),
+                m.IsRaw,
+                m.ParticipantCount))
+            .ToList();
 
-        List<MeetSummary> upcomingMeets = await dbContext.Set<Meet>()
+        List<MeetSummary> upcomingMeets = (await dbContext.Set<Meet>()
             .Where(m => m.PublishedInCalendar && m.StartDate > today)
             .OrderBy(m => m.StartDate)
             .Take(3)
-            .Select(m => new MeetSummary(m.Slug, m.Title, m.Location, DateOnly.FromDateTime(m.StartDate)))
-            .ToListAsync(cancellationToken);
+            .Select(m => new
+            {
+                m.Slug,
+                m.Title,
+                m.Location,
+                m.StartDate,
+                m.Category,
+                m.IsRaw,
+                ParticipantCount = m.Participations.Count,
+            })
+            .ToListAsync(cancellationToken))
+            .Select(m => new MeetSummary(
+                m.Slug,
+                m.Title,
+                m.Location,
+                DateOnly.FromDateTime(m.StartDate),
+                m.Category.ToDisplayName(),
+                m.IsRaw,
+                m.ParticipantCount))
+            .ToList();
 
         List<RankingEntry> rankingsMen = await GetTopRankingsAsync("m", currentYear, cancellationToken);
         List<RankingEntry> rankingsWomen = await GetTopRankingsAsync("f", currentYear, cancellationToken);

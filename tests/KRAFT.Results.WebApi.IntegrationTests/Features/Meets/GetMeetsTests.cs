@@ -80,6 +80,39 @@ public sealed class GetMeetsTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ReturnsDisciplineAndIsClassicAndParticipantCount()
+    {
+        // Arrange
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithStartDate(new DateOnly(2099, 2, 1))
+            .WithMeetTypeId(1)
+            .WithIsRaw(true)
+            .Build();
+
+        HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
+        createResponse.EnsureSuccessStatusCode();
+        string slug = createResponse.Headers.Location!.ToString().TrimStart('/');
+
+        try
+        {
+            // Act
+            IReadOnlyList<MeetSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<MeetSummary>>(Path, CancellationToken.None);
+
+            // Assert
+            IReadOnlyList<MeetSummary> meets = response.ShouldNotBeNull();
+            meets.ShouldContain(x => x.Slug == slug);
+            MeetSummary meet = meets.First(x => x.Slug == slug);
+            meet.Discipline.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting);
+            meet.IsClassic.ShouldBeTrue();
+            meet.ParticipantCount.ShouldBe(0);
+        }
+        finally
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
+        }
+    }
+
+    [Fact]
     public async Task OnlyReturnsMeetsWithSpecifiedYear()
     {
         // Arrange
