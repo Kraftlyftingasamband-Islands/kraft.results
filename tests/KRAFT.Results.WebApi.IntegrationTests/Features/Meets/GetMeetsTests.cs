@@ -18,6 +18,7 @@ public sealed class GetMeetsTests(CollectionFixture fixture) : IAsyncLifetime
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     private string _meetSlug = string.Empty;
     private string _meetTitle = string.Empty;
+    private string _disciplineMeetSlug = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
@@ -34,6 +35,11 @@ public sealed class GetMeetsTests(CollectionFixture fixture) : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
+        if (!string.IsNullOrEmpty(_disciplineMeetSlug))
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{_disciplineMeetSlug}", CancellationToken.None);
+        }
+
         if (!string.IsNullOrEmpty(_meetSlug))
         {
             await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
@@ -91,25 +97,18 @@ public sealed class GetMeetsTests(CollectionFixture fixture) : IAsyncLifetime
 
         HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
         createResponse.EnsureSuccessStatusCode();
-        string slug = createResponse.Headers.Location!.ToString().TrimStart('/');
+        _disciplineMeetSlug = createResponse.Headers.Location!.ToString().TrimStart('/');
 
-        try
-        {
-            // Act
-            IReadOnlyList<MeetSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<MeetSummary>>(Path, CancellationToken.None);
+        // Act
+        IReadOnlyList<MeetSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<MeetSummary>>(Path, CancellationToken.None);
 
-            // Assert
-            IReadOnlyList<MeetSummary> meets = response.ShouldNotBeNull();
-            meets.ShouldContain(x => x.Slug == slug);
-            MeetSummary meet = meets.First(x => x.Slug == slug);
-            meet.Discipline.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting);
-            meet.IsClassic.ShouldBeTrue();
-            meet.ParticipantCount.ShouldBe(0);
-        }
-        finally
-        {
-            await _authorizedHttpClient.DeleteAsync($"/meets/{slug}", CancellationToken.None);
-        }
+        // Assert
+        IReadOnlyList<MeetSummary> meets = response.ShouldNotBeNull();
+        meets.ShouldContain(x => x.Slug == _disciplineMeetSlug);
+        MeetSummary meet = meets.First(x => x.Slug == _disciplineMeetSlug);
+        meet.Discipline.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting);
+        meet.IsClassic.ShouldBeTrue();
+        meet.ParticipantCount.ShouldBe(0);
     }
 
     [Fact]
