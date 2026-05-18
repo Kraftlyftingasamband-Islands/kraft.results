@@ -89,6 +89,11 @@ internal sealed class CreateTeamHandler
 
     private static Result<int> UniqueConstraintToError(string message)
     {
+        if (message.Contains("IX_Teams_TitleShort_Unique", StringComparison.Ordinal))
+        {
+            return TeamErrors.ShortTitleExists;
+        }
+
         if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
         {
             return TeamErrors.TitleExists;

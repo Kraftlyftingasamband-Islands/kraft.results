@@ -17,6 +17,9 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.HasIndex(e => e.Slug, "IX_Teams_Slug_Unique")
             .IsUnique();
 
+        builder.HasIndex(e => e.TitleShort, "IX_Teams_TitleShort_Unique")
+            .IsUnique();
+
         builder.Property(e => e.CreatedBy)
             .HasMaxLength(50)
             .HasDefaultValue("klaus", "DF_Teams_CreatedBy");
