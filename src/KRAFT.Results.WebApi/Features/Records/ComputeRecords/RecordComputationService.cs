@@ -379,17 +379,14 @@ internal sealed class RecordComputationService(
                 StandardRecordInfo? standardRecord =
                     GetStandardRecord(slot, allRecordsBySlot);
 
-                if (standardRecord is not null)
-                {
-                    slotAttempts = slotAttempts
-                        .Where(sa => sa.MeetDate >= standardRecord.Date)
-                        .ToList();
-                }
+                decimal startWeight = standardRecord is not null
+                    ? Math.Abs(standardRecord.Weight)
+                    : 0m;
 
                 List<ExpectedRecord> expectedChain =
                     ComputeExpectedChain(
                         slotAttempts,
-                        standardRecord?.Weight ?? 0m);
+                        startWeight);
 
                 SlotReconciliationResult result =
                     ReconcileSlot(slot, expectedChain, allRecordsBySlot);
@@ -535,17 +532,14 @@ internal sealed class RecordComputationService(
             StandardRecordInfo? standardRecord =
                 GetStandardRecord(slot, allRecordsBySlot);
 
-            if (standardRecord is not null)
-            {
-                slotAttempts = slotAttempts
-                    .Where(sa => sa.MeetDate >= standardRecord.Date)
-                    .ToList();
-            }
+            decimal startWeight = standardRecord is not null
+                ? Math.Abs(standardRecord.Weight)
+                : 0m;
 
             List<ExpectedRecord> expectedChain =
                 ComputeExpectedChain(
                     slotAttempts,
-                    standardRecord?.Weight ?? 0m);
+                    startWeight);
 
             SlotReconciliationResult result =
                 ReconcileSlot(slot, expectedChain, allRecordsBySlot);

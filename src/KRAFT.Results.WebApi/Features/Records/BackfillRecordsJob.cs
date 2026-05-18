@@ -123,16 +123,13 @@ internal sealed class BackfillRecordsJob(
                         dbContext,
                         stoppingToken);
 
-                    if (standardRecord is not null)
-                    {
-                        slotAttempts = slotAttempts
-                            .Where(sa => sa.MeetDate >= standardRecord.Date)
-                            .ToList();
-                    }
+                    decimal startWeight = standardRecord is not null
+                        ? Math.Abs(standardRecord.Weight)
+                        : 0m;
 
                     List<ExpectedRecord> expectedChain = ComputeExpectedChain(
                         slotAttempts,
-                        standardRecord?.Weight ?? 0m);
+                        startWeight);
 
                     SlotReconciliationResult result = await ReconcileSlotAsync(
                         division.EraId,

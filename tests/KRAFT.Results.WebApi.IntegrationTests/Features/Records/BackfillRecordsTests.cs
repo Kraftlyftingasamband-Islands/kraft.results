@@ -910,6 +910,259 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             "duplicate records for the same attempt should be deduplicated");
     }
 
+    [Fact]
+    public async Task WhenAttemptPredatesStandardRecord_BackfillStillCreatesRecord()
+    {
+        // Arrange — athlete lifts squat=200 at a meet dated 2021-01-01.
+        // A standard record is then inserted dated 2022-01-01 with weight=150.
+        // The athlete's attempt predates the standard but beats its weight threshold.
+        // The bug: the date filter excluded pre-standard attempts, so no record was created.
+        // The fix: the date filter is removed; only the weight threshold matters.
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await ResetRecordSlotAsync(TestSeedConstants.AgeCategory.Masters4Id, weightCategoryId);
+
+        // Create a meet dated before the standard record date
+        int oldMeetId = await CreateMeetWithDateAndGetIdAsync(new DateOnly(2021, 6, 15), isRaw: true);
+
+        string athleteSlug = await CreateAthleteAsync("BkfPreStd", "m", new DateOnly(1950, 1, 1));
+        int participationId = await AddParticipantAsync(oldMeetId, athleteSlug, HeavyBodyWeight);
+
+        await RecordAttemptAsync(oldMeetId, participationId, Discipline.Squat, 1, 200.0m);
+        await RecordAttemptAsync(oldMeetId, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttemptAsync(oldMeetId, participationId, Discipline.Deadlift, 1, 250.0m);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        await using AsyncServiceScope idScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext idDb = idScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int squatAttemptId = await GetAttemptIdByRoundAsync(
+            idDb, participationId, Discipline.Squat, 1, TestContext.Current.CancellationToken);
+
+        // Insert a standard record dated AFTER the meet date
+        string insertStandardSql =
+            $"""
+            INSERT INTO Records (
+                EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
+                Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {weightCategoryId},
+                {(int)RecordCategory.Squat},
+                150.0, '2022-01-01', 1, NULL, 1, 1, 'backfill-test');
+            """;
+
+        await idDb.Database.ExecuteSqlRawAsync(
+            insertStandardSql, TestContext.Current.CancellationToken);
+
+        // Remove any non-standard records so backfill must re-create from scratch
+        string deleteNonStandardSql =
+            $"""
+            DELETE FROM Records
+            WHERE EraId = {TestSeedConstants.Era.CurrentId}
+            AND AgeCategoryId = {TestSeedConstants.AgeCategory.Masters4Id}
+            AND WeightCategoryId = {weightCategoryId}
+            AND RecordCategoryId = {(int)RecordCategory.Squat}
+            AND IsRaw = 1
+            AND IsStandard = 0;
+            """;
+
+        await idDb.Database.ExecuteSqlRawAsync(
+            deleteNonStandardSql, TestContext.Current.CancellationToken);
+
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
+
+        // Assert — the pre-standard attempt should produce a record (weight 200 > standard 150)
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .Where(r => !r.IsStandard)
+            .ToListAsync(CancellationToken.None);
+
+        slotRecords.Count.ShouldBe(1, "pre-standard attempt that beats the standard weight should produce a record");
+        slotRecords[0].AttemptId.ShouldBe(squatAttemptId);
+        slotRecords[0].Weight.ShouldBe(200.0m);
+        slotRecords[0].IsCurrent.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task WhenStandardRecordHasNegativeWeight_AbsoluteValueIsUsedAsThreshold()
+    {
+        // Arrange — old production system stored negative weights as "minimum to beat" thresholds.
+        // A standard with Weight=-117.50 means the threshold is 117.50; any attempt > 117.50 should
+        // produce a record. An attempt of 200kg should produce a record.
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await ResetRecordSlotAsync(TestSeedConstants.AgeCategory.Masters4Id, weightCategoryId);
+
+        string athleteSlug = await CreateAthleteAsync("BkfNegStd", "m", new DateOnly(1950, 1, 1));
+        int participationId = await AddParticipantAsync(_rawMeetId, athleteSlug, HeavyBodyWeight);
+
+        await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Squat, 1, 200.0m);
+        await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Bench, 1, 130.0m);
+        await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Deadlift, 1, 250.0m);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        await using AsyncServiceScope idScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext idDb = idScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int squatAttemptId = await GetAttemptIdByRoundAsync(
+            idDb, participationId, Discipline.Squat, 1, TestContext.Current.CancellationToken);
+
+        // Insert a standard record with a negative weight (old-system convention)
+        string insertNegativeStandardSql =
+            $"""
+            INSERT INTO Records (
+                EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
+                Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {weightCategoryId},
+                {(int)RecordCategory.Squat},
+                -117.50, '2020-01-01', 1, NULL, 1, 1, 'backfill-test');
+            """;
+
+        await idDb.Database.ExecuteSqlRawAsync(
+            insertNegativeStandardSql, TestContext.Current.CancellationToken);
+
+        // Remove non-standard records so backfill must re-create
+        string deleteNonStandardSql =
+            $"""
+            DELETE FROM Records
+            WHERE EraId = {TestSeedConstants.Era.CurrentId}
+            AND AgeCategoryId = {TestSeedConstants.AgeCategory.Masters4Id}
+            AND WeightCategoryId = {weightCategoryId}
+            AND RecordCategoryId = {(int)RecordCategory.Squat}
+            AND IsRaw = 1
+            AND IsStandard = 0;
+            """;
+
+        await idDb.Database.ExecuteSqlRawAsync(
+            deleteNonStandardSql, TestContext.Current.CancellationToken);
+
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
+
+        // Assert — 200kg exceeds the absolute-value threshold of 117.50, so a record is expected
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .Where(r => !r.IsStandard)
+            .ToListAsync(CancellationToken.None);
+
+        slotRecords.Count.ShouldBe(
+            1,
+            "attempt exceeding the absolute-value threshold of a negative-weight standard should produce a record");
+        slotRecords[0].AttemptId.ShouldBe(squatAttemptId);
+        slotRecords[0].Weight.ShouldBe(200.0m);
+    }
+
+    [Fact]
+    public async Task WhenStandardRecordHasZeroWeight_AnyValidAttemptCreatesRecord()
+    {
+        // Arrange — a standard with Weight=0.00 means "no minimum to beat"; any valid
+        // attempt should create a record. A squat of 150kg should produce a record.
+        int weightCategoryId = TestSeedConstants.WeightCategory.Id105Kg;
+
+        await ResetRecordSlotAsync(TestSeedConstants.AgeCategory.Masters4Id, weightCategoryId);
+
+        string athleteSlug = await CreateAthleteAsync("BkfZeroStd", "m", new DateOnly(1950, 1, 1));
+        int participationId = await AddParticipantAsync(_rawMeetId, athleteSlug, HeavyBodyWeight);
+
+        await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Squat, 1, 150.0m);
+        await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Bench, 1, 100.0m);
+        await RecordAttemptAsync(_rawMeetId, participationId, Discipline.Deadlift, 1, 200.0m);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        await using AsyncServiceScope idScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext idDb = idScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        int squatAttemptId = await GetAttemptIdByRoundAsync(
+            idDb, participationId, Discipline.Squat, 1, TestContext.Current.CancellationToken);
+
+        // Insert a standard record with zero weight
+        string insertZeroStandardSql =
+            $"""
+            INSERT INTO Records (
+                EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
+                Weight, Date, IsStandard, AttemptId, IsCurrent, IsRaw, CreatedBy)
+            VALUES (
+                {TestSeedConstants.Era.CurrentId},
+                {TestSeedConstants.AgeCategory.Masters4Id},
+                {weightCategoryId},
+                {(int)RecordCategory.Squat},
+                0.00, '2022-01-01', 1, NULL, 1, 1, 'backfill-test');
+            """;
+
+        await idDb.Database.ExecuteSqlRawAsync(
+            insertZeroStandardSql, TestContext.Current.CancellationToken);
+
+        // Remove non-standard records so backfill must re-create
+        string deleteNonStandardSql =
+            $"""
+            DELETE FROM Records
+            WHERE EraId = {TestSeedConstants.Era.CurrentId}
+            AND AgeCategoryId = {TestSeedConstants.AgeCategory.Masters4Id}
+            AND WeightCategoryId = {weightCategoryId}
+            AND RecordCategoryId = {(int)RecordCategory.Squat}
+            AND IsRaw = 1
+            AND IsStandard = 0;
+            """;
+
+        await idDb.Database.ExecuteSqlRawAsync(
+            deleteNonStandardSql, TestContext.Current.CancellationToken);
+
+        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
+        using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
+
+        // Act
+        await job.StartAsync(CancellationToken.None);
+        await (job.ExecuteTask ?? Task.CompletedTask);
+
+        // Assert — a zero-weight standard imposes no threshold; any valid attempt creates a record
+        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
+
+        List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
+            .Where(r => r.EraId == TestSeedConstants.Era.CurrentId)
+            .Where(r => r.AgeCategoryId == TestSeedConstants.AgeCategory.Masters4Id)
+            .Where(r => r.WeightCategoryId == weightCategoryId)
+            .Where(r => r.RecordCategoryId == RecordCategory.Squat)
+            .Where(r => r.IsRaw)
+            .Where(r => !r.IsStandard)
+            .ToListAsync(CancellationToken.None);
+
+        slotRecords.Count.ShouldBe(1, "zero-weight standard should allow any valid attempt to create a record");
+        slotRecords[0].AttemptId.ShouldBe(squatAttemptId);
+        slotRecords[0].Weight.ShouldBe(150.0m);
+    }
+
     private static async Task<int> GetAttemptIdByRoundAsync(
         ResultsDbContext dbContext,
         int participationId,
@@ -1121,6 +1374,27 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         string slug = Slug.Create($"{firstName} {lastName}");
         _athleteSlugs.Add(slug);
         return slug;
+    }
+
+    private async Task<int> CreateMeetWithDateAndGetIdAsync(DateOnly startDate, bool isRaw)
+    {
+        CreateMeetCommand command = new CreateMeetCommandBuilder()
+            .WithIsRaw(isRaw)
+            .WithRecordsPossible(true)
+            .WithStartDate(startDate)
+            .Build();
+
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
+            "/meets", command, CancellationToken.None);
+        response.EnsureSuccessStatusCode();
+
+        string slug = response.Headers.Location!.ToString().TrimStart('/');
+        _meetSlugs.Add(slug);
+
+        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
+            $"/meets/{slug}", CancellationToken.None);
+
+        return meetDetails!.MeetId;
     }
 
     private async Task<int> CreateMeetAndGetIdAsync(bool isRaw, int? meetTypeId = null)
