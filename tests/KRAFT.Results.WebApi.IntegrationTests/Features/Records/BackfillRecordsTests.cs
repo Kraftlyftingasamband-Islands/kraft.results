@@ -923,7 +923,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await ResetRecordSlotAsync(TestSeedConstants.AgeCategory.Masters4Id, weightCategoryId);
 
         // Create a meet dated before the standard record date
-        int oldMeetId = await CreateMeetWithDateAndGetIdAsync(new DateOnly(2021, 6, 15), isRaw: true);
+        int oldMeetId = await CreateMeetAndGetIdAsync(isRaw: true, startDate: new DateOnly(2021, 6, 15));
 
         string athleteSlug = await CreateAthleteAsync("BkfPreStd", "m", new DateOnly(1950, 1, 1));
         int participationId = await AddParticipantAsync(oldMeetId, athleteSlug, HeavyBodyWeight);
@@ -940,7 +940,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             idDb, participationId, Discipline.Squat, 1, TestContext.Current.CancellationToken);
 
         // Insert a standard record dated AFTER the meet date
-        string insertStandardSql =
+        await idDb.Database.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (
                 EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
@@ -951,13 +951,11 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
                 {weightCategoryId},
                 {(int)RecordCategory.Squat},
                 150.0, '2022-01-01', 1, NULL, 1, 1, 'backfill-test');
-            """;
-
-        await idDb.Database.ExecuteSqlRawAsync(
-            insertStandardSql, TestContext.Current.CancellationToken);
+            """,
+            TestContext.Current.CancellationToken);
 
         // Remove any non-standard records so backfill must re-create from scratch
-        string deleteNonStandardSql =
+        await idDb.Database.ExecuteSqlAsync(
             $"""
             DELETE FROM Records
             WHERE EraId = {TestSeedConstants.Era.CurrentId}
@@ -966,10 +964,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             AND RecordCategoryId = {(int)RecordCategory.Squat}
             AND IsRaw = 1
             AND IsStandard = 0;
-            """;
-
-        await idDb.Database.ExecuteSqlRawAsync(
-            deleteNonStandardSql, TestContext.Current.CancellationToken);
+            """,
+            TestContext.Current.CancellationToken);
 
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
@@ -1023,7 +1019,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             idDb, participationId, Discipline.Squat, 1, TestContext.Current.CancellationToken);
 
         // Insert a standard record with a negative weight (old-system convention)
-        string insertNegativeStandardSql =
+        await idDb.Database.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (
                 EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
@@ -1034,13 +1030,11 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
                 {weightCategoryId},
                 {(int)RecordCategory.Squat},
                 -117.50, '2020-01-01', 1, NULL, 1, 1, 'backfill-test');
-            """;
-
-        await idDb.Database.ExecuteSqlRawAsync(
-            insertNegativeStandardSql, TestContext.Current.CancellationToken);
+            """,
+            TestContext.Current.CancellationToken);
 
         // Remove non-standard records so backfill must re-create
-        string deleteNonStandardSql =
+        await idDb.Database.ExecuteSqlAsync(
             $"""
             DELETE FROM Records
             WHERE EraId = {TestSeedConstants.Era.CurrentId}
@@ -1049,10 +1043,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             AND RecordCategoryId = {(int)RecordCategory.Squat}
             AND IsRaw = 1
             AND IsStandard = 0;
-            """;
-
-        await idDb.Database.ExecuteSqlRawAsync(
-            deleteNonStandardSql, TestContext.Current.CancellationToken);
+            """,
+            TestContext.Current.CancellationToken);
 
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
@@ -1080,6 +1072,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             "attempt exceeding the absolute-value threshold of a negative-weight standard should produce a record");
         slotRecords[0].AttemptId.ShouldBe(squatAttemptId);
         slotRecords[0].Weight.ShouldBe(200.0m);
+        slotRecords[0].IsCurrent.ShouldBeTrue();
     }
 
     [Fact]
@@ -1106,7 +1099,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             idDb, participationId, Discipline.Squat, 1, TestContext.Current.CancellationToken);
 
         // Insert a standard record with zero weight
-        string insertZeroStandardSql =
+        await idDb.Database.ExecuteSqlAsync(
             $"""
             INSERT INTO Records (
                 EraId, AgeCategoryId, WeightCategoryId, RecordCategoryId,
@@ -1117,13 +1110,11 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
                 {weightCategoryId},
                 {(int)RecordCategory.Squat},
                 0.00, '2022-01-01', 1, NULL, 1, 1, 'backfill-test');
-            """;
-
-        await idDb.Database.ExecuteSqlRawAsync(
-            insertZeroStandardSql, TestContext.Current.CancellationToken);
+            """,
+            TestContext.Current.CancellationToken);
 
         // Remove non-standard records so backfill must re-create
-        string deleteNonStandardSql =
+        await idDb.Database.ExecuteSqlAsync(
             $"""
             DELETE FROM Records
             WHERE EraId = {TestSeedConstants.Era.CurrentId}
@@ -1132,10 +1123,8 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             AND RecordCategoryId = {(int)RecordCategory.Squat}
             AND IsRaw = 1
             AND IsStandard = 0;
-            """;
-
-        await idDb.Database.ExecuteSqlRawAsync(
-            deleteNonStandardSql, TestContext.Current.CancellationToken);
+            """,
+            TestContext.Current.CancellationToken);
 
         await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
@@ -1161,6 +1150,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         slotRecords.Count.ShouldBe(1, "zero-weight standard should allow any valid attempt to create a record");
         slotRecords[0].AttemptId.ShouldBe(squatAttemptId);
         slotRecords[0].Weight.ShouldBe(150.0m);
+        slotRecords[0].IsCurrent.ShouldBeTrue();
     }
 
     private static async Task<int> GetAttemptIdByRoundAsync(
@@ -1376,33 +1366,15 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         return slug;
     }
 
-    private async Task<int> CreateMeetWithDateAndGetIdAsync(DateOnly startDate, bool isRaw)
-    {
-        CreateMeetCommand command = new CreateMeetCommandBuilder()
-            .WithIsRaw(isRaw)
-            .WithRecordsPossible(true)
-            .WithStartDate(startDate)
-            .Build();
-
-        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
-            "/meets", command, CancellationToken.None);
-        response.EnsureSuccessStatusCode();
-
-        string slug = response.Headers.Location!.ToString().TrimStart('/');
-        _meetSlugs.Add(slug);
-
-        MeetDetails? meetDetails = await _authorizedHttpClient.GetFromJsonAsync<MeetDetails>(
-            $"/meets/{slug}", CancellationToken.None);
-
-        return meetDetails!.MeetId;
-    }
-
-    private async Task<int> CreateMeetAndGetIdAsync(bool isRaw, int? meetTypeId = null)
+    private async Task<int> CreateMeetAndGetIdAsync(
+        bool isRaw,
+        int? meetTypeId = null,
+        DateOnly? startDate = null)
     {
         CreateMeetCommandBuilder builder = new CreateMeetCommandBuilder()
             .WithIsRaw(isRaw)
             .WithRecordsPossible(true)
-            .WithStartDate(new DateOnly(2025, 3, 15));
+            .WithStartDate(startDate ?? new DateOnly(2025, 3, 15));
 
         if (meetTypeId.HasValue)
         {
