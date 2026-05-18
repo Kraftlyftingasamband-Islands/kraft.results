@@ -5,7 +5,7 @@
 namespace KRAFT.Results.WebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTeamTitleAndSlugUniqueIndexes : Migration
+    public partial class AddTeamUniqueIndexes : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,6 +23,13 @@ namespace KRAFT.Results.WebApi.Migrations
                 table: "Teams",
                 column: "Title",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_TitleShort_Unique",
+                schema: "dbo",
+                table: "Teams",
+                column: "TitleShort",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -35,6 +42,11 @@ namespace KRAFT.Results.WebApi.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_Teams_Title_Unique",
+                schema: "dbo",
+                table: "Teams");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Teams_TitleShort_Unique",
                 schema: "dbo",
                 table: "Teams");
         }
