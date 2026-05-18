@@ -108,13 +108,13 @@
 
         <div class="widget">
             <div class="widget-header">
-                <h2 class="widget-title">Ný met</h2>
+                <h2 class="widget-title">Nýjustu met</h2>
                 <NavLink class="widget-link" href="/records">Allt →</NavLink>
             </div>
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Karlar</div>
-                    @foreach (DashboardRecordEntry record in context.RecentRecordsMen)
+                    @foreach (DashboardRecordEntry record in context.LatestRecordsMen)
                     {
                         <div class="record-item">
                             <div class="record-left">
@@ -137,7 +137,7 @@
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Konur</div>
-                    @foreach (DashboardRecordEntry record in context.RecentRecordsWomen)
+                    @foreach (DashboardRecordEntry record in context.LatestRecordsWomen)
                     {
                         <div class="record-item">
                             <div class="record-left">

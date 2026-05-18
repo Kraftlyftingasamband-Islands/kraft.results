@@ -10,7 +10,7 @@ public sealed record DashboardSummary(
     IReadOnlyList<MeetSummary> UpcomingMeets,
     IReadOnlyList<RankingEntry> TopRankingsMen,
     IReadOnlyList<RankingEntry> TopRankingsWomen,
-    IReadOnlyList<DashboardRecordEntry> RecentRecordsMen,
-    IReadOnlyList<DashboardRecordEntry> RecentRecordsWomen,
+    IReadOnlyList<DashboardRecordEntry> LatestRecordsMen,
+    IReadOnlyList<DashboardRecordEntry> LatestRecordsWomen,
     IReadOnlyList<TeamCompetitionStanding> TeamStandingsMen,
     IReadOnlyList<TeamCompetitionStanding> TeamStandingsWomen);

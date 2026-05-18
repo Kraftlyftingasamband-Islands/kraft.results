@@ -41,8 +41,8 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         List<RankingEntry> rankingsMen = await GetTopRankingsAsync("m", currentYear, cancellationToken);
         List<RankingEntry> rankingsWomen = await GetTopRankingsAsync("f", currentYear, cancellationToken);
 
-        List<DashboardRecordEntry> recordsMen = await GetRecentRecordsAsync("m", cancellationToken);
-        List<DashboardRecordEntry> recordsWomen = await GetRecentRecordsAsync("f", cancellationToken);
+        List<DashboardRecordEntry> recordsMen = await GetLatestRecordsAsync("m", cancellationToken);
+        List<DashboardRecordEntry> recordsWomen = await GetLatestRecordsAsync("f", cancellationToken);
 
         (List<TeamCompetitionStanding> teamsMen, List<TeamCompetitionStanding> teamsWomen) =
             await GetTeamStandingsAsync(currentYear, cancellationToken);
@@ -93,7 +93,9 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .CountAsync(cancellationToken);
 
         int records = await dbContext.Set<Record>()
-            .Where(r => r.AttemptId != null && r.Date.Year == year)
+            .Where(r => r.AttemptId != null)
+            .Where(r => r.IsCurrent)
+            .Where(r => r.Date.Year == year)
             .CountAsync(cancellationToken);
 
         int clubs = await dbContext.Set<Participation>()
@@ -157,15 +159,17 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .ToList();
     }
 
-    private async Task<List<DashboardRecordEntry>> GetRecentRecordsAsync(
+    private async Task<List<DashboardRecordEntry>> GetLatestRecordsAsync(
         string gender, CancellationToken cancellationToken)
     {
         List<RawRecordRow> rows = await dbContext.Set<Record>()
             .Where(r => r.AttemptId != null)
+            .Where(r => r.IsCurrent)
             .Where(r => r.RecordCategoryId != RecordCategory.TotalWilks
                      && r.RecordCategoryId != RecordCategory.TotalIpfPoints)
             .Where(r => r.Attempt!.Participation.Athlete.Gender == Gender.Parse(gender))
             .OrderByDescending(r => r.Date)
+            .ThenBy(r => Guid.NewGuid())
             .Take(3)
             .Select(r => new RawRecordRow(
                 r.RecordCategoryId,
