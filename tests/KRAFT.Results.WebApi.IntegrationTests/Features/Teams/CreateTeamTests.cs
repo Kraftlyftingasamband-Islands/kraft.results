@@ -128,4 +128,27 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
         error.ShouldNotBeNull();
         error.Code.ShouldBe(ErrorCodes.TeamsShortTitleExists);
     }
+
+    [Fact]
+    public async Task ReturnsConflict_WithErrorCode_WhenTitleExists()
+    {
+        // Arrange
+        string title = "Title-" + Guid.NewGuid().ToString()[..8];
+        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
+            .WithTitle(title)
+            .Build();
+        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
+            .WithTitle(title)
+            .Build();
+        _ = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, secondCommand, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe(ErrorCodes.TeamsTitleExists);
+    }
 }

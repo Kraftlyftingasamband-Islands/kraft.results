@@ -10,6 +10,7 @@ internal static class TeamErrors
     internal const string EmptyTitleFullCode = "Teams.EmptyTitleFull";
     internal const string TitleTooLongCode = "Teams.TitleTooLong";
     internal const string ShortTitleExistsCode = "Teams.ShortTitleExists";
+    internal const string TitleExistsCode = "Teams.TitleExists";
     internal const string TeamHasAthletesCode = "Teams.HasAthletes";
     internal const string TitleFullTooLongCode = "Teams.TitleFullTooLong";
 
@@ -44,6 +45,10 @@ internal static class TeamErrors
     internal static readonly Error ShortTitleExists = new(
         ShortTitleExistsCode,
         "A team with that short title already exists.");
+
+    internal static readonly Error TitleExists = new(
+        TitleExistsCode,
+        "A team with that title already exists.");
 
     internal static Error TeamDoesNotExist(int id) => new(
         "Teams.TeamDoesNotExist",

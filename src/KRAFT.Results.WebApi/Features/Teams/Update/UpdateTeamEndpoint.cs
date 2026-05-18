@@ -27,6 +27,7 @@ internal static class UpdateTeamEndpoint
                 {
                     TeamErrors.TeamNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
                     TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    TeamErrors.TitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });

@@ -170,9 +170,53 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         error.Code.ShouldBe(ErrorCodes.TeamsShortTitleExists);
     }
 
-    private async Task<string> CreateTeamAsync()
+    [Fact]
+    public async Task ReturnsConflict_WithErrorCode_WhenTitleAlreadyExists()
     {
-        CreateTeamCommand createCommand = new CreateTeamCommandBuilder().Build();
+        // Arrange
+        string slug = await CreateTeamAsync();
+        string existingTitle = "Title-" + Guid.NewGuid().ToString()[..8];
+        CreateTeamCommand otherTeam = new CreateTeamCommandBuilder()
+            .WithTitle(existingTitle)
+            .Build();
+        await _authorizedHttpClient.PostAsJsonAsync(BasePath, otherTeam, CancellationToken.None);
+
+        UpdateTeamCommand command = new UpdateTeamCommandBuilder()
+            .WithTitle(existingTitle)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        ErrorResponse? error = await response.Content.ReadFromJsonAsync<ErrorResponse>(CancellationToken.None);
+        error.ShouldNotBeNull();
+        error.Code.ShouldBe(ErrorCodes.TeamsTitleExists);
+    }
+
+    [Fact]
+    public async Task ReturnsOk_WhenUpdatingTeamWithItsOwnTitle()
+    {
+        // Arrange
+        string ownTitle = "Title-" + Guid.NewGuid().ToString()[..8];
+        string slug = await CreateTeamAsync(ownTitle);
+        UpdateTeamCommand command = new UpdateTeamCommandBuilder()
+            .WithTitle(ownTitle)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug}", command, CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    private async Task<string> CreateTeamAsync(string? title = null)
+    {
+        CreateTeamCommand createCommand = title is null
+            ? new CreateTeamCommandBuilder().Build()
+            : new CreateTeamCommandBuilder().WithTitle(title).Build();
         HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
         createResponse.EnsureSuccessStatusCode();
 
