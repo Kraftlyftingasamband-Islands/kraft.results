@@ -4,6 +4,7 @@ using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 using KRAFT.Results.WebApi.ValueObjects;
 
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Teams.Update;
@@ -75,9 +76,26 @@ internal sealed class UpdateTeamHandler
             return result;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 } sqlEx)
+        {
+            return UniqueConstraintToError(sqlEx.Message);
+        }
 
         return Result.Success();
+    }
+
+    private static Result UniqueConstraintToError(string message)
+    {
+        if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
+        {
+            return Result.Failure(TeamErrors.TitleExists);
+        }
+
+        throw new InvalidOperationException($"Unexpected unique constraint violation on Teams: {message}");
     }
 
     private Task<bool> IsDuplicateShortTitleAsync(string currentSlug, string titleShort, CancellationToken cancellationToken) =>

@@ -212,6 +212,31 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    [Fact]
+    public async Task ReturnsConflict_NotInternalServerError_WhenConcurrentUpdateRacesOnTitle()
+    {
+        // Arrange — two teams that will both try to adopt a brand-new title simultaneously
+        string slug1 = await CreateTeamAsync();
+        string slug2 = await CreateTeamAsync();
+        string newTitle = "Title-" + Guid.NewGuid().ToString()[..8];
+
+        UpdateTeamCommand command1 = new UpdateTeamCommandBuilder()
+            .WithTitle(newTitle)
+            .Build();
+        UpdateTeamCommand command2 = new UpdateTeamCommandBuilder()
+            .WithTitle(newTitle)
+            .Build();
+
+        // Act — fire both updates simultaneously so both pass AnyAsync and the DB unique constraint fires on one
+        Task<HttpResponseMessage> task1 = _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug1}", command1, CancellationToken.None);
+        Task<HttpResponseMessage> task2 = _authorizedHttpClient.PutAsJsonAsync($"{BasePath}/{slug2}", command2, CancellationToken.None);
+        HttpResponseMessage[] responses = await Task.WhenAll(task1, task2);
+
+        // Assert — neither request may return 500; at least one must return 409
+        responses.ShouldAllBe(r => r.StatusCode != HttpStatusCode.InternalServerError);
+        responses.ShouldContain(r => r.StatusCode == HttpStatusCode.Conflict);
+    }
+
     private async Task<string> CreateTeamAsync(string? title = null)
     {
         CreateTeamCommand createCommand = title is null
