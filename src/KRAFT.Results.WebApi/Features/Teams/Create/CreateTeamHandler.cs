@@ -81,13 +81,21 @@ internal sealed class CreateTeamHandler
         }
         catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 } sqlEx)
         {
-            return UniqueConstraintToError(sqlEx.Message);
+            Error? error = UniqueConstraintToError(sqlEx.Message);
+
+            if (error is null)
+            {
+                _logger.LogWarning(ex, "Unexpected unique constraint violation on Teams");
+                throw;
+            }
+
+            return error;
         }
 
         return team.TeamId;
     }
 
-    private static Result<int> UniqueConstraintToError(string message)
+    private static Error? UniqueConstraintToError(string message)
     {
         if (message.Contains("IX_Teams_TitleShort_Unique", StringComparison.Ordinal))
         {
@@ -99,6 +107,6 @@ internal sealed class CreateTeamHandler
             return TeamErrors.TitleExists;
         }
 
-        throw new InvalidOperationException($"Unexpected unique constraint violation on Teams: {message}");
+        return null;
     }
 }

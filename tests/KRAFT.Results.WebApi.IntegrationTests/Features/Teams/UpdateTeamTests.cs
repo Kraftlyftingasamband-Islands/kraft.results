@@ -272,8 +272,9 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
         createResponse.EnsureSuccessStatusCode();
 
-        List<TeamSummary>? teams = await _authorizedHttpClient.GetFromJsonAsync<List<TeamSummary>>(BasePath, CancellationToken.None);
-        TeamSummary team = teams!.First(t => t.ShortTitle == createCommand.TitleShort);
+        List<TeamSummary>? teamsResponse = await _authorizedHttpClient.GetFromJsonAsync<List<TeamSummary>>(BasePath, CancellationToken.None);
+        List<TeamSummary> teams = teamsResponse.ShouldNotBeNull();
+        TeamSummary team = teams.First(t => t.ShortTitle == createCommand.TitleShort);
 
         return team.Slug;
     }

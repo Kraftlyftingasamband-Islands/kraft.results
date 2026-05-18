@@ -82,25 +82,33 @@ internal sealed class UpdateTeamHandler
         }
         catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 } sqlEx)
         {
-            return UniqueConstraintToError(sqlEx.Message);
+            Error? error = UniqueConstraintToError(sqlEx.Message);
+
+            if (error is null)
+            {
+                _logger.LogWarning(ex, "Unexpected unique constraint violation on Teams");
+                throw;
+            }
+
+            return Result.Failure(error);
         }
 
         return Result.Success();
     }
 
-    private static Result UniqueConstraintToError(string message)
+    private static Error? UniqueConstraintToError(string message)
     {
         if (message.Contains("IX_Teams_TitleShort_Unique", StringComparison.Ordinal))
         {
-            return Result.Failure(TeamErrors.ShortTitleExists);
+            return TeamErrors.ShortTitleExists;
         }
 
         if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
         {
-            return Result.Failure(TeamErrors.TitleExists);
+            return TeamErrors.TitleExists;
         }
 
-        throw new InvalidOperationException($"Unexpected unique constraint violation on Teams: {message}");
+        return null;
     }
 
     private Task<bool> IsDuplicateShortTitleAsync(string currentSlug, string titleShort, CancellationToken cancellationToken) =>
