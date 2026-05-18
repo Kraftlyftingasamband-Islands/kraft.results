@@ -175,4 +175,26 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
         responses.ShouldAllBe(r => r.StatusCode != HttpStatusCode.InternalServerError);
         responses.ShouldContain(r => r.StatusCode == HttpStatusCode.Conflict);
     }
+
+    [Fact]
+    public async Task ReturnsConflict_NotInternalServerError_WhenConcurrentCreationRacesOnShortTitle()
+    {
+        // Arrange
+        string shortTitle = UniqueShortCode.Next();
+        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
+            .WithTitleShort(shortTitle)
+            .Build();
+        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
+            .WithTitleShort(shortTitle)
+            .Build();
+
+        // Act — fire both requests simultaneously so the DB unique constraint may fire
+        Task<HttpResponseMessage> task1 = _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
+        Task<HttpResponseMessage> task2 = _authorizedHttpClient.PostAsJsonAsync(Path, secondCommand, CancellationToken.None);
+        HttpResponseMessage[] responses = await Task.WhenAll(task1, task2);
+
+        // Assert — neither request may return 500; at least one must return 409
+        responses.ShouldAllBe(r => r.StatusCode != HttpStatusCode.InternalServerError);
+        responses.ShouldContain(r => r.StatusCode == HttpStatusCode.Conflict);
+    }
 }

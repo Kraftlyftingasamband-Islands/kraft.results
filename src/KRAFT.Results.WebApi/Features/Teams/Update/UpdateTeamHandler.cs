@@ -90,6 +90,11 @@ internal sealed class UpdateTeamHandler
 
     private static Result UniqueConstraintToError(string message)
     {
+        if (message.Contains("IX_Teams_TitleShort_Unique", StringComparison.Ordinal))
+        {
+            return Result.Failure(TeamErrors.ShortTitleExists);
+        }
+
         if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
         {
             return Result.Failure(TeamErrors.TitleExists);
