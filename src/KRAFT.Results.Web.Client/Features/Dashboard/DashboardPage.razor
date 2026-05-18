@@ -114,48 +114,62 @@
             <div class="split-columns">
                 <div class="split-col">
                     <div class="split-col-header">Karlar</div>
-                    @foreach (DashboardRecordEntry record in context.LatestRecordsMen)
+                    @if (context.LatestRecordsMen.Count == 0)
                     {
-                        <div class="record-item">
-                            <div class="record-left">
-                                <div class="record-top">
-                                    <span class="record-lift">@record.Lift</span>
-                                    <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
+                        <p class="empty-col">Engin gildandi met skráð</p>
+                    }
+                    else
+                    {
+                        @foreach (DashboardRecordEntry record in context.LatestRecordsMen)
+                        {
+                            <div class="record-item">
+                                <div class="record-left">
+                                    <div class="record-top">
+                                        <span class="record-lift">@record.Lift</span>
+                                        <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
+                                    </div>
+                                    <div class="record-meta">
+                                        <span class="badge">@record.WeightCategory</span>
+                                        <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
+                                        <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
+                                    </div>
                                 </div>
-                                <div class="record-meta">
-                                    <span class="badge">@record.WeightCategory</span>
-                                    <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
-                                    <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
+                                <div class="record-right">
+                                    <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")" aria-label="@($"{record.AthleteName} — {record.Lift} — {record.Weight} kg")">@record.Weight kg</NavLink>
+                                    <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
                                 </div>
                             </div>
-                            <div class="record-right">
-                                <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")">@record.Weight kg</NavLink>
-                                <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
-                            </div>
-                        </div>
+                        }
                     }
                 </div>
                 <div class="split-col">
                     <div class="split-col-header">Konur</div>
-                    @foreach (DashboardRecordEntry record in context.LatestRecordsWomen)
+                    @if (context.LatestRecordsWomen.Count == 0)
                     {
-                        <div class="record-item">
-                            <div class="record-left">
-                                <div class="record-top">
-                                    <span class="record-lift">@record.Lift</span>
-                                    <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
+                        <p class="empty-col">Engin gildandi met skráð</p>
+                    }
+                    else
+                    {
+                        @foreach (DashboardRecordEntry record in context.LatestRecordsWomen)
+                        {
+                            <div class="record-item">
+                                <div class="record-left">
+                                    <div class="record-top">
+                                        <span class="record-lift">@record.Lift</span>
+                                        <NavLink class="record-athlete" href="@($"/athletes/{record.AthleteSlug}")">@record.AthleteName</NavLink>
+                                    </div>
+                                    <div class="record-meta">
+                                        <span class="badge">@record.WeightCategory</span>
+                                        <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
+                                        <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
+                                    </div>
                                 </div>
-                                <div class="record-meta">
-                                    <span class="badge">@record.WeightCategory</span>
-                                    <span class="badge">@record.AgeCategory.ToAgeCategoryLabel()</span>
-                                    <span class="badge badge--@(record.IsClassic ? "classic" : "equipped")">@DisplayNames.EquipmentType(record.IsClassic)</span>
+                                <div class="record-right">
+                                    <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")" aria-label="@($"{record.AthleteName} — {record.Lift} — {record.Weight} kg")">@record.Weight kg</NavLink>
+                                    <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
                                 </div>
                             </div>
-                            <div class="record-right">
-                                <NavLink class="record-weight" href="@($"/meets/{record.MeetSlug}")">@record.Weight kg</NavLink>
-                                <span class="record-date">@record.MeetDate.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
-                            </div>
-                        </div>
+                        }
                     }
                 </div>
             </div>
