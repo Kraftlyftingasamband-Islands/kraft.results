@@ -154,7 +154,8 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         CreateTeamCommand otherTeam = new CreateTeamCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
-        await _authorizedHttpClient.PostAsJsonAsync(BasePath, otherTeam, CancellationToken.None);
+        HttpResponseMessage otherTeamResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, otherTeam, CancellationToken.None);
+        otherTeamResponse.EnsureSuccessStatusCode();
 
         UpdateTeamCommand command = new UpdateTeamCommandBuilder()
             .WithTitleShort(shortTitle)
@@ -179,7 +180,8 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         CreateTeamCommand otherTeam = new CreateTeamCommandBuilder()
             .WithTitle(existingTitle)
             .Build();
-        await _authorizedHttpClient.PostAsJsonAsync(BasePath, otherTeam, CancellationToken.None);
+        HttpResponseMessage otherTeamResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, otherTeam, CancellationToken.None);
+        otherTeamResponse.EnsureSuccessStatusCode();
 
         UpdateTeamCommand command = new UpdateTeamCommandBuilder()
             .WithTitle(existingTitle)
