@@ -117,7 +117,8 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
         CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
-        _ = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
+        HttpResponseMessage firstResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
+        firstResponse.EnsureSuccessStatusCode();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, secondCommand, CancellationToken.None);
@@ -140,7 +141,8 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
         CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
             .WithTitle(title)
             .Build();
-        _ = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
+        HttpResponseMessage firstResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
+        firstResponse.EnsureSuccessStatusCode();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, secondCommand, CancellationToken.None);
