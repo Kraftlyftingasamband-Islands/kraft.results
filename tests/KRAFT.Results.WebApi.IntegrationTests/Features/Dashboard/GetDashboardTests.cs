@@ -90,8 +90,8 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         result.UpcomingMeets.ShouldNotBeNull();
         result.TopRankingsMen.ShouldNotBeNull();
         result.TopRankingsWomen.ShouldNotBeNull();
-        result.RecentRecordsMen.ShouldNotBeNull();
-        result.RecentRecordsWomen.ShouldNotBeNull();
+        result.LatestRecordsMen.ShouldNotBeNull();
+        result.LatestRecordsWomen.ShouldNotBeNull();
         result.TeamStandingsMen.ShouldNotBeNull();
         result.TeamStandingsWomen.ShouldNotBeNull();
     }
