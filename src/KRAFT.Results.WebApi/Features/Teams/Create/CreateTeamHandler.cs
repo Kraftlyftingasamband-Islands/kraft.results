@@ -4,6 +4,7 @@ using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 using KRAFT.Results.WebApi.ValueObjects;
 
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace KRAFT.Results.WebApi.Features.Teams.Create;
@@ -74,8 +75,25 @@ internal sealed class CreateTeamHandler
 
         _dbContext.Set<Team>().Add(team);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is SqlException { Number: 2601 or 2627 } sqlEx)
+        {
+            return UniqueConstraintToError(sqlEx.Message);
+        }
 
         return team.TeamId;
+    }
+
+    private static Result<int> UniqueConstraintToError(string message)
+    {
+        if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
+        {
+            return TeamErrors.TitleExists;
+        }
+
+        throw new InvalidOperationException($"Unexpected unique constraint violation on Teams: {message}");
     }
 }
