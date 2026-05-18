@@ -62,6 +62,12 @@ internal sealed class UpdateTeamHandler
             return Result.Failure(TeamErrors.ShortTitleExists);
         }
 
+        if (await IsDuplicateTitleAsync(slug, command.Title, cancellationToken))
+        {
+            _logger.LogWarning("Title {Title} already exists", command.Title);
+            return Result.Failure(TeamErrors.TitleExists);
+        }
+
         Result result = team.Update(modifier, command.Title, command.TitleShort, command.TitleFull, country);
 
         if (result.IsFailure)
@@ -78,5 +84,11 @@ internal sealed class UpdateTeamHandler
         _dbContext.Set<Team>()
         .Where(x => x.Slug != currentSlug)
         .Where(x => x.TitleShort == titleShort)
+        .AnyAsync(cancellationToken);
+
+    private Task<bool> IsDuplicateTitleAsync(string currentSlug, string title, CancellationToken cancellationToken) =>
+        _dbContext.Set<Team>()
+        .Where(x => x.Slug != currentSlug)
+        .Where(x => x.Title == title)
         .AnyAsync(cancellationToken);
 }

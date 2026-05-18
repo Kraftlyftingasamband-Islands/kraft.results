@@ -11,6 +11,12 @@ internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
     {
         builder.ToTable("Teams", "dbo");
 
+        builder.HasIndex(e => e.Title, "IX_Teams_Title_Unique")
+            .IsUnique();
+
+        builder.HasIndex(e => e.Slug, "IX_Teams_Slug_Unique")
+            .IsUnique();
+
         builder.Property(e => e.CreatedBy)
             .HasMaxLength(50)
             .HasDefaultValue("klaus", "DF_Teams_CreatedBy");
