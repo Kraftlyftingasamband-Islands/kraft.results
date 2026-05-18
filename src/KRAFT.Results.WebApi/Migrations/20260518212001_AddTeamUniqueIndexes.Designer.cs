@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KRAFT.Results.WebApi.Migrations
 {
     [DbContext(typeof(ResultsDbContext))]
-    [Migration("20260518203141_AddTeamTitleAndSlugUniqueIndexes")]
-    partial class AddTeamTitleAndSlugUniqueIndexes
+    [Migration("20260518212001_AddTeamUniqueIndexes")]
+    partial class AddTeamUniqueIndexes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -887,6 +887,9 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.HasKey("TeamId");
 
                     b.HasIndex(new[] { "Slug" }, "IX_Teams_Slug_Unique")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "TitleShort" }, "IX_Teams_TitleShort_Unique")
                         .IsUnique();
 
                     b.HasIndex(new[] { "Title" }, "IX_Teams_Title_Unique")
