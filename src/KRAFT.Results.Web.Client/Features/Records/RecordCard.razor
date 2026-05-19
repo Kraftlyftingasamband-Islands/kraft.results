@@ -2,7 +2,8 @@
 
 @if (Record.IsStandard)
 {
-    <div class="rc-card rc-standard">
+    <Card Compact="true" CssClass="rc-standard">
+    <div class="rc-card">
         <div class="rc-header-row">
             <div class="rc-category">@Record.WeightCategory</div>
             <div class="rc-name-col">
@@ -10,9 +11,11 @@
             </div>
         </div>
     </div>
+    </Card>
 }
 else
 {
+    <Card Compact="true">
     <div class="rc-card">
         <div class="rc-header-row">
             <a class="rc-category rc-category-link" href="@($"/records/{Record.Id}/history")">@Record.WeightCategory</a>
@@ -38,7 +41,8 @@ else
                 }
             </div>
         </div>
-</div>
+    </div>
+    </Card>
 }
 
 @code {
@@ -63,6 +67,6 @@ else
 
         parts.Add(Record.Date.ToString("dd.MM.yyyy"));
 
-        _meta = string.Join(" \u00b7 ", parts);
+        _meta = string.Join(" · ", parts);
     }
 }

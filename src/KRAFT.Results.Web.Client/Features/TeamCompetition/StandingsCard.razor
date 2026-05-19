@@ -1,6 +1,7 @@
 @using KRAFT.Results.Contracts.TeamCompetition
 
-<div class="sc-card @(_isFirst ? "sc-card-first" : null)">
+<Card Compact="true" CssClass="@(_isFirst ? "sc-card-first" : null)">
+<div class="sc-card">
     @if (_isMedal)
     {
         <div class="sc-rank @_rankClass" role="img" aria-label="@_rankAriaLabel">
@@ -29,6 +30,7 @@
         @Standing.TotalPoints
     </div>
 </div>
+</Card>
 
 @code {
     [Parameter, EditorRequired]
@@ -50,9 +52,9 @@
             2 => "\U0001f948",
             3 => "\U0001f949",
             _ when Standing.Rank > 0 => Standing.Rank.ToString(),
-            _ => "\u2013",
+            _ => "–",
         };
         _rankClass = _isMedal ? "rank-medal" : string.Empty;
-        _rankAriaLabel = _isMedal ? $"{Standing.Rank}. s\u00e6ti" : string.Empty;
+        _rankAriaLabel = _isMedal ? $"{Standing.Rank}. sæti" : string.Empty;
     }
 }

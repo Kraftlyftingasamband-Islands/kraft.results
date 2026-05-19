@@ -526,3 +526,7 @@ h1:focus {
     color: var(--color-text-muted);
     font-size: 0.9375rem;
 }
+
+/* Card state overrides — modifier classes applied via CssClass to Card's article */
+.sc-card-first { background: rgba(139, 26, 43, 0.06); }
+.rc-standard { border-inline-start-color: var(--color-border); }
