@@ -532,6 +532,17 @@ h1:focus {
     font-size: 0.9375rem;
 }
 
+/* Card defaults — each Card resets its own variables so nested Cards do not inherit parent overrides */
+.card {
+    --card-padding: 1.25rem 1.5rem;
+    --card-border-start: 4px solid var(--card-accent, var(--color-primary));
+    --card-bg: var(--color-white);
+    --card-shadow: var(--shadow-sm);
+    --card-border: 1px solid var(--color-border);
+    --card-hover-transform: translateY(-4px);
+    --card-hover-shadow: var(--shadow-lg);
+}
+
 /* Card state overrides — modifier classes applied via CssClass to Card's article */
 .sc-card-first { --card-bg: rgba(139, 26, 43, 0.06); }
 .rc-standard { --card-accent: var(--color-border); }
