@@ -23,16 +23,16 @@
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
     }
+}
 
-    ::deep a {
-        position: static;
-    }
+.card--clickable ::deep a {
+    position: static;
+}
 
-    ::deep a::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-    }
+.card--clickable ::deep a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
 }
 
 .card--compact {
