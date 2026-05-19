@@ -14,7 +14,7 @@
         <div class="card-grid">
             @foreach (TeamSummary team in context)
             {
-                <Card>
+                <Card Clickable="true">
                     <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
                     <div class="team-name">@team.Title</div>
                     <div class="team-short">@team.ShortTitle</div>
