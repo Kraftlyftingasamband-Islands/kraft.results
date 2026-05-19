@@ -536,4 +536,5 @@ h1:focus {
 .rhc-current .rhc-mark,
 .rhc-current .rhc-name { color: var(--color-primary-dark); }
 .ap-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
+.p-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
 .card-flush { --card-padding: 0; overflow: hidden; }

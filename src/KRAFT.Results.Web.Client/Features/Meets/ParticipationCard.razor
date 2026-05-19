@@ -7,7 +7,8 @@
 @inject HttpClient HttpClient
 @inject IJSRuntime JS
 
-<div class="p-card @(Participation.Disqualified ? "p-card-dq" : null)"
+<Card Compact="true" CssClass="@(Participation.Disqualified ? "p-card-dq" : null)">
+<div class="p-card"
      style="@($"--grid-template: {DesktopGridTemplate}")">
 
     <div class="p-header-row">
@@ -164,6 +165,7 @@
         }
     </div>
 </div>
+</Card>
 
 <AuthorizeView Roles="Admin">
     <EditBodyWeightDialog @ref="_editDialog"
