@@ -24,10 +24,6 @@
         outline-offset: 2px;
     }
 
-    &:has(:focus-visible) ::deep a:focus-visible {
-        outline: none;
-    }
-
     ::deep a {
         position: static;
     }
