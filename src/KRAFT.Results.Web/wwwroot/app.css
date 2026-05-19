@@ -532,6 +532,25 @@ h1:focus {
     font-size: 0.9375rem;
 }
 
+/* Card grid — shared layout for card-based index pages */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.count-value {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.count-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
 /* Card defaults — each Card resets its own variables so nested Cards do not inherit parent overrides */
 .card {
     --card-padding: 1.25rem 1.5rem;
