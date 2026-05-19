@@ -2,7 +2,7 @@
 
 @if (Record.IsStandard)
 {
-    <Card Compact="true" CssClass="rc-standard">
+    <Card Compact="true" CssClass="card-spaced rc-standard">
     <div class="rc-card">
         <div class="rc-header-row">
             <div class="rc-category">@Record.WeightCategory</div>
@@ -15,7 +15,7 @@
 }
 else
 {
-    <Card Compact="true">
+    <Card Compact="true" CssClass="card-spaced">
     <div class="rc-card">
         <div class="rc-header-row">
             <a class="rc-category rc-category-link" href="@($"/records/{Record.Id}/history")">@Record.WeightCategory</a>
