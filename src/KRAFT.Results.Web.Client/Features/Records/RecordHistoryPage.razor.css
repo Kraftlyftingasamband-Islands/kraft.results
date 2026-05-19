@@ -42,8 +42,6 @@
     background: var(--color-white);
     border-radius: var(--radius-sm);
     font-size: 0.9375rem;
-    max-width: 720px;
-    margin-inline: auto;
 }
 
 .meta-separator {
@@ -51,8 +49,6 @@
 }
 
 .rhc-list {
-    max-width: 720px;
-    margin-inline: auto;
     container-type: inline-size;
 }
 

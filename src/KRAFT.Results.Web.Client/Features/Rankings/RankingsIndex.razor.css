@@ -39,8 +39,6 @@
 }
 
 .rankings-list {
-    max-width: 720px;
-    margin-inline: auto;
     container-type: inline-size;
 }
 

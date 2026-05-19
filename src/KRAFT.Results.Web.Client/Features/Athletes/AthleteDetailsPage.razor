@@ -53,7 +53,7 @@
         @if (pageData.PersonalBests.Count > 0)
         {
             <h3 id="bestaragangur">Besti árangur</h3>
-            <div class="pb-group-container">
+            <div class="content-column pb-group-container">
                 @foreach (IGrouping<bool, AthletePersonalBest> group in pageData.PersonalBests.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
                 {
                     <AthletePersonalBestGroupCard
@@ -67,7 +67,7 @@
         @if (pageData.Records.Count > 0)
         {
             <h3 id="islandsmet">Núverandi íslandsmet (@pageData.Records.Count)</h3>
-            <div class="pb-group-container">
+            <div class="content-column pb-group-container">
                 @foreach (IGrouping<bool, AthleteRecord> group in pageData.Records.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
                 {
                     <AthleteRecordGroupCard
@@ -88,7 +88,7 @@
                 {
                     <details class="career-group" open>
                         <summary class="career-group-summary">@meetType.Key</summary>
-                        <div class="card-list">
+                        <div class="content-column card-list">
                             @foreach (AthleteParticipation p in meetType)
                             {
                                 <AthleteParticipationCard
@@ -103,7 +103,7 @@
                 {
                     <details class="career-group">
                         <summary class="career-group-summary">@meetType.Key</summary>
-                        <div class="card-list">
+                        <div class="content-column card-list">
                             @foreach (AthleteParticipation p in meetType)
                             {
                                 <AthleteParticipationCard

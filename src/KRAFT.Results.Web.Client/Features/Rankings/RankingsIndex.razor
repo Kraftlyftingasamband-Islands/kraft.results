@@ -60,7 +60,7 @@
                 ? 1
                 : (int)Math.Ceiling((double)response.TotalCount / PageSize);
 
-            <div class="rankings-list">
+            <div class="content-column rankings-list">
                 @foreach (RankingEntry entry in response.Items)
                 {
                     <RankingCard Entry="entry" DisciplineLabel="@DisciplineLabel" />

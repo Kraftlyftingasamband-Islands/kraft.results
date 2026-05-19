@@ -17,8 +17,6 @@
 
 .card-list {
     width: 100%;
-    max-width: 720px;
-    margin-inline: auto;
     container-type: inline-size;
     margin-block-end: 1rem;
 }
@@ -26,8 +24,6 @@
 .pb-group-container {
     display: flex;
     gap: 16px;
-    max-width: 720px;
-    margin-inline: auto;
     margin-block-end: 1.5rem;
 }
 

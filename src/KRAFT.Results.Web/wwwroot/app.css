@@ -85,6 +85,11 @@ tbody tr:nth-child(even) {
     padding-top: 1.1rem;
 }
 
+.content-column {
+    max-width: 720px;
+    margin-inline: auto;
+}
+
 .widget-grid {
     display: grid;
     grid-template-columns: 1fr;
