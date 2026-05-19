@@ -18,22 +18,30 @@
         <section class="season-stats" aria-label="Tölur ársins @_year">
             <h2 class="section-label">Tölur ársins @_year</h2>
             <div class="stat-bar">
-                <div class="stat-card">
-                    <span class="stat-number">@context.SeasonStats.Meets</span>
-                    <span class="stat-label">Mót</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">@context.SeasonStats.Athletes</span>
-                    <span class="stat-label">Keppendur</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">@context.SeasonStats.Records</span>
-                    <span class="stat-label">Met</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number">@context.SeasonStats.Clubs</span>
-                    <span class="stat-label">Félög</span>
-                </div>
+                <Card Compact="true" CssClass="card-plain">
+                    <div class="stat-inner">
+                        <span class="stat-number">@context.SeasonStats.Meets</span>
+                        <span class="stat-label">Mót</span>
+                    </div>
+                </Card>
+                <Card Compact="true" CssClass="card-plain">
+                    <div class="stat-inner">
+                        <span class="stat-number">@context.SeasonStats.Athletes</span>
+                        <span class="stat-label">Keppendur</span>
+                    </div>
+                </Card>
+                <Card Compact="true" CssClass="card-plain">
+                    <div class="stat-inner">
+                        <span class="stat-number">@context.SeasonStats.Records</span>
+                        <span class="stat-label">Met</span>
+                    </div>
+                </Card>
+                <Card Compact="true" CssClass="card-plain">
+                    <div class="stat-inner">
+                        <span class="stat-number">@context.SeasonStats.Clubs</span>
+                        <span class="stat-label">Félög</span>
+                    </div>
+                </Card>
             </div>
         </section>
 
