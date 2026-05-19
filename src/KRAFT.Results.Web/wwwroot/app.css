@@ -528,5 +528,5 @@ h1:focus {
 }
 
 /* Card state overrides — modifier classes applied via CssClass to Card's article */
-.sc-card-first { background: rgba(139, 26, 43, 0.06); }
-.rc-standard { border-inline-start-color: var(--color-border); }
+.sc-card-first { --card-bg: rgba(139, 26, 43, 0.06); }
+.rc-standard { --card-accent: var(--color-border); }
