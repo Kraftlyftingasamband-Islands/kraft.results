@@ -1,25 +1,10 @@
 /* ===== Record History Card — mobile-first ===== */
 
 .rhc-card {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-inline-start: 4px solid transparent;
-    border-radius: var(--radius-md);
-    padding: 10px 14px;
     margin-block-end: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-}
-
-.rhc-current {
-    border-inline-start-color: var(--color-primary);
-    background: var(--color-primary-light);
-}
-
-.rhc-standard {
-    border-inline-start-color: var(--color-border);
-    opacity: 0.65;
 }
 
 /* ── Header row ── */
@@ -76,11 +61,6 @@
     color: var(--color-primary);
     font-variant-numeric: tabular-nums;
     line-height: 1;
-}
-
-.rhc-current .rhc-mark,
-.rhc-current .rhc-name {
-    color: var(--color-primary-dark);
 }
 
 .rhc-delta {

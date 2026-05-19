@@ -1,7 +1,7 @@
 @using KRAFT.Results.Contracts.Records
 
-<div class="rhc-card @(Entry.IsCurrent ? "rhc-current" : null) @(Entry.IsStandard ? "rhc-standard" : null)"
-     aria-current="@(Entry.IsCurrent ? "true" : null)">
+<Card Compact="true" CssClass="@_cardCssClass">
+<div class="rhc-card" aria-current="@(Entry.IsCurrent ? "true" : null)">
 
     <div class="rhc-header-row">
         <div class="rhc-name-col">
@@ -44,15 +44,30 @@
         }
     </div>
 </div>
+</Card>
 
 @code {
     [Parameter, EditorRequired]
     public RecordHistoryEntry Entry { get; set; } = null!;
 
+    private string _cardCssClass = string.Empty;
     private string _footerMeta = string.Empty;
 
     protected override void OnParametersSet()
     {
+        if (Entry.IsCurrent)
+        {
+            _cardCssClass = "rhc-current";
+        }
+        else if (Entry.IsStandard)
+        {
+            _cardCssClass = "rhc-standard";
+        }
+        else
+        {
+            _cardCssClass = "rhc-default";
+        }
+
         string date = Entry.Date.ToString("dd.MM.yyyy");
         _footerMeta = Entry.BodyWeight.HasValue
             ? $"{date} · {Entry.BodyWeight.Value:F1} kg"
