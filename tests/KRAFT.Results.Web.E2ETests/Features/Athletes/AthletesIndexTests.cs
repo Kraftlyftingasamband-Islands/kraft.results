@@ -28,8 +28,8 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
 
         await Expect(searchInput).ToBeVisibleAsync();
 
-        ILocator athleteRows = page.Locator("table tbody tr");
-        await Expect(athleteRows).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator athleteCards = page.Locator(".card-grid .card");
+        await Expect(athleteCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 
     [Fact]
@@ -42,8 +42,8 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
         ILocator searchInput = page.Locator("input.search-input");
         await Expect(searchInput).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        ILocator athleteRows = page.Locator("table tbody tr");
-        await Expect(athleteRows.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator athleteCards = page.Locator(".card-grid .card");
+        await Expect(athleteCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Wait for the Blazor circuit to finish initializing — AthletesIndex.OnAfterRenderAsync
         // focuses the search input after OnInitializedAsync completes. Filling before this
@@ -55,6 +55,6 @@ public class AthletesIndexTests(PlaywrightFixture fixture)
         await searchInput.FillAsync("zzzznonexistent");
 
         // Assert
-        await Expect(athleteRows).ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(athleteCards).ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }

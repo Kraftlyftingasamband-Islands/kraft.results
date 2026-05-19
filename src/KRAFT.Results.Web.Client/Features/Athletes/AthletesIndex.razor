@@ -26,26 +26,25 @@
 
         @if (_filteredAthletes.Count > 0)
         {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nafn</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach (AthleteSummary athlete in _filteredAthletes)
-                    {
-                        <tr>
-                            <td>
-                                <NavLink class="nav-link" href="@($"/athletes/{athlete.Slug}")">
-                                    @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
-                                </NavLink>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div class="card-grid">
+                @foreach (AthleteSummary athlete in _filteredAthletes)
+                {
+                    <Card Clickable="true">
+                        <a href="@($"/athletes/{athlete.Slug}")" aria-label="@athlete.Name"></a>
+                        <div class="athlete-name">
+                            @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
+                        </div>
+                        @if (athlete.Team is not null)
+                        {
+                            <div class="athlete-team">@athlete.Team</div>
+                        }
+                        <div class="athlete-count">
+                            <span class="count-value">@athlete.ParticipationCount</span>
+                            <span class="count-label">mót</span>
+                        </div>
+                    </Card>
+                }
+            </div>
         }
 
         @if (_filteredAthletes.Count == 0 && _athletes.Count > 0)
