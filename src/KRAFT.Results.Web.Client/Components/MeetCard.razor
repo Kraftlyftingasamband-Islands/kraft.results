@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 
-<article class="meet-card @(_variant) @(_isLinked ? "meet-card--linked" : "")">
+<Card Clickable="@_isLinked" CssClass="@_cardClasses">
     <div class="meet-card-header">
         <time class="meet-card-date" datetime="@Meet.StartDate.ToString("yyyy-MM-dd")">
             @Meet.StartDate.ToString("dd. MMM yyyy")
@@ -57,7 +57,7 @@
             </AuthorizeView>
         }
     </div>
-</article>
+</Card>
 
 @code {
     [Parameter, EditorRequired]
@@ -72,6 +72,7 @@
     private bool _hasParticipants;
     private string _variant = "";
     private bool _isLinked;
+    private string _cardClasses = "meet-card";
 
     protected override void OnParametersSet()
     {
@@ -83,6 +84,7 @@
             (false, false) => "meet-card--ghost",
             _ => "",
         };
+        _cardClasses = string.IsNullOrEmpty(_variant) ? "meet-card" : $"meet-card {_variant}";
     }
 
     protected override async Task OnParametersSetAsync()

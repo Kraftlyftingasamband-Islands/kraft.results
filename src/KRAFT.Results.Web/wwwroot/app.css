@@ -538,3 +538,21 @@ h1:focus {
 .ap-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
 .p-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
 .card-flush { --card-padding: 0; overflow: hidden; }
+
+/* MeetCard state overrides */
+.meet-card--active { --card-bg: var(--color-primary-light); }
+.meet-card--active .meet-card-count {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+.meet-card--ghost {
+    --card-border: 1px dashed var(--color-border);
+    --card-border-start: 1px dashed var(--color-border);
+    --card-bg: transparent;
+    --card-shadow: none;
+    --card-accent: transparent;
+    --card-hover-transform: none;
+    --card-hover-shadow: none;
+}
+.meet-card--ghost .meet-card-title-link,
+.meet-card--ghost .meet-card-title-text { color: var(--color-text-muted); }
