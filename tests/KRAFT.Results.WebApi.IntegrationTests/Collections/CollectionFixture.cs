@@ -165,6 +165,8 @@ public sealed class CollectionFixture : IAsyncLifetime
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedWeightCategories());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedEras());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedEraWeightCategories());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedMeet());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedBaseParticipations());
     }
 
     private static async Task SeedIntegrationRolesAsync(ResultsDbContext dbContext)

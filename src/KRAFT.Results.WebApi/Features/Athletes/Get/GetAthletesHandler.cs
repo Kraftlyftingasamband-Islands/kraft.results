@@ -32,7 +32,9 @@ internal sealed class GetAthletesHandler
                 x.Firstname + " " + x.Lastname,
                 x.DateOfBirth != null && x.DateOfBirth.Value.Year > 1 ? (int?)x.DateOfBirth.Value.Year : null,
                 x.DateOfBirth != null && x.DateOfBirth.Value.Year > 1 ? x.DateOfBirth : null,
-                x.Gender == "f" ? "f" : "m"))
+                x.Gender == "f" ? "f" : "m",
+                x.Participations.Count,
+                x.Team != null ? x.Team.Title : null))
             .ToListAsync(cancellationToken);
 
         return rows
@@ -41,7 +43,9 @@ internal sealed class GetAthletesHandler
                 x.Name,
                 x.YearOfBirth,
                 x.Gender,
-                ResolveEligibleSlugs(x.DateOfBirth, meetDate)))
+                ResolveEligibleSlugs(x.DateOfBirth, meetDate),
+                x.ParticipationCount,
+                x.Team))
             .ToList();
     }
 
@@ -52,5 +56,5 @@ internal sealed class GetAthletesHandler
             : ["open"];
     }
 
-    private sealed record AthleteRow(string? Slug, string Name, int? YearOfBirth, DateOnly? DateOfBirth, string Gender);
+    private sealed record AthleteRow(string? Slug, string Name, int? YearOfBirth, DateOnly? DateOfBirth, string Gender, int ParticipationCount, string? Team);
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
@@ -107,5 +108,35 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
 
         // Assert
         response![0].Name.ShouldBe("0 0");
+    }
+
+    [Fact]
+    public async Task SeededAthleteReturnsParticipationCountAndTeam()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<AthleteSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        AthleteSummary? seededAthlete = response!.FirstOrDefault(x => x.Slug == TestSeedConstants.Athlete.Slug);
+        seededAthlete.ShouldNotBeNull();
+        seededAthlete.ParticipationCount.ShouldBe(3);
+        seededAthlete.Team.ShouldBe(TestSeedConstants.Team.Title);
+    }
+
+    [Fact]
+    public async Task NewAthleteReturnsZeroParticipationCountAndNullTeam()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<AthleteSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        AthleteSummary? newAthlete = response!.FirstOrDefault(x => x.Slug == _slug);
+        newAthlete.ShouldNotBeNull();
+        newAthlete.ParticipationCount.ShouldBe(0);
+        newAthlete.Team.ShouldBeNull();
     }
 }
