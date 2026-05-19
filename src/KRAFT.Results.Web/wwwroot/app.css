@@ -101,7 +101,7 @@ tbody tr:nth-child(even) {
         grid-template-columns: 1fr 1fr;
     }
 
-    .widget-grid .widget {
+    .widget-grid > .card {
         margin-bottom: 0;
     }
 }
@@ -540,7 +540,7 @@ h1:focus {
 .rhc-standard { --card-accent: var(--color-border); opacity: 0.65; }
 .ap-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
 .p-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
-.card-flush { --card-padding: 0; }
+.card-flush { --card-padding: 0; overflow: hidden; }
 .card-plain { --card-border-start: none; }
 .card-half { flex: 0 0 calc(50% - 8px); min-width: 0; }
 @media (max-width: 600px) { .card-half { flex: 1 1 auto; } }

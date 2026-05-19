@@ -46,7 +46,7 @@
         </section>
 
         <div class="widget-grid">
-        <div class="widget">
+        <Card CssClass="card-flush card-plain">
             <div class="widget-header">
                 <h2 class="widget-title">Mót</h2>
                 <NavLink class="widget-link" href="/meets">Mótaskrá →</NavLink>
@@ -85,9 +85,9 @@
                     }
                 </div>
             </div>
-        </div>
+        </Card>
 
-        <div class="widget">
+        <Card CssClass="card-flush card-plain">
             <div class="widget-header">
                 <h2 class="widget-title">Stigatafla @_year — Klassík</h2>
                 <NavLink class="widget-link" href="/rankings">Allt →</NavLink>
@@ -126,9 +126,9 @@
                     }
                 </div>
             </div>
-        </div>
+        </Card>
 
-        <div class="widget">
+        <Card CssClass="card-flush card-plain">
             <div class="widget-header">
                 <h2 class="widget-title">Nýjustu met</h2>
                 <NavLink class="widget-link" href="/records">Allt →</NavLink>
@@ -195,11 +195,11 @@
                     }
                 </div>
             </div>
-        </div>
+        </Card>
 
         @if (context.TeamStandingsMen.Count > 0 || context.TeamStandingsWomen.Count > 0)
         {
-            <div class="widget">
+            <Card CssClass="card-flush card-plain">
                 <div class="widget-header">
                     <h2 class="widget-title">Liðakeppni @_year</h2>
                     <NavLink class="widget-link" href="/team-competition">Allt →</NavLink>
@@ -224,7 +224,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
         }
         </div>
     </ChildContent>
