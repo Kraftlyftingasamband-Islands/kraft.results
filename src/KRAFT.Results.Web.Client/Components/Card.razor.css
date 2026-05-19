@@ -6,23 +6,48 @@
     padding: 1.25rem 1.5rem;
     background: var(--color-white);
     box-shadow: var(--shadow-sm);
+}
+
+.card--clickable {
+    cursor: pointer;
     transition: transform var(--transition-base) ease,
                 box-shadow var(--transition-base) ease;
-    cursor: pointer;
 
     &:hover,
     &:focus-within {
         transform: translateY(-4px);
         box-shadow: var(--shadow-lg);
     }
+
+    &:has(:focus-visible) {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    &:has(:focus-visible) ::deep a:focus-visible {
+        outline: none;
+    }
+
+    ::deep a {
+        position: static;
+    }
+
+    ::deep a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+    }
 }
 
-::deep a {
-    position: static;
+.card--compact {
+    padding: 0.75rem 1rem;
 }
 
-::deep a::after {
-    content: "";
-    position: absolute;
-    inset: 0;
+@media (prefers-reduced-motion: reduce) {
+    .card--clickable {
+        &:hover,
+        &:focus-within {
+            transform: none;
+        }
+    }
 }
