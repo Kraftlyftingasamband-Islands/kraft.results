@@ -531,16 +531,15 @@ h1:focus {
 .sc-card-first { --card-bg: rgba(139, 26, 43, 0.06); }
 .rc-standard { --card-accent: var(--color-border); }
 .rhc-default { --card-accent: transparent; }
-.rhc-current { --card-accent: var(--color-primary); --card-bg: var(--color-primary-light); }
+.rhc-current { --card-accent: var(--color-primary); --card-bg: var(--color-primary-light); --rhc-text-color: var(--color-primary-dark); }
 .rhc-standard { --card-accent: var(--color-border); opacity: 0.65; }
-.rhc-current .rhc-mark,
-.rhc-current .rhc-name { color: var(--color-primary-dark); }
 .ap-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
 .p-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
-.card-flush { --card-padding: 0; overflow: hidden; }
+.card-flush { --card-padding: 0; }
+.card-spaced { margin-block-end: 6px; }
 
 /* MeetCard state overrides */
-.meet-card--active { --card-bg: var(--color-primary-light); }
+.meet-card--active { --card-bg: var(--color-primary-light); --card-accent: var(--color-primary); }
 .meet-card--active .meet-card-count {
     color: var(--color-primary);
     font-weight: 600;

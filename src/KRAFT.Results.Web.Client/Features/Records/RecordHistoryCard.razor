@@ -57,15 +57,15 @@
     {
         if (Entry.IsCurrent)
         {
-            _cardCssClass = "rhc-current";
+            _cardCssClass = "card-spaced rhc-current";
         }
         else if (Entry.IsStandard)
         {
-            _cardCssClass = "rhc-standard";
+            _cardCssClass = "card-spaced rhc-standard";
         }
         else
         {
-            _cardCssClass = "rhc-default";
+            _cardCssClass = "card-spaced rhc-default";
         }
 
         string date = Entry.Date.ToString("dd.MM.yyyy");

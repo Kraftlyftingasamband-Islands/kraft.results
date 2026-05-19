@@ -2,7 +2,7 @@
 @using KRAFT.Results.Contracts.Athletes
 @using Microsoft.AspNetCore.Components.Routing
 
-<Card Compact="true" CssClass="@(Participation.IsDisqualified ? "ap-card-dq" : null)">
+<Card Compact="true" CssClass="@(Participation.IsDisqualified ? "card-spaced ap-card-dq" : "card-spaced")">
 <div class="ap-card">
     <div class="ap-header-row">
         <div class="ap-rank @_rankClass">@_rankDisplay</div>

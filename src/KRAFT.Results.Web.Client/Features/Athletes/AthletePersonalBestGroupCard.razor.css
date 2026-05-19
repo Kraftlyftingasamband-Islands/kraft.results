@@ -18,6 +18,8 @@
 .pbg-rows {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .pbg-row {

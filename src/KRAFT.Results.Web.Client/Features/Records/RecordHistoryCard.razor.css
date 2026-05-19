@@ -1,7 +1,6 @@
 /* ===== Record History Card — mobile-first ===== */
 
 .rhc-card {
-    margin-block-end: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -23,7 +22,7 @@
 .rhc-name {
     font-weight: 700;
     font-size: 17px;
-    color: var(--color-primary);
+    color: var(--rhc-text-color, var(--color-primary));
     text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
@@ -58,7 +57,7 @@
 .rhc-mark {
     font-weight: 800;
     font-size: 26px;
-    color: var(--color-primary);
+    color: var(--rhc-text-color, var(--color-primary));
     font-variant-numeric: tabular-nums;
     line-height: 1;
 }

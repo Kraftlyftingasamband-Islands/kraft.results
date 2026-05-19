@@ -7,7 +7,7 @@
 @inject HttpClient HttpClient
 @inject IJSRuntime JS
 
-<Card Compact="true" CssClass="@(Participation.Disqualified ? "p-card-dq" : null)">
+<Card Compact="true" CssClass="@(Participation.Disqualified ? "card-spaced p-card-dq" : "card-spaced")">
 <div class="p-card"
      style="@($"--grid-template: {DesktopGridTemplate}")">
 

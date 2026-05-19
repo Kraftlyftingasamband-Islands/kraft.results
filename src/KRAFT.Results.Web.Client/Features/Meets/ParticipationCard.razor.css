@@ -1,7 +1,6 @@
 /* ===== Shared / Mobile-first ===== */
 
 .p-card {
-    margin-block-end: 6px;
     display: flex;
     flex-direction: column;
     gap: 8px;
