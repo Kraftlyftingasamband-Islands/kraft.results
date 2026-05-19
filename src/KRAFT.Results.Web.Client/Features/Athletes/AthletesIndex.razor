@@ -30,7 +30,7 @@
                 @foreach (AthleteSummary athlete in _filteredAthletes)
                 {
                     <Card Clickable="true">
-                        <a href="@($"/athletes/{athlete.Slug}")" aria-label="@athlete.Name"></a>
+                        <a href="@($"/athletes/{athlete.Slug}")" aria-hidden="true" tabindex="-1"></a>
                         <div class="athlete-name">
                             @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
                         </div>
@@ -38,7 +38,9 @@
                         {
                             <div class="athlete-team">@athlete.Team</div>
                         }
-                        <div class="athlete-count">
+                        <div class="athlete-count"
+                             aria-label="@($"{athlete.ParticipationCount} mót")"
+                             title="Fjöldi keppnismóta">
                             <span class="count-value">@athlete.ParticipationCount</span>
                             <span class="count-label">mót</span>
                         </div>
