@@ -1,5 +1,4 @@
 .pbg-card {
-    flex: 0 0 calc(50% - 8px);
     min-width: 0;
 }
 
@@ -158,12 +157,6 @@
     font-size: 14px;
     font-weight: 500;
     color: var(--color-text-muted);
-}
-
-@media (max-width: 600px) {
-    .pbg-card {
-        flex: 1 1 auto;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
