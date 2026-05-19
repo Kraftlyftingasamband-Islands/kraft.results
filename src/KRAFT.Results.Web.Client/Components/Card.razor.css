@@ -3,7 +3,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     border-inline-start: 4px solid var(--card-accent, var(--color-primary));
-    padding: 1.25rem 1.5rem;
+    padding: var(--card-padding, 1.25rem 1.5rem);
     background: var(--card-bg, var(--color-white));
     box-shadow: var(--shadow-sm);
 }
@@ -36,7 +36,7 @@
 }
 
 .card--compact {
-    padding: 0.75rem 1rem;
+    --card-padding: 0.75rem 1rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

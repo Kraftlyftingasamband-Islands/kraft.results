@@ -2,6 +2,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 
+<Card CssClass="card-flush">
 <div class="arg-card">
     <h3 class="arg-header">@Title</h3>
     <div class="arg-rows">
@@ -26,6 +27,7 @@
         }
     </div>
 </div>
+</Card>
 
 @code {
     [Parameter, EditorRequired]
