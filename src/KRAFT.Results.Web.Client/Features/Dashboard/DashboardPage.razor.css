@@ -14,13 +14,8 @@
     margin-bottom: 1.5rem;
 }
 
-.stat-card {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    padding: 0.875rem 1rem;
+.stat-inner {
     text-align: center;
-    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
