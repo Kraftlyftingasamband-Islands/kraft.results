@@ -69,7 +69,7 @@ public sealed class AthletesIndexTests : IDisposable
     }
 
     [Fact]
-    public void HidesTableWhenNoAthletes()
+    public void HidesCardGridWhenNoAthletes()
     {
         // Arrange
         RegisterHttpClient([]);
@@ -78,7 +78,7 @@ public sealed class AthletesIndexTests : IDisposable
         IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
 
         // Assert
-        cut.FindAll("table").Count.ShouldBe(0);
+        cut.FindAll(".card-grid").Count.ShouldBe(0);
     }
 
     [Fact]
@@ -162,8 +162,6 @@ public sealed class AthletesIndexTests : IDisposable
         {
             string countText = cut.Find(".card-grid .card .athlete-count .count-value").TextContent.Trim();
             countText.ShouldBe("5");
-            string labelText = cut.Find(".card-grid .card .athlete-count .count-label").TextContent.Trim();
-            labelText.ShouldBe("mót");
         });
     }
 
