@@ -82,6 +82,175 @@ public sealed class AthletesIndexTests : IDisposable
     }
 
     [Fact]
+    public void RendersAthleteCards_WhenAthletesAreLoaded()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 0, null),
+            new("anna-karlsdottir", "Anna Karlsdottir", 1985, null, [], 0, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".card-grid .card").Count.ShouldBe(2);
+        });
+    }
+
+    [Fact]
+    public void CardShowsNameWithBirthYear_WhenYearIsPresent()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 0, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string nameText = cut.Find(".card-grid .card .athlete-name").TextContent.Trim();
+            nameText.ShouldBe("Jon Jonsson (1990)");
+        });
+    }
+
+    [Fact]
+    public void CardShowsNameOnly_WhenBirthYearIsAbsent()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", null, null, [], 0, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string nameText = cut.Find(".card-grid .card .athlete-name").TextContent.Trim();
+            nameText.ShouldBe("Jon Jonsson");
+        });
+    }
+
+    [Fact]
+    public void CardShowsParticipationCount()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 5, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string countText = cut.Find(".card-grid .card .athlete-count .count-value").TextContent.Trim();
+            countText.ShouldBe("5");
+            string labelText = cut.Find(".card-grid .card .athlete-count .count-label").TextContent.Trim();
+            labelText.ShouldBe("mót");
+        });
+    }
+
+    [Fact]
+    public void CardLinksToAthleteDetailPage()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 0, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string href = cut.Find(".card-grid .card a").GetAttribute("href") ?? string.Empty;
+            href.ShouldBe("/athletes/jon-jonsson");
+        });
+    }
+
+    [Fact]
+    public void CardShowsTeam_WhenAthleteHasTeam()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 0, "Þór"),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string teamText = cut.Find(".card-grid .card .athlete-team").TextContent.Trim();
+            teamText.ShouldBe("Þór");
+        });
+    }
+
+    [Fact]
+    public void CardOmitsTeamLine_WhenAthleteHasNoTeam()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 0, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".card-grid .card .athlete-team").Count.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void CardShowsZeroParticipations_WhenAthleteHasNone()
+    {
+        // Arrange
+        List<AthleteSummary> athletes =
+        [
+            new("jon-jonsson", "Jon Jonsson", 1990, null, [], 0, null),
+        ];
+        RegisterHttpClient(athletes);
+
+        // Act
+        IRenderedComponent<AthletesIndex> cut = _context.Render<AthletesIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string countText = cut.Find(".card-grid .card .athlete-count .count-value").TextContent.Trim();
+            countText.ShouldBe("0");
+        });
+    }
+
+    [Fact]
     public void FiltersAthletesByFirstName()
     {
         // Arrange
@@ -101,7 +270,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> visibleNames = cut.FindAll("table tbody tr td a")
+            List<string> visibleNames = cut.FindAll(".card-grid .card .athlete-name")
                 .Select(e => e.TextContent.Trim())
                 .ToList();
 
@@ -129,7 +298,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> visibleNames = cut.FindAll("table tbody tr td a")
+            List<string> visibleNames = cut.FindAll(".card-grid .card .athlete-name")
                 .Select(e => e.TextContent.Trim())
                 .ToList();
 
@@ -157,7 +326,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> visibleNames = cut.FindAll("table tbody tr td a")
+            List<string> visibleNames = cut.FindAll(".card-grid .card .athlete-name")
                 .Select(e => e.TextContent.Trim())
                 .ToList();
 
@@ -186,7 +355,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> visibleNames = cut.FindAll("table tbody tr td a")
+            List<string> visibleNames = cut.FindAll(".card-grid .card .athlete-name")
                 .Select(e => e.TextContent.Trim())
                 .ToList();
 
@@ -210,7 +379,7 @@ public sealed class AthletesIndexTests : IDisposable
 
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("table tbody tr").Count.ShouldBe(1);
+            cut.FindAll(".card-grid .card").Count.ShouldBe(1);
         });
 
         // Act
@@ -219,7 +388,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            int visibleCount = cut.FindAll("table tbody tr").Count;
+            int visibleCount = cut.FindAll(".card-grid .card").Count;
             visibleCount.ShouldBe(2);
         });
     }
@@ -242,7 +411,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("table").Count.ShouldBe(0);
+            cut.FindAll(".card-grid").Count.ShouldBe(0);
             cut.Find(".empty-state").ShouldNotBeNull();
         });
     }
