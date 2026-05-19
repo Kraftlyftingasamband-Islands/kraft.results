@@ -244,7 +244,7 @@ public sealed class MeetCardTests : IDisposable
     }
 
     [Fact]
-    public void DoesNotHaveLinkedModifier_WhenZeroParticipantsAndNonAdmin()
+    public void IsNotClickable_WhenZeroParticipantsAndNonAdmin()
     {
         // Arrange
         MeetSummary meet = MakePastMeet(participantCount: 0);
@@ -256,12 +256,12 @@ public sealed class MeetCardTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("article.meet-card--linked").Count.ShouldBe(0);
+            cut.FindAll("article.card--clickable").Count.ShouldBe(0);
         });
     }
 
     [Fact]
-    public void HasLinkedModifier_WhenParticipantCountGreaterThanZero()
+    public void IsClickable_WhenParticipantCountGreaterThanZero()
     {
         // Arrange
         MeetSummary meet = MakePastMeet(participantCount: 5);
@@ -273,12 +273,12 @@ public sealed class MeetCardTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.Find("article.meet-card--linked").ShouldNotBeNull();
+            cut.Find("article.card--clickable").ShouldNotBeNull();
         });
     }
 
     [Fact]
-    public void HasLinkedModifier_WhenZeroParticipantsAndAdmin()
+    public void IsClickable_WhenZeroParticipantsAndAdmin()
     {
         // Arrange
         MeetSummary meet = MakePastMeet(participantCount: 0);
@@ -291,7 +291,7 @@ public sealed class MeetCardTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.Find("article.meet-card--linked").ShouldNotBeNull();
+            cut.Find("article.card--clickable").ShouldNotBeNull();
         });
     }
 

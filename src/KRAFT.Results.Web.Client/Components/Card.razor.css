@@ -1,11 +1,11 @@
 .card {
     position: relative;
-    border: 1px solid var(--color-border);
+    border: var(--card-border, 1px solid var(--color-border));
     border-radius: var(--radius-md);
-    border-inline-start: 4px solid var(--card-accent, var(--color-primary));
+    border-inline-start: var(--card-border-start, 4px solid var(--card-accent, var(--color-primary)));
     padding: var(--card-padding, 1.25rem 1.5rem);
     background: var(--card-bg, var(--color-white));
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--card-shadow, var(--shadow-sm));
 }
 
 .card--clickable {
@@ -15,8 +15,8 @@
 
     &:hover,
     &:focus-within {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        transform: var(--card-hover-transform, translateY(-4px));
+        box-shadow: var(--card-hover-shadow, var(--shadow-lg));
     }
 
     &:has(:focus-visible) {
