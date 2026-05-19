@@ -1,5 +1,6 @@
 @using KRAFT.Results.Contracts.Rankings
 
+<Card Compact="true">
 <div class="r-card">
     <div class="r-header-row">
         <div class="r-rank @_rankClass" aria-hidden="true">@_rankDisplay</div>
@@ -23,6 +24,7 @@
         }
     </div>
 </div>
+</Card>
 
 @code {
     [Parameter, EditorRequired]
