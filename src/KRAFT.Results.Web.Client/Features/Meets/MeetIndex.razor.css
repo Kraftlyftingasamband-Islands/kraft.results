@@ -3,7 +3,7 @@
     margin-block-end: 1rem;
 }
 
-::deep .meet-card {
+.meet-list {
     max-width: 40rem;
     margin-inline: auto;
 }
