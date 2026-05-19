@@ -26,7 +26,7 @@
 
         @if (response.Entries.Count > 0)
         {
-            <div class="record-meta">
+            <div class="content-column record-meta">
                 <span>@response.Category</span>
                 <span class="meta-separator">&middot;</span>
                 <span>@response.WeightCategory</span>
@@ -43,7 +43,7 @@
                 }
             </div>
 
-            <div class="rhc-list">
+            <div class="content-column rhc-list">
                 @foreach (RecordHistoryEntry entry in response.Entries)
                 {
                     <RecordHistoryCard Entry="entry" />

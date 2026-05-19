@@ -1,6 +1,4 @@
 .record-section {
-    max-width: 720px;
-    margin-inline: auto;
     margin-block-end: 2rem;
     container-type: inline-size;
 }

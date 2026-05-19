@@ -14,7 +14,7 @@
 
 <DataLoader @key="Year" T="IReadOnlyCollection<MeetSummary>" Loader="LoadAsync" Noun="mót">
     <ChildContent Context="meets">
-        <div class="meet-list">
+        <div class="content-column">
             @foreach (IGrouping<string, MeetSummary> group in meets.GroupBy(x => x.StartDate.ToString("MMMM", CultureInfo.CurrentCulture)))
             {
                 <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
