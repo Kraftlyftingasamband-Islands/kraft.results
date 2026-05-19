@@ -3,3 +3,8 @@
     margin-block-end: 1rem;
 }
 
+::deep .meet-card {
+    max-width: 40rem;
+    margin-inline: auto;
+}
+
