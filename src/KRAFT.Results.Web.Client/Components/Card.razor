@@ -1,7 +1,22 @@
-<article class="card">
+<article class="card @(_classes)">
     @ChildContent
 </article>
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool Clickable { get; set; }
+    [Parameter] public bool Compact { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+
+    private string _classes = "";
+
+    protected override void OnParametersSet()
+    {
+        _classes = string.Join(" ",
+            new[] {
+                Clickable ? "card--clickable" : null,
+                Compact ? "card--compact" : null,
+                CssClass
+            }.Where(c => !string.IsNullOrEmpty(c)));
+    }
 }
