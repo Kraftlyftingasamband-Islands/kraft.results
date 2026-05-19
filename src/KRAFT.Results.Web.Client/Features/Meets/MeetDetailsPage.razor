@@ -85,22 +85,26 @@
                     @foreach (IGrouping<string, MeetParticipation> gender in Participations.GroupBy(x => x.Gender).OrderByDescending(x => x.Key))
                     {
                         <div class="leaders-gender-col">
-                            <h3 class="leaders-gender-heading">@gender.Key</h3>
-                            @foreach (var leader in gender.OrderByDescending(x => x.IpfPoints).Take(3).Select((x, i) => (Participation: x, Index: i)))
-                            {
-                                <div class="leader-row">
-                                    <span class="leader-medal" aria-hidden="true">
-                                        @((leader.Index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
-                                    </span>
-                                    <div class="leader-info">
-                                        <NavLink class="leader-name" href="@($"/athletes/{leader.Participation.AthleteSlug}")">@leader.Participation.Athlete</NavLink>
-                                        <span class="leader-meta">
-                                            @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @($"{leader.Participation.BodyWeight:F2}") kg
-                                        </span>
-                                    </div>
-                                    <span class="leader-pts">@($"{leader.Participation.IpfPoints:F2}")</span>
+                            <Card CssClass="card-flush">
+                                <h3 class="leaders-gender-heading">@gender.Key</h3>
+                                <div class="leaders-card-body">
+                                    @foreach (var leader in gender.OrderByDescending(x => x.IpfPoints).Take(3).Select((x, i) => (Participation: x, Index: i)))
+                                    {
+                                        <div class="leader-row">
+                                            <span class="leader-medal" aria-hidden="true">
+                                                @((leader.Index + 1) switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })
+                                            </span>
+                                            <div class="leader-info">
+                                                <NavLink class="leader-name" href="@($"/athletes/{leader.Participation.AthleteSlug}")">@leader.Participation.Athlete</NavLink>
+                                                <span class="leader-meta">
+                                                    @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @($"{leader.Participation.BodyWeight:F2}") kg
+                                                </span>
+                                            </div>
+                                            <span class="leader-pts">@($"{leader.Participation.IpfPoints:F2}")</span>
+                                        </div>
+                                    }
                                 </div>
-                            }
+                            </Card>
                         </div>
                     }
                 </div>
