@@ -111,7 +111,7 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SeededAthleteReturnsParticipationCountAndTeam()
+    public async Task SeededAthlete_ReturnsParticipationCount()
     {
         // Arrange
 
@@ -122,11 +122,24 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
         AthleteSummary? seededAthlete = response!.FirstOrDefault(x => x.Slug == TestSeedConstants.Athlete.Slug);
         seededAthlete.ShouldNotBeNull();
         seededAthlete.ParticipationCount.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task SeededAthlete_ReturnsTeam()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<AthleteSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        AthleteSummary? seededAthlete = response!.FirstOrDefault(x => x.Slug == TestSeedConstants.Athlete.Slug);
+        seededAthlete.ShouldNotBeNull();
         seededAthlete.Team.ShouldBe(TestSeedConstants.Team.Title);
     }
 
     [Fact]
-    public async Task NewAthleteReturnsZeroParticipationCountAndNullTeam()
+    public async Task NewAthlete_ReturnsZeroParticipationCount()
     {
         // Arrange
 
@@ -137,6 +150,19 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
         AthleteSummary? newAthlete = response!.FirstOrDefault(x => x.Slug == _slug);
         newAthlete.ShouldNotBeNull();
         newAthlete.ParticipationCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task NewAthlete_ReturnsNullTeam()
+    {
+        // Arrange
+
+        // Act
+        IReadOnlyList<AthleteSummary>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<AthleteSummary>>(Path, CancellationToken.None);
+
+        // Assert
+        AthleteSummary? newAthlete = response!.FirstOrDefault(x => x.Slug == _slug);
+        newAthlete.ShouldNotBeNull();
         newAthlete.Team.ShouldBeNull();
     }
 }
