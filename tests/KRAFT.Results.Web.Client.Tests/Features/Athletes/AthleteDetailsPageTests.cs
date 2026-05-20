@@ -4,6 +4,7 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Web.Client.Features.Athletes;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -12,6 +13,8 @@ namespace KRAFT.Results.Web.Client.Tests.Features.Athletes;
 
 public sealed class AthleteDetailsPageTests : IDisposable
 {
+    private const string ImageBaseUrl = "https://example.blob.core.windows.net/images";
+
     private readonly BunitContext _context = new();
 
     [Fact]
@@ -371,6 +374,43 @@ public sealed class AthleteDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void RendersPhotoImg_InAthleteDetailHeader_WhenAthleteHasProfileImage()
+    {
+        // Arrange
+        AthleteDetails athlete = AthleteDetailsPageMockHandler.AthleteWithPhoto("jondoe.jpg");
+        RegisterHttpClient(athlete: athlete);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement img = cut.Find(".athlete-detail-header img");
+            img.GetAttribute("src").ShouldBe($"{ImageBaseUrl}/jondoe.jpg?width=300&height=200&crop=auto");
+        });
+    }
+
+    [Fact]
+    public void RendersSvgPlaceholder_InAthleteDetailHeader_WhenAthleteHasNoProfileImage()
+    {
+        // Arrange
+        RegisterHttpClient();
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".athlete-detail-header svg").ShouldNotBeNull();
+            cut.FindAll(".athlete-detail-header img").Count.ShouldBe(0);
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -381,17 +421,31 @@ public sealed class AthleteDetailsPageTests : IDisposable
         List<AthleteRecord>? records = null,
         List<AthletePersonalBest>? personalBests = null,
         List<AthleteParticipation>? participations = null,
-        bool delay = false)
+        bool delay = false,
+        AthleteDetails? athlete = null)
     {
         AthleteDetailsPageMockHandler handler = new(
             records ?? [],
             personalBests ?? [],
             participations ?? [],
-            delay);
+            delay,
+            athlete);
 
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
+    }
+
+    private void RegisterConfiguration()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ImageBaseUrl"] = ImageBaseUrl,
+            })
+            .Build();
+        _context.Services.AddSingleton(configuration);
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
@@ -400,6 +454,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         NullAthleteHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 
@@ -409,6 +464,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         FailingAthleteHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 

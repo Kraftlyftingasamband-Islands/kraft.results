@@ -45,6 +45,9 @@
                 {
                     <Card Clickable="true">
                         <a href="@($"/athletes/{member.Slug}")" aria-hidden="true" tabindex="-1"></a>
+                        <AthletePhoto Filename="@member.ProfileImageFilename"
+                                      Alt="@member.Name"
+                                      Size="AthletePhotoSize.Small" />
                         <div class="member-name">
                             @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
                         </div>

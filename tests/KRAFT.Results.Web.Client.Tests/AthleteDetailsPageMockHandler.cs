@@ -9,7 +9,8 @@ internal sealed class AthleteDetailsPageMockHandler(
     List<AthleteRecord> records,
     List<AthletePersonalBest> personalBests,
     List<AthleteParticipation> participations,
-    bool delay = false) : HttpMessageHandler
+    bool delay = false,
+    AthleteDetails? athlete = null) : HttpMessageHandler
 {
     private static readonly AthleteDetails DefaultAthlete = new(
         Slug: "test-athlete",
@@ -19,6 +20,17 @@ internal sealed class AthleteDetailsPageMockHandler(
         ClubSlug: "test-club",
         RecordCount: 0,
         ProfileImageFilename: null);
+
+    private AthleteDetails ResolvedAthlete => athlete ?? DefaultAthlete;
+
+    internal static AthleteDetails AthleteWithPhoto(string filename) => new(
+        Slug: "test-athlete",
+        Name: "Test Athlete",
+        YearOfBirth: 1990,
+        Club: "Test Club",
+        ClubSlug: "test-club",
+        RecordCount: 0,
+        ProfileImageFilename: filename);
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
@@ -45,7 +57,7 @@ internal sealed class AthleteDetailsPageMockHandler(
         }
         else
         {
-            response = new(HttpStatusCode.OK) { Content = JsonContent.Create(DefaultAthlete) };
+            response = new(HttpStatusCode.OK) { Content = JsonContent.Create(ResolvedAthlete) };
         }
 
         return response;

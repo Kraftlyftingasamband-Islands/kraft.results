@@ -11,7 +11,12 @@
 <DataLoader T="AthletePageData" Loader="LoadAsync" Noun="keppanda">
     <ChildContent Context="pageData">
         <div class="page-header">
-            <h1>@pageData.Athlete.Name</h1>
+            <div class="athlete-detail-header">
+                <AthletePhoto Filename="@pageData.Athlete.ProfileImageFilename"
+                              Alt="@pageData.Athlete.Name"
+                              Size="AthletePhotoSize.Large" />
+                <h1>@pageData.Athlete.Name</h1>
+            </div>
             <AuthorizeView Roles="Admin">
                 <div class="admin-actions">
                     <a href="/athletes/@Slug/edit" class="btn-action" aria-label="Breyta keppanda">
