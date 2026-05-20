@@ -5,6 +5,7 @@ using Bunit;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Web.Client.Features.Teams;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -13,6 +14,8 @@ namespace KRAFT.Results.Web.Client.Tests.Features.Teams;
 
 public sealed class TeamsIndexTests : IDisposable
 {
+    private const string TeamLogoBaseUrl = "https://example.blob.core.windows.net/images";
+
     private readonly BunitContext _context = new();
 
     [Fact]
@@ -67,6 +70,50 @@ public sealed class TeamsIndexTests : IDisposable
         });
     }
 
+    [Fact]
+    public void RendersLogoImg_WhenTeamHasLogoImageFilename()
+    {
+        // Arrange
+        List<TeamSummary> teams =
+        [
+            new("thor", "Þór", "Þór", "thor.png", 12),
+        ];
+        RegisterHttpClientWithConfig(teams);
+
+        // Act
+        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png");
+            img.GetAttribute("alt").ShouldBe("Þór logo");
+            img.GetAttribute("loading").ShouldBe("lazy");
+        });
+    }
+
+    [Fact]
+    public void RendersSvgPlaceholder_WhenTeamHasNoLogoImageFilename()
+    {
+        // Arrange
+        List<TeamSummary> teams =
+        [
+            new("kr", "KR", "KR", null, 5),
+        ];
+        RegisterHttpClientWithConfig(teams);
+
+        // Act
+        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".team-logo svg").ShouldNotBeNull();
+            cut.FindAll(".team-logo img").Count.ShouldBe(0);
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -78,6 +125,17 @@ public sealed class TeamsIndexTests : IDisposable
         MockHttpMessageHandler<TeamSummary> handler = new(teams, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
+        _context.AddAuthorization();
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
+    private void RegisterHttpClientWithConfig(List<TeamSummary> teams)
+    {
+        MockHttpMessageHandler<TeamSummary> handler = new(teams);
+        HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
+        _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 
@@ -87,6 +145,18 @@ public sealed class TeamsIndexTests : IDisposable
         FailingHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
+    }
+
+    private void RegisterConfiguration()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["TeamLogoBaseUrl"] = TeamLogoBaseUrl,
+            })
+            .Build();
+        _context.Services.AddSingleton(configuration);
     }
 }

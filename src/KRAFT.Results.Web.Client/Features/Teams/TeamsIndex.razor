@@ -3,9 +3,11 @@
 @using KRAFT.Results.Contracts.Teams
 @using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.Extensions.Configuration
 
 @inject HttpClient HttpClient;
 @inject NavigationManager NavigationManager;
+@inject IConfiguration Configuration;
 
 <PageHeader Title="Félög" ActionHref="/teams/create" ActionLabel="Stofna félag" />
 
@@ -16,11 +18,37 @@
             {
                 <Card Clickable="true">
                     <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
-                    <div class="team-name">@team.Title</div>
-                    <div class="team-short">@team.ShortTitle</div>
-                    <div class="team-count">
-                        <span class="count-value">@team.AthleteCount</span>
-                        <span class="count-label">meðlimir</span>
+                    <div class="team-card-content">
+                        <div class="team-logo team-logo--md">
+                            @if (team.LogoImageFilename is not null)
+                            {
+                                <img src="@($"{_teamLogoBaseUrl}/{team.LogoImageFilename}")"
+                                     alt="@($"{team.Title} logo")"
+                                     loading="lazy"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                                <div class="team-logo-placeholder" style="display:none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
+                                    </svg>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="team-logo-placeholder">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
+                                    </svg>
+                                </div>
+                            }
+                        </div>
+                        <div class="team-card-text">
+                            <div class="team-name">@team.Title</div>
+                            <div class="team-short">@team.ShortTitle</div>
+                            <div class="team-count">
+                                <span class="count-value">@team.AthleteCount</span>
+                                <span class="count-label">meðlimir</span>
+                            </div>
+                        </div>
                     </div>
                 </Card>
             }
@@ -29,6 +57,13 @@
 </DataLoader>
 
 @code {
+    private string _teamLogoBaseUrl = "";
+
+    protected override void OnInitialized()
+    {
+        _teamLogoBaseUrl = Configuration["TeamLogoBaseUrl"] ?? "";
+    }
+
     private async Task<IReadOnlyCollection<TeamSummary>?> LoadAsync()
     {
         return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams");
