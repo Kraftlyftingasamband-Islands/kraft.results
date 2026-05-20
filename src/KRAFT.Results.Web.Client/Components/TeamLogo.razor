@@ -47,13 +47,7 @@
             _ => "team-logo--md",
         };
 
-        _sizeQuery = Size switch
-        {
-            TeamLogoSize.Small => "?width=64&height=64",
-            TeamLogoSize.Medium => "?width=128&height=128",
-            TeamLogoSize.Large => "?width=128&height=128",
-            _ => "?width=128&height=128",
-        };
+        _sizeQuery = "?width=128&height=128";
 
         _isValidFilename = Filename is not null
             && !Filename.Contains('/')

@@ -102,7 +102,7 @@ public sealed class TeamCompetitionIndexTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
         img.GetAttribute("alt").ShouldBe(string.Empty);
         img.GetAttribute("loading").ShouldBe("lazy");
     }
