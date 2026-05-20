@@ -56,12 +56,12 @@ public sealed class UserIndexTests : IDisposable
         IRenderedComponent<UserIndex> cut = _context.Render<UserIndex>();
 
         // Assert
-        cut.Find("button.btn-action").ShouldNotBeNull();
-        cut.Find("button.btn-action").TextContent.ShouldContain("Stofna notanda");
+        cut.Find("a.btn-action").ShouldNotBeNull();
+        cut.Find("a.btn-action").TextContent.ShouldContain("Stofna notanda");
     }
 
     [Fact]
-    public void ShowsUserTable_WhenUsersAreLoaded()
+    public void ShowsUserCards_WhenUsersAreLoaded()
     {
         // Arrange
         List<UserSummary> users =
@@ -77,7 +77,7 @@ public sealed class UserIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll("table tbody tr").Count.ShouldBe(2);
+            cut.FindAll(".card-grid .card").Count.ShouldBe(2);
         });
     }
 
@@ -92,7 +92,7 @@ public sealed class UserIndexTests : IDisposable
         MockHttpMessageHandler<UserSummary> handler = new(users);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
-        _context.AddAuthorization();
+        _context.AddAuthorization().SetRoles("Admin");
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
@@ -101,6 +101,6 @@ public sealed class UserIndexTests : IDisposable
         FailingHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
-        _context.AddAuthorization();
+        _context.AddAuthorization().SetRoles("Admin");
     }
 }
