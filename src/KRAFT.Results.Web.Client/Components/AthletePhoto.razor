@@ -1,0 +1,60 @@
+@using Microsoft.Extensions.Configuration
+
+@inject IConfiguration Configuration
+
+<div class="athlete-photo @_sizeClass">
+    @if (_isValidFilename)
+    {
+        <img src="@($"{_imageBaseUrl}/{Filename}{_sizeQuery}")"
+             alt="@Alt"
+             loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    }
+    <div class="athlete-photo-placeholder" style="@(_isValidFilename ? "display:none" : "")" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+        </svg>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Filename { get; set; }
+
+    [Parameter]
+    public string Alt { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public AthletePhotoSize Size { get; set; }
+
+    private string _imageBaseUrl = "";
+    private string _sizeClass = "";
+    private string _sizeQuery = "";
+    private bool _isValidFilename;
+
+    protected override void OnInitialized()
+    {
+        _imageBaseUrl = Configuration["ImageBaseUrl"] ?? "";
+    }
+
+    protected override void OnParametersSet()
+    {
+        _sizeClass = Size switch
+        {
+            AthletePhotoSize.Small => "athlete-photo--sm",
+            AthletePhotoSize.Large => "athlete-photo--lg",
+            _ => "athlete-photo--sm",
+        };
+
+        _sizeQuery = Size switch
+        {
+            AthletePhotoSize.Large => "?width=300&height=200&crop=auto",
+            _ => "?width=64&height=64&crop=auto",
+        };
+
+        _isValidFilename = !string.IsNullOrEmpty(Filename)
+            && !Filename.Contains('/')
+            && !Filename.Contains('\\')
+            && !Filename.Contains(':');
+    }
+}
