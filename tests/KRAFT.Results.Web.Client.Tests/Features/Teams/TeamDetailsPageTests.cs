@@ -6,6 +6,7 @@ using Bunit;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Web.Client.Features.Teams;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -14,6 +15,8 @@ namespace KRAFT.Results.Web.Client.Tests.Features.Teams;
 
 public sealed class TeamDetailsPageTests : IDisposable
 {
+    private const string TeamLogoBaseUrl = "https://example.blob.core.windows.net/images";
+
     private readonly BunitContext _context = new();
 
     [Fact]
@@ -131,6 +134,46 @@ public sealed class TeamDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void RendersLogoImg_WhenTeamHasLogo()
+    {
+        // Arrange
+        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", "thor.png", []);
+        RegisterHttpClientWithConfig(team);
+
+        // Act
+        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+            p => p.Add(c => c.Slug, "thor"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png");
+            img.GetAttribute("alt").ShouldBe("Þór IF logo");
+            img.GetAttribute("loading").ShouldBe("lazy");
+        });
+    }
+
+    [Fact]
+    public void RendersSvgPlaceholder_WhenTeamHasNoLogo()
+    {
+        // Arrange
+        TeamDetails team = new("kr", "KR", "KR", "Kraftlyftingafélag Reykjavíkur", "ISL", null, []);
+        RegisterHttpClientWithConfig(team);
+
+        // Act
+        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+            p => p.Add(c => c.Slug, "kr"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".team-logo svg").ShouldNotBeNull();
+            cut.FindAll(".team-logo img").Count.ShouldBe(0);
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -142,6 +185,17 @@ public sealed class TeamDetailsPageTests : IDisposable
         TeamDetailsPageMockHandler handler = new(team, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
+        _context.AddAuthorization();
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
+    private void RegisterHttpClientWithConfig(TeamDetails team)
+    {
+        TeamDetailsPageMockHandler handler = new(team);
+        HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
+        _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 
@@ -151,6 +205,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         NullTeamHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 
@@ -160,7 +215,19 @@ public sealed class TeamDetailsPageTests : IDisposable
         FailingHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
+    }
+
+    private void RegisterConfiguration()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["TeamLogoBaseUrl"] = TeamLogoBaseUrl,
+            })
+            .Build();
+        _context.Services.AddSingleton(configuration);
     }
 
     private sealed class TeamDetailsPageMockHandler(TeamDetails team, bool delay = false) : HttpMessageHandler

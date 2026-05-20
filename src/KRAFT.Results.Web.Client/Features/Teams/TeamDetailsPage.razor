@@ -3,14 +3,40 @@
 @using KRAFT.Results.Contracts.Teams
 @using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.Extensions.Configuration
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject IConfiguration Configuration
 
 <DataLoader T="TeamDetails" Loader="LoadAsync" Noun="félag">
     <ChildContent Context="team">
         <div class="page-header">
-            <h1>@team.FullTitle (@team.ShortTitle)</h1>
+            <div class="team-detail-header">
+                <div class="team-logo team-logo--lg">
+                    @if (team.LogoImageFilename is not null)
+                    {
+                        <img src="@($"{_teamLogoBaseUrl}/{team.LogoImageFilename}")"
+                             alt="@($"{team.FullTitle} logo")"
+                             loading="lazy"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                        <div class="team-logo-placeholder" style="display:none">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
+                            </svg>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="team-logo-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
+                            </svg>
+                        </div>
+                    }
+                </div>
+                <h1>@team.FullTitle (@team.ShortTitle)</h1>
+            </div>
             <AuthorizeView Roles="Admin">
                 <div class="admin-actions">
                     <a href="/teams/@Slug/edit" class="btn-action" aria-label="Breyta félagi">
@@ -68,12 +94,18 @@
 </DataLoader>
 
 @code {
+    private string _teamLogoBaseUrl = "";
     private ConfirmDialog _deleteDialog = null!;
     private bool _isDeleting;
     private string? _deleteErrorMessage;
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _teamLogoBaseUrl = Configuration["TeamLogoBaseUrl"] ?? "";
+    }
 
     private async Task<TeamDetails?> LoadAsync()
     {
