@@ -9,7 +9,7 @@ public class UserIndexTests(PlaywrightFixture fixture)
     private readonly PlaywrightFixture _fixture = fixture;
 
     [Fact]
-    public async Task DisplaysUserList_WhenLoggedIn()
+    public async Task DisplaysUserCards_WhenLoggedIn()
     {
         // Arrange
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
@@ -26,9 +26,9 @@ public class UserIndexTests(PlaywrightFixture fixture)
         // Assert
         await Expect(heading).ToBeVisibleAsync();
 
-        ILocator tableRows = page.Locator("table tbody tr");
-        await Expect(tableRows.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        ILocator userCards = page.Locator(".card-grid .card");
+        await Expect(userCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        await Expect(tableRows).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
+        await Expect(userCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
 }
