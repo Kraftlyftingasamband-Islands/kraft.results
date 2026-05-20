@@ -2,7 +2,6 @@
 
 @using KRAFT.Results.Contracts.Teams
 @using KRAFT.Results.Web.Client.Components
-@using Microsoft.AspNetCore.Components.Routing
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
@@ -37,26 +36,32 @@
             </AuthorizeView>
         </div>
 
-        <br/>
-
         <h2>Meðlimir</h2>
 
         @if (team.Members is { Count: > 0 } members)
         {
-            <ul class="member-list">
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
                 @foreach (TeamMember member in members)
                 {
-                    <li>
-                        <NavLink class="nav-link" href="@($"/athletes/{member.Slug}")">
+                    <Card Clickable="true">
+                        <a href="@($"/athletes/{member.Slug}")" aria-hidden="true" tabindex="-1"></a>
+                        <div class="member-name">
                             @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
-                        </NavLink>
-                    </li>
+                        </div>
+                        <div class="member-count"
+                             role="group"
+                             aria-label="@($"{member.ParticipationCount} mót")"
+                             title="Fjöldi keppnismóta">
+                            <span class="count-value">@member.ParticipationCount</span>
+                            <span class="count-label">mót</span>
+                        </div>
+                    </Card>
                 }
-            </ul>
+            </div>
         }
         else
         {
-            <p>Engir meðlimir skráðir.</p>
+            <EmptyState Message="Engir meðlimir skráðir." />
         }
 
         <ConfirmDialog @ref="_deleteDialog"
