@@ -47,7 +47,7 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=96&height=96");
         img.GetAttribute("loading").ShouldBe("lazy");
     }
 
