@@ -87,7 +87,7 @@ public sealed class TeamsIndexTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
+            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
             img.GetAttribute("alt").ShouldBe(string.Empty);
             img.GetAttribute("loading").ShouldBe("lazy");
         });
@@ -144,7 +144,7 @@ public sealed class TeamsIndexTests : IDisposable
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["TeamLogoBaseUrl"] = TeamLogoBaseUrl,
+                ["ImageBaseUrl"] = TeamLogoBaseUrl,
             })
             .Build();
         _context.Services.AddSingleton(configuration);

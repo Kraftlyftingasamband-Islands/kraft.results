@@ -218,7 +218,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["TeamLogoBaseUrl"] = TeamLogoBaseUrl,
+                ["ImageBaseUrl"] = TeamLogoBaseUrl,
             })
             .Build();
         _context.Services.AddSingleton(configuration);

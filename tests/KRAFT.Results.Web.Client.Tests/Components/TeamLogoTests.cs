@@ -47,7 +47,7 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
         img.GetAttribute("loading").ShouldBe("lazy");
     }
 
@@ -132,7 +132,7 @@ public sealed class TeamLogoTests : IDisposable
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["TeamLogoBaseUrl"] = TeamLogoBaseUrl,
+                ["ImageBaseUrl"] = TeamLogoBaseUrl,
             })
             .Build();
         _context.Services.AddSingleton(configuration);
