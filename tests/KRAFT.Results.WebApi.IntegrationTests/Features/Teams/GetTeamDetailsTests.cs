@@ -97,4 +97,19 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task MemberParticipationCount_IsPopulatedFromSeedData()
+    {
+        // Arrange
+        string path = $"{BasePath}/{Constants.TestTeamSlug}";
+
+        // Act
+        TeamDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<TeamDetails>(path, CancellationToken.None);
+
+        // Assert
+        response!.Members.ShouldContain(m => m.Slug == Constants.TestAthleteSlug);
+        TeamMember member = response.Members.Single(m => m.Slug == Constants.TestAthleteSlug);
+        member.ParticipationCount.ShouldBe(3);
+    }
 }
