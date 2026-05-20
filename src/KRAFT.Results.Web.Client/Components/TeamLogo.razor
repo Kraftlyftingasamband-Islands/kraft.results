@@ -56,6 +56,8 @@
         _isValidFilename = Filename is not null
             && !Filename.Contains('/')
             && !Filename.Contains('\\')
-            && !Filename.Contains(':');
+            && !Filename.Contains(':')
+            && !Filename.Contains('?')
+            && !Filename.Contains('#');
     }
 }

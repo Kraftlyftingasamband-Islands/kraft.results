@@ -107,6 +107,8 @@ public sealed class TeamLogoTests : IDisposable
     [InlineData("http://evil.com/logo.png")]
     [InlineData("//evil.com/logo.png")]
     [InlineData("javascript:alert(1)")]
+    [InlineData("logo.png?width=999")]
+    [InlineData("logo.png#section")]
     public void ShowsPlaceholder_WhenFilenameIsInvalid(string invalidFilename)
     {
         // Arrange
