@@ -178,6 +178,58 @@ public sealed class TeamDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void RendersMemberPhotoImg_WhenMemberHasProfileImage()
+    {
+        // Arrange
+        TeamDetails team = new(
+            "thor",
+            "Þór IF",
+            "Þór",
+            "Þór IF",
+            "ISL",
+            null,
+            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5, "jon.jpg")]);
+        RegisterHttpClient(team);
+
+        // Act
+        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+            p => p.Add(c => c.Slug, "thor"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement img = cut.Find(".card .athlete-photo img");
+            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/jon.jpg?width=64&height=64&crop=auto");
+        });
+    }
+
+    [Fact]
+    public void RendersMemberPhotoPlaceholder_WhenMemberHasNoProfileImage()
+    {
+        // Arrange
+        TeamDetails team = new(
+            "thor",
+            "Þór IF",
+            "Þór",
+            "Þór IF",
+            "ISL",
+            null,
+            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5, null)]);
+        RegisterHttpClient(team);
+
+        // Act
+        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+            p => p.Add(c => c.Slug, "thor"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".card .athlete-photo svg").ShouldNotBeNull();
+            cut.FindAll(".card .athlete-photo img").Count.ShouldBe(0);
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();

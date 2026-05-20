@@ -3,6 +3,12 @@
     margin-block-end: 1rem;
 }
 
+.athlete-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .athlete-meta {
     display: flex;
     align-items: center;
