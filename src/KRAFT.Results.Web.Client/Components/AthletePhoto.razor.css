@@ -1,0 +1,37 @@
+.athlete-photo {
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.athlete-photo--sm {
+    width: 48px;
+    height: 48px;
+}
+
+.athlete-photo--lg {
+    width: 80px;
+    height: 80px;
+}
+
+.athlete-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.athlete-photo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: color-mix(in oklch, var(--color-border), transparent 40%);
+    color: var(--color-text-muted);
+    opacity: 0.4;
+}
+
+.athlete-photo-placeholder svg {
+    width: 60%;
+    height: 60%;
+}
