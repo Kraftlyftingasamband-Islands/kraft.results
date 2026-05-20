@@ -52,8 +52,8 @@ public sealed class TeamsIndexTests : IDisposable
         // Arrange
         List<TeamSummary> teams =
         [
-            new("thor", "Þór", "Þór", 12),
-            new("kr", "Kraftlyftingafélag Reykjavíkur", "KR", 5),
+            new("thor", "Þór", "Þór", "thor.png", 12),
+            new("kr", "Kraftlyftingafélag Reykjavíkur", "KR", null, 5),
         ];
         RegisterHttpClient(teams);
 

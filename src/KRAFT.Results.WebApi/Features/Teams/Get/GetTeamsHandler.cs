@@ -22,6 +22,7 @@ internal sealed class GetTeamsHandler
             x.Slug,
             x.Title,
             x.TitleShort,
+            x.LogoImageFilename,
             x.Athletes.Count))
         .ToListAsync(cancellationToken);
 }
