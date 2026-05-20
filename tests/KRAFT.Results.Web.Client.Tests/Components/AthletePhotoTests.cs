@@ -27,7 +27,9 @@ public sealed class AthletePhotoTests : IDisposable
 
         // Act
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
-            p => p.Add(c => c.Size, AthletePhotoSize.Small));
+            p => p
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Small));
 
         // Assert
         cut.Find(".athlete-photo svg").ShouldNotBeNull();
@@ -43,6 +45,7 @@ public sealed class AthletePhotoTests : IDisposable
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
             p => p
                 .Add(c => c.Filename, string.Empty)
+                .Add(c => c.Alt, "test")
                 .Add(c => c.Size, AthletePhotoSize.Small));
 
         // Assert
@@ -108,7 +111,9 @@ public sealed class AthletePhotoTests : IDisposable
 
         // Act
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
-            p => p.Add(c => c.Size, size));
+            p => p
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, size));
 
         // Assert
         cut.Find($".athlete-photo.{expectedClass}").ShouldNotBeNull();
@@ -131,6 +136,7 @@ public sealed class AthletePhotoTests : IDisposable
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
             p => p
                 .Add(c => c.Filename, invalidFilename)
+                .Add(c => c.Alt, "test")
                 .Add(c => c.Size, AthletePhotoSize.Small));
 
         // Assert
@@ -147,6 +153,7 @@ public sealed class AthletePhotoTests : IDisposable
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
             p => p
                 .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
                 .Add(c => c.Size, AthletePhotoSize.Small));
 
         // Assert
