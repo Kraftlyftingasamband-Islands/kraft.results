@@ -5,7 +5,7 @@
 <div class="team-logo @_sizeClass">
     @if (_isValidFilename)
     {
-        <img src="@($"{_teamLogoBaseUrl}/{Filename}")"
+        <img src="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery}")"
              alt="@Alt"
              loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
@@ -29,6 +29,7 @@
 
     private string _teamLogoBaseUrl = "";
     private string _sizeClass = "";
+    private string _sizeQuery = "";
     private bool _isValidFilename;
 
     protected override void OnInitialized()
@@ -44,6 +45,14 @@
             TeamLogoSize.Medium => "team-logo--md",
             TeamLogoSize.Large => "team-logo--lg",
             _ => "team-logo--md",
+        };
+
+        _sizeQuery = Size switch
+        {
+            TeamLogoSize.Small => "?width=48&height=48",
+            TeamLogoSize.Medium => "?width=96&height=96",
+            TeamLogoSize.Large => "?width=160&height=160",
+            _ => "?width=96&height=96",
         };
 
         _isValidFilename = Filename is not null

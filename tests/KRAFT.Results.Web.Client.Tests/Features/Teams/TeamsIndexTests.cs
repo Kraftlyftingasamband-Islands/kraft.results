@@ -87,7 +87,7 @@ public sealed class TeamsIndexTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png");
+            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=96&height=96");
             img.GetAttribute("alt").ShouldBe(string.Empty);
             img.GetAttribute("loading").ShouldBe("lazy");
         });
