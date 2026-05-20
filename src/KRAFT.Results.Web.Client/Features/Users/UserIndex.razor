@@ -8,74 +8,52 @@
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient;
-@inject NavigationManager NavigationManager;
 
-<div class="page-header">
-    <h3>Notendur</h3>
-    <button class="btn-action" @onclick="NavigateToCreate">
-        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-            <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
-        </svg>
-        Stofna notanda
-    </button>
-</div>
+<PageHeader Title="Notendur" ActionHref="/users/create" ActionLabel="Stofna notanda" />
 
 <DataLoader T="IReadOnlyCollection<UserSummary>" Loader="LoadAsync" Noun="notendur">
     <ChildContent Context="context">
-        <table>
-            <thead>
-                <tr>
-                    <th>Nafn</th>
-                    <th>Tölvupóstfang</th>
-                    <th>Hlutverk</th>
-                    <th>Stofnaður</th>
-                    <th><span class="visually-hidden">Aðgerðir</span></th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @if (!context.Any())
+        @if (context.Any())
+        {
+            <div class="card-grid">
+                @foreach (UserSummary user in context)
                 {
-                    <tr>
-                        <td colspan="5">Engir notendur fundust.</td>
-                    </tr>
+                    <Card>
+                        <div class="user-name">@user.Name</div>
+                        @if (user.Email is not null)
+                        {
+                            <div class="user-email">@user.Email</div>
+                        }
+                        @if (user.Roles.Count > 0)
+                        {
+                            <div class="user-roles">
+                                @foreach (string role in user.Roles)
+                                {
+                                    <span class="badge">@role</span>
+                                }
+                            </div>
+                        }
+                        <div class="user-footer">
+                            <span class="user-date">@user.CreatedOn.ToString("d. MMM yyyy")</span>
+                            <a href="@($"/users/{user.UserId}/edit")" class="btn-edit" aria-label="@($"Breyta {user.Name}")">
+                                <svg class="btn-edit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/>
+                                </svg>
+                                <span>Breyta</span>
+                            </a>
+                        </div>
+                    </Card>
                 }
-                else
-                {
-                    @foreach (UserSummary User in context)
-                    {
-                        <tr>
-                            <td>@User.Name</td>
-                            <td>@User.Email</td>
-                            <td>@string.Join(", ", User.Roles)</td>
-                            <td>@User.CreatedOn.ToShortDateString()</td>
-                            <td>
-                                <button type="button" class="btn-edit" @onclick="@(() => NavigateToEdit(User.UserId))" aria-label="@($"Breyta {User.Name}")">
-                                    <svg class="btn-edit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/>
-                                    </svg>
-                                    <span>Breyta</span>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
+            </div>
+        }
+        else
+        {
+            <EmptyState Message="Engir notendur fundust." />
+        }
     </ChildContent>
 </DataLoader>
 
 @code {
-    private void NavigateToCreate()
-    {
-        NavigationManager.NavigateTo("/users/create");
-    }
-
-    private void NavigateToEdit(int userId)
-    {
-        NavigationManager.NavigateTo($"/users/{userId}/edit");
-    }
-
     private async Task<IReadOnlyCollection<UserSummary>?> LoadAsync()
     {
         return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<UserSummary>>("/users");
