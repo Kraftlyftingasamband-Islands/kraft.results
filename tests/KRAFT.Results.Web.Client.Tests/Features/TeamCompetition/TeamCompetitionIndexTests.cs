@@ -125,6 +125,11 @@ public sealed class TeamCompetitionIndexTests : IDisposable
 
     private void RegisterConfiguration()
     {
+        if (_context.Services.Any(s => s.ServiceType == typeof(IConfiguration)))
+        {
+            return;
+        }
+
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {

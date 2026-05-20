@@ -15,11 +15,15 @@ public sealed class TeamLogoTests : IDisposable
 
     private readonly BunitContext _context = new();
 
+    public TeamLogoTests()
+    {
+        RegisterConfiguration();
+    }
+
     [Fact]
     public void RendersSvgPlaceholder_WhenFilenameIsNull()
     {
         // Arrange
-        RegisterConfiguration();
 
         // Act
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
@@ -34,7 +38,6 @@ public sealed class TeamLogoTests : IDisposable
     public void RendersImg_WhenFilenameIsProvided()
     {
         // Arrange
-        RegisterConfiguration();
 
         // Act
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
@@ -52,7 +55,6 @@ public sealed class TeamLogoTests : IDisposable
     public void AltDefaultsToEmpty_ForDecorativeUse()
     {
         // Arrange
-        RegisterConfiguration();
 
         // Act
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
@@ -69,7 +71,6 @@ public sealed class TeamLogoTests : IDisposable
     public void RendersAltText_WhenAltIsProvided()
     {
         // Arrange
-        RegisterConfiguration();
 
         // Act
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
@@ -90,7 +91,6 @@ public sealed class TeamLogoTests : IDisposable
     public void AppliesSizeClass_ForEachSize(TeamLogoSize size, string expectedClass)
     {
         // Arrange
-        RegisterConfiguration();
 
         // Act
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
@@ -110,7 +110,6 @@ public sealed class TeamLogoTests : IDisposable
     public void ShowsPlaceholder_WhenFilenameIsInvalid(string invalidFilename)
     {
         // Arrange
-        RegisterConfiguration();
 
         // Act
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
