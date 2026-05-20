@@ -88,7 +88,7 @@ public sealed class TeamsIndexTests : IDisposable
         {
             AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
             img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png");
-            img.GetAttribute("alt").ShouldBe("Þór logo");
+            img.GetAttribute("alt").ShouldBe(string.Empty);
             img.GetAttribute("loading").ShouldBe("lazy");
         });
     }
