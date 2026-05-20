@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using AngleSharp.Dom;
+
 using Bunit;
 
 using KRAFT.Results.Contracts.Teams;
@@ -110,8 +112,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            AngleSharp.Dom.IElement grid = cut.Find(".card-grid");
-            grid.ShouldNotBeNull();
+            IElement grid = cut.Find(".card-grid");
             grid.QuerySelector(".member-name").ShouldNotBeNull().TextContent.ShouldContain("Jon Jonsson (1990)");
             grid.QuerySelector(".member-count").ShouldNotBeNull().TextContent.ShouldContain("5");
             grid.QuerySelector("a").ShouldNotBeNull().GetAttribute("href").ShouldBe("/athletes/jon-jonsson");
@@ -151,7 +152,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+            IElement img = cut.Find(".team-logo img");
             img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
             img.GetAttribute("alt").ShouldBe("Þór IF");
             img.GetAttribute("loading").ShouldBe("lazy");

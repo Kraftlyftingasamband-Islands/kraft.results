@@ -102,13 +102,15 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
     public async Task ReturnsParticipationCount_WhenTeamHasMembers()
     {
         // Arrange
+        // Uses the shared seed team which has a pre-seeded athlete with participations
         string path = $"{BasePath}/{Constants.TestTeamSlug}";
 
         // Act
         TeamDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<TeamDetails>(path, CancellationToken.None);
 
         // Assert
-        TeamMember member = response!.Members.Single(m => m.Slug == Constants.TestAthleteSlug);
+        TeamDetails details = response.ShouldNotBeNull();
+        TeamMember member = details.Members.Single(m => m.Slug == Constants.TestAthleteSlug);
         member.ParticipationCount.ShouldBe(3); // BaseSeedSql seeds 3 participations for the test athlete
     }
 }
