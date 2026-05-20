@@ -30,7 +30,8 @@ internal sealed class GetTeamDetailsHandler
                 .Select(a => new TeamMember(
                     a.Slug,
                     $"{a.Firstname} {a.Lastname}",
-                    a.DateOfBirth != null && a.DateOfBirth.Value.Year > 1 ? a.DateOfBirth.Value.Year : null))
+                    a.DateOfBirth != null && a.DateOfBirth.Value.Year > 1 ? a.DateOfBirth.Value.Year : null,
+                    a.Participations.Count))
             .ToList()))
         .FirstOrDefaultAsync(cancellationToken);
 }
