@@ -20,14 +20,14 @@
                 @foreach (UserSummary user in context)
                 {
                     <Card>
-                        <h2 class="user-name">@user.Name</h2>
+                        <div class="user-name">@user.Name</div>
                         @if (user.Email is not null)
                         {
                             <div class="user-email">@user.Email</div>
                         }
                         @if (user.Roles.Count > 0)
                         {
-                            <div class="user-roles" aria-label="Hlutverk">
+                            <div class="user-roles" role="group" aria-label="Hlutverk">
                                 @foreach (string role in user.Roles)
                                 {
                                     <span class="badge">@role</span>
