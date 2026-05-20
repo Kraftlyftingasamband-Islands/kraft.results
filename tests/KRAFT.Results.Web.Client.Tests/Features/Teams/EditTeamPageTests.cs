@@ -119,7 +119,7 @@ public sealed class EditTeamPageTests : IDisposable
 
     private sealed class EditTeamPageMockHandler(bool delay = false) : HttpMessageHandler
     {
-        private readonly TeamDetails _team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", []);
+        private readonly TeamDetails _team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
 
         private readonly List<CountrySummary> _countries = [new("ISL", "Iceland")];
 

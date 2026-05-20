@@ -6,4 +6,5 @@ public sealed record class TeamDetails(
     string ShortTitle,
     string FullTitle,
     string CountryCode,
+    string? LogoImageFilename,
     IReadOnlyList<TeamMember> Members);

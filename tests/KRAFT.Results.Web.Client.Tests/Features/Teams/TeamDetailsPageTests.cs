@@ -20,7 +20,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsLoadingStateInitially()
     {
         // Arrange
-        RegisterHttpClient(new TeamDetails("thor", "Þór", "Þór", "Þór IF", "ISL", []), delay: true);
+        RegisterHttpClient(new TeamDetails("thor", "Þór", "Þór", "Þór IF", "ISL", null, []), delay: true);
 
         // Act
         IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
@@ -72,7 +72,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsTeamTitle_WhenLoaded()
     {
         // Arrange
-        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", []);
+        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
         RegisterHttpClient(team);
 
         // Act
@@ -96,6 +96,7 @@ public sealed class TeamDetailsPageTests : IDisposable
             "Þór",
             "Þór IF",
             "ISL",
+            null,
             [new TeamMember("jon-jonsson", "Jon Jonsson", 1990)]);
         RegisterHttpClient(team);
 
@@ -115,7 +116,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsEmptyMembersMessage_WhenTeamHasNoMembers()
     {
         // Arrange
-        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", []);
+        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
         RegisterHttpClient(team);
 
         // Act
