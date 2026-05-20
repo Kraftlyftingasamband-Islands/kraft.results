@@ -34,7 +34,7 @@
 
     protected override void OnInitialized()
     {
-        _teamLogoBaseUrl = Configuration["TeamLogoBaseUrl"] ?? "";
+        _teamLogoBaseUrl = Configuration["ImageBaseUrl"] ?? "";
     }
 
     protected override void OnParametersSet()
@@ -47,7 +47,11 @@
             _ => "team-logo--md",
         };
 
-        _sizeQuery = "?width=128&height=128";
+        _sizeQuery = Size switch
+        {
+            TeamLogoSize.Large => "?width=128&height=128",
+            _ => "?width=64&height=64&crop=auto",
+        };
 
         _isValidFilename = Filename is not null
             && !Filename.Contains('/')
