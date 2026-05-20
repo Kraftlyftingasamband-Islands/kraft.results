@@ -19,21 +19,23 @@
             <div class="card-grid">
                 @foreach (UserSummary user in context)
                 {
-                    <Card>
-                        <div class="user-name">@user.Name</div>
-                        @if (user.Email is not null)
-                        {
-                            <div class="user-email">@user.Email</div>
-                        }
-                        @if (user.Roles.Count > 0)
-                        {
-                            <div class="user-roles" role="group" aria-label="Hlutverk">
-                                @foreach (string role in user.Roles)
-                                {
-                                    <span class="badge">@role</span>
-                                }
-                            </div>
-                        }
+                    <Card CssClass="user-card">
+                        <div class="user-body">
+                            <div class="user-name">@user.Name</div>
+                            @if (user.Email is not null)
+                            {
+                                <div class="user-email">@user.Email</div>
+                            }
+                            @if (user.Roles.Count > 0)
+                            {
+                                <div class="user-roles" role="group" aria-label="Hlutverk">
+                                    @foreach (string role in user.Roles)
+                                    {
+                                        <span class="badge">@role</span>
+                                    }
+                                </div>
+                            }
+                        </div>
                         <div class="user-footer">
                             <span class="user-date">@user.CreatedOn.ToString("d. MMM yyyy", new CultureInfo("is-IS"))</span>
                             <a href="@($"/users/{user.UserId}/edit")" class="btn-edit" aria-label="@($"Breyta {user.Name}")">
