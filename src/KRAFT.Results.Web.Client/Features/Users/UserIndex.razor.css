@@ -1,3 +1,37 @@
+.user-name {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.user-email {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.user-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-block-start: 0.5rem;
+}
+
+.user-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-block-start: 0.75rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.user-date {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
 .btn-edit {
     display: inline-flex;
     align-items: center;
