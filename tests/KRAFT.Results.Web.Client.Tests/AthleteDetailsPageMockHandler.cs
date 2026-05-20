@@ -17,7 +17,8 @@ internal sealed class AthleteDetailsPageMockHandler(
         YearOfBirth: 1990,
         Club: "Test Club",
         ClubSlug: "test-club",
-        RecordCount: 0);
+        RecordCount: 0,
+        ProfileImageFilename: null);
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

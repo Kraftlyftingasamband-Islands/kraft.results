@@ -102,7 +102,7 @@ public sealed class TeamDetailsPageTests : IDisposable
             "Þór IF",
             "ISL",
             null,
-            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5)]);
+            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5, null)]);
         RegisterHttpClient(team);
 
         // Act
