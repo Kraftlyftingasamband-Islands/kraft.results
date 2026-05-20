@@ -11,7 +11,7 @@
 
 <DataLoader T="IReadOnlyCollection<TeamSummary>" Loader="LoadAsync" Noun="félög">
     <ChildContent Context="context">
-        <div class="card-grid">
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
             @foreach (TeamSummary team in context)
             {
                 <Card Clickable="true">
