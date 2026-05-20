@@ -9,39 +9,6 @@
     align-items: flex-start;
 }
 
-.team-logo {
-    flex-shrink: 0;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.team-logo--md {
-    width: 48px;
-    height: 48px;
-}
-
-.team-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.team-logo-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: color-mix(in oklch, var(--color-border), transparent 40%);
-    color: var(--color-text-muted);
-    opacity: 0.4;
-}
-
-.team-logo-placeholder svg {
-    width: 60%;
-    height: 60%;
-}
-
 .team-card-text {
     flex: 1;
     min-width: 0;
