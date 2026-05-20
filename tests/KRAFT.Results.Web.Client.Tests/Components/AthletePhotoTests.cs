@@ -128,7 +128,7 @@ public sealed class AthletePhotoTests : IDisposable
     [InlineData("javascript:alert(1)")]
     [InlineData("photo.png?width=999")]
     [InlineData("photo.png#section")]
-    public void ShowsPlaceholder_WhenFilenameContainsPathTraversalCharacters(string invalidFilename)
+    public void ShowsPlaceholder_WhenFilenameContainsUnsafeCharacters(string invalidFilename)
     {
         // Arrange
 
