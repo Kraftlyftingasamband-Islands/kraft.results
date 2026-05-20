@@ -112,9 +112,9 @@ public sealed class TeamDetailsPageTests : IDisposable
         {
             AngleSharp.Dom.IElement grid = cut.Find(".card-grid");
             grid.ShouldNotBeNull();
-            grid.QuerySelector(".member-name")?.TextContent.ShouldContain("Jon Jonsson (1990)");
-            grid.QuerySelector(".member-count")?.TextContent.ShouldContain("5");
-            grid.QuerySelector("a")?.GetAttribute("href").ShouldBe("/athletes/jon-jonsson");
+            grid.QuerySelector(".member-name").ShouldNotBeNull().TextContent.ShouldContain("Jon Jonsson (1990)");
+            grid.QuerySelector(".member-count").ShouldNotBeNull().TextContent.ShouldContain("5");
+            grid.QuerySelector("a").ShouldNotBeNull().GetAttribute("href").ShouldBe("/athletes/jon-jonsson");
         });
     }
 
