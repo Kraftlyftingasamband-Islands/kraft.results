@@ -4,6 +4,7 @@
 
 @attribute [Authorize(Roles = "Admin")]
 
+@using System.Globalization
 @using KRAFT.Results.Contracts.Users
 @using KRAFT.Results.Web.Client.Components
 
@@ -19,14 +20,14 @@
                 @foreach (UserSummary user in context)
                 {
                     <Card>
-                        <div class="user-name">@user.Name</div>
+                        <h2 class="user-name">@user.Name</h2>
                         @if (user.Email is not null)
                         {
                             <div class="user-email">@user.Email</div>
                         }
                         @if (user.Roles.Count > 0)
                         {
-                            <div class="user-roles">
+                            <div class="user-roles" aria-label="Hlutverk">
                                 @foreach (string role in user.Roles)
                                 {
                                     <span class="badge">@role</span>
@@ -34,7 +35,7 @@
                             </div>
                         }
                         <div class="user-footer">
-                            <span class="user-date">@user.CreatedOn.ToString("d. MMM yyyy")</span>
+                            <span class="user-date">@user.CreatedOn.ToString("d. MMM yyyy", new CultureInfo("is-IS"))</span>
                             <a href="@($"/users/{user.UserId}/edit")" class="btn-edit" aria-label="@($"Breyta {user.Name}")">
                                 <svg class="btn-edit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/>
@@ -48,7 +49,7 @@
         }
         else
         {
-            <EmptyState Message="Engir notendur fundust." />
+            <EmptyState Message="Engir notendur eru skráðir." />
         }
     </ChildContent>
 </DataLoader>
