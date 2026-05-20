@@ -28,10 +28,10 @@
     height: 100%;
     background: color-mix(in oklch, var(--color-border), transparent 40%);
     color: var(--color-text-muted);
-    opacity: 0.4;
 }
 
 .athlete-photo-placeholder svg {
     width: 60%;
     height: 60%;
+    opacity: 0.6;
 }
