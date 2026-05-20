@@ -15,6 +15,7 @@ internal sealed class GetAthleteDetailsHandler(ResultsDbContext dbContext)
                 x.DateOfBirth != null && x.DateOfBirth.Value.Year > 0 ? x.DateOfBirth.Value.Year : null,
                 x.Team != null ? x.Team.TitleFull : null,
                 x.Team != null ? x.Team.Slug : null,
-                0))
+                0,
+                x.ProfileImageFilename))
             .FirstOrDefaultAsync(cancellationToken);
 }

@@ -31,7 +31,8 @@ internal sealed class GetTeamDetailsHandler
                     a.Slug,
                     $"{a.Firstname} {a.Lastname}",
                     a.DateOfBirth != null && a.DateOfBirth.Value.Year > 1 ? a.DateOfBirth.Value.Year : null,
-                    a.Participations.Count))
+                    a.Participations.Count,
+                    a.ProfileImageFilename))
             .ToList()))
         .FirstOrDefaultAsync(cancellationToken);
 }
