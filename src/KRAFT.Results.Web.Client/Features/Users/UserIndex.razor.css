@@ -3,6 +3,7 @@
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--color-text);
+    margin: 0;
 }
 
 .user-email {
@@ -36,7 +37,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.25rem 0.625rem;
+    padding: 0.625rem 0.75rem;
+    min-height: 2.75rem;
     font-family: var(--font-body);
     font-size: 0.8125rem;
     font-weight: 500;
@@ -69,7 +71,7 @@
 }
 
 .btn-edit:active {
-    background: #f8dde1;
+    background: var(--color-primary-light);
     color: var(--color-primary-dark);
 }
 
