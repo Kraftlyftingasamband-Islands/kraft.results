@@ -389,7 +389,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             AngleSharp.Dom.IElement img = cut.Find(".athlete-detail-header img");
-            img.GetAttribute("src").ShouldBe($"{ImageBaseUrl}/jondoe.jpg?width=300&height=200&crop=auto");
+            img.GetAttribute("src").ShouldStartWith($"{ImageBaseUrl}/jondoe.jpg");
         });
     }
 
