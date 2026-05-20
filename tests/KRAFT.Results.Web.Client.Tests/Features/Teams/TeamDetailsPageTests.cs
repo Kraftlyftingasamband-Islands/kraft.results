@@ -90,7 +90,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     }
 
     [Fact]
-    public void ShowsMemberList_WhenTeamHasMembers()
+    public void ShowsMemberCards_WhenTeamHasMembers()
     {
         // Arrange
         TeamDetails team = new(
@@ -100,7 +100,7 @@ public sealed class TeamDetailsPageTests : IDisposable
             "Þór IF",
             "ISL",
             null,
-            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 0)]);
+            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5)]);
         RegisterHttpClient(team);
 
         // Act
@@ -110,8 +110,11 @@ public sealed class TeamDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.Find(".member-list").ShouldNotBeNull();
-            cut.Find(".member-list").TextContent.ShouldContain("Jon Jonsson");
+            AngleSharp.Dom.IElement grid = cut.Find(".card-grid");
+            grid.ShouldNotBeNull();
+            grid.QuerySelector(".member-name")?.TextContent.ShouldContain("Jon Jonsson (1990)");
+            grid.QuerySelector(".member-count")?.TextContent.ShouldContain("5");
+            grid.QuerySelector("a")?.GetAttribute("href").ShouldBe("/athletes/jon-jonsson");
         });
     }
 
@@ -129,8 +132,8 @@ public sealed class TeamDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".member-list").Count.ShouldBe(0);
-            cut.Find("p").TextContent.ShouldContain("Engir meðlimir");
+            cut.FindAll(".card-grid").Count.ShouldBe(0);
+            cut.Find(".empty-state").TextContent.ShouldContain("Engir meðlimir");
         });
     }
 
