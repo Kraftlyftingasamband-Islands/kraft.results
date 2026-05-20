@@ -23,14 +23,8 @@ internal sealed class AthleteDetailsPageMockHandler(
 
     private AthleteDetails ResolvedAthlete => athlete ?? DefaultAthlete;
 
-    internal static AthleteDetails AthleteWithPhoto(string filename) => new(
-        Slug: "test-athlete",
-        Name: "Test Athlete",
-        YearOfBirth: 1990,
-        Club: "Test Club",
-        ClubSlug: "test-club",
-        RecordCount: 0,
-        ProfileImageFilename: filename);
+    internal static AthleteDetails AthleteWithPhoto(string filename) =>
+        DefaultAthlete with { ProfileImageFilename = filename };
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
