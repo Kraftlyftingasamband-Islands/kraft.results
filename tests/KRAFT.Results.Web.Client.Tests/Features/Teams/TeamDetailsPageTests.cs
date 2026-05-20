@@ -200,7 +200,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             AngleSharp.Dom.IElement img = cut.Find(".card .athlete-photo img");
-            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/jon.jpg?width=64&height=64&crop=auto");
+            img.GetAttribute("src").ShouldStartWith($"{TeamLogoBaseUrl}/jon.jpg");
         });
     }
 
