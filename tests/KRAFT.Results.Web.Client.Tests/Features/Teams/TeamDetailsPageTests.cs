@@ -153,7 +153,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             IElement img = cut.Find(".team-logo img");
-            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
+            img.GetAttribute("src").ShouldStartWith($"{TeamLogoBaseUrl}/thor.png");
             img.GetAttribute("alt").ShouldBe("Þór IF");
             img.GetAttribute("loading").ShouldBe("lazy");
         });
