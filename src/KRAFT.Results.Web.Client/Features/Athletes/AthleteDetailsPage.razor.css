@@ -1,12 +1,14 @@
 .page-header {
     border-block-end: 1px solid var(--color-border);
     margin-block-end: 1rem;
+    flex-wrap: wrap;
 }
 
 .athlete-detail-header {
     display: flex;
     align-items: center;
     gap: 1rem;
+    min-width: 0;
 }
 
 .athlete-meta {
