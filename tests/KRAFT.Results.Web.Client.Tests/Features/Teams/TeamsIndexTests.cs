@@ -78,7 +78,7 @@ public sealed class TeamsIndexTests : IDisposable
         [
             new("thor", "Þór", "Þór", "thor.png", 12),
         ];
-        RegisterHttpClientWithConfig(teams);
+        RegisterHttpClient(teams);
 
         // Act
         IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
@@ -101,7 +101,7 @@ public sealed class TeamsIndexTests : IDisposable
         [
             new("kr", "KR", "KR", null, 5),
         ];
-        RegisterHttpClientWithConfig(teams);
+        RegisterHttpClient(teams);
 
         // Act
         IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
@@ -123,16 +123,6 @@ public sealed class TeamsIndexTests : IDisposable
     private void RegisterHttpClient(List<TeamSummary> teams, bool delay = false)
     {
         MockHttpMessageHandler<TeamSummary> handler = new(teams, delay);
-        HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
-        _context.Services.AddSingleton(httpClient);
-        RegisterConfiguration();
-        _context.AddAuthorization();
-    }
-
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
-    private void RegisterHttpClientWithConfig(List<TeamSummary> teams)
-    {
-        MockHttpMessageHandler<TeamSummary> handler = new(teams);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         RegisterConfiguration();
