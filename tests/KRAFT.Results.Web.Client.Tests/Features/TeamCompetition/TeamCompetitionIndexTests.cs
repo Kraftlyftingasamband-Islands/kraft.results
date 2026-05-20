@@ -6,6 +6,7 @@ using Bunit;
 using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.Web.Client.Features.TeamCompetition;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -14,6 +15,8 @@ namespace KRAFT.Results.Web.Client.Tests.Features.TeamCompetition;
 
 public sealed class TeamCompetitionIndexTests : IDisposable
 {
+    private const string TeamLogoBaseUrl = "https://example.blob.core.windows.net/images";
+
     private readonly BunitContext _context = new();
 
     [Fact]
@@ -85,6 +88,25 @@ public sealed class TeamCompetitionIndexTests : IDisposable
         cut.Find(".year-nav").ShouldNotBeNull();
     }
 
+    [Fact]
+    public void RendersLogoImg_WhenStandingHasLogoImageFilename()
+    {
+        // Arrange
+        TeamCompetitionStanding standing = new(1, "Þór IF", "Þór", "thor", "thor.png", 100);
+        RegisterConfiguration();
+        _context.AddAuthorization();
+
+        // Act
+        IRenderedComponent<StandingsCard> cut = _context.Render<StandingsCard>(
+            parameters => parameters.Add(p => p.Standing, standing));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png");
+        img.GetAttribute("alt").ShouldBe("Þór IF logo");
+        img.GetAttribute("loading").ShouldBe("lazy");
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -101,12 +123,24 @@ public sealed class TeamCompetitionIndexTests : IDisposable
             Men: men ?? [],
             Combined: combined ?? []);
 
+    private void RegisterConfiguration()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["TeamLogoBaseUrl"] = TeamLogoBaseUrl,
+            })
+            .Build();
+        _context.Services.AddSingleton(configuration);
+    }
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
     private void RegisterHttpClient(TeamCompetitionResponse response, bool delay = false)
     {
         TeamCompetitionMockHandler handler = new(response, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 
@@ -116,6 +150,7 @@ public sealed class TeamCompetitionIndexTests : IDisposable
         FailingHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
+        RegisterConfiguration();
         _context.AddAuthorization();
     }
 
