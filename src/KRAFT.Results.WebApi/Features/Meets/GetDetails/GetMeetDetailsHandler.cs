@@ -61,6 +61,7 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
             raw.RecordsPossible,
             raw.IsRaw,
             raw.ShowTeamPoints,
-            raw.Category.GetDisciplines());
+            raw.Category.GetDisciplines(),
+            PhotoCount: 0);
     }
 }
