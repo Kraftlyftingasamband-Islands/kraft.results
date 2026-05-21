@@ -1,9 +1,10 @@
 .gallery-grid {
     --thumb-size: 75px;
+    --gallery-gap: 6px;
 
     display: grid;
     grid-template-columns: repeat(auto-fill, var(--thumb-size));
-    gap: 6px;
+    gap: var(--gallery-gap);
 }
 
 @media (max-width: 400px) {

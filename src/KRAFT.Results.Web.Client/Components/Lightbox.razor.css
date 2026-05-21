@@ -1,11 +1,22 @@
 .lightbox-backdrop {
+    --lightbox-backdrop-bg: rgba(0, 0, 0, 0.85);
+    --lightbox-surface-subtle: rgba(255, 255, 255, 0.08);
+    --lightbox-nav-bg: rgba(255, 255, 255, 0.12);
+    --lightbox-nav-border: rgba(255, 255, 255, 0.2);
+    --lightbox-nav-hover-bg: rgba(255, 255, 255, 0.22);
+    --lightbox-nav-mobile-bg: rgba(0, 0, 0, 0.45);
+
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--lightbox-backdrop-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: var(--z-modal, 400);
+}
+
+.lightbox-backdrop:focus-visible {
+    outline: none;
 }
 
 .lightbox-content {
@@ -65,7 +76,7 @@
     min-height: min(500px, 70vh);
     max-width: min(600px, 90vw);
     max-height: min(500px, 70vh);
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--lightbox-surface-subtle);
     border-radius: var(--radius-sm, 0.5rem);
     overflow: hidden;
 }
@@ -94,8 +105,8 @@
 }
 
 .lightbox-nav {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--lightbox-nav-bg);
+    border: 1px solid var(--lightbox-nav-border);
     color: var(--color-white, #ffffff);
     cursor: pointer;
     min-width: 44px;
@@ -114,7 +125,7 @@
     }
 
     &:hover {
-        background: rgba(255, 255, 255, 0.22);
+        background: var(--lightbox-nav-hover-bg);
     }
 
     &:focus-visible {
@@ -149,19 +160,19 @@
 
     .lightbox-nav {
         position: absolute;
-        top: 50%;
+        inset-block-start: 50%;
         transform: translateY(-50%);
         z-index: 1;
-        background: rgba(0, 0, 0, 0.45);
+        background: var(--lightbox-nav-mobile-bg);
         border-color: rgba(255, 255, 255, 0.15);
     }
 
     .lightbox-nav--prev {
-        left: 0.25rem;
+        inset-inline-start: 0.25rem;
     }
 
     .lightbox-nav--next {
-        right: 0.25rem;
+        inset-inline-end: 0.25rem;
     }
 }
 

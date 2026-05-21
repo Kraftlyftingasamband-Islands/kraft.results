@@ -1,5 +1,18 @@
 @using KRAFT.Results.Web.Client.Features.Meets
 
+<div aria-live="polite" aria-atomic="true">
+    @if (IsOpen && Photos.Count > 0)
+    {
+        <div class="lightbox-info">
+            <span class="lightbox-counter">@(_currentIndex + 1) / @Photos.Count</span>
+            @if (CurrentPhoto.Photographer is not null)
+            {
+                <span class="lightbox-photographer">Mynd: @CurrentPhoto.Photographer</span>
+            }
+        </div>
+    }
+</div>
+
 @if (IsOpen && Photos.Count > 0)
 {
     <div class="lightbox-backdrop"
@@ -9,6 +22,7 @@
          tabindex="-1"
          @ref="_backdropRef"
          @onkeydown="HandleKeyDown"
+         @onkeydown:preventDefault="true"
          @onclick="HandleBackdropClick">
         <div class="lightbox-content"
              @onclick:stopPropagation="true"
@@ -25,14 +39,17 @@
             </button>
 
             <div class="lightbox-image-area">
-                <button class="lightbox-nav lightbox-nav--prev"
-                        @ref="_prevRef"
-                        @onclick="PreviousPhoto"
-                        aria-label="Fyrri mynd">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="15,18 9,12 15,6" />
-                    </svg>
-                </button>
+                @if (Photos.Count > 1)
+                {
+                    <button class="lightbox-nav lightbox-nav--prev"
+                            @ref="_prevRef"
+                            @onclick="NavigatePrevious"
+                            aria-label="Fyrri mynd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="15,18 9,12 15,6" />
+                        </svg>
+                    </button>
+                }
 
                 <div class="lightbox-image-container @(_imageLoaded ? "is-loaded" : "") @(_imageError ? "has-error" : "")">
                     @if (_imageError)
@@ -51,24 +68,17 @@
                     }
                 </div>
 
-                <button class="lightbox-nav lightbox-nav--next"
-                        @ref="_nextRef"
-                        @onclick="NextPhoto"
-                        aria-label="Næsta mynd">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="9,18 15,12 9,6" />
-                    </svg>
-                </button>
-            </div>
-
-            <div aria-live="polite" aria-atomic="true">
-                <div class="lightbox-info">
-                    <span class="lightbox-counter">@(_currentIndex + 1) / @Photos.Count</span>
-                    @if (CurrentPhoto.Photographer is not null)
-                    {
-                        <span class="lightbox-photographer">Mynd: @CurrentPhoto.Photographer</span>
-                    }
-                </div>
+                @if (Photos.Count > 1)
+                {
+                    <button class="lightbox-nav lightbox-nav--next"
+                            @ref="_nextRef"
+                            @onclick="NavigateNext"
+                            aria-label="Næsta mynd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="9,18 15,12 9,6" />
+                        </svg>
+                    </button>
+                }
             </div>
         </div>
     </div>
@@ -176,23 +186,15 @@
     private void NavigatePrevious()
     {
         _currentIndex = (_currentIndex - 1 + Photos.Count) % Photos.Count;
+        _focusTrapIndex = 0;
         ResetImageState();
     }
 
     private void NavigateNext()
     {
         _currentIndex = (_currentIndex + 1) % Photos.Count;
+        _focusTrapIndex = 0;
         ResetImageState();
-    }
-
-    private void PreviousPhoto()
-    {
-        NavigatePrevious();
-    }
-
-    private void NextPhoto()
-    {
-        NavigateNext();
     }
 
     private void ResetImageState()
