@@ -24,7 +24,7 @@
                     <button class="gallery-thumb"
                             @ref="_thumbRefs[index]"
                             @onclick="() => OpenLightbox(index)"
-                            aria-label="Opna mynd">
+                            aria-label="@($"Opna mynd {index + 1} af {data.GalleryPhotos.Count}")">
                         <img src="@photo.ThumbnailUrl" alt="" loading="lazy" width="75" height="75" />
                     </button>
                 }

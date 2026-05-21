@@ -9,7 +9,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    color: var(--color-text-muted);
+    color: var(--color-text);
     font-size: 0.875rem;
     transition: color var(--transition-fast) ease;
 }
