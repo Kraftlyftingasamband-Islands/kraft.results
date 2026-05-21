@@ -51,7 +51,7 @@ public sealed class GetMeetDetailsTests(CollectionFixture fixture) : IAsyncLifet
     }
 
     [Fact]
-    public async Task ReturnsPhotoCount_WhenMeetHasPhotosWithValidFilenames()
+    public async Task WhenMeetHasPhotosWithValidFilenames_ReturnsPhotoCount()
     {
         // Arrange — seed three photos: two with valid filenames, one with null filename
         await fixture.ExecuteSqlAsync(
@@ -74,7 +74,7 @@ public sealed class GetMeetDetailsTests(CollectionFixture fixture) : IAsyncLifet
     }
 
     [Fact]
-    public async Task ReturnsPhotoCount_ExcludingPhotosWithEmptyFilename()
+    public async Task WhenFilenameIsEmpty_ExcludesFromPhotoCount()
     {
         // Arrange — seed two photos: one with valid filename, one with empty string
         await fixture.ExecuteSqlAsync(

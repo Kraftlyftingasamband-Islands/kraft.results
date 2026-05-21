@@ -140,6 +140,7 @@ public sealed class GalleryPageTests : IDisposable
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            request.RequestUri!.AbsolutePath.ShouldBe("/meets/test-meet/photos");
             MeetPhotos response = new("Test Meet", photos);
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
