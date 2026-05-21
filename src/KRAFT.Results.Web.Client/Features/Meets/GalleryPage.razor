@@ -1,0 +1,79 @@
+@page "/meets/{Slug}/gallery"
+
+@using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Client.Components
+@using Microsoft.Extensions.Configuration
+
+@inject HttpClient HttpClient
+@inject IConfiguration Configuration
+
+<DataLoader T="GalleryData" Loader="LoadAsync" Noun="myndir">
+    <ChildContent Context="data">
+        <div class="page-header">
+            <h1>@data.MeetPhotos.MeetTitle — Myndir</h1>
+            <a href="/meets/@Slug" class="btn-cancel">Til baka</a>
+        </div>
+
+        @if (data.GalleryPhotos.Count > 0)
+        {
+            <div class="gallery-grid">
+                @for (int i = 0; i < data.GalleryPhotos.Count; i++)
+                {
+                    int index = i;
+                    GalleryPhoto photo = data.GalleryPhotos[i];
+                    <button class="gallery-thumb" @onclick="() => OpenLightbox(index)" aria-label="Opna mynd">
+                        <img src="@photo.ThumbnailUrl" alt="" loading="lazy" width="75" height="75" />
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <EmptyState Message="Engar myndir fundust." />
+        }
+
+        @if (_lightboxOpen)
+        {
+            @* Lightbox placeholder — Lightbox component will be wired in step 6. *@
+            <div class="lightbox-placeholder" data-index="@_lightboxIndex"></div>
+        }
+    </ChildContent>
+</DataLoader>
+
+@code {
+    private sealed record GalleryData(MeetPhotos MeetPhotos, IReadOnlyList<GalleryPhoto> GalleryPhotos);
+
+    private sealed record GalleryPhoto(string ThumbnailUrl, string DisplayUrl);
+
+    private bool _lightboxOpen;
+    private int _lightboxIndex;
+
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private async Task<GalleryData?> LoadAsync()
+    {
+        MeetPhotos? meetPhotos = await HttpClient.GetFromJsonAsync<MeetPhotos>($"/meets/{Slug}/photos");
+
+        if (meetPhotos is null)
+        {
+            return null;
+        }
+
+        string imageBaseUrl = Configuration["ImageBaseUrl"] ?? string.Empty;
+
+        IReadOnlyList<GalleryPhoto> galleryPhotos = meetPhotos.Photos
+            .Select(p => new GalleryPhoto(
+                ThumbnailUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Thumbnail}",
+                DisplayUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Main}"))
+            .ToList();
+
+        return new GalleryData(meetPhotos, galleryPhotos);
+    }
+
+    private void OpenLightbox(int index)
+    {
+        _lightboxIndex = index;
+        _lightboxOpen = true;
+    }
+}
