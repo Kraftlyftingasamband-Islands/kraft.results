@@ -19,7 +19,8 @@ internal sealed class PhotoConfiguration : IEntityTypeConfiguration<Photo>
         builder.Property(e => e.Date)
             .HasColumnType("datetime");
 
-        builder.Property(e => e.ImageFilname)
+        builder.Property(e => e.ImageFilename)
+            .HasColumnName("ImageFilname")
             .HasMaxLength(200);
 
         builder.Property(e => e.ModifiedBy)
