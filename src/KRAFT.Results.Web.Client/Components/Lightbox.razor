@@ -99,7 +99,7 @@
     private bool _imageError;
     private double _touchStartX;
 
-    private const int FocusTrapElementCount = 3;
+    private int FocusTrapElementCount => Photos.Count > 1 ? 3 : 1;
 
     [Parameter, EditorRequired]
     public IReadOnlyList<GalleryPhoto> Photos { get; set; } = [];
@@ -177,8 +177,9 @@
         ElementReference target = index switch
         {
             0 => _closeRef,
-            1 => _prevRef,
-            _ => _nextRef,
+            1 when Photos.Count > 1 => _prevRef,
+            _ when Photos.Count > 1 => _nextRef,
+            _ => _closeRef,
         };
         await target.FocusAsync();
     }

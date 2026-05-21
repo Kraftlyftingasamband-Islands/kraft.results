@@ -320,6 +320,31 @@ public sealed class LightboxTests : IDisposable
         cut.Find(".lightbox-image-container").ClassList.ShouldContain("is-loaded");
     }
 
+    [Fact]
+    public void TabKey_WithSinglePhoto_DoesNotThrow_AndCyclesToCloseButton()
+    {
+        // Arrange
+        IReadOnlyList<GalleryPhoto> onePhoto =
+        [
+            new GalleryPhoto(
+                ThumbnailUrl: "https://example.com/thumb1.jpg",
+                DisplayUrl: "https://example.com/display1.jpg",
+                Photographer: null),
+        ];
+
+        IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
+            p => p
+                .Add(c => c.Photos, onePhoto)
+                .Add(c => c.StartIndex, 0)
+                .Add(c => c.IsOpen, true)
+                .Add(c => c.OnClose, EventCallback.Empty));
+
+        // Act & Assert — pressing Tab must not throw a JS interop exception
+        Should.NotThrow(() =>
+            cut.Find(".lightbox-backdrop").KeyDown(
+                new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Tab" }));
+    }
+
     public void Dispose()
     {
         _context.Dispose();

@@ -5,6 +5,7 @@
     --lightbox-nav-border: rgba(255, 255, 255, 0.2);
     --lightbox-nav-hover-bg: rgba(255, 255, 255, 0.22);
     --lightbox-nav-mobile-bg: rgba(0, 0, 0, 0.45);
+    --lightbox-nav-mobile-border: rgba(255, 255, 255, 0.15);
 
     position: fixed;
     inset: 0;
@@ -164,7 +165,7 @@
         transform: translateY(-50%);
         z-index: 1;
         background: var(--lightbox-nav-mobile-bg);
-        border-color: rgba(255, 255, 255, 0.15);
+        border-color: var(--lightbox-nav-mobile-border);
     }
 
     .lightbox-nav--prev {
