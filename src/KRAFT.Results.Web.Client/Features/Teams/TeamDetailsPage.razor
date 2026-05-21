@@ -45,18 +45,22 @@
                 {
                     <Card Clickable="true">
                         <a href="@($"/athletes/{member.Slug}")" aria-hidden="true" tabindex="-1"></a>
-                        <AthletePhoto Filename="@member.ProfileImageFilename"
-                                      Alt="@member.Name"
-                                      Size="AthletePhotoSize.Small" />
-                        <div class="member-name">
-                            @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
-                        </div>
-                        <div class="member-count"
-                             role="group"
-                             aria-label="@($"{member.ParticipationCount} mót")"
-                             title="Fjöldi keppnismóta">
-                            <span class="count-value">@member.ParticipationCount</span>
-                            <span class="count-label">mót</span>
+                        <div class="member-row">
+                            <AthletePhoto Filename="@member.ProfileImageFilename"
+                                          Alt="@member.Name"
+                                          Size="AthletePhotoSize.Small" />
+                            <div class="member-info">
+                                <div class="member-name">
+                                    @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
+                                </div>
+                                <div class="member-count"
+                                     role="group"
+                                     aria-label="@($"{member.ParticipationCount} mót")"
+                                     title="Fjöldi keppnismóta">
+                                    <span class="count-value">@member.ParticipationCount</span>
+                                    <span class="count-label">mót</span>
+                                </div>
+                            </div>
                         </div>
                     </Card>
                 }
