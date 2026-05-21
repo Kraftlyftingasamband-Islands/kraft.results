@@ -58,11 +58,10 @@
                     }
                     else
                     {
-                        <img class="lightbox-image"
-                             src="@CurrentPhoto.DisplayUrl"
+                        <img @key="CurrentImageUrl"
+                             class="lightbox-image"
+                             src="@CurrentImageUrl"
                              alt=""
-                             width="600"
-                             height="500"
                              @onload="HandleImageLoaded"
                              @onerror="HandleImageError" />
                     }
@@ -97,6 +96,7 @@
     private bool _shouldFocus;
     private bool _imageLoaded;
     private bool _imageError;
+    private bool _useFallback;
     private double _touchStartX;
 
     private int FocusTrapElementCount => Photos.Count > 1 ? 3 : 1;
@@ -115,6 +115,10 @@
 
     private GalleryPhoto CurrentPhoto => Photos[_currentIndex];
 
+    private string CurrentImageUrl => _useFallback
+        ? CurrentPhoto.ThumbnailUrl
+        : CurrentPhoto.DisplayUrl;
+
     protected override void OnParametersSet()
     {
         if (IsOpen && !_wasOpen)
@@ -124,6 +128,7 @@
             _shouldFocus = true;
             _imageLoaded = false;
             _imageError = false;
+            _useFallback = false;
         }
 
         _wasOpen = IsOpen;
@@ -202,6 +207,7 @@
     {
         _imageLoaded = false;
         _imageError = false;
+        _useFallback = false;
     }
 
     private void HandleImageLoaded()
@@ -211,6 +217,12 @@
 
     private void HandleImageError()
     {
+        if (!_useFallback)
+        {
+            _useFallback = true;
+            return;
+        }
+
         _imageError = true;
     }
 
