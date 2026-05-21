@@ -21,7 +21,10 @@
                 {
                     int index = i;
                     GalleryPhoto photo = data.GalleryPhotos[i];
-                    <button class="gallery-thumb" @onclick="() => OpenLightbox(index)" aria-label="Opna mynd">
+                    <button class="gallery-thumb"
+                            @ref="_thumbRefs[index]"
+                            @onclick="() => OpenLightbox(index)"
+                            aria-label="Opna mynd">
                         <img src="@photo.ThumbnailUrl" alt="" loading="lazy" width="75" height="75" />
                     </button>
                 }
@@ -41,6 +44,7 @@
 
     private bool _lightboxOpen;
     private int _lightboxIndex;
+    private Dictionary<int, ElementReference> _thumbRefs = [];
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -64,6 +68,10 @@
                 Photographer: p.Photographer))
             .ToList();
 
+        _thumbRefs = Enumerable
+            .Range(0, galleryPhotos.Count)
+            .ToDictionary(i => i, _ => new ElementReference());
+
         return new GalleryData(meetPhotos, galleryPhotos);
     }
 
@@ -73,9 +81,14 @@
         _lightboxOpen = true;
     }
 
-    private void CloseLightbox()
+    private async Task CloseLightbox()
     {
         _lightboxOpen = false;
+
+        if (_thumbRefs.TryGetValue(_lightboxIndex, out ElementReference thumbRef))
+        {
+            await thumbRef.FocusAsync();
+        }
     }
 
     private static bool IsValidImageFilename(string filename)
