@@ -286,7 +286,7 @@ public sealed class LightboxTests : IDisposable
     }
 
     [Fact]
-    public void ImageContainer_HasLoadingPlaceholderBackground()
+    public void WhenOpen_RendersImageContainer()
     {
         // Act
         IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
