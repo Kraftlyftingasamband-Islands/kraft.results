@@ -9,7 +9,8 @@ namespace KRAFT.Results.Web.Client.Tests;
 internal sealed class MeetDetailsPageMockHandler(
     List<MeetParticipation> participations,
     bool calculatePlaces = false,
-    bool delay = false) : HttpMessageHandler
+    bool delay = false,
+    int photoCount = 0) : HttpMessageHandler
 {
     private readonly MeetDetails _meet = new(
         MeetId: 1,
@@ -33,7 +34,7 @@ internal sealed class MeetDetailsPageMockHandler(
         IsClassic: true,
         ShowTeamPoints: false,
         Disciplines: [Discipline.Squat, Discipline.Bench, Discipline.Deadlift],
-        PhotoCount: 0);
+        PhotoCount: photoCount);
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

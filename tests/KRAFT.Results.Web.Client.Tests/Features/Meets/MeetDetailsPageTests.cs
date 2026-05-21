@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using AngleSharp.Dom;
+
 using Bunit;
 
 using KRAFT.Results.Contracts;
@@ -122,6 +124,42 @@ public sealed class MeetDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void ShowsPhotoCountLink_WhenPhotoCountIsGreaterThanZero()
+    {
+        // Arrange
+        RegisterHttpClient(photoCount: 42);
+
+        // Act
+        IRenderedComponent<MeetDetailsPage> cut = _context.Render<MeetDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-meet"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            IElement link = cut.Find(".photo-count-link");
+            link.TextContent.ShouldContain("42 myndir");
+            link.GetAttribute("href").ShouldBe("/meets/test-meet/gallery");
+        });
+    }
+
+    [Fact]
+    public void HidesPhotoCountLink_WhenPhotoCountIsZero()
+    {
+        // Arrange
+        RegisterHttpClient(photoCount: 0);
+
+        // Act
+        IRenderedComponent<MeetDetailsPage> cut = _context.Render<MeetDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-meet"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".photo-count-link").Count.ShouldBe(0);
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -151,12 +189,14 @@ public sealed class MeetDetailsPageTests : IDisposable
     private void RegisterHttpClient(
         List<MeetParticipation>? participations = null,
         bool calculatePlaces = false,
-        bool delay = false)
+        bool delay = false,
+        int photoCount = 0)
     {
         MeetDetailsPageMockHandler handler = new(
             participations ?? [],
             calculatePlaces,
-            delay);
+            delay,
+            photoCount);
 
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
