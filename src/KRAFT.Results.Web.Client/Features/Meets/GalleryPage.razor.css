@@ -1,0 +1,34 @@
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 75px);
+    gap: 6px;
+}
+
+@media (max-width: 400px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    }
+}
+
+.gallery-thumb {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: block;
+    width: 75px;
+    height: 75px;
+    overflow: hidden;
+    transition: opacity var(--transition-fast) ease;
+}
+
+.gallery-thumb:hover {
+    opacity: 0.8;
+}
+
+.gallery-thumb img {
+    width: 75px;
+    height: 75px;
+    object-fit: cover;
+    display: block;
+}
