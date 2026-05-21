@@ -24,7 +24,7 @@ internal sealed class GetMeetPhotosHandler(ResultsDbContext dbContext)
             .Where(p => p.ImageFilename != null)
             .Where(p => p.ImageFilename != string.Empty)
             .OrderBy(p => p.CreatedOn)
-            .Select(p => new PhotoSummary(p.PhotoId, p.ImageFilename!, p.Photographer))
+            .Select(p => new PhotoSummary(p.ImageFilename!, p.Photographer))
             .ToListAsync(cancellationToken);
 
         return new MeetPhotos(meetTitle, photos);
