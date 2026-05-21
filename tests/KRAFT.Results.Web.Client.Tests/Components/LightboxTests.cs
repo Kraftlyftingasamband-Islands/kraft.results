@@ -28,8 +28,6 @@ public sealed class LightboxTests : IDisposable
     [Fact]
     public void DisplaysImageWithCorrectMainDisplayUrl()
     {
-        // Arrange
-
         // Act
         IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
             p => p
@@ -46,8 +44,6 @@ public sealed class LightboxTests : IDisposable
     [Fact]
     public void ShowsPhotographerAttribution_WhenPresent()
     {
-        // Arrange
-
         // Act
         IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
             p => p
@@ -63,8 +59,6 @@ public sealed class LightboxTests : IDisposable
     [Fact]
     public void HidesPhotographerAttribution_WhenNull()
     {
-        // Arrange
-
         // Act
         IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
             p => p
@@ -137,8 +131,6 @@ public sealed class LightboxTests : IDisposable
     [Fact]
     public void ShowsCorrectPhotoCounter()
     {
-        // Arrange
-
         // Act
         IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
             p => p

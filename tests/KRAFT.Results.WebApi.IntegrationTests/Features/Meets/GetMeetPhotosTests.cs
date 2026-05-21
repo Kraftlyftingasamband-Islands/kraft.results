@@ -15,17 +15,16 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     private const string BasePath = "/meets";
 
     private readonly HttpClient _httpClient = fixture.Factory!.CreateClient();
+    private readonly HttpClient _authorizedClient = fixture.CreateAuthorizedHttpClient();
 
     private string _meetSlug = string.Empty;
     private int _meetId;
 
     async ValueTask IAsyncLifetime.InitializeAsync()
     {
-        HttpClient authorizedClient = fixture.CreateAuthorizedHttpClient();
-
         CreateMeetCommand meetCommand = new CreateMeetCommandBuilder().Build();
 
-        HttpResponseMessage createMeetResponse = await authorizedClient.PostAsJsonAsync(
+        HttpResponseMessage createMeetResponse = await _authorizedClient.PostAsJsonAsync(
             "/meets",
             meetCommand,
             CancellationToken.None);
@@ -34,29 +33,26 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
 
         _meetSlug = createMeetResponse.Headers.Location!.ToString().TrimStart('/');
 
-        MeetDetails? meetDetails = await authorizedClient.GetFromJsonAsync<MeetDetails>(
+        MeetDetails? meetDetails = await _authorizedClient.GetFromJsonAsync<MeetDetails>(
             $"/meets/{_meetSlug}",
             CancellationToken.None);
 
         _meetId = meetDetails!.MeetId;
-
-        authorizedClient.Dispose();
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
         if (_meetSlug.Length > 0)
         {
-            HttpClient authorizedClient = fixture.CreateAuthorizedHttpClient();
-            await authorizedClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
-            authorizedClient.Dispose();
+            await _authorizedClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
         }
 
         _httpClient.Dispose();
+        _authorizedClient.Dispose();
     }
 
     [Fact]
-    public async Task ReturnsOk_WithEmptyPhotos_WhenMeetHasNoPhotos()
+    public async Task WhenMeetHasNoPhotos_ReturnsOkWithEmptyPhotos()
     {
         // Arrange & Act
         HttpResponseMessage response = await _httpClient.GetAsync(
@@ -71,7 +67,7 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     }
 
     [Fact]
-    public async Task ReturnsNotFound_WhenMeetDoesNotExist()
+    public async Task WhenMeetDoesNotExist_ReturnsNotFound()
     {
         // Arrange & Act
         HttpResponseMessage response = await _httpClient.GetAsync(
@@ -83,7 +79,7 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     }
 
     [Fact]
-    public async Task ReturnsOk_WithPhotos_WhenMeetHasPhotos()
+    public async Task WhenMeetHasPhotos_ReturnsOkWithPhotos()
     {
         // Arrange — seed two photos for the meet
         await fixture.ExecuteSqlAsync(
@@ -107,7 +103,7 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     }
 
     [Fact]
-    public async Task ExcludesPhotos_WithNullOrEmptyFilename()
+    public async Task WhenFilenameIsNullOrEmpty_ExcludesPhoto()
     {
         // Arrange — seed one valid photo and one with null filename
         await fixture.ExecuteSqlAsync(
@@ -133,7 +129,7 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     }
 
     [Fact]
-    public async Task ReturnsPhotographerName_WhenPresent_AndNullWhenAbsent()
+    public async Task WhenPhotographerIsPresent_ReturnsName_WhenAbsent_ReturnsNull()
     {
         // Arrange
         await fixture.ExecuteSqlAsync(
@@ -158,7 +154,7 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     }
 
     [Fact]
-    public async Task ReturnsPhotos_OrderedByCreatedOnAscending()
+    public async Task WhenMultiplePhotos_ReturnsOrderedByCreatedOnAscending()
     {
         // Arrange — insert photos with explicit CreatedOn in descending order
         await fixture.ExecuteSqlAsync(
@@ -191,7 +187,7 @@ public sealed class GetMeetPhotosTests(CollectionFixture fixture) : IAsyncLifeti
     }
 
     [Fact]
-    public async Task ReturnsMeetTitle_InResponse()
+    public async Task Always_ReturnsMeetTitle()
     {
         // Arrange & Act
         HttpResponseMessage response = await _httpClient.GetAsync(
