@@ -1,5 +1,6 @@
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Enums;
+using KRAFT.Results.WebApi.Features.Photos;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +33,8 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
                 x.RecordsPossible,
                 x.IsRaw,
                 x.ShowTeamPoints,
+                PhotoCount = dbContext.Set<Photo>()
+                    .Count(p => p.Meet!.Slug == slug && p.ImageFilename != null && p.ImageFilename != string.Empty),
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -62,6 +65,6 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
             raw.IsRaw,
             raw.ShowTeamPoints,
             raw.Category.GetDisciplines(),
-            PhotoCount: 0);
+            raw.PhotoCount);
     }
 }
