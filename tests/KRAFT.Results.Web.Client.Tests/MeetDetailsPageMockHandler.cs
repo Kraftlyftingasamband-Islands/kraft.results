@@ -32,7 +32,8 @@ internal sealed class MeetDetailsPageMockHandler(
         RecordsPossible: false,
         IsClassic: true,
         ShowTeamPoints: false,
-        Disciplines: [Discipline.Squat, Discipline.Bench, Discipline.Deadlift]);
+        Disciplines: [Discipline.Squat, Discipline.Bench, Discipline.Deadlift],
+        PhotoCount: 0);
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

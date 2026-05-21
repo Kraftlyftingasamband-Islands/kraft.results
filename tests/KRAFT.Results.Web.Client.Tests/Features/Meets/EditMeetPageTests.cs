@@ -140,7 +140,8 @@ public sealed class EditMeetPageTests : IDisposable
             RecordsPossible: false,
             IsClassic: false,
             ShowTeamPoints: false,
-            Disciplines: []);
+            Disciplines: [],
+            PhotoCount: 0);
 
         private readonly List<MeetTypeSummary> _meetTypes =
         [

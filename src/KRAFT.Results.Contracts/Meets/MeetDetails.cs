@@ -23,4 +23,5 @@ public sealed record class MeetDetails(
     bool RecordsPossible,
     bool IsClassic,
     bool ShowTeamPoints,
-    IReadOnlyList<Discipline> Disciplines);
+    IReadOnlyList<Discipline> Disciplines,
+    int PhotoCount);
