@@ -25,8 +25,8 @@ public sealed class GalleryPageTests : IDisposable
         // Arrange
         List<PhotoSummary> photos =
         [
-            new(PhotoId: 1, ImageFilename: "photo1.jpg", Photographer: null),
-            new(PhotoId: 2, ImageFilename: "photo2.jpg", Photographer: "Jane Doe"),
+            new(ImageFilename: "photo1.jpg", Photographer: null),
+            new(ImageFilename: "photo2.jpg", Photographer: "Jane Doe"),
         ];
         RegisterHttpClient(photos);
 
@@ -65,7 +65,7 @@ public sealed class GalleryPageTests : IDisposable
         // Arrange
         List<PhotoSummary> photos =
         [
-            new(PhotoId: 1, ImageFilename: "myphoto.jpg", Photographer: null),
+            new(ImageFilename: "myphoto.jpg", Photographer: null),
         ];
         RegisterHttpClient(photos);
 
@@ -78,6 +78,35 @@ public sealed class GalleryPageTests : IDisposable
         {
             AngleSharp.Dom.IElement img = cut.Find(".gallery-thumb img");
             img.GetAttribute("src").ShouldBe($"{ImageBaseUrl}/myphoto.jpg{MeetPhotoSizes.Thumbnail}");
+        });
+    }
+
+    [Theory]
+    [InlineData("../traversal.jpg")]
+    [InlineData("//cdn.evil.com/img.jpg")]
+    [InlineData("has/slash.jpg")]
+    [InlineData("has\\backslash.jpg")]
+    [InlineData("has:colon.jpg")]
+    [InlineData("has?query.jpg")]
+    [InlineData("has#hash.jpg")]
+    public void SkipsPhotos_WithInvalidFilenames(string invalidFilename)
+    {
+        // Arrange
+        List<PhotoSummary> photos =
+        [
+            new(ImageFilename: "valid.jpg", Photographer: null),
+            new(ImageFilename: invalidFilename, Photographer: null),
+        ];
+        RegisterHttpClient(photos);
+
+        // Act
+        IRenderedComponent<GalleryPage> cut = _context.Render<GalleryPage>(
+            p => p.Add(c => c.Slug, "test-meet"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".gallery-thumb").Count.ShouldBe(1);
         });
     }
 

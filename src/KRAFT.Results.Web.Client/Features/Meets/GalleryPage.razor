@@ -54,9 +54,10 @@
             return null;
         }
 
-        string imageBaseUrl = Configuration["ImageBaseUrl"] ?? string.Empty;
+        string imageBaseUrl = (Configuration["ImageBaseUrl"] ?? string.Empty).TrimEnd('/');
 
         IReadOnlyList<GalleryPhoto> galleryPhotos = meetPhotos.Photos
+            .Where(p => IsValidImageFilename(p.ImageFilename))
             .Select(p => new GalleryPhoto(
                 ThumbnailUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Thumbnail}",
                 DisplayUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Main}",
@@ -75,5 +76,16 @@
     private void CloseLightbox()
     {
         _lightboxOpen = false;
+    }
+
+    private static bool IsValidImageFilename(string filename)
+    {
+        return !string.IsNullOrEmpty(filename)
+            && !filename.StartsWith("//", StringComparison.Ordinal)
+            && !filename.Contains('/')
+            && !filename.Contains('\\')
+            && !filename.Contains(':')
+            && !filename.Contains('?')
+            && !filename.Contains('#');
     }
 }

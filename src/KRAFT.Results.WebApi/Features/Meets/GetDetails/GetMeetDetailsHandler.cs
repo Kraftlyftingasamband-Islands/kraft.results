@@ -34,7 +34,9 @@ internal sealed class GetMeetDetailsHandler(ResultsDbContext dbContext)
                 x.IsRaw,
                 x.ShowTeamPoints,
                 PhotoCount = dbContext.Set<Photo>()
-                    .Count(p => p.Meet!.Slug == slug && p.ImageFilename != null && p.ImageFilename != string.Empty),
+                    .Where(p => p.Meet!.Slug == slug)
+                    .Where(p => p.ImageFilename != null)
+                    .Count(p => p.ImageFilename != string.Empty),
             })
             .FirstOrDefaultAsync(cancellationToken);
 
