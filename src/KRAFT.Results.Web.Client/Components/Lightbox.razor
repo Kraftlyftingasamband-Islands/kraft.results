@@ -10,8 +10,14 @@
          @ref="_backdropRef"
          @onkeydown="HandleKeyDown"
          @onclick="HandleBackdropClick">
-        <div class="lightbox-content" @onclick:stopPropagation="true">
-            <button class="lightbox-close" @onclick="HandleClose" aria-label="Loka">
+        <div class="lightbox-content"
+             @onclick:stopPropagation="true"
+             @ontouchstart="HandleTouchStart"
+             @ontouchend="HandleTouchEnd">
+            <button class="lightbox-close"
+                    @ref="_closeRef"
+                    @onclick="HandleClose"
+                    aria-label="Loka">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
@@ -19,40 +25,71 @@
             </button>
 
             <div class="lightbox-image-area">
-                <button class="lightbox-nav lightbox-nav--prev" @onclick="PreviousPhoto" aria-label="Fyrri mynd">
+                <button class="lightbox-nav lightbox-nav--prev"
+                        @ref="_prevRef"
+                        @onclick="PreviousPhoto"
+                        aria-label="Fyrri mynd">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="15,18 9,12 15,6" />
                     </svg>
                 </button>
 
-                <img class="lightbox-image"
-                     src="@CurrentPhoto.DisplayUrl"
-                     alt=""
-                     width="600"
-                     height="500" />
+                <div class="lightbox-image-container @(_imageLoaded ? "is-loaded" : "") @(_imageError ? "has-error" : "")">
+                    @if (_imageError)
+                    {
+                        <p class="lightbox-error-message">Ekki tókst að hlaða mynd</p>
+                    }
+                    else
+                    {
+                        <img class="lightbox-image"
+                             src="@CurrentPhoto.DisplayUrl"
+                             alt=""
+                             width="600"
+                             height="500"
+                             @onload="HandleImageLoaded"
+                             @onerror="HandleImageError" />
+                    }
+                </div>
 
-                <button class="lightbox-nav lightbox-nav--next" @onclick="NextPhoto" aria-label="Næsta mynd">
+                <button class="lightbox-nav lightbox-nav--next"
+                        @ref="_nextRef"
+                        @onclick="NextPhoto"
+                        aria-label="Næsta mynd">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="9,18 15,12 9,6" />
                     </svg>
                 </button>
             </div>
 
-            <div class="lightbox-info">
-                <span class="lightbox-counter">@(_currentIndex + 1) / @Photos.Count</span>
-                @if (CurrentPhoto.Photographer is not null)
-                {
-                    <span class="lightbox-photographer">Mynd: @CurrentPhoto.Photographer</span>
-                }
+            <div aria-live="polite" aria-atomic="true">
+                <div class="lightbox-info">
+                    <span class="lightbox-counter">@(_currentIndex + 1) / @Photos.Count</span>
+                    @if (CurrentPhoto.Photographer is not null)
+                    {
+                        <span class="lightbox-photographer">Mynd: @CurrentPhoto.Photographer</span>
+                    }
+                </div>
             </div>
         </div>
     </div>
 }
 
 @code {
+    private const double SwipeThreshold = 50.0;
+
     private ElementReference _backdropRef;
+    private ElementReference _closeRef;
+    private ElementReference _prevRef;
+    private ElementReference _nextRef;
     private int _currentIndex;
+    private int _focusTrapIndex;
     private bool _wasOpen;
+    private bool _shouldFocus;
+    private bool _imageLoaded;
+    private bool _imageError;
+    private double _touchStartX;
+
+    private const int FocusTrapElementCount = 3;
 
     [Parameter, EditorRequired]
     public IReadOnlyList<GalleryPhoto> Photos { get; set; } = [];
@@ -73,6 +110,10 @@
         if (IsOpen && !_wasOpen)
         {
             _currentIndex = StartIndex;
+            _focusTrapIndex = 0;
+            _shouldFocus = true;
+            _imageLoaded = false;
+            _imageError = false;
         }
 
         _wasOpen = IsOpen;
@@ -80,8 +121,9 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (IsOpen && Photos.Count > 0)
+        if (_shouldFocus && IsOpen && Photos.Count > 0)
         {
+            _shouldFocus = false;
             await _backdropRef.FocusAsync();
         }
     }
@@ -94,22 +136,106 @@
                 await HandleClose();
                 break;
             case "ArrowLeft":
-                PreviousPhoto();
+                NavigatePrevious();
                 break;
             case "ArrowRight":
-                NextPhoto();
+                NavigateNext();
+                break;
+            case "Tab" when args.ShiftKey:
+                await FocusPreviousTrapElement();
+                break;
+            case "Tab":
+                await FocusNextTrapElement();
                 break;
         }
     }
 
-    private void PreviousPhoto()
+    private async Task FocusNextTrapElement()
+    {
+        _focusTrapIndex = (_focusTrapIndex + 1) % FocusTrapElementCount;
+        await FocusTrapElement(_focusTrapIndex);
+    }
+
+    private async Task FocusPreviousTrapElement()
+    {
+        _focusTrapIndex = (_focusTrapIndex - 1 + FocusTrapElementCount) % FocusTrapElementCount;
+        await FocusTrapElement(_focusTrapIndex);
+    }
+
+    private async Task FocusTrapElement(int index)
+    {
+        ElementReference target = index switch
+        {
+            0 => _closeRef,
+            1 => _prevRef,
+            _ => _nextRef,
+        };
+        await target.FocusAsync();
+    }
+
+    private void NavigatePrevious()
     {
         _currentIndex = (_currentIndex - 1 + Photos.Count) % Photos.Count;
+        ResetImageState();
+    }
+
+    private void NavigateNext()
+    {
+        _currentIndex = (_currentIndex + 1) % Photos.Count;
+        ResetImageState();
+    }
+
+    private void PreviousPhoto()
+    {
+        NavigatePrevious();
     }
 
     private void NextPhoto()
     {
-        _currentIndex = (_currentIndex + 1) % Photos.Count;
+        NavigateNext();
+    }
+
+    private void ResetImageState()
+    {
+        _imageLoaded = false;
+        _imageError = false;
+    }
+
+    private void HandleImageLoaded()
+    {
+        _imageLoaded = true;
+    }
+
+    private void HandleImageError()
+    {
+        _imageError = true;
+    }
+
+    private void HandleTouchStart(Microsoft.AspNetCore.Components.Web.TouchEventArgs args)
+    {
+        if (args.ChangedTouches.Length > 0)
+        {
+            _touchStartX = args.ChangedTouches[0].ClientX;
+        }
+    }
+
+    private void HandleTouchEnd(Microsoft.AspNetCore.Components.Web.TouchEventArgs args)
+    {
+        if (args.ChangedTouches.Length == 0)
+        {
+            return;
+        }
+
+        double deltaX = args.ChangedTouches[0].ClientX - _touchStartX;
+
+        if (deltaX < -SwipeThreshold)
+        {
+            NavigateNext();
+        }
+        else if (deltaX > SwipeThreshold)
+        {
+            NavigatePrevious();
+        }
     }
 
     private async Task HandleClose()
