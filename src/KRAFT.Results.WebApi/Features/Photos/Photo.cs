@@ -12,7 +12,7 @@ internal sealed class Photo
 
     public DateTime Date { get; private set; }
 
-    public string? ImageFilname { get; private set; }
+    public string? ImageFilename { get; private set; }
 
     public DateTime CreatedOn { get; private set; }
 

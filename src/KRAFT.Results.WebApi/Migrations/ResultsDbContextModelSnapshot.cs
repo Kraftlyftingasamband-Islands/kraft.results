@@ -704,7 +704,8 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime");
 
-                    b.Property<string>("ImageFilname")
+                    b.Property<string>("ImageFilename")
+                        .HasColumnName("ImageFilname")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
