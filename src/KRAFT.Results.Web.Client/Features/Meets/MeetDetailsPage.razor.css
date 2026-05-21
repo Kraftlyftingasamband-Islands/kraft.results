@@ -3,6 +3,27 @@
     margin-block-end: 1rem;
 }
 
+/* ===== Photo count link ===== */
+
+.photo-count-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    transition: color var(--transition-fast) ease;
+}
+
+.photo-count-link:hover {
+    color: var(--color-primary);
+}
+
+.photo-count-icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+}
+
 /* ===== IPF point leaders ===== */
 
 .leaders-section {
