@@ -161,7 +161,7 @@ public sealed class LightboxTests : IDisposable
     }
 
     [Fact]
-    public void ShowsErrorMessage_WhenImageFailsToLoad()
+    public void FallsBackToThumbnailUrl_WhenDisplayUrlFails()
     {
         // Arrange
         IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
@@ -171,7 +171,29 @@ public sealed class LightboxTests : IDisposable
                 .Add(c => c.IsOpen, true)
                 .Add(c => c.OnClose, EventCallback.Empty));
 
+        cut.Find(".lightbox-image").GetAttribute("src").ShouldBe("https://example.com/display1.jpg");
+
         // Act
+        cut.Find(".lightbox-image").TriggerEvent("onerror", new Microsoft.AspNetCore.Components.Web.ErrorEventArgs());
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".lightbox-image");
+        img.GetAttribute("src").ShouldBe("https://example.com/thumb1.jpg");
+    }
+
+    [Fact]
+    public void ShowsErrorMessage_WhenBothDisplayAndThumbnailFail()
+    {
+        // Arrange
+        IRenderedComponent<Lightbox> cut = _context.Render<Lightbox>(
+            p => p
+                .Add(c => c.Photos, _twoPhotos)
+                .Add(c => c.StartIndex, 0)
+                .Add(c => c.IsOpen, true)
+                .Add(c => c.OnClose, EventCallback.Empty));
+
+        // Act — first error triggers fallback, second error shows message
+        cut.Find(".lightbox-image").TriggerEvent("onerror", new Microsoft.AspNetCore.Components.Web.ErrorEventArgs());
         cut.Find(".lightbox-image").TriggerEvent("onerror", new Microsoft.AspNetCore.Components.Web.ErrorEventArgs());
 
         // Assert
@@ -191,6 +213,7 @@ public sealed class LightboxTests : IDisposable
                 .Add(c => c.OnClose, EventCallback.Empty));
 
         cut.Find(".lightbox-image").TriggerEvent("onerror", new Microsoft.AspNetCore.Components.Web.ErrorEventArgs());
+        cut.Find(".lightbox-image").TriggerEvent("onerror", new Microsoft.AspNetCore.Components.Web.ErrorEventArgs());
         cut.FindAll(".lightbox-image").Count.ShouldBe(0);
 
         // Act
@@ -198,6 +221,7 @@ public sealed class LightboxTests : IDisposable
 
         // Assert
         cut.FindAll(".lightbox-image").Count.ShouldBe(1);
+        cut.Find(".lightbox-image").GetAttribute("src").ShouldBe("https://example.com/display2.jpg");
         cut.FindAll(".lightbox-error-message").Count.ShouldBe(0);
     }
 
