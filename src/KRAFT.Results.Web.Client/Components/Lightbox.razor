@@ -1,0 +1,124 @@
+@using KRAFT.Results.Web.Client.Features.Meets
+
+@if (IsOpen && Photos.Count > 0)
+{
+    <div class="lightbox-backdrop"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Myndayfirlit"
+         tabindex="-1"
+         @ref="_backdropRef"
+         @onkeydown="HandleKeyDown"
+         @onclick="HandleBackdropClick">
+        <div class="lightbox-content" @onclick:stopPropagation="true">
+            <button class="lightbox-close" @onclick="HandleClose" aria-label="Loka">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+
+            <div class="lightbox-image-area">
+                <button class="lightbox-nav lightbox-nav--prev" @onclick="PreviousPhoto" aria-label="Fyrri mynd">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="15,18 9,12 15,6" />
+                    </svg>
+                </button>
+
+                <img class="lightbox-image"
+                     src="@CurrentPhoto.DisplayUrl"
+                     alt=""
+                     width="600"
+                     height="500" />
+
+                <button class="lightbox-nav lightbox-nav--next" @onclick="NextPhoto" aria-label="Næsta mynd">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="9,18 15,12 9,6" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="lightbox-info">
+                <span class="lightbox-counter">@(_currentIndex + 1) / @Photos.Count</span>
+                @if (CurrentPhoto.Photographer is not null)
+                {
+                    <span class="lightbox-photographer">Mynd: @CurrentPhoto.Photographer</span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ElementReference _backdropRef;
+    private int _currentIndex;
+    private bool _wasOpen;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<GalleryPhoto> Photos { get; set; } = [];
+
+    [Parameter]
+    public int StartIndex { get; set; }
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private GalleryPhoto CurrentPhoto => Photos[_currentIndex];
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && !_wasOpen)
+        {
+            _currentIndex = StartIndex;
+        }
+
+        _wasOpen = IsOpen;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsOpen && Photos.Count > 0)
+        {
+            await _backdropRef.FocusAsync();
+        }
+    }
+
+    private async Task HandleKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+    {
+        switch (args.Key)
+        {
+            case "Escape":
+                await HandleClose();
+                break;
+            case "ArrowLeft":
+                PreviousPhoto();
+                break;
+            case "ArrowRight":
+                NextPhoto();
+                break;
+        }
+    }
+
+    private void PreviousPhoto()
+    {
+        _currentIndex = (_currentIndex - 1 + Photos.Count) % Photos.Count;
+    }
+
+    private void NextPhoto()
+    {
+        _currentIndex = (_currentIndex + 1) % Photos.Count;
+    }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        await HandleClose();
+    }
+}

@@ -32,18 +32,12 @@
             <EmptyState Message="Engar myndir fundust." />
         }
 
-        @if (_lightboxOpen)
-        {
-            @* Lightbox placeholder — Lightbox component will be wired in step 6. *@
-            <div class="lightbox-placeholder" data-index="@_lightboxIndex"></div>
-        }
+        <Lightbox Photos="data.GalleryPhotos" StartIndex="_lightboxIndex" IsOpen="_lightboxOpen" OnClose="CloseLightbox" />
     </ChildContent>
 </DataLoader>
 
 @code {
     private sealed record GalleryData(MeetPhotos MeetPhotos, IReadOnlyList<GalleryPhoto> GalleryPhotos);
-
-    private sealed record GalleryPhoto(string ThumbnailUrl, string DisplayUrl);
 
     private bool _lightboxOpen;
     private int _lightboxIndex;
@@ -65,7 +59,8 @@
         IReadOnlyList<GalleryPhoto> galleryPhotos = meetPhotos.Photos
             .Select(p => new GalleryPhoto(
                 ThumbnailUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Thumbnail}",
-                DisplayUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Main}"))
+                DisplayUrl: $"{imageBaseUrl}/{p.ImageFilename}{MeetPhotoSizes.Main}",
+                Photographer: p.Photographer))
             .ToList();
 
         return new GalleryData(meetPhotos, galleryPhotos);
@@ -75,5 +70,10 @@
     {
         _lightboxIndex = index;
         _lightboxOpen = true;
+    }
+
+    private void CloseLightbox()
+    {
+        _lightboxOpen = false;
     }
 }
