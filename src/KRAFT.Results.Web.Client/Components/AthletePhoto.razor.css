@@ -1,6 +1,6 @@
 .athlete-photo {
     flex-shrink: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
