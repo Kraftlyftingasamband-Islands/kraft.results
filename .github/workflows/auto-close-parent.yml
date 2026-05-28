@@ -1,0 +1,85 @@
+name: Auto-close parent issues
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  auto-close-parent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const number = context.payload.issue.number;
+
+            const parentRefs = [...body.matchAll(/Part of #(\d+)/gi)];
+            if (parentRefs.length === 0) return;
+
+            for (const match of parentRefs) {
+              const parentNumber = parseInt(match[1]);
+
+              const { data: parent } = await github.rest.issues.get({
+                ...context.repo,
+                issue_number: parentNumber,
+              });
+
+              if (parent.state === 'closed') continue;
+
+              const parentBody = parent.body || '';
+
+              const updatedBody = parentBody.replace(
+                new RegExp(`- \\[ \\] #${number}\\b`),
+                `- [x] #${number}`
+              );
+
+              if (updatedBody !== parentBody) {
+                await github.rest.issues.update({
+                  ...context.repo,
+                  issue_number: parentNumber,
+                  body: updatedBody,
+                });
+              }
+
+              const acMatch = parentBody.match(/## Acceptance Criteria\s*\n([\s\S]*?)(?=\n##|$)/);
+              const isContainer = !acMatch || !/- \[[ x]\]/.test(acMatch[1]);
+              if (!isContainer) continue;
+
+              const subIssuesMatch = parentBody.match(/## Sub-issues\s*\n([\s\S]*?)(?=\n##|$)/);
+              if (!subIssuesMatch) continue;
+
+              const childNumbers = [...subIssuesMatch[1].matchAll(/#(\d+)/g)]
+                .map(m => parseInt(m[1]));
+
+              if (childNumbers.length === 0) continue;
+
+              let allClosed = true;
+              for (const childNum of childNumbers) {
+                const { data: child } = await github.rest.issues.get({
+                  ...context.repo,
+                  issue_number: childNum,
+                });
+                if (child.state !== 'closed') {
+                  allClosed = false;
+                  break;
+                }
+              }
+
+              if (allClosed) {
+                await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: parentNumber,
+                  body: 'All sub-issues resolved — closing parent.',
+                });
+                await github.rest.issues.update({
+                  ...context.repo,
+                  issue_number: parentNumber,
+                  state: 'closed',
+                  state_reason: 'completed',
+                });
+              }
+            }
