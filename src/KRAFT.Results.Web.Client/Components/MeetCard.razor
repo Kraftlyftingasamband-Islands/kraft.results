@@ -12,6 +12,14 @@
         <div class="meet-card-pills">
             <span class="pill pill-discipline">@Meet.Discipline</span>
             <span class="pill @(Meet.IsClassic ? "pill-classic" : "pill-equipped")">@DisplayNames.EquipmentType(Meet.IsClassic)</span>
+            @if (_variant == "meet-card--active")
+            {
+                <span class="card-status card-status--active">Skráning opin</span>
+            }
+            else if (_variant == "meet-card--ghost")
+            {
+                <span class="card-status">Væntanlegt</span>
+            }
         </div>
     </div>
 

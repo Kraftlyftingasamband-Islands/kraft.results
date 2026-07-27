@@ -17,6 +17,10 @@
         </div>
         <div class="p-name-col">
             <NavLink class="p-name" href="@($"/athletes/{Participation.AthleteSlug}")">@Participation.Athlete</NavLink>
+            @if (Participation.Disqualified)
+            {
+                <span class="card-status">Úr leik</span>
+            }
             <span class="p-meta">
                 @_metaLine
                 <AuthorizeView Roles="Admin">

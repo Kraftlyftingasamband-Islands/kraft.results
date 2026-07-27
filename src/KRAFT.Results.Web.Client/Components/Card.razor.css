@@ -2,21 +2,20 @@
     position: relative;
     border: var(--card-border, 1px solid var(--color-border));
     border-radius: var(--radius-md);
-    border-inline-start: var(--card-border-start, 4px solid var(--card-accent, var(--color-primary)));
     padding: var(--card-padding, 1.25rem 1.5rem);
     background: var(--card-bg, var(--color-white));
     box-shadow: var(--card-shadow, var(--shadow-sm));
+    transition: border-color var(--transition-base) ease,
+                background-color var(--transition-base) ease;
 }
 
 .card--clickable {
     cursor: pointer;
-    transition: transform var(--transition-base) ease,
-                box-shadow var(--transition-base) ease;
 
     &:hover,
     &:focus-within {
-        transform: var(--card-hover-transform, translateY(-4px));
-        box-shadow: var(--card-hover-shadow, var(--shadow-lg));
+        border-color: var(--color-primary);
+        background: rgba(139, 26, 43, 0.06);
     }
 
     &:has(:focus-visible) {
@@ -40,12 +39,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .card--clickable {
+    .card {
         transition: none;
-
-        &:hover,
-        &:focus-within {
-            transform: none;
-        }
     }
 }
