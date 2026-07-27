@@ -557,7 +557,7 @@ h1:focus {
 }
 
 /* Card state overrides — modifier classes applied via CssClass to Card's article */
-.sc-card-first { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }
+.sc-card-first { --card-bg: color-mix(in oklch, var(--color-primary) 2%, transparent); }
 .rhc-current { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); --rhc-text-color: var(--color-primary-dark); }
 .ap-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
 .p-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }

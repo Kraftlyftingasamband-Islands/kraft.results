@@ -465,6 +465,108 @@ public sealed class EntityStatCardTests : IDisposable
         cut.Find(".sc-card-first").ShouldNotBeNull();
     }
 
+    [Fact]
+    public void WhenNameHrefIsJavascriptScheme_RendersNameAsSpanNotAnchor()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.NameHref, "javascript:alert(1)")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement nameEl = cut.Find(".esc-name");
+        nameEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenValueHrefHasNoLeadingSlashOrHash_RendersValueAsSpanNotAnchor()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "500")
+                .Add(c => c.ValueHref, "https://evil.example.com"));
+
+        // Assert
+        AngleSharp.Dom.IElement valueEl = cut.Find(".esc-value");
+        valueEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenValueHrefIsSetButValueAriaLabelIsEmpty_DoesNotRenderAriaLabelAttribute()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.ValueHref, "/meets/nationals-2025")
+                .Add(c => c.ValueAriaLabel, string.Empty));
+
+        // Assert
+        cut.Find(".esc-value").GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenValueHrefIsSetAndValueAriaLabelIsNull_DoesNotRenderAriaLabelAttribute()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.ValueHref, "/meets/nationals-2025"));
+
+        // Assert
+        cut.Find(".esc-value").GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenNoLeadingAndNoImage_BodyAndStatArePresent()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.Find(".esc-body").ShouldNotBeNull();
+        cut.Find(".esc-stat").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenLeadingIsRank0_RendersRankSpanWithEnDashAndNoMedalClass()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(0);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement rankSpan = cut.Find(".esc-leading--rank");
+        rankSpan.TextContent.Trim().ShouldBe("–");
+        cut.FindAll(".esc-leading--medal").Count.ShouldBe(0);
+    }
+
     public void Dispose()
     {
         _context.Dispose();

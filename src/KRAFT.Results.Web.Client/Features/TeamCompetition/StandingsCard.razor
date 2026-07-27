@@ -3,22 +3,20 @@
 <EntityStatCard Leading="CardLeading.Rank(Standing.Rank)"
                 Image="@_logoFragment"
                 Name="@Standing.TeamTitleShort"
-                NameHref="@(string.IsNullOrEmpty(Standing.TeamSlug) ? null : $"/teams/{Standing.TeamSlug}")"
+                NameHref="@(string.IsNullOrEmpty(Standing.TeamSlug) ? null : SlugSanitizer.SlugHref("/teams/", Standing.TeamSlug))"
                 MetaText="@Standing.TeamName"
                 Label="Stig"
                 Value="@Standing.TotalPoints.ToString()"
-                CssClass="@(_isFirst ? "card-spaced sc-card-first" : "card-spaced")" />
+                CssClass="@(Standing.Rank == 1 ? "card-spaced sc-card-first" : "card-spaced")" />
 
 @code {
     [Parameter, EditorRequired]
     public required TeamCompetitionStanding Standing { get; init; }
 
-    private bool _isFirst;
     private RenderFragment? _logoFragment;
 
     protected override void OnParametersSet()
     {
-        _isFirst = Standing.Rank == 1;
         _logoFragment = @<TeamLogo Filename="@Standing.LogoImageFilename" Size="TeamLogoSize.Small" />;
     }
 }
