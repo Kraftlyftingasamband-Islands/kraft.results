@@ -1,61 +1,24 @@
 @using KRAFT.Results.Contracts.TeamCompetition
 
-<Card Compact="true" CssClass="@(_isFirst ? "card-spaced sc-card-first" : "card-spaced")">
-<div class="sc-card">
-    @if (_isMedal)
-    {
-        <div class="sc-rank @_rankClass" role="img" aria-label="@_rankAriaLabel">
-            @_rankDisplay
-        </div>
-    }
-    else
-    {
-        <div class="sc-rank @_rankClass">
-            @_rankDisplay
-        </div>
-    }
-    <TeamLogo Filename="@Standing.LogoImageFilename" Size="TeamLogoSize.Small" />
-    <div class="sc-name-col">
-        @if (!string.IsNullOrEmpty(Standing.TeamSlug))
-        {
-            <NavLink class="sc-team-abbr" href="@($"/teams/{Standing.TeamSlug}")">@Standing.TeamTitleShort</NavLink>
-        }
-        else
-        {
-            <span class="sc-team-abbr">@Standing.TeamTitleShort</span>
-        }
-        <span class="sc-team-name">@Standing.TeamName</span>
-    </div>
-    <div class="sc-points">
-        <span class="sc-points-label">Stig</span>
-        @Standing.TotalPoints
-    </div>
-</div>
-</Card>
+<EntityStatCard Leading="CardLeading.Rank(Standing.Rank)"
+                Image="@_logoFragment"
+                Name="@Standing.TeamTitleShort"
+                NameHref="@(string.IsNullOrEmpty(Standing.TeamSlug) ? null : $"/teams/{Standing.TeamSlug}")"
+                MetaText="@Standing.TeamName"
+                Label="Stig"
+                Value="@Standing.TotalPoints.ToString()"
+                CssClass="@(_isFirst ? "card-spaced sc-card-first" : "card-spaced")" />
 
 @code {
     [Parameter, EditorRequired]
     public required TeamCompetitionStanding Standing { get; init; }
 
     private bool _isFirst;
-    private bool _isMedal;
-    private string _rankDisplay = string.Empty;
-    private string _rankClass = string.Empty;
-    private string _rankAriaLabel = string.Empty;
+    private RenderFragment? _logoFragment;
 
     protected override void OnParametersSet()
     {
         _isFirst = Standing.Rank == 1;
-        _isMedal = Standing.Rank is 1 or 2 or 3;
-        _rankDisplay = Standing.Rank switch
-        {
-            1 => "\U0001f947",
-            2 => "\U0001f948",
-            3 => "\U0001f949",
-            _ when Standing.Rank > 0 => Standing.Rank.ToString(),
-            _ => "–",
-        };
-        _rankClass = _isMedal ? "rank-medal" : string.Empty;
-        _rankAriaLabel = _isMedal ? $"{Standing.Rank}. sæti" : string.Empty;
+        _logoFragment = @<TeamLogo Filename="@Standing.LogoImageFilename" Size="TeamLogoSize.Small" />;
     }
 }
