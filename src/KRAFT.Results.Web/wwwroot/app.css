@@ -573,6 +573,7 @@ h1:focus {
     --card-bg: transparent;
     --card-shadow: none;
     --card-hover-bg: transparent;
+    --card-hover-border-color: transparent;
 }
 .meet-card--ghost .meet-card-title-link,
 .meet-card--ghost .meet-card-title-text { color: var(--color-text-muted); }
