@@ -24,6 +24,12 @@
 
     --transition-fast: 150ms;
     --transition-base: 250ms;
+
+    /* Pill tint tokens — kind-keyed background tints for Pill component */
+    --pill-tint-weight:    color-mix(in oklch, var(--color-primary)    14%, transparent);
+    --pill-tint-age:       color-mix(in oklch, var(--color-success)    14%, transparent);
+    --pill-tint-equipment: color-mix(in oklch, var(--color-text)       15%, transparent);
+    --pill-tint-neutral:   color-mix(in oklch, var(--color-text-muted) 13%, transparent);
 }
 
 *, *::before, *::after {
