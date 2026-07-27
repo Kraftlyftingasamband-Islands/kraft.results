@@ -27,13 +27,13 @@
         }
         <div class="esc-body">
             <div class="esc-name-row">
-                @if (string.IsNullOrEmpty(NameHref))
+                @if (string.IsNullOrEmpty(_safeNameHref))
                 {
                     <span class="esc-name">@Name</span>
                 }
                 else
                 {
-                    <NavLink class="esc-name" href="@NameHref">@Name</NavLink>
+                    <NavLink class="esc-name" href="@_safeNameHref">@Name</NavLink>
                 }
             </div>
             @if (Pills is { Count: > 0 })
@@ -55,7 +55,7 @@
             {
                 <div class="esc-label">@Label</div>
             }
-            @if (string.IsNullOrEmpty(ValueHref))
+            @if (string.IsNullOrEmpty(_safeValueHref))
             {
                 <span class="esc-value">
                     @Value
@@ -67,7 +67,9 @@
             }
             else
             {
-                <NavLink class="esc-value" href="@ValueHref" aria-label="@ValueAriaLabel">
+                <NavLink class="esc-value"
+                         href="@_safeValueHref"
+                         aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
                     @Value
                     @if (!string.IsNullOrEmpty(Unit))
                     {
@@ -115,4 +117,16 @@
 
     [Parameter]
     public string? CssClass { get; set; }
+
+    private string? _safeNameHref;
+    private string? _safeValueHref;
+
+    protected override void OnParametersSet()
+    {
+        _safeNameHref = IsRelativeHref(NameHref) ? NameHref : null;
+        _safeValueHref = IsRelativeHref(ValueHref) ? ValueHref : null;
+    }
+
+    private static bool IsRelativeHref(string? href) =>
+        !string.IsNullOrEmpty(href) && (href[0] == '/' || href[0] == '#');
 }
