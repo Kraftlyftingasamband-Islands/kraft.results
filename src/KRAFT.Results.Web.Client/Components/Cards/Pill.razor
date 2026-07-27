@@ -1,0 +1,23 @@
+@namespace KRAFT.Results.Web.Client.Components.Cards
+
+<span class="@_classes">@Value.Text</span>
+
+@code {
+    [Parameter, EditorRequired]
+    public required MetaPill Value { get; set; }
+
+    private string _classes = "";
+
+    protected override void OnParametersSet()
+    {
+        string tintClass = Value.Kind switch
+        {
+            PillKind.WeightCategory => "esc-pill--weight",
+            PillKind.AgeCategory => "esc-pill--age",
+            PillKind.Equipment => "esc-pill--equipment",
+            PillKind.Neutral => "esc-pill--neutral",
+            _ => "esc-pill--neutral",
+        };
+        _classes = $"esc-pill {tintClass}";
+    }
+}
