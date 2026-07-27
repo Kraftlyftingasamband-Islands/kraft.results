@@ -552,10 +552,10 @@ h1:focus {
 }
 
 /* Card state overrides — modifier classes applied via CssClass to Card's article */
-.sc-card-first { --card-bg: rgba(139, 26, 43, 0.06); }
-.rhc-current { --card-bg: rgba(139, 26, 43, 0.06); --rhc-text-color: var(--color-primary-dark); }
-.ap-card-dq { --card-bg: rgba(107, 114, 128, 0.08); }
-.p-card-dq { --card-bg: rgba(107, 114, 128, 0.08); }
+.sc-card-first { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }
+.rhc-current { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); --rhc-text-color: var(--color-primary-dark); }
+.ap-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
+.p-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
 .card-flush { --card-padding: 0; overflow: hidden; }
 .card-half { flex: 0 0 calc(50% - 8px); min-width: 0; }
 @media (max-width: 600px) { .card-half { flex: 1 1 auto; } }
@@ -563,7 +563,7 @@ h1:focus {
 
 .meet-card { margin-block-end: 0.75rem; }
 
-.meet-card--active { --card-bg: rgba(139, 26, 43, 0.06); }
+.meet-card--active { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }
 .meet-card--active .meet-card-count {
     color: var(--color-primary);
     font-weight: 600;
@@ -572,6 +572,7 @@ h1:focus {
     --card-border: 1px dashed var(--color-border);
     --card-bg: transparent;
     --card-shadow: none;
+    --card-hover-bg: transparent;
 }
 .meet-card--ghost .meet-card-title-link,
 .meet-card--ghost .meet-card-title-text { color: var(--color-text-muted); }
@@ -590,11 +591,10 @@ h1:focus {
     letter-spacing: 0.02em;
     text-transform: uppercase;
     white-space: nowrap;
-    color: var(--color-text-muted);
-    background: color-mix(in srgb, currentColor 12%, transparent);
+    color: var(--color-text);
+    background: color-mix(in oklch, currentColor 12%, transparent);
 }
 
 .card-status--active {
     color: var(--color-primary);
-    background: color-mix(in srgb, currentColor 12%, transparent);
 }
