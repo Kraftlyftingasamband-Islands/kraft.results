@@ -1,0 +1,472 @@
+using Bunit;
+
+using KRAFT.Results.Web.Client.Components.Cards;
+
+using Microsoft.AspNetCore.Components;
+
+using Shouldly;
+
+namespace KRAFT.Results.Web.Client.Tests.Components.Cards;
+
+public sealed class EntityStatCardTests : IDisposable
+{
+    private readonly BunitContext _context = new();
+
+    [Fact]
+    public void WhenLeadingIsRank1_RendersGoldMedalSpanWithRoleImg()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(1);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-leading--medal").GetAttribute("role").ShouldBe("img");
+    }
+
+    [Fact]
+    public void WhenLeadingIsRank2_RendersAriaLabelWithPlacement()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(2);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-leading--medal").GetAttribute("aria-label").ShouldBe("2. sæti");
+    }
+
+    [Fact]
+    public void WhenLeadingIsRank3_RendersBronzeMedalSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(3);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-leading--medal").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenLeadingIsRankGreaterThan3_RendersRankSpanWithNumber()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(4);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement rankSpan = cut.Find(".esc-leading--rank");
+        rankSpan.TextContent.Trim().ShouldBe("4");
+    }
+
+    [Fact]
+    public void WhenLeadingIsRankGreaterThan3_DoesNotRenderMedalSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(5);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.FindAll(".esc-leading--medal").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadge_RendersBadgeSpanWithText()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("NEW");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeSpan = cut.Find(".esc-leading--badge");
+        badgeSpan.TextContent.Trim().ShouldBe("NEW");
+    }
+
+    [Fact]
+    public void WhenNameHrefIsNull_RendersNameAsSpan()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Jón Jónsson")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement nameSpan = cut.Find(".esc-name");
+        nameSpan.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenNameHrefIsNull_RendersNoAnchorInNameRow()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Jón Jónsson")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.FindAll(".esc-name-row a").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenNameHrefIsSet_RendersNameAsNavLink()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Jón Jónsson")
+                .Add(c => c.NameHref, "/athletes/jon-jonsson")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement nameLink = cut.Find(".esc-name");
+        nameLink.TagName.ShouldBe("A");
+    }
+
+    [Fact]
+    public void WhenNameHrefIsSet_RendersNameWithCorrectHref()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Jón Jónsson")
+                .Add(c => c.NameHref, "/athletes/jon-jonsson")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-name").GetAttribute("href").ShouldBe("/athletes/jon-jonsson");
+    }
+
+    [Fact]
+    public void WhenValueHrefIsNull_RendersValueAsSpan()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        AngleSharp.Dom.IElement valueEl = cut.Find(".esc-value");
+        valueEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenValueHrefIsSet_RendersValueAsNavLink()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.ValueHref, "/meets/nationals-2025")
+                .Add(c => c.ValueAriaLabel, "750 total"));
+
+        // Assert
+        AngleSharp.Dom.IElement valueEl = cut.Find(".esc-value");
+        valueEl.TagName.ShouldBe("A");
+    }
+
+    [Fact]
+    public void WhenValueHrefAndAriaLabelAreSet_RendersAriaLabel()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.ValueHref, "/meets/nationals-2025")
+                .Add(c => c.ValueAriaLabel, "750 total"));
+
+        // Assert
+        cut.Find(".esc-value").GetAttribute("aria-label").ShouldBe("750 total");
+    }
+
+    [Fact]
+    public void WhenUnitIsSet_RendersUnitInsideValueElement()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.Unit, "kg"));
+
+        // Assert
+        AngleSharp.Dom.IElement unitSpan = cut.Find(".esc-value .esc-unit");
+        unitSpan.TextContent.Trim().ShouldBe("kg");
+    }
+
+    [Fact]
+    public void WhenPillsAreOutOfOrder_RendersSortedByKind()
+    {
+        // Arrange
+        IReadOnlyList<MetaPill> pills =
+        [
+            new(PillKind.Neutral, "IPF"),
+            new(PillKind.WeightCategory, "-83kg"),
+        ];
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.Pills, pills));
+
+        // Assert
+        List<AngleSharp.Dom.IElement> pillEls = cut.FindAll(".esc-pills .esc-pill").ToList();
+        pillEls.Count.ShouldBe(2);
+
+        // WeightCategory (0) sorts before Neutral (3)
+        pillEls[0].TextContent.Trim().ShouldBe("-83kg");
+        pillEls[1].TextContent.Trim().ShouldBe("IPF");
+    }
+
+    [Fact]
+    public void WhenPillsIsEmpty_DoesNotRenderPillsContainer()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.FindAll(".esc-pills").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenLeadingIsNull_DoesNotRenderLeadingSlot()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.FindAll(".esc-leading").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenImageIsNull_DoesNotRenderImageSlot()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.FindAll(".esc-image").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenImageIsProvided_RendersImageSlot()
+    {
+        // Arrange
+        RenderFragment imageFragment = builder =>
+        {
+            builder.OpenElement(0, "img");
+            builder.AddAttribute(1, "src", "/logo.png");
+            builder.AddAttribute(2, "alt", "team logo");
+            builder.CloseElement();
+        };
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.Image, imageFragment));
+
+        // Assert
+        cut.Find(".esc-image").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenMetaTextIsNull_DoesNotRenderMetaLine()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.FindAll(".esc-meta").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenMetaTextIsSet_RendersMetaLine()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.MetaText, "Reykjavík Powerlifting Club"));
+
+        // Assert
+        cut.Find(".esc-meta").TextContent.Trim().ShouldBe("Reykjavík Powerlifting Club");
+    }
+
+    [Fact]
+    public void WhenLabelIsNull_DoesNotRenderLabelElement()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.FindAll(".esc-label").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenLabelIsSet_RendersLabelElement()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.Label, "Total"));
+
+        // Assert
+        cut.Find(".esc-label").TextContent.Trim().ShouldBe("Total");
+    }
+
+    [Fact]
+    public void WhenUnitIsNull_DoesNotRenderUnitElement()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.FindAll(".esc-unit").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenValueIsSet_RendersValueText()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "842.50"));
+
+        // Assert
+        cut.Find(".esc-value").TextContent.Trim().ShouldBe("842.50");
+    }
+
+    [Fact]
+    public void WhenNameIsSet_RendersNameText()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Sigríður Halldórsdóttir")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-name").TextContent.Trim().ShouldBe("Sigríður Halldórsdóttir");
+    }
+
+    [Fact]
+    public void WhenCssClassIsSet_PassesThroughToCard()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.CssClass, "sc-card-first"));
+
+        // Assert
+        cut.Find(".sc-card-first").ShouldNotBeNull();
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
+}
