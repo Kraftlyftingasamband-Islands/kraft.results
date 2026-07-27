@@ -31,8 +31,8 @@ internal sealed class GetMeetRecordsHandler(ResultsDbContext dbContext)
             .Where(r => !ExcludedCategories.Contains(r.RecordCategoryId))
             .Select(r => new
             {
-                AthleteName = r.Attempt!.Participation.Athlete.Firstname + " " + r.Attempt!.Participation.Athlete.Lastname,
-                AthleteSlug = r.Attempt!.Participation.Athlete.Slug,
+                AthleteName = r.Attempt!.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname,
+                AthleteSlug = r.Attempt.Participation.Athlete.Slug,
                 r.RecordCategoryId,
                 WeightCategory = r.WeightCategory.Title,
                 AgeCategory = r.AgeCategory.Title,

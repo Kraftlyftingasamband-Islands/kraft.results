@@ -90,7 +90,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await RecordAttemptAsync(_rawMeetId, _baseParticipationId, Discipline.Deadlift, 1, 180.0m);
         await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope idScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope idScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext idDb = idScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         _baseBenchAttemptId = await GetAttemptIdByRoundAsync(
@@ -167,7 +167,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             TestSeedConstants.AgeCategory.JuniorId,
             TestSeedConstants.WeightCategory.Id93Kg);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -176,7 +176,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -218,7 +218,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         }
 
         // Assert — each slot should have exactly one current record
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> allCurrentRecords = await assertDb.Set<RecordEntity>()
@@ -268,7 +268,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await clearDb.Database.ExecuteSqlRawAsync(
             deleteTotalSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -277,7 +277,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
@@ -325,7 +325,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await clearDb.Database.ExecuteSqlRawAsync(
             deleteDlSingleSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -334,7 +334,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> dlSingleRecords = await assertDb.Set<RecordEntity>()
@@ -365,7 +365,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert — the standard record in the equipped masters4 93kg squat slot must survive
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -406,7 +406,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         int deadliftAttemptId = await GetAttemptIdByRoundAsync(
             idDb, participationId, Discipline.Deadlift, 1, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -415,7 +415,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert — no records should reference the Norwegian athlete's attempts
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -471,7 +471,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await idDb.Database.ExecuteSqlRawAsync(
             deleteSingleLiftSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -480,7 +480,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         RecordEntity? benchRecord = await assertDb.Set<RecordEntity>()
@@ -554,7 +554,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await SeedRecordAthlete.ClearSlotAsync(
             idDb, TestSeedConstants.WeightCategory.Id93Kg, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -563,7 +563,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert — both records must appear in the chain
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -648,7 +648,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await insertDb.Database.ExecuteSqlRawAsync(
             deleteNonStandardSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -657,7 +657,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -732,7 +732,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await idDb.Database.ExecuteSqlRawAsync(
             deleteTotalSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -741,7 +741,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
@@ -816,7 +816,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await sqlDb.Database.ExecuteSqlRawAsync(
             deleteTotalSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -825,7 +825,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> totalRecords = await assertDb.Set<RecordEntity>()
@@ -883,7 +883,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await idDb.Database.ExecuteSqlRawAsync(
             insertDuplicateSql, TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -892,7 +892,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> squatRecords = await assertDb.Set<RecordEntity>()
@@ -967,7 +967,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             """,
             TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -976,7 +976,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert — the pre-standard attempt should produce a record (weight 200 > standard 150)
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -1046,7 +1046,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             """,
             TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -1055,7 +1055,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert — 200kg exceeds the absolute-value threshold of 117.50, so a record is expected
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()
@@ -1126,7 +1126,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
             """,
             TestContext.Current.CancellationToken);
 
-        await using AsyncServiceScope scope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = fixture.Factory.Services.CreateAsyncScope();
         IServiceScopeFactory scopeFactory = scope.ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         using BackfillRecordsJob job = new(scopeFactory, NullLogger<BackfillRecordsJob>.Instance);
 
@@ -1135,7 +1135,7 @@ public sealed class BackfillRecordsTests(CollectionFixture fixture) : IAsyncLife
         await (job.ExecuteTask ?? Task.CompletedTask);
 
         // Assert — a zero-weight standard imposes no threshold; any valid attempt creates a record
-        await using AsyncServiceScope assertScope = fixture.Factory!.Services.CreateAsyncScope();
+        await using AsyncServiceScope assertScope = fixture.Factory.Services.CreateAsyncScope();
         ResultsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<ResultsDbContext>();
 
         List<RecordEntity> slotRecords = await assertDb.Set<RecordEntity>()

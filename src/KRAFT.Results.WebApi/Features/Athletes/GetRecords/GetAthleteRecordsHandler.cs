@@ -23,16 +23,16 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
         {
             x.Date,
             IsClassic = x.Attempt!.Participation.Meet.IsRaw,
-            IsSingleLift = x.Attempt!.Participation.Meet.Category != MeetCategory.Powerlifting,
+            IsSingleLift = x.Attempt.Participation.Meet.Category != MeetCategory.Powerlifting,
             WeightCategory = x.WeightCategory.Title,
             AgeCategory = x.AgeCategory.Slug ?? x.AgeCategory.Title,
-            x.Attempt!.Participation.Total,
+            x.Attempt.Participation.Total,
             x.Weight,
-            x.Attempt!.Discipline,
+            x.Attempt.Discipline,
             x.RecordCategoryId,
-            MeetTitle = x.Attempt!.Participation.Meet.Title,
-            MeetYear = x.Attempt!.Participation.Meet.StartDate.Year,
-            MeetSlug = x.Attempt!.Participation.Meet.Slug,
+            MeetTitle = x.Attempt.Participation.Meet.Title,
+            MeetYear = x.Attempt.Participation.Meet.StartDate.Year,
+            MeetSlug = x.Attempt.Participation.Meet.Slug,
         })
         .Select(x => new AthleteRecord(
             x.Date,
