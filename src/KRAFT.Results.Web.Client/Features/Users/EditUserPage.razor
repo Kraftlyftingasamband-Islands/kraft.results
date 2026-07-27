@@ -150,16 +150,11 @@
 
     private bool IsRoleSelected(string role)
     {
-        return _model?.Roles.Contains(role) ?? false;
+        return _model.Roles.Contains(role);
     }
 
     private void ToggleRole(string role, ChangeEventArgs e)
     {
-        if (_model is null)
-        {
-            return;
-        }
-
         bool isChecked = (bool)(e.Value ?? false);
 
         if (isChecked && !_model.Roles.Contains(role))
