@@ -28,7 +28,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public RankingEntry Entry { get; set; } = null!;
+    public required RankingEntry Entry { get; set; }
 
     [Parameter]
     public string DisciplineLabel { get; set; } = string.Empty;

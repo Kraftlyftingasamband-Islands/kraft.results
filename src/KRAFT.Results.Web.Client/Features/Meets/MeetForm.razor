@@ -261,7 +261,7 @@
     {
         MeetFormValues values = new(
             _model.Title,
-            _model.StartDate!.Value,
+            _model.StartDate.GetValueOrDefault(),
             _model.MeetTypeId,
             _model.EndDate,
             string.IsNullOrWhiteSpace(_model.Location) ? null : _model.Location,

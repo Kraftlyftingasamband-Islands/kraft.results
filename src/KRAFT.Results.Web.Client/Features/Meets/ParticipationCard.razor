@@ -191,8 +191,8 @@
                IsLoading="_isRemoving" />
 
 @code {
-    private EditBodyWeightDialog _editDialog = null!;
-    private ConfirmDialog _removeDialog = null!;
+    private EditBodyWeightDialog? _editDialog;
+    private ConfirmDialog? _removeDialog;
     private bool _isSaving;
     private bool _isRemoving;
     private string? _editErrorMessage;
@@ -206,7 +206,7 @@
     private MeetParticipation? _freshParticipation;
 
     [Parameter, EditorRequired]
-    public MeetParticipation Participation { get; init; } = null!;
+    public required MeetParticipation Participation { get; init; }
 
     [Parameter, EditorRequired]
     public bool ShowIpfPoints { get; init; }
@@ -320,7 +320,7 @@
     private async Task ShowEditDialog()
     {
         _editErrorMessage = null;
-        await _editDialog.ShowAsync();
+        await (_editDialog?.ShowAsync() ?? Task.CompletedTask);
     }
 
     private async Task HandleSaveWeight(decimal newWeight)
@@ -341,7 +341,7 @@
                 return;
             }
 
-            await _editDialog.CloseAsync();
+            await (_editDialog?.CloseAsync() ?? Task.CompletedTask);
             await RefreshParticipation();
             await OnBodyWeightUpdated.InvokeAsync();
         }
@@ -358,7 +358,7 @@
     private async Task ShowRemoveDialog()
     {
         _removeErrorMessage = null;
-        await _removeDialog.ShowAsync();
+        await (_removeDialog?.ShowAsync() ?? Task.CompletedTask);
     }
 
     private async Task HandleRemoveParticipant()
@@ -377,7 +377,7 @@
                 return;
             }
 
-            await _removeDialog.CloseAsync();
+            await (_removeDialog?.CloseAsync() ?? Task.CompletedTask);
             await OnParticipantRemoved.InvokeAsync();
         }
         catch (HttpRequestException)

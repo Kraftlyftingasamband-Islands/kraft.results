@@ -36,7 +36,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public TeamCompetitionStanding Standing { get; init; } = null!;
+    public required TeamCompetitionStanding Standing { get; init; }
 
     private bool _isFirst;
     private bool _isMedal;

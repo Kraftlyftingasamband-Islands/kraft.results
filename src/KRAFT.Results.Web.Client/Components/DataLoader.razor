@@ -30,13 +30,13 @@ else if (_state == State.Loaded && _data is not null)
     private T? _data;
 
     [Parameter, EditorRequired]
-    public Func<Task<T?>> Loader { get; set; } = null!;
+    public required Func<Task<T?>> Loader { get; set; }
 
     [Parameter, EditorRequired]
     public string Noun { get; set; } = string.Empty;
 
     [Parameter, EditorRequired]
-    public RenderFragment<T> ChildContent { get; set; } = null!;
+    public required RenderFragment<T> ChildContent { get; set; }
 
     [Parameter]
     public EventCallback OnLoaded { get; set; }

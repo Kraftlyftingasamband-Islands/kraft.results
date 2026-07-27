@@ -170,7 +170,7 @@
         AthleteFormValues values = new(
             _model.FirstName,
             _model.LastName,
-            _model.DateOfBirth!.Value,
+            _model.DateOfBirth.GetValueOrDefault(),
             _model.Gender,
             _model.CountryCode,
             teamId);
@@ -208,7 +208,7 @@
         {
             if (value is DateOnly date && date > DateOnly.FromDateTime(DateTime.Today))
             {
-                return new ValidationResult(ErrorMessage, [validationContext.MemberName!]);
+                return new ValidationResult(ErrorMessage, [validationContext.MemberName ?? string.Empty]);
             }
 
             return ValidationResult.Success;

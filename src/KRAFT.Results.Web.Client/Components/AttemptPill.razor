@@ -23,7 +23,7 @@ else
 
 @code {
     [Parameter, EditorRequired]
-    public MeetAttempt Attempt { get; init; } = null!;
+    public required MeetAttempt Attempt { get; init; }
 
     [Parameter]
     public string? RecordContext { get; init; }

@@ -52,7 +52,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public RecordHistoryEntry Entry { get; set; } = null!;
+    public required RecordHistoryEntry Entry { get; set; }
 
     private string _cardCssClass = string.Empty;
     private string _footerMeta = string.Empty;

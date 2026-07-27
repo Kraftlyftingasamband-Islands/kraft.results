@@ -38,9 +38,9 @@
                                class="form-input"
                                autocomplete="given-name"
                                aria-describedby="@(HasError ? "edit-error" : null)"
-                               @bind-Value="_model!.FirstName"
+                               @bind-Value="_model.FirstName"
                                disabled="@_isLoading" />
-                    <ValidationMessage For="@(() => _model!.FirstName)" />
+                    <ValidationMessage For="@(() => _model.FirstName)" />
                 </div>
 
                 <div class="form-field">
@@ -49,9 +49,9 @@
                                class="form-input"
                                autocomplete="family-name"
                                aria-describedby="@(HasError ? "edit-error" : null)"
-                               @bind-Value="_model!.LastName"
+                               @bind-Value="_model.LastName"
                                disabled="@_isLoading" />
-                    <ValidationMessage For="@(() => _model!.LastName)" />
+                    <ValidationMessage For="@(() => _model.LastName)" />
                 </div>
 
                 <div class="form-field">
@@ -61,9 +61,9 @@
                                class="form-input"
                                autocomplete="email"
                                aria-describedby="@(HasError ? "edit-error" : null)"
-                               @bind-Value="_model!.Email"
+                               @bind-Value="_model.Email"
                                disabled="@_isLoading" />
-                    <ValidationMessage For="@(() => _model!.Email)" />
+                    <ValidationMessage For="@(() => _model.Email)" />
                 </div>
 
                 <fieldset class="form-field role-field" aria-describedby="@(_rolesError is not null ? "roles-error" : null)">
@@ -135,7 +135,7 @@
     [Parameter]
     public int UserId { get; set; }
 
-    private EditUserModel? _model;
+    private EditUserModel _model = new();
     private EditUserData? _lastUserData;
     private bool _isLoading;
     private string? _errorMessage;
@@ -212,7 +212,7 @@
 
         try
         {
-            if (_model!.Roles.Count == 0)
+            if (_model.Roles.Count == 0)
             {
                 _rolesError = "Velja verður að minnsta kosti eitt hlutverk.";
                 _isLoading = false;
@@ -220,7 +220,7 @@
             }
 
             UpdateUserCommand command = new(
-                _model!.FirstName,
+                _model.FirstName,
                 _model.LastName,
                 _model.Email);
 

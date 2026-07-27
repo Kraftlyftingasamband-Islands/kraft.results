@@ -69,7 +69,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public MeetSummary Meet { get; set; } = default!;
+    public required MeetSummary Meet { get; set; }
 
     [Parameter]
     public bool IsFuture { get; set; }

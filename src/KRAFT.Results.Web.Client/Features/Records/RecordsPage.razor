@@ -44,10 +44,10 @@
 
 @code {
     [Parameter]
-    public string Gender { get; set; } = default!;
+    public string Gender { get; set; } = string.Empty;
 
     [Parameter]
-    public string AgeCategory { get; set; } = default!;
+    public string AgeCategory { get; set; } = string.Empty;
 
     [SupplyParameterFromQuery(Name = "equipmentType")]
     public string? EquipmentType { get; set; }
