@@ -15,7 +15,7 @@
     &:hover,
     &:focus-within {
         border-color: var(--color-primary);
-        background: rgba(139, 26, 43, 0.06);
+        background: var(--card-hover-bg, color-mix(in oklch, var(--color-primary) 6%, transparent));
     }
 
     &:has(:focus-visible) {
