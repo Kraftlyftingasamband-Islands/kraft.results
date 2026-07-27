@@ -26,6 +26,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             dbContext.Set<Meet>()
                 .Where(m => m.PublishedResults)
                 .Where(m => m.StartDate <= today)
+                .Where(m => m.Participations.Any(p => p.Attempts.Count > 0))
                 .OrderByDescending(m => m.StartDate)
                 .Take(3),
             cancellationToken);
