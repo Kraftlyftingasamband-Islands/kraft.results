@@ -1,7 +1,7 @@
 using Bunit;
 
 using KRAFT.Results.Contracts.Meets;
-using KRAFT.Results.Web.Client.Components;
+using KRAFT.Results.Web.Client.Components.Cards;
 
 using Microsoft.Extensions.DependencyInjection;
 
