@@ -17,13 +17,11 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
 {
     private const string Path = "/dashboard";
     private const string MeetsPath = "/meets";
-    private const string AthletesPath = "/athletes";
 
     private readonly HttpClient _client = fixture.Factory!.CreateClient();
     private readonly HttpClient _authorizedClient = fixture.CreateAuthorizedHttpClient();
     private readonly List<string> _meetSlugs = [];
     private readonly List<(int MeetId, int ParticipationId)> _participations = [];
-    private readonly List<string> _athleteSlugs = [];
     private string _recentMeetSlug = string.Empty;
     private string _upcomingMeetSlug = string.Empty;
     private string _attemptlessMeetSlug = string.Empty;
@@ -128,11 +126,6 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         foreach (string slug in _meetSlugs)
         {
             await _authorizedClient.DeleteAsync($"{MeetsPath}/{slug}", CancellationToken.None);
-        }
-
-        foreach (string slug in _athleteSlugs)
-        {
-            await _authorizedClient.DeleteAsync($"{AthletesPath}/{slug}", CancellationToken.None);
         }
 
         _client.Dispose();
@@ -286,6 +279,9 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         recentMeets.ShouldContain(m => m.Slug == slug3);
         recentMeets.ShouldContain(m => m.Slug == slug2);
         recentMeets.ShouldNotContain(m => m.Slug == slug1);
+        recentMeets
+            .Select(m => m.StartDate)
+            .ShouldBeInOrder(SortDirection.Descending);
     }
 
     private async Task<string> CreateMeetSlugAsync(DateOnly startDate)
