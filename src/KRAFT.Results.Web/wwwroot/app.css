@@ -6,6 +6,7 @@
     --color-bg: #fafafa;
     --color-text: #1a1a2e;
     --color-text-muted: #6b7280;
+    --color-text-secondary: #4b5563;
     --color-border: #e5e7eb;
     --color-success: #16a34a;
     --color-danger: #dc2626;
@@ -520,7 +521,7 @@ h1:focus {
     font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 700;
-    font-feature-settings: "tnum" 1, "zero" 1;
+    font-variant-numeric: tabular-nums slashed-zero;
     color: var(--color-primary);
 }
 
@@ -537,7 +538,7 @@ h1:focus {
     padding: 0.1rem 0.375rem;
     border-radius: 3px;
     background: #f3f4f6;
-    color: #4b5563;
+    color: var(--color-text-secondary);
     line-height: 1.4;
 }
 
