@@ -30,7 +30,7 @@ internal sealed class GetTeamCompetitionHandler
             .Select(p => new TeamPointRow(
                 p.TeamId!.Value,
                 p.Team!.Title,
-                p.Team!.TitleShort,
+                p.Team.TitleShort,
                 p.Team.Slug,
                 p.Team.LogoImageFilename,
                 p.Athlete.Gender.Value,
