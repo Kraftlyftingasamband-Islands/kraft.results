@@ -18,25 +18,25 @@
         <section class="season-stats" aria-label="Tölur ársins @_year">
             <h2 class="section-label">Tölur ársins @_year</h2>
             <div class="stat-bar">
-                <Card Compact="true" CssClass="card-plain">
+                <Card Compact="true">
                     <div class="stat-inner">
                         <span class="stat-label">Mót</span>
                         <span class="stat-number">@context.SeasonStats.Meets</span>
                     </div>
                 </Card>
-                <Card Compact="true" CssClass="card-plain">
+                <Card Compact="true">
                     <div class="stat-inner">
                         <span class="stat-label">Keppendur</span>
                         <span class="stat-number">@context.SeasonStats.Athletes</span>
                     </div>
                 </Card>
-                <Card Compact="true" CssClass="card-plain">
+                <Card Compact="true">
                     <div class="stat-inner">
                         <span class="stat-label">Met</span>
                         <span class="stat-number">@context.SeasonStats.Records</span>
                     </div>
                 </Card>
-                <Card Compact="true" CssClass="card-plain">
+                <Card Compact="true">
                     <div class="stat-inner">
                         <span class="stat-label">Félög</span>
                         <span class="stat-number">@context.SeasonStats.Clubs</span>
@@ -46,7 +46,7 @@
         </section>
 
         <div class="widget-grid">
-        <Card CssClass="card-flush card-plain">
+        <Card CssClass="card-flush">
             <div class="widget-header">
                 <h2 class="widget-title">Mót</h2>
                 <NavLink class="widget-link" href="/meets">Mótaskrá →</NavLink>
@@ -87,7 +87,7 @@
             </div>
         </Card>
 
-        <Card CssClass="card-flush card-plain">
+        <Card CssClass="card-flush">
             <div class="widget-header">
                 <h2 class="widget-title">Stigatafla @_year — Klassík</h2>
                 <NavLink class="widget-link" href="/rankings">Allt →</NavLink>
@@ -128,7 +128,7 @@
             </div>
         </Card>
 
-        <Card CssClass="card-flush card-plain">
+        <Card CssClass="card-flush">
             <div class="widget-header">
                 <h2 class="widget-title">Nýjustu met</h2>
                 <NavLink class="widget-link" href="/records">Allt →</NavLink>
@@ -199,7 +199,7 @@
 
         @if (context.TeamStandingsMen.Count > 0 || context.TeamStandingsWomen.Count > 0)
         {
-            <Card CssClass="card-flush card-plain">
+            <Card CssClass="card-flush">
                 <div class="widget-header">
                     <h2 class="widget-title">Liðakeppni @_year</h2>
                     <NavLink class="widget-link" href="/team-competition">Allt →</NavLink>

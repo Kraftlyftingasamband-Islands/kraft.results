@@ -2,7 +2,6 @@
     position: relative;
     border: var(--card-border, 1px solid var(--color-border));
     border-radius: var(--radius-md);
-    border-inline-start: var(--card-border-start, 4px solid var(--card-accent, var(--color-primary)));
     padding: var(--card-padding, 1.25rem 1.5rem);
     background: var(--card-bg, var(--color-white));
     box-shadow: var(--card-shadow, var(--shadow-sm));
@@ -10,13 +9,13 @@
 
 .card--clickable {
     cursor: pointer;
-    transition: transform var(--transition-base) ease,
-                box-shadow var(--transition-base) ease;
+    transition: border-color var(--transition-base) ease,
+                background-color var(--transition-base) ease;
 
     &:hover,
     &:focus-within {
-        transform: var(--card-hover-transform, translateY(-4px));
-        box-shadow: var(--card-hover-shadow, var(--shadow-lg));
+        border-color: var(--card-hover-border-color, var(--color-primary));
+        background: var(--card-hover-bg, color-mix(in oklch, var(--color-primary) 6%, transparent));
     }
 
     &:has(:focus-visible) {
@@ -42,10 +41,5 @@
 @media (prefers-reduced-motion: reduce) {
     .card--clickable {
         transition: none;
-
-        &:hover,
-        &:focus-within {
-            transform: none;
-        }
     }
 }

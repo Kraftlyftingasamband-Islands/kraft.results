@@ -545,44 +545,56 @@ h1:focus {
 /* Card defaults — each Card resets its own variables so nested Cards do not inherit parent overrides */
 .card {
     --card-padding: 1.25rem 1.5rem;
-    --card-border-start: 4px solid var(--card-accent, var(--color-primary));
     --card-bg: var(--color-white);
     --card-shadow: var(--shadow-sm);
     --card-border: 1px solid var(--color-border);
-    --card-hover-transform: translateY(-4px);
-    --card-hover-shadow: var(--shadow-lg);
 }
 
 /* Card state overrides — modifier classes applied via CssClass to Card's article */
-.sc-card-first { --card-bg: rgba(139, 26, 43, 0.06); }
-.rc-standard { --card-accent: var(--color-border); }
-.rhc-default { --card-accent: transparent; }
-.rhc-current { --card-accent: var(--color-primary); --card-bg: var(--color-primary-light); --rhc-text-color: var(--color-primary-dark); }
-.rhc-standard { --card-accent: var(--color-border); opacity: 0.65; }
-.ap-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
-.p-card-dq { --card-accent: #9ca3af; opacity: 0.7; }
+.sc-card-first { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }
+.rhc-current { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); --rhc-text-color: var(--color-primary-dark); }
+.ap-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
+.p-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
 .card-flush { --card-padding: 0; overflow: hidden; }
-.card-plain { --card-border-start: none; }
 .card-half { flex: 0 0 calc(50% - 8px); min-width: 0; }
 @media (max-width: 600px) { .card-half { flex: 1 1 auto; } }
 .card-spaced { margin-block-end: 6px; }
 
 .meet-card { margin-block-end: 0.75rem; }
 
-/* MeetCard state overrides */
-.meet-card--active { --card-bg: var(--color-primary-light); --card-accent: var(--color-primary); }
+.meet-card--active { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }
 .meet-card--active .meet-card-count {
     color: var(--color-primary);
     font-weight: 600;
 }
 .meet-card--ghost {
     --card-border: 1px dashed var(--color-border);
-    --card-border-start: 1px dashed var(--color-border);
     --card-bg: transparent;
     --card-shadow: none;
-    --card-accent: transparent;
-    --card-hover-transform: none;
-    --card-hover-shadow: none;
+    --card-hover-bg: transparent;
+    --card-hover-border-color: transparent;
 }
 .meet-card--ghost .meet-card-title-link,
 .meet-card--ghost .meet-card-title-text { color: var(--color-text-muted); }
+
+/* Status pill — shared across card components; must be global (not scoped) */
+.card-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-block: 0.0625rem;
+    padding-inline: 0.4375rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--color-text);
+    background: color-mix(in oklch, currentColor 12%, transparent);
+}
+
+.card-status--active {
+    color: var(--color-primary);
+}

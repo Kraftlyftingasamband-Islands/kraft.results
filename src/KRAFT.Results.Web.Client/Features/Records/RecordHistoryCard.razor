@@ -5,6 +5,10 @@
 
     <div class="rhc-header-row">
         <div class="rhc-name-col">
+            @if (Entry.IsCurrent)
+            {
+                <span class="card-status card-status--active">Núverandi met</span>
+            }
             @if (Entry.IsStandard)
             {
                 <span class="rhc-standard-text">Íslenski staðallinn</span>
@@ -59,13 +63,9 @@
         {
             _cardCssClass = "card-spaced rhc-current";
         }
-        else if (Entry.IsStandard)
-        {
-            _cardCssClass = "card-spaced rhc-standard";
-        }
         else
         {
-            _cardCssClass = "card-spaced rhc-default";
+            _cardCssClass = "card-spaced";
         }
 
         string date = Entry.Date.ToString("dd.MM.yyyy");
