@@ -39,8 +39,8 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired] public List<EraSummary> Eras { get; set; } = default!;
-    [Parameter, EditorRequired] public string CurrentEraSlug { get; set; } = default!;
+    [Parameter, EditorRequired] public required List<EraSummary> Eras { get; set; }
+    [Parameter, EditorRequired] public required string CurrentEraSlug { get; set; }
     [Parameter] public string InitialEquipmentType { get; set; } = "classic";
     [Parameter] public string InitialEraSlug { get; set; } = "";
     [Parameter] public bool Disabled { get; set; }

@@ -47,7 +47,7 @@ else
 
 @code {
     [Parameter, EditorRequired]
-    public RecordEntry Record { get; set; } = null!;
+    public required RecordEntry Record { get; set; }
 
     private string _meta = string.Empty;
 

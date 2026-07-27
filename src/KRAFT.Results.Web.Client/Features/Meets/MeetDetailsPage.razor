@@ -65,24 +65,27 @@
             }
             <br />
             @Meet?.Location<br />
-            @if (Meet?.PhotoCount > 0)
+            @if (Meet is { PhotoCount: > 0 })
             {
-                <a href="/meets/@Slug/gallery" class="photo-count-link" aria-label="@($"{Meet!.PhotoCount} myndir af þessu móti")">
+                <a href="/meets/@Slug/gallery" class="photo-count-link" aria-label="@($"{Meet.PhotoCount} myndir af þessu móti")">
                     <svg class="photo-count-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                         <circle cx="12" cy="13" r="3"/>
                     </svg>
-                    @Meet!.PhotoCount myndir
+                    @Meet.PhotoCount myndir
                 </a>
             }
         </p>
 
         <AuthorizeView Roles="Admin">
-            <AddParticipantForm MeetId="Meet!.MeetId"
-                                IncludedDisciplines="IncludedDisciplines"
-                                MeetStartDate="Meet!.StartDate"
-                                RegisteredAthletes="@Participations.Select(p => p.AthleteSlug).ToHashSet()"
-                                OnParticipantAdded="ReloadParticipations" />
+            @if (Meet is not null)
+            {
+                <AddParticipantForm MeetId="Meet.MeetId"
+                                    IncludedDisciplines="IncludedDisciplines"
+                                    MeetStartDate="Meet.StartDate"
+                                    RegisteredAthletes="@Participations.Select(p => p.AthleteSlug).ToHashSet()"
+                                    OnParticipantAdded="ReloadParticipations" />
+            }
         </AuthorizeView>
 
         <SectionNav Links="_navLinks" />
@@ -182,7 +185,7 @@
             }
         </div>
 
-        @if (ShowTeamStandings)
+        @if (ShowTeamStandings && _teamPointsResponse is not null)
         {
             <h2 id="lidakeppni">Liðakeppni</h2>
 
@@ -190,7 +193,7 @@
                 @if (IsPreGenderSplit)
                 {
                     <ol class="standings-list">
-                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Combined)
+                        @foreach (TeamCompetitionStanding standing in _teamPointsResponse.Combined)
                         {
                             <li><StandingsCard Standing="standing" /></li>
                         }
@@ -199,12 +202,12 @@
                 else
                 {
                     <div class="standings-grid">
-                        @if (_teamPointsResponse!.Women.Count > 0)
+                        @if (_teamPointsResponse.Women.Count > 0)
                         {
                             <section class="standings-gender">
                                 <h4>@("f".ToGenderGroupLabel())</h4>
                                 <ol class="standings-list">
-                                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Women)
+                                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse.Women)
                                     {
                                         <li><StandingsCard Standing="standing" /></li>
                                     }
@@ -212,12 +215,12 @@
                             </section>
                         }
 
-                        @if (_teamPointsResponse!.Men.Count > 0)
+                        @if (_teamPointsResponse.Men.Count > 0)
                         {
                             <section class="standings-gender">
                                 <h4>@("m".ToGenderGroupLabel())</h4>
                                 <ol class="standings-list">
-                                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse!.Men)
+                                    @foreach (TeamCompetitionStanding standing in _teamPointsResponse.Men)
                                     {
                                         <li><StandingsCard Standing="standing" /></li>
                                     }
@@ -226,7 +229,7 @@
                         }
                     </div>
 
-                    @if (_teamPointsResponse!.Women.Count == 0 && _teamPointsResponse!.Men.Count == 0)
+                    @if (_teamPointsResponse.Women.Count == 0 && _teamPointsResponse.Men.Count == 0)
                     {
                         <div class="empty-section">Engar niðurstöður.</div>
                     }
@@ -290,7 +293,7 @@
     private readonly Dictionary<Guid, CancellationTokenSource> _toastTimers = [];
     private readonly CancellationTokenSource _disposeCts = new();
 
-    private ConfirmDialog _deleteDialog = null!;
+    private ConfirmDialog? _deleteDialog;
     private bool _isDeleting;
     private string? _deleteErrorMessage;
     private bool _isAdmin;
@@ -502,7 +505,7 @@
                 .GroupBy(a => a.Discipline)
                 .ToDictionary(g => g.Key, g => g.Any(a => a.Weight > 0));
 
-            IncludedDisciplines = Meet!.Disciplines
+            IncludedDisciplines = (Meet?.Disciplines ?? [])
                 .ToDictionary(d => d, d => attemptWeights.GetValueOrDefault(d, false));
 
             ShowIpfPoints = Participations.Any(x => x.IpfPoints > 0);
@@ -518,7 +521,7 @@
     private async Task ShowDeleteDialog()
     {
         _deleteErrorMessage = null;
-        await _deleteDialog.ShowAsync();
+        await (_deleteDialog?.ShowAsync() ?? Task.CompletedTask);
     }
 
     private async Task HandleDelete()

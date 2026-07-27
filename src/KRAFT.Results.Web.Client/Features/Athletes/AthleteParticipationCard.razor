@@ -53,7 +53,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public AthleteParticipation Participation { get; set; } = null!;
+    public required AthleteParticipation Participation { get; set; }
 
     [Parameter, EditorRequired]
     public string MeetType { get; set; } = string.Empty;

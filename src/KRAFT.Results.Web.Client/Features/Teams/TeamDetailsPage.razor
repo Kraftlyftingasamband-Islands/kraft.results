@@ -83,7 +83,7 @@
 </DataLoader>
 
 @code {
-    private ConfirmDialog _deleteDialog = null!;
+    private ConfirmDialog? _deleteDialog;
     private bool _isDeleting;
     private string? _deleteErrorMessage;
 
@@ -98,7 +98,7 @@
     private async Task ShowDeleteDialog()
     {
         _deleteErrorMessage = null;
-        await _deleteDialog.ShowAsync();
+        await (_deleteDialog?.ShowAsync() ?? Task.CompletedTask);
     }
 
     private async Task HandleDelete()
