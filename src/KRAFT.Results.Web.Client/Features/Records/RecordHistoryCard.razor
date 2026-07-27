@@ -5,6 +5,10 @@
 
     <div class="rhc-header-row">
         <div class="rhc-name-col">
+            @if (Entry.IsCurrent)
+            {
+                <span class="card-status card-status--active">Núverandi met</span>
+            }
             @if (Entry.IsStandard)
             {
                 <span class="rhc-standard-text">Íslenski staðallinn</span>
