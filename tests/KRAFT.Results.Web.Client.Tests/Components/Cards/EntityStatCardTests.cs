@@ -567,6 +567,127 @@ public sealed class EntityStatCardTests : IDisposable
         cut.FindAll(".esc-leading--medal").Count.ShouldBe(0);
     }
 
+    // Fix 1 — protocol-relative URL rejection
+    [Fact]
+    public void WhenNameHrefIsProtocolRelative_RendersNameAsSpanNotAnchor()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.NameHref, "//attacker.example.com")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement nameEl = cut.Find(".esc-name");
+        nameEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenValueHrefIsProtocolRelative_RendersValueAsSpanNotAnchor()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "500")
+                .Add(c => c.ValueHref, "//attacker.example.com"));
+
+        // Assert
+        AngleSharp.Dom.IElement valueEl = cut.Find(".esc-value");
+        valueEl.TagName.ShouldBe("SPAN");
+    }
+
+    // Fix 2 — non-medal rank accessible label
+    [Fact]
+    public void WhenLeadingIsNonMedalRank_RendersRoleImgOnRankSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(4);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-leading--rank").GetAttribute("role").ShouldBe("img");
+    }
+
+    [Fact]
+    public void WhenLeadingIsNonMedalRank_RendersAriaLabelOnRankSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(4);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-leading--rank").GetAttribute("aria-label").ShouldBe("4. sæti");
+    }
+
+    [Fact]
+    public void WhenLeadingIsRank0_RendersNoRoleOrAriaLabelOnRankSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Rank(0);
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement rankSpan = cut.Find(".esc-leading--rank");
+        rankSpan.GetAttribute("role").ShouldBeNull();
+        rankSpan.GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    // Fix 3 — clipped entity name title fallback
+    [Fact]
+    public void WhenNameHrefIsNull_NameSpanHasTitleAttribute()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Sigríður Halldórsdóttir")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-name").GetAttribute("title").ShouldBe("Sigríður Halldórsdóttir");
+    }
+
+    [Fact]
+    public void WhenNameHrefIsSet_NameNavLinkHasTitleAttribute()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Sigríður Halldórsdóttir")
+                .Add(c => c.NameHref, "/athletes/sigridur")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        cut.Find(".esc-name").GetAttribute("title").ShouldBe("Sigríður Halldórsdóttir");
+    }
+
     public void Dispose()
     {
         _context.Dispose();

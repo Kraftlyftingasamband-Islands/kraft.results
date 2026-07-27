@@ -11,6 +11,9 @@
                 case CardLeading.RankLeading rank when rank.IsMedal:
                     <span class="esc-leading esc-leading--medal" role="img" aria-label="@rank.AriaLabel">@rank.Display</span>
                     break;
+                case CardLeading.RankLeading { AriaLabel: not null } rank:
+                    <span class="esc-leading esc-leading--rank" role="img" aria-label="@rank.AriaLabel">@rank.Display</span>
+                    break;
                 case CardLeading.RankLeading rank:
                     <span class="esc-leading esc-leading--rank">@rank.Display</span>
                     break;
@@ -29,11 +32,11 @@
             <div class="esc-name-row">
                 @if (string.IsNullOrEmpty(_safeNameHref))
                 {
-                    <span class="esc-name">@Name</span>
+                    <span class="esc-name" title="@Name">@Name</span>
                 }
                 else
                 {
-                    <NavLink class="esc-name" href="@_safeNameHref">@Name</NavLink>
+                    <NavLink class="esc-name" href="@_safeNameHref" title="@Name">@Name</NavLink>
                 }
             </div>
             @if (Pills is { Count: > 0 })
@@ -128,5 +131,5 @@
     }
 
     private static bool IsRelativeHref(string? href) =>
-        !string.IsNullOrEmpty(href) && (href[0] == '/' || href[0] == '#');
+        !string.IsNullOrEmpty(href) && ((href[0] == '/' && (href.Length < 2 || href[1] != '/')) || href[0] == '#');
 }

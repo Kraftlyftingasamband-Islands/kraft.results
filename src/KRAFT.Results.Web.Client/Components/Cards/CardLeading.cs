@@ -26,7 +26,9 @@ public abstract record CardLeading
 
         public bool IsMedal => Value is 1 or 2 or 3;
 
-        public string AriaLabel => IsMedal ? $"{Value}. sæti" : string.Empty;
+        public string? AriaLabel => Value > 0
+            ? $"{Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}. sæti"
+            : null;
     }
 
     public sealed record BadgeLeading(string Text) : CardLeading;

@@ -195,7 +195,7 @@ public sealed class CardLeadingTests
         CardLeading.RankLeading sut = new(1);
 
         // Act
-        string ariaLabel = sut.AriaLabel;
+        string? ariaLabel = sut.AriaLabel;
 
         // Assert
         ariaLabel.ShouldBe("1. sæti");
@@ -208,7 +208,7 @@ public sealed class CardLeadingTests
         CardLeading.RankLeading sut = new(2);
 
         // Act
-        string ariaLabel = sut.AriaLabel;
+        string? ariaLabel = sut.AriaLabel;
 
         // Assert
         ariaLabel.ShouldBe("2. sæti");
@@ -221,35 +221,61 @@ public sealed class CardLeadingTests
         CardLeading.RankLeading sut = new(3);
 
         // Act
-        string ariaLabel = sut.AriaLabel;
+        string? ariaLabel = sut.AriaLabel;
 
         // Assert
         ariaLabel.ShouldBe("3. sæti");
     }
 
     [Fact]
-    public void WhenRankIsFour_AriaLabelIsEmpty()
+    public void WhenRankIsFour_AriaLabelIsIcelandicFourthPlace()
     {
         // Arrange
         CardLeading.RankLeading sut = new(4);
 
         // Act
-        string ariaLabel = sut.AriaLabel;
+        string? ariaLabel = sut.AriaLabel;
 
         // Assert
-        ariaLabel.ShouldBe(string.Empty);
+        ariaLabel.ShouldBe("4. sæti");
     }
 
     [Fact]
-    public void WhenRankIsZero_AriaLabelIsEmpty()
+    public void WhenRankIsGreaterThanThree_AriaLabelIsIcelandicPlacement()
+    {
+        // Arrange
+        CardLeading.RankLeading sut = new(10);
+
+        // Act
+        string? ariaLabel = sut.AriaLabel;
+
+        // Assert
+        ariaLabel.ShouldBe("10. sæti");
+    }
+
+    [Fact]
+    public void WhenRankIsZero_AriaLabelIsNull()
     {
         // Arrange
         CardLeading.RankLeading sut = new(0);
 
         // Act
-        string ariaLabel = sut.AriaLabel;
+        string? ariaLabel = sut.AriaLabel;
 
         // Assert
-        ariaLabel.ShouldBe(string.Empty);
+        ariaLabel.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenRankIsNegative_AriaLabelIsNull()
+    {
+        // Arrange
+        CardLeading.RankLeading sut = new(-1);
+
+        // Act
+        string? ariaLabel = sut.AriaLabel;
+
+        // Assert
+        ariaLabel.ShouldBeNull();
     }
 }
