@@ -1,0 +1,26 @@
+.esc-pill {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.1rem 0.375rem;
+    border-radius: 3px;
+    line-height: 1.4;
+    color: var(--color-text-secondary);
+}
+
+/* Tint tokens are added in Step 4 (app.css); these classes reference them here */
+.esc-pill--weight {
+    background: var(--pill-tint-weight);
+}
+
+.esc-pill--age {
+    background: var(--pill-tint-age);
+}
+
+.esc-pill--equipment {
+    background: var(--pill-tint-equipment);
+}
+
+.esc-pill--neutral {
+    background: var(--pill-tint-neutral);
+}
