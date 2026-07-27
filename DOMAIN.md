@@ -4,6 +4,24 @@ Domain concepts for KRAFT.Results — a powerlifting competition results managem
 
 ---
 
+## Meet Visibility
+
+### PublishedResults vs. having results
+
+`PublishedResults` is a **manually set flag** on the Meet — an editorial decision to make the meet's results page public. It defaults to `true` at meet creation and says nothing about whether result data exists. A meet can be published yet empty.
+
+### Has actual results
+
+A meet **has actual results** when at least one of its participations has at least one recorded attempt. This is a **data-existence check**, independent of `PublishedResults`. A meet where every lifter bombed out (all totals 0) still has actual results — the attempts happened.
+
+The strictness ladder, for reference: has participants (registrations only) < has recorded attempts (**the chosen definition**) < has a valid total (`Total > 0`, the idiom used for individual-athlete result checks in rankings and records).
+
+### Dashboard eligibility for past meets
+
+The dashboard's recent-meets list shows only past meets (`StartDate <= today`) that are published (`PublishedResults`) **and** have actual results. The filter is role-agnostic — admins see the same list; empty past meets remain reachable via the meets index, which deliberately lists all meets.
+
+---
+
 ## Bans and Disqualification
 
 ### Ban
