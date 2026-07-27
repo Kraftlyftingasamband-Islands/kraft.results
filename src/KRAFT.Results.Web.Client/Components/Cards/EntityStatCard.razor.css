@@ -1,0 +1,164 @@
+.esc {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 0;
+}
+
+.esc-leading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.esc-leading--rank {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.esc-leading--medal {
+    font-size: 1.25rem;
+    line-height: 1;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.esc-leading--badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    background: var(--pill-tint-neutral);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.esc-image {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.esc-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
+
+.esc-name-row {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+::deep span.esc-name,
+::deep a.esc-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+::deep a.esc-name {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+::deep a.esc-name:hover {
+    color: var(--color-primary-dark);
+}
+
+/* ≥44px touch target — transparent overlay keeps the visual size */
+::deep a.esc-name::before {
+    content: "";
+    position: absolute;
+    inset-block: -50%;
+    inset-inline: -6px;
+    min-block-size: 44px;
+}
+
+.esc-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
+.esc-meta {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.esc-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: end;
+    flex-shrink: 0;
+}
+
+.esc-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+::deep span.esc-value,
+::deep a.esc-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+::deep a.esc-value {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+::deep a.esc-value:hover {
+    color: var(--color-primary-dark);
+}
+
+/* ≥44px touch target for value links */
+::deep a.esc-value::before {
+    content: "";
+    position: absolute;
+    inset-block: -50%;
+    inset-inline: -6px;
+    min-block-size: 44px;
+}
+
+.esc-unit {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-inline-start: 2px;
+}
+
+@container (min-width: 680px) {
+    .esc {
+        column-gap: 12px;
+        padding-inline: 4px;
+    }
+
+    .esc-stat {
+        min-width: 4.5rem;
+    }
+}

@@ -1,0 +1,118 @@
+@namespace KRAFT.Results.Web.Client.Components.Cards
+@using System.Diagnostics
+@using Microsoft.AspNetCore.Components.Routing
+
+<Card Compact CssClass="@CssClass">
+    <div class="esc">
+        @if (Leading is not null)
+        {
+            @switch (Leading)
+            {
+                case CardLeading.RankLeading rank when rank.IsMedal:
+                    <span class="esc-leading esc-leading--medal" role="img" aria-label="@rank.AriaLabel">@rank.Display</span>
+                    break;
+                case CardLeading.RankLeading rank:
+                    <span class="esc-leading esc-leading--rank">@rank.Display</span>
+                    break;
+                case CardLeading.BadgeLeading badge:
+                    <span class="esc-leading esc-leading--badge">@badge.Text</span>
+                    break;
+                default:
+                    throw new UnreachableException($"Unknown CardLeading variant: {Leading.GetType().Name}");
+            }
+        }
+        @if (Image is not null)
+        {
+            <div class="esc-image">@Image</div>
+        }
+        <div class="esc-body">
+            <div class="esc-name-row">
+                @if (string.IsNullOrEmpty(NameHref))
+                {
+                    <span class="esc-name">@Name</span>
+                }
+                else
+                {
+                    <NavLink class="esc-name" href="@NameHref">@Name</NavLink>
+                }
+            </div>
+            @if (Pills is { Count: > 0 })
+            {
+                <div class="esc-pills">
+                    @foreach (MetaPill pill in Pills.OrderBy(p => p.Kind))
+                    {
+                        <Pill Value="@pill" />
+                    }
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(MetaText))
+            {
+                <div class="esc-meta">@MetaText</div>
+            }
+        </div>
+        <div class="esc-stat">
+            @if (!string.IsNullOrEmpty(Label))
+            {
+                <div class="esc-label">@Label</div>
+            }
+            @if (string.IsNullOrEmpty(ValueHref))
+            {
+                <span class="esc-value">
+                    @Value
+                    @if (!string.IsNullOrEmpty(Unit))
+                    {
+                        <span class="esc-unit">@Unit</span>
+                    }
+                </span>
+            }
+            else
+            {
+                <NavLink class="esc-value" href="@ValueHref" aria-label="@ValueAriaLabel">
+                    @Value
+                    @if (!string.IsNullOrEmpty(Unit))
+                    {
+                        <span class="esc-unit">@Unit</span>
+                    }
+                </NavLink>
+            }
+        </div>
+    </div>
+</Card>
+
+@code {
+    [Parameter]
+    public CardLeading? Leading { get; set; }
+
+    [Parameter]
+    public RenderFragment? Image { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+
+    [Parameter]
+    public string? NameHref { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<MetaPill> Pills { get; set; } = [];
+
+    [Parameter]
+    public string? MetaText { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string Value { get; set; }
+
+    [Parameter]
+    public string? Unit { get; set; }
+
+    [Parameter]
+    public string? ValueHref { get; set; }
+
+    [Parameter]
+    public string? ValueAriaLabel { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+}
