@@ -117,8 +117,6 @@
 
 .esc-label {
     font-size: 0.6875rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -126,9 +124,6 @@
 ::deep span.esc-value,
 ::deep a.esc-value {
     font-size: 1.125rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--color-text);
     white-space: nowrap;
 }
 
@@ -153,8 +148,6 @@
 
 .esc-unit {
     font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
     margin-inline-start: 2px;
 }
 

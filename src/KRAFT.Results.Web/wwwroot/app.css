@@ -541,6 +541,26 @@ h1:focus {
     color: var(--color-text-muted);
 }
 
+/* Shared numeric typography — consumed by EntityStatCard and season stat tiles.
+   Font-size is intentionally omitted so each consumer sets its own size:
+   EntityStatCard uses 1.125rem; season tiles use ~1.625rem (set in step 6). */
+.stat-value {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+}
+
+.stat-label {
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
+.stat-unit {
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
 /* Badge — shared pill label used across Dashboard records and User roles */
 .badge {
     display: inline-block;
