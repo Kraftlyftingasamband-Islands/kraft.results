@@ -26,7 +26,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await Expect(heading).ToContainTextAsync("Karlar", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(heading).ToContainTextAsync("Opinn flokkur", new LocatorAssertionsToContainTextOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        ILocator recordCards = page.Locator(".record-section .rc-card");
+        ILocator recordCards = page.Locator(".record-section .card");
         await Expect(recordCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(recordCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
@@ -44,7 +44,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
         await Expect(heading).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
         // Assert
-        ILocator recordCards = page.Locator(".record-section .rc-card");
+        ILocator recordCards = page.Locator(".record-section .card");
         await Expect(recordCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(recordCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
@@ -69,7 +69,7 @@ public class RecordsPageTests(PlaywrightFixture fixture)
             new Regex("era=current-era"),
             new PageAssertionsToHaveURLOptions { Timeout = PageConstants.DefaultTimeoutMs });
 
-        ILocator recordCards = page.Locator(".record-section .rc-card");
+        ILocator recordCards = page.Locator(".record-section .card");
         await Expect(recordCards.First).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = PageConstants.DefaultTimeoutMs });
         await Expect(recordCards).Not.ToHaveCountAsync(0, new LocatorAssertionsToHaveCountOptions { Timeout = PageConstants.DefaultTimeoutMs });
     }
