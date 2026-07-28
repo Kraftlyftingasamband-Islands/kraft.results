@@ -66,7 +66,7 @@ public sealed class RecordHistoryPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".rhc-list .rhc-card").Count.ShouldBe(1);
+            cut.FindAll(".rhc-list .card").Count.ShouldBe(1);
         });
     }
 
