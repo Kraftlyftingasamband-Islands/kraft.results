@@ -8,7 +8,7 @@
     color: var(--color-text-secondary);
 }
 
-/* Tint tokens are added in Step 4 (app.css); these classes reference them here */
+/* Tint tokens are defined in app.css :root; these classes reference them */
 .esc-pill--weight {
     background: var(--pill-tint-weight);
 }
@@ -17,8 +17,14 @@
     background: var(--pill-tint-age);
 }
 
-.esc-pill--equipment {
-    background: var(--pill-tint-equipment);
+.esc-pill--equipment-classic {
+    background: var(--pill-tint-equipment-classic);
+    color: var(--pill-text-equipment-classic);
+}
+
+.esc-pill--equipment-equipped {
+    background: var(--pill-tint-equipment-equipped);
+    color: var(--pill-text-equipment-equipped);
 }
 
 .esc-pill--neutral {

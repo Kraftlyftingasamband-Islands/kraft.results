@@ -28,8 +28,13 @@
     /* Pill tint tokens — kind-keyed background tints for Pill component */
     --pill-tint-weight:    color-mix(in oklch, var(--color-primary)    14%, transparent);
     --pill-tint-age:       color-mix(in oklch, var(--color-success)    14%, transparent);
-    --pill-tint-equipment: color-mix(in oklch, var(--color-text)       15%, transparent);
     --pill-tint-neutral:   color-mix(in oklch, var(--color-text-muted) 13%, transparent);
+
+    /* Equipment pill — hex-snapped tokens (dark-mode overrides deferred to #377) */
+    --pill-tint-equipment-classic:  #eff6ff;
+    --pill-text-equipment-classic:  #2563eb;
+    --pill-tint-equipment-equipped: #fef3c7;
+    --pill-text-equipment-equipped: #b45309;
 }
 
 *, *::before, *::after {
