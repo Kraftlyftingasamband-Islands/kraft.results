@@ -1,7 +1,7 @@
 @using KRAFT.Results.Contracts.Records
 @using KRAFT.Results.Web.Client.Components.Cards
 
-<EntityStatCard Leading="CardLeading.Badge(Record.WeightCategory)"
+<EntityStatCard Leading="@_leading"
                 Name="@_name"
                 NameHref="@_nameHref"
                 Pills="@_pills"
@@ -9,31 +9,37 @@
                 Value="@_value"
                 Unit="kg"
                 ValueHref="@_valueHref"
+                ValueAriaLabel="@_valueAriaLabel"
                 CssClass="card-spaced" />
 
 @code {
     [Parameter, EditorRequired]
     public required RecordEntry Record { get; set; }
 
+    private CardLeading _leading = CardLeading.Badge(string.Empty);
     private string _name = string.Empty;
     private string? _nameHref;
     private IReadOnlyList<MetaPill> _pills = [];
     private string? _metaText;
     private string _value = string.Empty;
     private string? _valueHref;
+    private string _valueAriaLabel = string.Empty;
 
     protected override void OnParametersSet()
     {
         if (Record.IsStandard)
         {
+            _leading = CardLeading.Badge(Record.WeightCategory);
             _name = "Íslenski staðallinn";
             _nameHref = null;
             _pills = [];
             _metaText = null;
             _valueHref = null;
+            _valueAriaLabel = string.Empty;
         }
         else
         {
+            _leading = CardLeading.Badge(Record.WeightCategory, $"/records/{Record.Id}/history");
             _name = Record.Athlete ?? "-";
             _nameHref = Record.AthleteSlug is not null
                 ? SlugSanitizer.SlugHref("/athletes/", Record.AthleteSlug)
@@ -59,5 +65,9 @@
         }
 
         _value = Record.Weight.ToString("F1");
+
+        _valueAriaLabel = _valueHref is not null
+            ? $"{_value} kg, opna mót"
+            : string.Empty;
     }
 }

@@ -117,6 +117,61 @@ public sealed class EntityStatCardTests : IDisposable
     }
 
     [Fact]
+    public void WhenLeadingIsBadgeWithNoHref_RendersBadgeAsSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find(".esc-leading--badge");
+        badgeEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithHref_RendersBadgeAsAnchor()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83", "/records/1/history");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find(".esc-leading--badge");
+        badgeEl.TagName.ShouldBe("A");
+        badgeEl.GetAttribute("href").ShouldBe("/records/1/history");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithNonRelativeHref_RendersBadgeAsSpanNotAnchor()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83", "https://evil.example.com");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find(".esc-leading--badge");
+        badgeEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
     public void WhenNameHrefIsNull_RendersNameAsSpan()
     {
         // Arrange

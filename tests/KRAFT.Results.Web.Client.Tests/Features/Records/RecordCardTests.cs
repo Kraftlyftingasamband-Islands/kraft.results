@@ -14,7 +14,7 @@ public sealed class RecordCardTests : IDisposable
     private readonly BunitContext _context = new();
 
     [Fact]
-    public void WhenNonStandard_RenderesBadgeWithWeightCategory()
+    public void WhenNonStandard_RendersBadgeWithWeightCategory()
     {
         // Arrange
         RecordEntry entry = new(
@@ -35,6 +35,56 @@ public sealed class RecordCardTests : IDisposable
 
         // Assert
         cut.Find(".esc-leading--badge").TextContent.ShouldBe("83");
+    }
+
+    [Fact]
+    public void WhenNonStandard_RendersBadgeAsAnchorLinkingToRecordHistory()
+    {
+        // Arrange
+        RecordEntry entry = new(
+            Id: 42,
+            WeightCategory: "83",
+            Athlete: "Jón Jónsson",
+            AthleteSlug: "jon-jonsson",
+            BirthYear: 1990,
+            BodyWeight: 82.5m,
+            Weight: 220.5m,
+            Date: new DateOnly(2024, 3, 15),
+            MeetSlug: "nationals-2024",
+            IsStandard: false);
+
+        // Act
+        IRenderedComponent<RecordCard> cut = _context.Render<RecordCard>(
+            parameters => parameters.Add(p => p.Record, entry));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeLink = cut.Find("a.esc-leading--badge");
+        badgeLink.GetAttribute("href").ShouldBe("/records/42/history");
+        badgeLink.TextContent.ShouldBe("83");
+    }
+
+    [Fact]
+    public void WhenNonStandard_ValueLinkHasMeetAriaLabel()
+    {
+        // Arrange
+        RecordEntry entry = new(
+            Id: 1,
+            WeightCategory: "83",
+            Athlete: "Jón Jónsson",
+            AthleteSlug: "jon-jonsson",
+            BirthYear: null,
+            BodyWeight: null,
+            Weight: 120.0m,
+            Date: new DateOnly(2024, 3, 15),
+            MeetSlug: "nationals-2024",
+            IsStandard: false);
+
+        // Act
+        IRenderedComponent<RecordCard> cut = _context.Render<RecordCard>(
+            parameters => parameters.Add(p => p.Record, entry));
+
+        // Assert
+        cut.Find("a.esc-value").GetAttribute("aria-label").ShouldBe("120.0 kg, opna mót");
     }
 
     [Fact]
@@ -288,6 +338,31 @@ public sealed class RecordCardTests : IDisposable
 
         // Assert
         cut.Find(".esc-leading--badge").TextContent.ShouldBe("83");
+    }
+
+    [Fact]
+    public void WhenStandard_RendersBadgeAsPlainSpanWithNoHistoryLink()
+    {
+        // Arrange
+        RecordEntry entry = new(
+            Id: 1,
+            WeightCategory: "83",
+            Athlete: "Jón Jónsson",
+            AthleteSlug: "jon-jonsson",
+            BirthYear: 1990,
+            BodyWeight: 82.5m,
+            Weight: 220.5m,
+            Date: new DateOnly(2024, 3, 15),
+            MeetSlug: "nationals-2024",
+            IsStandard: true);
+
+        // Act
+        IRenderedComponent<RecordCard> cut = _context.Render<RecordCard>(
+            parameters => parameters.Add(p => p.Record, entry));
+
+        // Assert
+        cut.Find("span.esc-leading--badge").ShouldNotBeNull();
+        cut.FindAll("a.esc-leading--badge").Count.ShouldBe(0);
     }
 
     [Fact]

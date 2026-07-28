@@ -33,6 +33,32 @@ public sealed class CardLeadingTests
     }
 
     [Fact]
+    public void WhenBadgeFactoryCalled_HrefIsNull()
+    {
+        // Arrange
+
+        // Act
+        CardLeading result = CardLeading.Badge("83");
+
+        // Assert
+        CardLeading.BadgeLeading leading = result.ShouldBeOfType<CardLeading.BadgeLeading>();
+        leading.Href.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenBadgeFactoryCalledWithHref_ReturnsBadgeLeadingWithHref()
+    {
+        // Arrange
+
+        // Act
+        CardLeading result = CardLeading.Badge("83", "/records/1/history");
+
+        // Assert
+        CardLeading.BadgeLeading leading = result.ShouldBeOfType<CardLeading.BadgeLeading>();
+        leading.Href.ShouldBe("/records/1/history");
+    }
+
+    [Fact]
     public void WhenRankIsOne_DisplayIsGoldMedalGlyph()
     {
         // Arrange
