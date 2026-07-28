@@ -1,30 +1,16 @@
 @using KRAFT.Results.Contracts.Rankings
+@using KRAFT.Results.Web.Client.Components.Cards
 
-<Card Compact="true" CssClass="card-spaced">
-<div class="r-card">
-    <div class="r-header-row">
-        <div class="r-rank @_rankClass" aria-hidden="true">@_rankDisplay</div>
-        <div class="r-name-col">
-            <NavLink class="r-name" href="@($"/athletes/{Entry.AthleteSlug}")">@Entry.Athlete</NavLink>
-            <span class="r-meta">@Entry.WeightCategory kg · @Entry.BodyWeight.ToString("F2") kg · @Entry.Result.ToString("F1") @DisciplineLabel</span>
-        </div>
-        @if (Entry.IpfPoints.HasValue)
-        {
-            <div class="r-ipf-col">
-                <span class="r-ipf-label">IPF stig</span>
-                @if (IpfPointsHref is not null)
-                {
-                    <NavLink class="r-ipf" href="@IpfPointsHref">@Entry.IpfPoints.Value.ToString("F2")</NavLink>
-                }
-                else
-                {
-                    <span class="r-ipf">@Entry.IpfPoints.Value.ToString("F2")</span>
-                }
-            </div>
-        }
-    </div>
-</div>
-</Card>
+<EntityStatCard Leading="CardLeading.Rank(Entry.Rank)"
+                Name="@Entry.Athlete"
+                NameHref="@SlugSanitizer.SlugHref("/athletes/", Entry.AthleteSlug)"
+                Pills="@_pills"
+                MetaText="@_metaText"
+                Label="IPF stig"
+                Value="@_value"
+                ValueHref="@_valueHref"
+                ValueAriaLabel="@_valueAriaLabel"
+                CssClass="card-spaced" />
 
 @code {
     [Parameter, EditorRequired]
@@ -33,22 +19,34 @@
     [Parameter]
     public string DisciplineLabel { get; set; } = string.Empty;
 
-    [Parameter]
-    public string? IpfPointsHref { get; set; }
-
-    private string _rankDisplay = string.Empty;
-    private string _rankClass = string.Empty;
+    private IReadOnlyList<MetaPill> _pills = [];
+    private string _metaText = string.Empty;
+    private string _value = string.Empty;
+    private string? _valueHref;
+    private string _valueAriaLabel = string.Empty;
 
     protected override void OnParametersSet()
     {
-        _rankDisplay = Entry.Rank switch
-        {
-            1 => "🥇",
-            2 => "🥈",
-            3 => "🥉",
-            _ => Entry.Rank.ToString(),
-        };
+        _pills =
+        [
+            new MetaPill(PillKind.Neutral, $"{Entry.WeightCategory} kg"),
+            new MetaPill(PillKind.Neutral, $"{Entry.BodyWeight:F2} kg"),
+        ];
 
-        _rankClass = Entry.Rank is 1 or 2 or 3 ? "rank-medal" : string.Empty;
+        _metaText = $"{Entry.Result:F1} {DisciplineLabel}";
+
+        if (Entry.IpfPoints.HasValue)
+        {
+            string formatted = Entry.IpfPoints.Value.ToString("F2");
+            _value = formatted;
+            _valueHref = SlugSanitizer.SlugHref("/meets/", Entry.MeetSlug);
+            _valueAriaLabel = $"{formatted} IPF stig, opna mót";
+        }
+        else
+        {
+            _value = "-";
+            _valueHref = null;
+            _valueAriaLabel = string.Empty;
+        }
     }
 }

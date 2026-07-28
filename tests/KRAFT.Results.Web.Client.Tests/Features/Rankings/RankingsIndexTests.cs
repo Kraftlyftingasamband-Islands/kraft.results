@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -65,7 +66,7 @@ public sealed class RankingsIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".rankings-list .r-card").Count.ShouldBe(2);
+            cut.FindAll(".rankings-list .card").Count.ShouldBe(2);
         });
     }
 
@@ -80,6 +81,117 @@ public sealed class RankingsIndexTests : IDisposable
 
         // Assert — filter bar is outside DataLoader and always renders
         cut.Find(".filter-bar").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenRendered_AthleteLinkAndPillsAppear()
+    {
+        // Arrange
+        PagedResponse<RankingEntry> response = MakeResponse(items:
+        [
+            new(3, "Gunnar Gunnarsson", "gunnar-gunnarsson", "m", 320m, "93", 91.5m, 450.25m, 380m, "spring-2024", true, new DateOnly(2024, 5, 1)),
+        ]);
+        RegisterHttpClient(response);
+
+        // Act
+        IRenderedComponent<RankingsIndex> cut = _context.Render<RankingsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement nameLink = cut.Find("a.esc-name");
+            nameLink.GetAttribute("href").ShouldBe("/athletes/gunnar-gunnarsson");
+            nameLink.TextContent.ShouldBe("Gunnar Gunnarsson");
+
+            cut.FindAll(".esc-pill").Count.ShouldBe(2);
+        });
+    }
+
+    [Fact]
+    public void WhenIpfPointsHasValue_ValueRendersAsLinkToMeetWithAriaLabel()
+    {
+        // Arrange
+        decimal ipfPoints = 450.25m;
+        string formatted = ipfPoints.ToString("F2", CultureInfo.CurrentCulture);
+        PagedResponse<RankingEntry> response = MakeResponse(items:
+        [
+            new(1, "Gunnar Gunnarsson", "gunnar-gunnarsson", "m", 320m, "93", 91.5m, ipfPoints, 380m, "spring-2024", true, new DateOnly(2024, 5, 1)),
+        ]);
+        RegisterHttpClient(response);
+
+        // Act
+        IRenderedComponent<RankingsIndex> cut = _context.Render<RankingsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement valueLink = cut.Find("a.esc-value");
+            valueLink.GetAttribute("href").ShouldBe("/meets/spring-2024");
+            valueLink.GetAttribute("aria-label").ShouldBe($"{formatted} IPF stig, opna mót");
+            valueLink.TextContent.Trim().ShouldBe(formatted);
+        });
+    }
+
+    [Fact]
+    public void WhenIpfPointsIsNull_ValueRendersDash()
+    {
+        // Arrange
+        PagedResponse<RankingEntry> response = MakeResponse(items:
+        [
+            new(5, "Jón Jónsson", "jon-jonsson", "m", 200m, "83", 80m, null, 150m, "nationals-2024", true, new DateOnly(2024, 3, 15)),
+        ]);
+        RegisterHttpClient(response);
+
+        // Act
+        IRenderedComponent<RankingsIndex> cut = _context.Render<RankingsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("span.esc-value").TextContent.Trim().ShouldBe("-");
+        });
+    }
+
+    [Fact]
+    public void WhenRendered_MetaTextContainsResultAndDisciplineLabel()
+    {
+        // Arrange
+        decimal result = 200.5m;
+        string formattedResult = result.ToString("F1", CultureInfo.CurrentCulture);
+        PagedResponse<RankingEntry> response = MakeResponse(items:
+        [
+            new(1, "Jón Jónsson", "jon-jonsson", "m", result, "83", 80m, 350m, 150m, "nationals-2024", true, new DateOnly(2024, 3, 15)),
+        ]);
+        RegisterHttpClient(response);
+
+        // Act
+        IRenderedComponent<RankingsIndex> cut = _context.Render<RankingsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".esc-meta").TextContent.ShouldContain(formattedResult);
+        });
+    }
+
+    [Fact]
+    public void WhenRendered_LabelIsIpfStig()
+    {
+        // Arrange
+        PagedResponse<RankingEntry> response = MakeResponse(items:
+        [
+            new(1, "Jón Jónsson", "jon-jonsson", "m", 200m, "83", 80m, 350m, 150m, "nationals-2024", true, new DateOnly(2024, 3, 15)),
+        ]);
+        RegisterHttpClient(response);
+
+        // Act
+        IRenderedComponent<RankingsIndex> cut = _context.Render<RankingsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".esc-label").TextContent.ShouldBe("IPF stig");
+        });
     }
 
     public void Dispose()
