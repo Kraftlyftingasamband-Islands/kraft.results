@@ -10,6 +10,8 @@ public abstract record CardLeading
 
     public static CardLeading Badge(string text) => new BadgeLeading(text);
 
+    public static CardLeading Badge(string text, string? href) => new BadgeLeading(text, href);
+
     // CA1034: Nested types are intentionally public — they are sealed variants of a discriminated union.
     // The private constructor prevents external subtyping; callers pattern-match on RankLeading/BadgeLeading.
 #pragma warning disable CA1034
@@ -31,6 +33,6 @@ public abstract record CardLeading
             : null;
     }
 
-    public sealed record BadgeLeading(string Text) : CardLeading;
+    public sealed record BadgeLeading(string Text, string? Href = null) : CardLeading;
 #pragma warning restore CA1034
 }
