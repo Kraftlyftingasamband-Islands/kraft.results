@@ -117,6 +117,19 @@
     text-overflow: clip;
 }
 
+/* ≥44px touch target for anchors in the rich meta slot (RenderFragment content) */
+.esc-meta--rich ::deep a {
+    position: relative;
+}
+
+.esc-meta--rich ::deep a::before {
+    content: "";
+    position: absolute;
+    inset-block: -50%;
+    inset-inline: -6px;
+    min-block-size: 44px;
+}
+
 .esc-stat {
     grid-column: 4;
     display: flex;

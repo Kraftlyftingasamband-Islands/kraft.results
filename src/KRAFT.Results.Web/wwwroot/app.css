@@ -558,7 +558,10 @@ h1:focus {
 
 /* Card state overrides — modifier classes applied via CssClass to Card's article */
 .sc-card-first { --card-bg: color-mix(in oklch, var(--color-primary) 2%, transparent); }
-.rhc-current { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }
+.rhc-current {
+    --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent);
+    --color-text-muted: #5d6470; /* WCAG AA: ≥4.5:1 on the rhc-current tint */
+}
 .ap-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
 .p-card-dq { --card-bg: color-mix(in oklch, var(--color-text-muted) 8%, transparent); }
 .card-flush { --card-padding: 0; overflow: hidden; }
