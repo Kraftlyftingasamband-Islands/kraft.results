@@ -65,27 +65,27 @@
         <div class="esc-stat">
             @if (!string.IsNullOrEmpty(Label))
             {
-                <div class="esc-label">@Label</div>
+                <div class="esc-label stat-label">@Label</div>
             }
             @if (string.IsNullOrEmpty(_safeValueHref))
             {
-                <span class="esc-value">
+                <span class="esc-value stat-value">
                     @Value
                     @if (!string.IsNullOrEmpty(Unit))
                     {
-                        <span class="esc-unit">@Unit</span>
+                        <span class="esc-unit stat-unit">@Unit</span>
                     }
                 </span>
             }
             else
             {
-                <NavLink class="esc-value"
+                <NavLink class="esc-value stat-value"
                          href="@_safeValueHref"
                          aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
                     @Value
                     @if (!string.IsNullOrEmpty(Unit))
                     {
-                        <span class="esc-unit">@Unit</span>
+                        <span class="esc-unit stat-unit">@Unit</span>
                     }
                 </NavLink>
             }

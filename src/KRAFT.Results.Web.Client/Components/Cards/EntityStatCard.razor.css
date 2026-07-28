@@ -154,8 +154,6 @@ a.esc-leading--badge::before {
 
 .esc-label {
     font-size: 0.6875rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -163,9 +161,6 @@ a.esc-leading--badge::before {
 ::deep span.esc-value,
 ::deep a.esc-value {
     font-size: 1.125rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--color-text);
     white-space: nowrap;
 }
 
@@ -190,8 +185,6 @@ a.esc-leading--badge::before {
 
 .esc-unit {
     font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
     margin-inline-start: 2px;
 }
 
