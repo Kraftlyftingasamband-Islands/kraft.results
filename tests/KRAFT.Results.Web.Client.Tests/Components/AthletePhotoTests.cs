@@ -119,6 +119,84 @@ public sealed class AthletePhotoTests : IDisposable
         cut.Find($".athlete-photo.{expectedClass}").ShouldNotBeNull();
     }
 
+    [Fact]
+    public void RendersSrcset2x_WhenSizeIsSmall()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Small));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".athlete-photo img");
+        string? srcset = img.GetAttribute("srcset");
+        srcset.ShouldNotBeNull();
+        srcset.ShouldEndWith(" 2x");
+        srcset.ShouldContain("width=128");
+        srcset.ShouldContain("height=128");
+        srcset.ShouldContain("crop=auto");
+    }
+
+    [Fact]
+    public void RendersSrcset2x_WhenSizeIsLarge()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Large));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".athlete-photo img");
+        string? srcset = img.GetAttribute("srcset");
+        srcset.ShouldNotBeNull();
+        srcset.ShouldEndWith(" 2x");
+        srcset.ShouldContain("width=600");
+        srcset.ShouldContain("height=400");
+        srcset.ShouldContain("crop=auto");
+    }
+
+    [Fact]
+    public void SrcRemainsUnchanged_WhenSrcsetIsAdded_ForSmall()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Small));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".athlete-photo img");
+        img.GetAttribute("src").ShouldBe($"{ImageBaseUrl}/jondoe.jpg?width=64&height=64&crop=auto");
+    }
+
+    [Fact]
+    public void SrcRemainsUnchanged_WhenSrcsetIsAdded_ForLarge()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Large));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".athlete-photo img");
+        img.GetAttribute("src").ShouldBe($"{ImageBaseUrl}/jondoe.jpg?width=300&height=200&crop=auto");
+    }
+
     [Theory]
     [InlineData("../evil.png")]
     [InlineData("subdir/photo.png")]

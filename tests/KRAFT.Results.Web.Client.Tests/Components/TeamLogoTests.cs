@@ -100,6 +100,63 @@ public sealed class TeamLogoTests : IDisposable
         cut.Find($".team-logo.{expectedClass}").ShouldNotBeNull();
     }
 
+    [Fact]
+    public void RendersSrcset2x_WhenSizeIsMedium()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "thor.png")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        string? srcset = img.GetAttribute("srcset");
+        srcset.ShouldNotBeNull();
+        srcset.ShouldEndWith(" 2x");
+        srcset.ShouldContain("width=128");
+        srcset.ShouldContain("height=128");
+        srcset.ShouldContain("crop=auto");
+    }
+
+    [Fact]
+    public void RendersSrcset2x_WhenSizeIsLarge()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "thor.png")
+                .Add(c => c.Size, TeamLogoSize.Large));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        string? srcset = img.GetAttribute("srcset");
+        srcset.ShouldNotBeNull();
+        srcset.ShouldEndWith(" 2x");
+        srcset.ShouldContain("width=256");
+        srcset.ShouldContain("height=256");
+    }
+
+    [Fact]
+    public void SrcRemainsUnchanged_WhenSrcsetIsAdded_ForMedium()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "thor.png")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
+    }
+
     [Theory]
     [InlineData("../evil.png")]
     [InlineData("subdir/logo.png")]

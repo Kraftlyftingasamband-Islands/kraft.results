@@ -6,6 +6,7 @@
     @if (_isValidFilename)
     {
         <img src="@($"{_imageBaseUrl}/{Filename}{_sizeQuery}")"
+             srcset="@($"{_imageBaseUrl}/{Filename}{_sizeQuery2x} 2x")"
              alt="@Alt"
              loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
@@ -30,6 +31,7 @@
     private string _imageBaseUrl = "";
     private string _sizeClass = "";
     private string _sizeQuery = "";
+    private string _sizeQuery2x = "";
     private bool _isValidFilename;
 
     protected override void OnInitialized()
@@ -46,11 +48,13 @@
             _ => "athlete-photo--sm",
         };
 
-        _sizeQuery = Size switch
+        (int width, int height) dims = Size switch
         {
-            AthletePhotoSize.Large => "?width=300&height=200&crop=auto",
-            _ => "?width=64&height=64&crop=auto",
+            AthletePhotoSize.Large => (300, 200),
+            _ => (64, 64),
         };
+        _sizeQuery = $"?width={dims.width}&height={dims.height}&crop=auto";
+        _sizeQuery2x = $"?width={dims.width * 2}&height={dims.height * 2}&crop=auto";
 
         _isValidFilename = !string.IsNullOrEmpty(Filename)
             && !Filename.Contains('/')

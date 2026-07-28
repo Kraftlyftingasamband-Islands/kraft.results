@@ -6,6 +6,7 @@
     @if (_isValidFilename)
     {
         <img src="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery}")"
+             srcset="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery2x} 2x")"
              alt="@Alt"
              loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
@@ -30,6 +31,7 @@
     private string _teamLogoBaseUrl = "";
     private string _sizeClass = "";
     private string _sizeQuery = "";
+    private string _sizeQuery2x = "";
     private bool _isValidFilename;
 
     protected override void OnInitialized()
@@ -47,11 +49,14 @@
             _ => "team-logo--md",
         };
 
-        _sizeQuery = Size switch
+        (int width, int height, bool crop) dims = Size switch
         {
-            TeamLogoSize.Large => "?width=128&height=128",
-            _ => "?width=64&height=64&crop=auto",
+            TeamLogoSize.Large => (128, 128, false),
+            _ => (64, 64, true),
         };
+        string cropSuffix = dims.crop ? "&crop=auto" : "";
+        _sizeQuery = $"?width={dims.width}&height={dims.height}{cropSuffix}";
+        _sizeQuery2x = $"?width={dims.width * 2}&height={dims.height * 2}{cropSuffix}";
 
         _isValidFilename = Filename is not null
             && !Filename.Contains('/')
