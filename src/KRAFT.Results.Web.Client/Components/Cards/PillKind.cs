@@ -4,6 +4,7 @@ public enum PillKind
 {
     WeightCategory,
     AgeCategory,
-    Equipment,
+    EquipmentClassic,
+    EquipmentEquipped,
     Neutral,
 }

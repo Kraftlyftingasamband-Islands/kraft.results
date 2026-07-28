@@ -269,7 +269,7 @@ public sealed class EntityStatCardTests : IDisposable
         List<AngleSharp.Dom.IElement> pillEls = cut.FindAll(".esc-pills .esc-pill").ToList();
         pillEls.Count.ShouldBe(2);
 
-        // WeightCategory (0) sorts before Neutral (3)
+        // WeightCategory (0) sorts before Neutral (4)
         pillEls[0].TextContent.Trim().ShouldBe("-83kg");
         pillEls[1].TextContent.Trim().ShouldBe("IPF");
     }
