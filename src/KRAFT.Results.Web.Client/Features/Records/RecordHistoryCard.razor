@@ -1,24 +1,13 @@
 @using KRAFT.Results.Contracts.Records
 @using KRAFT.Results.Web.Client.Components.Cards
 
-@if (Entry.IsStandard)
-{
-    <EntityStatCard Name="Íslenski staðallinn"
-                    MetaContent="@_standardMetaContent"
-                    Value="@_value"
-                    Unit="kg"
-                    CssClass="card-spaced" />
-}
-else
-{
-    <EntityStatCard Name="@_name"
-                    NameHref="@_nameHref"
-                    Pills="@_pills"
-                    MetaContent="@_metaContent"
-                    Value="@_value"
-                    Unit="kg"
-                    CssClass="@_cssClass" />
-}
+<EntityStatCard Name="@_name"
+                NameHref="@_nameHref"
+                Pills="@_pills"
+                MetaContent="@_metaContent"
+                Value="@_value"
+                Unit="kg"
+                CssClass="@_cssClass" />
 
 @code {
     [Parameter, EditorRequired]
@@ -28,17 +17,20 @@ else
     private string? _nameHref;
     private IReadOnlyList<MetaPill> _pills = [];
     private RenderFragment? _metaContent;
-    private RenderFragment? _standardMetaContent;
     private string _value = string.Empty;
     private string _cssClass = string.Empty;
 
     protected override void OnParametersSet()
     {
         _value = Entry.Weight.ToString("F1");
+        _cssClass = Entry.IsCurrent ? "card-spaced rhc-current" : "card-spaced";
 
         if (Entry.IsStandard)
         {
-            _standardMetaContent = BuildStandardMetaContent();
+            _name = "Íslenski staðallinn";
+            _nameHref = null;
+            _pills = [];
+            _metaContent = BuildStandardMetaContent();
         }
         else
         {
@@ -54,7 +46,6 @@ else
             }
 
             _pills = pills;
-            _cssClass = Entry.IsCurrent ? "card-spaced rhc-current" : "card-spaced";
             _metaContent = BuildMetaContent();
         }
     }
@@ -91,5 +82,10 @@ else
         }
 
         <span>@Entry.Date.ToString("dd.MM.yyyy")</span>
+
+        @if (Entry.Delta.HasValue)
+        {
+            <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
+        }
     };
 }
