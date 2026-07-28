@@ -197,6 +197,40 @@ public sealed class AthletePhotoTests : IDisposable
         img.GetAttribute("src").ShouldBe($"{ImageBaseUrl}/jondoe.jpg?width=300&height=200&crop=auto");
     }
 
+    [Fact]
+    public void ShowsPlaceholder_WhenFilenameContainsComma()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "evil,photo.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Small));
+
+        // Assert
+        cut.Find(".athlete-photo svg").ShouldNotBeNull();
+        cut.FindAll(".athlete-photo img").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ShowsPlaceholder_WhenFilenameContainsSpace()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "evil photo.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Small));
+
+        // Assert
+        cut.Find(".athlete-photo svg").ShouldNotBeNull();
+        cut.FindAll(".athlete-photo img").Count.ShouldBe(0);
+    }
+
     [Theory]
     [InlineData("../evil.png")]
     [InlineData("subdir/photo.png")]
