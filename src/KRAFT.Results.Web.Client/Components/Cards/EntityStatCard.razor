@@ -48,7 +48,11 @@
                     }
                 </div>
             }
-            @if (!string.IsNullOrEmpty(MetaText))
+            @if (MetaContent is not null)
+            {
+                <div class="esc-meta esc-meta--rich">@MetaContent</div>
+            }
+            else if (!string.IsNullOrEmpty(MetaText))
             {
                 <div class="esc-meta">@MetaText</div>
             }
@@ -102,6 +106,9 @@
 
     [Parameter]
     public string? MetaText { get; set; }
+
+    [Parameter]
+    public RenderFragment? MetaContent { get; set; }
 
     [Parameter]
     public string? Label { get; set; }

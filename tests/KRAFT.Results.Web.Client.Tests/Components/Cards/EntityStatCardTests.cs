@@ -688,6 +688,69 @@ public sealed class EntityStatCardTests : IDisposable
         cut.Find(".esc-name").GetAttribute("title").ShouldBe("Sigríður Halldórsdóttir");
     }
 
+    [Fact]
+    public void WhenMetaContentIsProvided_RendersInsideRichMetaDiv()
+    {
+        // Arrange
+        RenderFragment metaFragment = builder =>
+        {
+            builder.OpenElement(0, "span");
+            builder.AddContent(1, "2024-01-15");
+            builder.CloseElement();
+        };
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "300")
+                .Add(c => c.MetaContent, metaFragment));
+
+        // Assert
+        AngleSharp.Dom.IElement richMeta = cut.Find(".esc-meta.esc-meta--rich");
+        richMeta.ShouldNotBeNull();
+        richMeta.QuerySelector("span")!.TextContent.ShouldBe("2024-01-15");
+    }
+
+    [Fact]
+    public void WhenMetaContentAndMetaTextAreBothSet_MetaContentTakesPrecedence()
+    {
+        // Arrange
+        RenderFragment metaFragment = builder =>
+        {
+            builder.OpenElement(0, "span");
+            builder.AddContent(1, "rich content");
+            builder.CloseElement();
+        };
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "300")
+                .Add(c => c.MetaContent, metaFragment)
+                .Add(c => c.MetaText, "plain text"));
+
+        // Assert
+        cut.Find(".esc-meta--rich").ShouldNotBeNull();
+        cut.FindAll(".esc-meta").Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void WhenBothMetaContentAndMetaTextAreNull_DoesNotRenderAnyMetaElement()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "300"));
+
+        // Assert
+        cut.FindAll(".esc-meta").Count.ShouldBe(0);
+    }
+
     public void Dispose()
     {
         _context.Dispose();
