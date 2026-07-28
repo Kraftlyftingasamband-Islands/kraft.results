@@ -1,0 +1,34 @@
+@using System.Globalization
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Dashboard
+@using KRAFT.Results.Web.Client.Components.Cards
+
+<EntityStatCard Name="@Record.AthleteName"
+                NameHref="@SlugSanitizer.SlugHref("/athletes/", Record.AthleteSlug)"
+                Pills="@_pills"
+                Label="@Record.Lift"
+                Value="@Record.Weight.ToString()"
+                Unit="kg"
+                ValueHref="@SlugSanitizer.SlugHref("/meets/", Record.MeetSlug)"
+                ValueAriaLabel="@($"{Record.AthleteName} — {Record.Lift} — {Record.Weight} kg")"
+                MetaText="@Record.MeetDate.ToString("MMM yyyy", CultureInfo.CurrentCulture)"
+                CssClass="card-spaced" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required DashboardRecordEntry Record { get; set; }
+
+    private List<MetaPill> _pills = [];
+
+    protected override void OnParametersSet()
+    {
+        _pills =
+        [
+            new MetaPill(PillKind.WeightCategory, Record.WeightCategory),
+            new MetaPill(PillKind.AgeCategory, Record.AgeCategory.ToAgeCategoryLabel()),
+            new MetaPill(
+                Record.IsClassic ? PillKind.EquipmentClassic : PillKind.EquipmentEquipped,
+                DisplayNames.EquipmentType(Record.IsClassic)),
+        ];
+    }
+}
