@@ -53,17 +53,59 @@ public sealed class PillTests : IDisposable
     }
 
     [Fact]
-    public void WhenKindIsEquipment_RendersEquipmentVariantClass()
+    public void WhenKindIsEquipmentClassic_RendersEquipmentClassicVariantClass()
     {
         // Arrange
-        MetaPill pill = new(PillKind.Equipment, "Classic");
+        MetaPill pill = new(PillKind.EquipmentClassic, "Klassískt");
 
         // Act
         IRenderedComponent<Pill> cut = _context.Render<Pill>(
             p => p.Add(c => c.Value, pill));
 
         // Assert
-        cut.Find(".esc-pill--equipment").ShouldNotBeNull();
+        cut.Find(".esc-pill--equipment-classic").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenKindIsEquipmentEquipped_RendersEquipmentEquippedVariantClass()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.EquipmentEquipped, "Búnaður");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill--equipment-equipped").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenKindIsEquipmentClassic_RendersText()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.EquipmentClassic, "Klassískt");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill").TextContent.Trim().ShouldBe("Klassískt");
+    }
+
+    [Fact]
+    public void WhenKindIsEquipmentEquipped_RendersText()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.EquipmentEquipped, "Búnaður");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill").TextContent.Trim().ShouldBe("Búnaður");
     }
 
     [Fact]
