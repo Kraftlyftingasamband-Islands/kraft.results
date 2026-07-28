@@ -139,6 +139,7 @@ public sealed class TeamLogoTests : IDisposable
         srcset.ShouldEndWith(" 2x");
         srcset.ShouldContain("width=256");
         srcset.ShouldContain("height=256");
+        srcset.ShouldNotContain("crop=auto");
     }
 
     [Fact]
@@ -155,6 +156,38 @@ public sealed class TeamLogoTests : IDisposable
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
         img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
+    }
+
+    [Fact]
+    public void ShowsPlaceholder_WhenFilenameContainsComma()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "evil,logo.png")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        cut.Find(".team-logo svg").ShouldNotBeNull();
+        cut.FindAll(".team-logo img").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ShowsPlaceholder_WhenFilenameContainsSpace()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "evil logo.png")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        cut.Find(".team-logo svg").ShouldNotBeNull();
+        cut.FindAll(".team-logo img").Count.ShouldBe(0);
     }
 
     [Theory]

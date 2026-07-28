@@ -145,7 +145,7 @@
                         <div class="record-list">
                             @foreach (DashboardRecordEntry record in context.LatestRecordsMen)
                             {
-                                <DashboardRecordCard Record="record" @key="@($"{record.AthleteSlug}-{record.Lift}")" />
+                                <DashboardRecordCard Record="record" @key="@($"{record.AthleteSlug}-{record.Lift}-{record.WeightCategory}-{record.AgeCategory}-{record.IsClassic}")" />
                             }
                         </div>
                     }
@@ -161,7 +161,7 @@
                         <div class="record-list">
                             @foreach (DashboardRecordEntry record in context.LatestRecordsWomen)
                             {
-                                <DashboardRecordCard Record="record" @key="@($"{record.AthleteSlug}-{record.Lift}")" />
+                                <DashboardRecordCard Record="record" @key="@($"{record.AthleteSlug}-{record.Lift}-{record.WeightCategory}-{record.AgeCategory}-{record.IsClassic}")" />
                             }
                         </div>
                     }

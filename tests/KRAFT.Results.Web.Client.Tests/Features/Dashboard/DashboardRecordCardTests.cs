@@ -3,9 +3,6 @@ using Bunit;
 using KRAFT.Results.Contracts.Dashboard;
 using KRAFT.Results.Web.Client.Features.Dashboard;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
 using Shouldly;
 
 namespace KRAFT.Results.Web.Client.Tests.Features.Dashboard;
@@ -203,9 +200,6 @@ public sealed class DashboardRecordCardTests : IDisposable
 
     private void RegisterServices()
     {
-        IConfiguration configuration = new ConfigurationBuilder()
-            .Build();
-        _context.Services.AddSingleton(configuration);
         _context.AddAuthorization();
     }
 }
