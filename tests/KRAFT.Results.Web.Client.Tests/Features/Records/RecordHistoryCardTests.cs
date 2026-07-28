@@ -171,7 +171,7 @@ public sealed class RecordHistoryCardTests : IDisposable
     }
 
     [Fact]
-    public void WhenStandard_DoesNotRenderDelta()
+    public void WhenStandard_WithDelta_RendersDeltaSpan()
     {
         // Arrange
         RecordHistoryEntry entry = MakeStandardEntry();
@@ -181,7 +181,59 @@ public sealed class RecordHistoryCardTests : IDisposable
             parameters => parameters.Add(p => p.Entry, entry));
 
         // Assert
+        cut.Find(".rhc-delta").TextContent.ShouldBe("▲ +5.0");
+    }
+
+    [Fact]
+    public void WhenStandard_WithNullDelta_DoesNotRenderDeltaSpan()
+    {
+        // Arrange
+        RecordHistoryEntry entry = new(
+            Date: new DateOnly(2024, 1, 15),
+            Athlete: null,
+            AthleteSlug: null,
+            Weight: 200m,
+            BodyWeight: null,
+            Meet: "Nationals 2024",
+            MeetSlug: "nationals-2024",
+            IsCurrent: false,
+            IsStandard: true,
+            Delta: null);
+
+        // Act
+        IRenderedComponent<RecordHistoryCard> cut = _context.Render<RecordHistoryCard>(
+            parameters => parameters.Add(p => p.Entry, entry));
+
+        // Assert
         cut.FindAll(".rhc-delta").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenStandardAndCurrent_AppliesRhcCurrentCssClass()
+    {
+        // Arrange
+        RecordHistoryEntry entry = MakeStandardCurrentEntry();
+
+        // Act
+        IRenderedComponent<RecordHistoryCard> cut = _context.Render<RecordHistoryCard>(
+            parameters => parameters.Add(p => p.Entry, entry));
+
+        // Assert
+        cut.Find(".rhc-current").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenStandardAndCurrent_RendersNuverandiMetPill()
+    {
+        // Arrange
+        RecordHistoryEntry entry = MakeStandardCurrentEntry();
+
+        // Act
+        IRenderedComponent<RecordHistoryCard> cut = _context.Render<RecordHistoryCard>(
+            parameters => parameters.Add(p => p.Entry, entry));
+
+        // Assert
+        cut.Find(".card-status--active").TextContent.ShouldBe("Núverandi met");
     }
 
     [Fact]
@@ -251,4 +303,17 @@ public sealed class RecordHistoryCardTests : IDisposable
             IsCurrent: false,
             IsStandard: true,
             Delta: 5.0m);
+
+    private static RecordHistoryEntry MakeStandardCurrentEntry() =>
+        new(
+            Date: new DateOnly(2024, 1, 15),
+            Athlete: null,
+            AthleteSlug: null,
+            Weight: 210m,
+            BodyWeight: null,
+            Meet: "Nationals 2024",
+            MeetSlug: "nationals-2024",
+            IsCurrent: true,
+            IsStandard: true,
+            Delta: 10.0m);
 }
