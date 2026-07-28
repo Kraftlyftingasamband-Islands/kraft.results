@@ -33,6 +33,58 @@ public sealed class CardLeadingTests
     }
 
     [Fact]
+    public void WhenBadgeFactoryCalled_HrefIsNull()
+    {
+        // Arrange
+
+        // Act
+        CardLeading result = CardLeading.Badge("83");
+
+        // Assert
+        CardLeading.BadgeLeading leading = result.ShouldBeOfType<CardLeading.BadgeLeading>();
+        leading.Href.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenBadgeFactoryCalledWithHref_ReturnsBadgeLeadingWithHref()
+    {
+        // Arrange
+
+        // Act
+        CardLeading result = CardLeading.Badge("83", "/records/1/history");
+
+        // Assert
+        CardLeading.BadgeLeading leading = result.ShouldBeOfType<CardLeading.BadgeLeading>();
+        leading.Href.ShouldBe("/records/1/history");
+    }
+
+    [Fact]
+    public void WhenBadgeFactoryCalledWithNoAriaLabel_AriaLabelIsNull()
+    {
+        // Arrange
+
+        // Act
+        CardLeading result = CardLeading.Badge("83", "/records/1/history");
+
+        // Assert
+        CardLeading.BadgeLeading leading = result.ShouldBeOfType<CardLeading.BadgeLeading>();
+        leading.AriaLabel.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenBadgeFactoryCalledWithAriaLabel_ReturnsBadgeLeadingWithAriaLabel()
+    {
+        // Arrange
+
+        // Act
+        CardLeading result = CardLeading.Badge("83", "/records/1/history", "Skoða met-sögu fyrir 83 kg");
+
+        // Assert
+        CardLeading.BadgeLeading leading = result.ShouldBeOfType<CardLeading.BadgeLeading>();
+        leading.AriaLabel.ShouldBe("Skoða met-sögu fyrir 83 kg");
+    }
+
+    [Fact]
     public void WhenRankIsOne_DisplayIsGoldMedalGlyph()
     {
         // Arrange

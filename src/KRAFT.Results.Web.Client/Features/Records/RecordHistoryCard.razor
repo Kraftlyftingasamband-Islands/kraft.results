@@ -1,76 +1,91 @@
 @using KRAFT.Results.Contracts.Records
+@using KRAFT.Results.Web.Client.Components.Cards
 
-<Card Compact="true" CssClass="@_cardCssClass">
-<div class="rhc-card" aria-current="@(Entry.IsCurrent ? "true" : null)">
-
-    <div class="rhc-header-row">
-        <div class="rhc-name-col">
-            @if (Entry.IsCurrent)
-            {
-                <span class="card-status card-status--active">Núverandi met</span>
-            }
-            @if (Entry.IsStandard)
-            {
-                <span class="rhc-standard-text">Íslenski staðallinn</span>
-            }
-            else if (Entry.AthleteSlug is not null)
-            {
-                <NavLink class="rhc-name" href="@($"athletes/{Entry.AthleteSlug}")">@Entry.Athlete</NavLink>
-            }
-            else
-            {
-                <span class="rhc-name-plain">@Entry.Athlete</span>
-            }
-        </div>
-        <div class="rhc-mark-col">
-            <span class="rhc-mark">@Entry.Weight.ToString("F1")</span>
-        </div>
-    </div>
-
-    <div class="rhc-footer-row">
-        <div class="rhc-footer-top">
-            <span class="rhc-footer-meta">@_footerMeta</span>
-            @if (Entry.Delta.HasValue)
-            {
-                <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
-            }
-        </div>
-        @if (!Entry.IsStandard && Entry.Meet is not null)
-        {
-            @if (Entry.MeetSlug is not null)
-            {
-                <NavLink class="rhc-footer-link" href="@($"meets/{Entry.MeetSlug}")">@Entry.Meet</NavLink>
-            }
-            else
-            {
-                <span class="rhc-footer-item">@Entry.Meet</span>
-            }
-        }
-    </div>
-</div>
-</Card>
+<EntityStatCard Name="@_name"
+                NameHref="@_nameHref"
+                Pills="@_pills"
+                MetaContent="@_metaContent"
+                Value="@_value"
+                Unit="kg"
+                CssClass="@_cssClass" />
 
 @code {
     [Parameter, EditorRequired]
     public required RecordHistoryEntry Entry { get; set; }
 
-    private string _cardCssClass = string.Empty;
-    private string _footerMeta = string.Empty;
+    private string _name = string.Empty;
+    private string? _nameHref;
+    private IReadOnlyList<MetaPill> _pills = [];
+    private RenderFragment? _metaContent;
+    private string _value = string.Empty;
+    private string _cssClass = string.Empty;
 
     protected override void OnParametersSet()
     {
-        if (Entry.IsCurrent)
+        _value = Entry.Weight.ToString("F1");
+        _cssClass = Entry.IsCurrent ? "card-spaced rhc-current" : "card-spaced";
+
+        if (Entry.IsStandard)
         {
-            _cardCssClass = "card-spaced rhc-current";
+            _name = "Íslenski staðallinn";
+            _nameHref = null;
+            _pills = [];
+            _metaContent = BuildStandardMetaContent();
         }
         else
         {
-            _cardCssClass = "card-spaced";
+            _name = Entry.Athlete ?? "-";
+            _nameHref = Entry.AthleteSlug is not null
+                ? SlugSanitizer.SlugHref("/athletes/", Entry.AthleteSlug)
+                : null;
+
+            List<MetaPill> pills = [];
+            if (Entry.BodyWeight.HasValue)
+            {
+                pills.Add(new MetaPill(PillKind.Neutral, $"{Entry.BodyWeight.Value:F1} kg"));
+            }
+
+            _pills = pills;
+            _metaContent = BuildMetaContent();
+        }
+    }
+
+    private RenderFragment BuildMetaContent() => __builder =>
+    {
+        if (Entry.IsCurrent)
+        {
+            <span class="card-status card-status--active">Núverandi met</span>
         }
 
-        string date = Entry.Date.ToString("dd.MM.yyyy");
-        _footerMeta = Entry.BodyWeight.HasValue
-            ? $"{date} · {Entry.BodyWeight.Value:F1} kg"
-            : date;
-    }
+        <span>@Entry.Date.ToString("dd.MM.yyyy")</span>
+
+        @if (Entry.MeetSlug is not null && Entry.Meet is not null)
+        {
+            <NavLink href="@SlugSanitizer.SlugHref("/meets/", Entry.MeetSlug)">@Entry.Meet</NavLink>
+        }
+        else if (Entry.Meet is not null)
+        {
+            <span>@Entry.Meet</span>
+        }
+
+        @if (Entry.Delta.HasValue)
+        {
+            <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
+        }
+    };
+
+    private RenderFragment BuildStandardMetaContent() => __builder =>
+    {
+        if (Entry.IsCurrent)
+        {
+            <span class="card-status card-status--active">Núverandi met</span>
+        }
+
+        <span>@Entry.Date.ToString("dd.MM.yyyy")</span>
+
+        @if (Entry.Delta.HasValue)
+        {
+            <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
+        }
+    };
 }

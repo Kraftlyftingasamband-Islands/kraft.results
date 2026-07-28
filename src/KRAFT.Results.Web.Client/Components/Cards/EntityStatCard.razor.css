@@ -41,6 +41,19 @@
     white-space: nowrap;
 }
 
+/* ≥44px touch target for badge links — applies only to the anchor variant */
+a.esc-leading--badge {
+    position: relative;
+}
+
+a.esc-leading--badge::before {
+    content: "";
+    position: absolute;
+    inset-block: -50%;
+    inset-inline: -6px;
+    min-block-size: 44px;
+}
+
 .esc-image {
     grid-column: 2;
     display: flex;
@@ -104,6 +117,30 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.esc-meta--rich {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 2px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+/* ≥44px touch target for anchors in the rich meta slot (RenderFragment content) */
+.esc-meta--rich ::deep a {
+    position: relative;
+}
+
+.esc-meta--rich ::deep a::before {
+    content: "";
+    position: absolute;
+    inset-block: -50%;
+    inset-inline: -6px;
+    min-block-size: 44px;
 }
 
 .esc-stat {

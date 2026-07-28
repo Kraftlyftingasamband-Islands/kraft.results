@@ -117,6 +117,115 @@ public sealed class EntityStatCardTests : IDisposable
     }
 
     [Fact]
+    public void WhenLeadingIsBadgeWithNoHref_RendersBadgeAsSpan()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find(".esc-leading--badge");
+        badgeEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithHref_RendersBadgeAsAnchor()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83", "/records/1/history");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find(".esc-leading--badge");
+        badgeEl.TagName.ShouldBe("A");
+        badgeEl.GetAttribute("href").ShouldBe("/records/1/history");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithNonRelativeHref_RendersBadgeAsSpanNotAnchor()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83", "https://evil.example.com");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find(".esc-leading--badge");
+        badgeEl.TagName.ShouldBe("SPAN");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithHrefAndAriaLabel_RendersAnchorWithAriaLabel()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("-59", "/records/7/history", "Skoða met-sögu fyrir -59 kg");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find("a.esc-leading--badge");
+        badgeEl.GetAttribute("aria-label").ShouldBe("Skoða met-sögu fyrir -59 kg");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithHrefButNoAriaLabel_RendersAnchorWithNoAriaLabelAttribute()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83", "/records/1/history");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find("a.esc-leading--badge");
+        badgeEl.GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithNoHref_SpanHasNoAriaLabelAttribute()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find("span.esc-leading--badge");
+        badgeEl.GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
     public void WhenNameHrefIsNull_RendersNameAsSpan()
     {
         // Arrange
@@ -686,6 +795,69 @@ public sealed class EntityStatCardTests : IDisposable
 
         // Assert
         cut.Find(".esc-name").GetAttribute("title").ShouldBe("Sigríður Halldórsdóttir");
+    }
+
+    [Fact]
+    public void WhenMetaContentIsProvided_RendersInsideRichMetaDiv()
+    {
+        // Arrange
+        RenderFragment metaFragment = builder =>
+        {
+            builder.OpenElement(0, "span");
+            builder.AddContent(1, "2024-01-15");
+            builder.CloseElement();
+        };
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "300")
+                .Add(c => c.MetaContent, metaFragment));
+
+        // Assert
+        AngleSharp.Dom.IElement richMeta = cut.Find(".esc-meta.esc-meta--rich");
+        richMeta.ShouldNotBeNull();
+        richMeta.QuerySelector("span")!.TextContent.ShouldBe("2024-01-15");
+    }
+
+    [Fact]
+    public void WhenMetaContentAndMetaTextAreBothSet_MetaContentTakesPrecedence()
+    {
+        // Arrange
+        RenderFragment metaFragment = builder =>
+        {
+            builder.OpenElement(0, "span");
+            builder.AddContent(1, "rich content");
+            builder.CloseElement();
+        };
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "300")
+                .Add(c => c.MetaContent, metaFragment)
+                .Add(c => c.MetaText, "plain text"));
+
+        // Assert
+        cut.Find(".esc-meta--rich").ShouldNotBeNull();
+        cut.FindAll(".esc-meta").Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void WhenBothMetaContentAndMetaTextAreNull_DoesNotRenderAnyMetaElement()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "300"));
+
+        // Assert
+        cut.FindAll(".esc-meta").Count.ShouldBe(0);
     }
 
     public void Dispose()

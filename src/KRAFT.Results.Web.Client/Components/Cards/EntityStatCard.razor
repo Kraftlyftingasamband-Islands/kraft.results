@@ -17,6 +17,11 @@
                 case CardLeading.RankLeading rank:
                     <span class="esc-leading esc-leading--rank">@rank.Display</span>
                     break;
+                case CardLeading.BadgeLeading badge when IsRelativeHref(badge.Href):
+                    <a class="esc-leading esc-leading--badge"
+                       href="@badge.Href"
+                       aria-label="@(string.IsNullOrEmpty(badge.AriaLabel) ? null : badge.AriaLabel)">@badge.Text</a>
+                    break;
                 case CardLeading.BadgeLeading badge:
                     <span class="esc-leading esc-leading--badge">@badge.Text</span>
                     break;
@@ -48,7 +53,11 @@
                     }
                 </div>
             }
-            @if (!string.IsNullOrEmpty(MetaText))
+            @if (MetaContent is not null)
+            {
+                <div class="esc-meta esc-meta--rich">@MetaContent</div>
+            }
+            else if (!string.IsNullOrEmpty(MetaText))
             {
                 <div class="esc-meta">@MetaText</div>
             }
@@ -102,6 +111,9 @@
 
     [Parameter]
     public string? MetaText { get; set; }
+
+    [Parameter]
+    public RenderFragment? MetaContent { get; set; }
 
     [Parameter]
     public string? Label { get; set; }
