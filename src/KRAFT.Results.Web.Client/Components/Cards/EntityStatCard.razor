@@ -18,7 +18,9 @@
                     <span class="esc-leading esc-leading--rank">@rank.Display</span>
                     break;
                 case CardLeading.BadgeLeading badge when IsRelativeHref(badge.Href):
-                    <a class="esc-leading esc-leading--badge" href="@badge.Href">@badge.Text</a>
+                    <a class="esc-leading esc-leading--badge"
+                       href="@badge.Href"
+                       aria-label="@(string.IsNullOrEmpty(badge.AriaLabel) ? null : badge.AriaLabel)">@badge.Text</a>
                     break;
                 case CardLeading.BadgeLeading badge:
                     <span class="esc-leading esc-leading--badge">@badge.Text</span>

@@ -64,6 +64,56 @@ public sealed class RecordCardTests : IDisposable
     }
 
     [Fact]
+    public void WhenNonStandard_BadgeAnchorHasIcelandicAriaLabel()
+    {
+        // Arrange
+        RecordEntry entry = new(
+            Id: 7,
+            WeightCategory: "-59",
+            Athlete: "Anna Sigurðardóttir",
+            AthleteSlug: "anna-sigurdardottir",
+            BirthYear: null,
+            BodyWeight: null,
+            Weight: 95.0m,
+            Date: new DateOnly(2024, 5, 10),
+            MeetSlug: "nationals-2024",
+            IsStandard: false);
+
+        // Act
+        IRenderedComponent<RecordCard> cut = _context.Render<RecordCard>(
+            parameters => parameters.Add(p => p.Record, entry));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeLink = cut.Find("a.esc-leading--badge");
+        badgeLink.GetAttribute("aria-label").ShouldBe("Skoða met-sögu fyrir -59 kg");
+    }
+
+    [Fact]
+    public void WhenStandard_BadgeSpanHasNoAriaLabel()
+    {
+        // Arrange
+        RecordEntry entry = new(
+            Id: 7,
+            WeightCategory: "-59",
+            Athlete: "Anna Sigurðardóttir",
+            AthleteSlug: "anna-sigurdardottir",
+            BirthYear: null,
+            BodyWeight: null,
+            Weight: 95.0m,
+            Date: new DateOnly(2024, 5, 10),
+            MeetSlug: "nationals-2024",
+            IsStandard: true);
+
+        // Act
+        IRenderedComponent<RecordCard> cut = _context.Render<RecordCard>(
+            parameters => parameters.Add(p => p.Record, entry));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeSpan = cut.Find("span.esc-leading--badge");
+        badgeSpan.GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
     public void WhenNonStandard_ValueLinkHasMeetAriaLabel()
     {
         // Arrange

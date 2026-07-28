@@ -172,6 +172,60 @@ public sealed class EntityStatCardTests : IDisposable
     }
 
     [Fact]
+    public void WhenLeadingIsBadgeWithHrefAndAriaLabel_RendersAnchorWithAriaLabel()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("-59", "/records/7/history", "Skoða met-sögu fyrir -59 kg");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find("a.esc-leading--badge");
+        badgeEl.GetAttribute("aria-label").ShouldBe("Skoða met-sögu fyrir -59 kg");
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithHrefButNoAriaLabel_RendersAnchorWithNoAriaLabelAttribute()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83", "/records/1/history");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find("a.esc-leading--badge");
+        badgeEl.GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenLeadingIsBadgeWithNoHref_SpanHasNoAriaLabelAttribute()
+    {
+        // Arrange
+        CardLeading leading = CardLeading.Badge("83");
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Leading, leading)
+                .Add(c => c.Name, "Athlete Name")
+                .Add(c => c.Value, "500"));
+
+        // Assert
+        AngleSharp.Dom.IElement badgeEl = cut.Find("span.esc-leading--badge");
+        badgeEl.GetAttribute("aria-label").ShouldBeNull();
+    }
+
+    [Fact]
     public void WhenNameHrefIsNull_RendersNameAsSpan()
     {
         // Arrange

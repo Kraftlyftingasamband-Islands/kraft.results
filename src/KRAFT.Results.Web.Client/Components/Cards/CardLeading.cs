@@ -8,9 +8,7 @@ public abstract record CardLeading
 
     public static CardLeading Rank(int value) => new RankLeading(value);
 
-    public static CardLeading Badge(string text) => new BadgeLeading(text);
-
-    public static CardLeading Badge(string text, string? href) => new BadgeLeading(text, href);
+    public static CardLeading Badge(string text, string? href = null, string? ariaLabel = null) => new BadgeLeading(text, href, ariaLabel);
 
     // CA1034: Nested types are intentionally public — they are sealed variants of a discriminated union.
     // The private constructor prevents external subtyping; callers pattern-match on RankLeading/BadgeLeading.
@@ -33,6 +31,6 @@ public abstract record CardLeading
             : null;
     }
 
-    public sealed record BadgeLeading(string Text, string? Href = null) : CardLeading;
+    public sealed record BadgeLeading(string Text, string? Href = null, string? AriaLabel = null) : CardLeading;
 #pragma warning restore CA1034
 }

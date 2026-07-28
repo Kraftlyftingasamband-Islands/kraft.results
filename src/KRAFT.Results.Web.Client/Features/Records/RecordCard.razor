@@ -39,7 +39,7 @@
         }
         else
         {
-            _leading = CardLeading.Badge(Record.WeightCategory, $"/records/{Record.Id}/history");
+            _leading = CardLeading.Badge(Record.WeightCategory, $"/records/{Record.Id}/history", $"Skoða met-sögu fyrir {Record.WeightCategory} kg");
             _name = Record.Athlete ?? "-";
             _nameHref = Record.AthleteSlug is not null
                 ? SlugSanitizer.SlugHref("/athletes/", Record.AthleteSlug)

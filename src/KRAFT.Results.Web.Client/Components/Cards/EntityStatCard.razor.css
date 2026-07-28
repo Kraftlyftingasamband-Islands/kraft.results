@@ -41,6 +41,19 @@
     white-space: nowrap;
 }
 
+/* ≥44px touch target for badge links — applies only to the anchor variant */
+a.esc-leading--badge {
+    position: relative;
+}
+
+a.esc-leading--badge::before {
+    content: "";
+    position: absolute;
+    inset-block: -50%;
+    inset-inline: -6px;
+    min-block-size: 44px;
+}
+
 .esc-image {
     grid-column: 2;
     display: flex;
