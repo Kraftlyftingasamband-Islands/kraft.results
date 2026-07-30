@@ -56,17 +56,22 @@
 .esc-pill[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
-    top: calc(100% + 6px);
+    top: 100%;
     inset-inline-start: 0;
     background: #1c1c2e;
+    background-clip: padding-box;
     color: #fff;
     font-size: 11px;
     font-weight: 500;
     line-height: 1.4;
     white-space: pre-line;
     text-align: start;
+    /* 6px transparent top border acts as a hover bridge — keeps the
+       tooltip reachable without a dead gap while IsSingleLift:hidden */
+    border-top: 6px solid transparent;
     padding: 5px 8px;
     border-radius: var(--radius-sm);
+    /* Hidden tooltip must not intercept pointer events */
     pointer-events: none;
     opacity: 0;
     transform: translateY(-4px);
@@ -82,6 +87,9 @@
 .esc-pill[data-tooltip]:focus-visible::after {
     opacity: 1;
     transform: translateY(0);
+    /* Allow pointer events only while visible so the bridge lets the
+       cursor travel into the tooltip without clicking through it when hidden */
+    pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
