@@ -124,12 +124,10 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
                 p.Athlete.Slug,
                 p.Total,
-                p.WeightCategory.Title,
                 p.Weight.Value,
                 p.Meet.IsRaw,
                 p.Athlete.Gender.Value,
-                p.Meet.Slug,
-                DateOnly.FromDateTime(p.Meet.StartDate)))
+                p.Meet.Slug))
             .ToListAsync(cancellationToken);
 
         Gender parsedGender = Gender.Parse(gender);
@@ -148,15 +146,9 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 i + 1,
                 x.r.AthleteName,
                 x.r.AthleteSlug,
-                x.r.Gender,
-                x.r.Total,
-                x.r.WeightCategory,
                 x.r.BodyWeight,
                 x.IpfPoints,
-                0m,
-                x.r.MeetSlug,
-                x.r.IsRaw,
-                x.r.MeetDate))
+                x.r.MeetSlug))
             .ToList();
     }
 
@@ -237,12 +229,10 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         string AthleteName,
         string AthleteSlug,
         decimal Total,
-        string WeightCategory,
         decimal BodyWeight,
         bool IsRaw,
         string Gender,
-        string MeetSlug,
-        DateOnly MeetDate);
+        string MeetSlug);
 
     private sealed record RawRecordRow(
         RecordCategory RecordCategoryId,
