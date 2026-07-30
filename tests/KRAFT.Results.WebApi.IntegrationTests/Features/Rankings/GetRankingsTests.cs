@@ -137,8 +137,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}", CancellationToken.None);
 
-        // Assert — default discipline returns results; individual result value is no longer part of RankingEntry
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
         response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
@@ -233,8 +234,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}&discipline=squat", CancellationToken.None);
 
-        // Assert — discipline filter returns results; individual result value is no longer part of RankingEntry
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
         response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
@@ -247,8 +249,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}&discipline=bench", CancellationToken.None);
 
-        // Assert — discipline filter returns results; individual result value is no longer part of RankingEntry
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
         response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
@@ -261,8 +264,9 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}&discipline=deadlift", CancellationToken.None);
 
-        // Assert — discipline filter returns results; individual result value is no longer part of RankingEntry
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
         response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
