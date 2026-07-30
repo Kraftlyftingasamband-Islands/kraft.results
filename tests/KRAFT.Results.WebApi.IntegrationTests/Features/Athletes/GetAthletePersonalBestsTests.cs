@@ -67,8 +67,12 @@ public sealed class GetAthletePersonalBestsTests(CollectionFixture fixture) : IA
         await RecordAttemptAsync(_equippedMeetId, p1, Discipline.Deadlift, 1, DeadliftWeight);
         await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
-        // Junior athlete: 83 kg bodyweight — cascade produces junior + open records per discipline
-        int p2 = await AddParticipantAsync(_juniorEquippedMeetId, _juniorAthleteSlug, 80.5m);
+        // Junior athlete: 90 kg bodyweight → 93 kg category, which is uncontested (the open
+        // athlete competes at 83 kg). An uncontested category lets the junior's lift win both
+        // the junior slot and — via the age cascade — the open slot, producing junior + open
+        // records per discipline. In a contested category the higher open lift would keep the
+        // open slot, leaving the junior only the junior slot.
+        int p2 = await AddParticipantAsync(_juniorEquippedMeetId, _juniorAthleteSlug, 90.0m);
         _participations.Add((_juniorEquippedMeetId, p2));
         await RecordAttemptAsync(_juniorEquippedMeetId, p2, Discipline.Squat, 1, 180.0m);
         await RecordAttemptAsync(_juniorEquippedMeetId, p2, Discipline.Bench, 1, 100.0m);
