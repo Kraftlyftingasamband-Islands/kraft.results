@@ -103,7 +103,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 BodyWeight: 90.5m,
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
-                Date: new DateOnly(2024, 5, 10)),
+                Date: new DateOnly(2024, 5, 10),
+                Matches: []),
         ];
 
         List<AthleteRecord> records =
@@ -155,7 +156,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 BodyWeight: 90.5m,
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
-                Date: new DateOnly(2024, 5, 10)),
+                Date: new DateOnly(2024, 5, 10),
+                Matches: []),
         ];
 
         List<AthleteRecord> records =
@@ -220,7 +222,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 BodyWeight: 90.5m,
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
-                Date: new DateOnly(2024, 5, 10)),
+                Date: new DateOnly(2024, 5, 10),
+                Matches: []),
         ];
 
         List<AthleteRecord> records =
@@ -272,7 +275,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 BodyWeight: 90.5m,
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
-                Date: new DateOnly(2024, 5, 10)),
+                Date: new DateOnly(2024, 5, 10),
+                Matches: []),
         ];
 
         List<AthleteRecord> records =

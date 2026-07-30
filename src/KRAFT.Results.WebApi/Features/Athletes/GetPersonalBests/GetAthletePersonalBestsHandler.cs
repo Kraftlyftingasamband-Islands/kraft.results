@@ -35,7 +35,9 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
                     a.Participation.Weight.Value,
                     a.Participation.Meet.Slug,
                     a.Participation.Meet.Category,
-                    a.Participation.Meet.StartDate))
+                    a.Participation.Meet.StartDate,
+                    SourceAttemptId: a.AttemptId,
+                    SourceParticipationId: null))
                 .First())
             .ToListAsync(cancellationToken);
 
@@ -59,24 +61,61 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
                     p.Weight.Value,
                     p.Meet.Title,
                     p.Meet.Category,
-                    p.Meet.StartDate))
+                    p.Meet.StartDate,
+                    SourceAttemptId: null,
+                    SourceParticipationId: p.ParticipationId))
                 .First())
             .ToListAsync(cancellationToken);
 
         List<PersonalBest> combined = [.. bestLifts, .. bestTotals];
 
+        List<int> liftAttemptIds = combined
+            .Where(x => x.SourceAttemptId.HasValue)
+            .Select(x => x.SourceAttemptId!.Value)
+            .ToList();
+
+        List<int> totalParticipationIds = combined
+            .Where(x => x.SourceParticipationId.HasValue)
+            .Select(x => x.SourceParticipationId!.Value)
+            .ToList();
+
+        ILookup<int, AthleteRecordMatch> liftMatchesByAttemptId =
+            await dbContext.LoadLiftMatchesByAttemptIdAsync(liftAttemptIds, cancellationToken);
+
+        ILookup<int, AthleteRecordMatch> totalMatchesByParticipationId =
+            await dbContext.LoadTotalMatchesByParticipationIdAsync(totalParticipationIds, cancellationToken);
+
         return [.. combined
             .OrderBy(x => (int)x.Category)
             .Select(x => new AthletePersonalBest(
-            x.IsRaw,
-            x.IsSingleLiftRecord,
-            x.Discipline,
-            x.Weight,
-            x.WeightCategoryTitle,
-            x.BodyWeight,
-            x.MeetSlug,
-            x.Category.ToDisplayName(),
-            DateOnly.FromDateTime(x.MeetDate)))];
+                x.IsRaw,
+                x.IsSingleLiftRecord,
+                x.Discipline,
+                x.Weight,
+                x.WeightCategoryTitle,
+                x.BodyWeight,
+                x.MeetSlug,
+                x.Category.ToDisplayName(),
+                DateOnly.FromDateTime(x.MeetDate),
+                Matches: ResolveMatches(x, liftMatchesByAttemptId, totalMatchesByParticipationId)))];
+    }
+
+    private static IReadOnlyList<AthleteRecordMatch> ResolveMatches(
+        PersonalBest pb,
+        ILookup<int, AthleteRecordMatch> liftMatchesByAttemptId,
+        ILookup<int, AthleteRecordMatch> totalMatchesByParticipationId)
+    {
+        if (pb.SourceAttemptId.HasValue)
+        {
+            return [.. liftMatchesByAttemptId[pb.SourceAttemptId.Value]];
+        }
+
+        if (pb.SourceParticipationId.HasValue)
+        {
+            return [.. totalMatchesByParticipationId[pb.SourceParticipationId.Value]];
+        }
+
+        return [];
     }
 
     private sealed record class PersonalBest(
@@ -88,5 +127,7 @@ internal sealed class GetAthletePersonalBestsHandler(ResultsDbContext dbContext)
         decimal BodyWeight,
         string MeetSlug,
         MeetCategory Category,
-        DateTime MeetDate);
+        DateTime MeetDate,
+        int? SourceAttemptId,
+        int? SourceParticipationId);
 }
