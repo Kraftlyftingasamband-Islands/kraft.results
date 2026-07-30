@@ -2,7 +2,7 @@ using Bunit;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
-using KRAFT.Results.Web.Client.Features.Athletes;
+using KRAFT.Results.Web.Client.Features.Athletes.Components;
 
 using Shouldly;
 
