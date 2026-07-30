@@ -1,6 +1,13 @@
 @namespace KRAFT.Results.Web.Client.Components.Cards
 
-<span class="@_classes">@Value.Text</span>
+@if (!string.IsNullOrEmpty(Value.Tooltip))
+{
+    <span class="@_classes" data-tooltip="@Value.Tooltip" tabindex="0">@Value.Text</span>
+}
+else
+{
+    <span class="@_classes">@Value.Text</span>
+}
 
 @code {
     [Parameter, EditorRequired]
