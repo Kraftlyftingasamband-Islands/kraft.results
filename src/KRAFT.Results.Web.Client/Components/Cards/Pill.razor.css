@@ -67,7 +67,7 @@
     white-space: pre-line;
     text-align: start;
     /* 6px transparent top border acts as a hover bridge — keeps the
-       tooltip reachable without a dead gap while IsSingleLift:hidden */
+       tooltip reachable without a dead gap while hidden */
     border-top: 6px solid transparent;
     padding: 5px 8px;
     border-radius: var(--radius-sm);
