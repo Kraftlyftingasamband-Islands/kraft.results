@@ -86,7 +86,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: 700;
-    color: var(--color-text-muted);
+    color: var(--color-text-secondary);
 }
 
 .ap-lift-total .ap-lift-label {

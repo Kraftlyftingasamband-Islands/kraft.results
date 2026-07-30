@@ -411,6 +411,41 @@ public sealed class AthleteDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void WhenAthleteHasCurrentRecords_RendersPerEraRecordHeading()
+    {
+        // Arrange
+        List<AthleteRecord> records =
+        [
+            new(
+                Date: new DateOnly(2024, 3, 15),
+                IsClassic: true,
+                IsSingleLift: false,
+                IsWithinPowerlifting: false,
+                IsStandaloneDiscipline: false,
+                WeightCategory: "83 kg",
+                AgeCategory: "open",
+                Type: Constants.Total,
+                Weight: 600.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+        ];
+
+        RegisterHttpClient(records: records);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string headingText = cut.Find("h4").TextContent.Trim();
+            string expectedEquipment = DisplayNames.EquipmentType(isClassic: true).ToLowerInvariant();
+            headingText.ShouldBe($"Íslandsmet {expectedEquipment} (1)");
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
