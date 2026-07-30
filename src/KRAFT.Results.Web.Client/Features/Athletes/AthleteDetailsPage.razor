@@ -73,12 +73,16 @@
         @if (pageData.Records.Count > 0)
         {
             <h3 id="islandsmet">Núverandi íslandsmet (@pageData.Records.Count)</h3>
-            <div class="content-column pb-group-container">
+            <div class="content-column">
                 @foreach (IGrouping<bool, AthleteRecord> group in pageData.Records.GroupBy(x => x.IsClassic).OrderByDescending(g => g.Key))
                 {
-                    <AthleteRecordGroupCard
-                        Title="@($"Íslandsmet {DisplayNames.EquipmentType(group.Key).ToLowerInvariant()} ({group.Count()})")"
-                        Records="@group.ToList()" />
+                    <h4>Íslandsmet @DisplayNames.EquipmentType(group.Key).ToLowerInvariant() (@group.Count())</h4>
+                    <div class="record-list">
+                        @foreach (AthleteRecord record in group)
+                        {
+                            <AthleteRecordCard Record="record" @key="@($"{record.WeightCategory}/{record.AgeCategory}/{record.Type}/{record.Date}")" />
+                        }
+                    </div>
                 }
             </div>
         }
