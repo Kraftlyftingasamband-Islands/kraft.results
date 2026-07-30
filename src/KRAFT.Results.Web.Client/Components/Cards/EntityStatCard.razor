@@ -69,7 +69,8 @@
             }
             @if (string.IsNullOrEmpty(_safeValueHref))
             {
-                <span class="esc-value stat-value">
+                <span class="esc-value stat-value"
+                      aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
                     @Value
                     @if (!string.IsNullOrEmpty(Unit))
                     {

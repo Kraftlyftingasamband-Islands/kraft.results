@@ -160,6 +160,26 @@ public sealed class RankingsIndexTests : IDisposable
     }
 
     [Fact]
+    public void WhenIpfPointsIsNull_ValueSpanHasContextualAriaLabel()
+    {
+        // Arrange
+        PagedResponse<RankingEntry> response = MakeResponse(items:
+        [
+            new(5, "Jón Jónsson", "jon-jonsson", 80m, null, "nationals-2024"),
+        ]);
+        RegisterHttpClient(response);
+
+        // Act
+        IRenderedComponent<RankingsIndex> cut = _context.Render<RankingsIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("span.esc-value").GetAttribute("aria-label").ShouldBe("IPF stig ekki til");
+        });
+    }
+
+    [Fact]
     public void WhenRendered_HasNoMetaLine()
     {
         // Arrange
