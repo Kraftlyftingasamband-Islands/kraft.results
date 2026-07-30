@@ -70,6 +70,39 @@ When a ban is added or removed, a domain event is raised on the Athlete aggregat
 
 ---
 
+## Records
+
+### Record slot
+
+A **record slot** is one current-record position keyed by equipment era × discipline (record category) × age category × weight category. `IsCurrent` marks the row holding the slot; superseded rows are retained as history. The athlete details page shows only current-era slots (`Era.EndDate` in the future) the athlete currently holds.
+
+### Record cascade
+
+A **single successful attempt can set multiple records at once**. Two axes cascade independently:
+
+- **Age categories** — the attempt counts in every age category the athlete qualifies for on the meet date, cascading toward the open category. A masters lifter cascades down through the younger masters bands (e.g. M4 → M3 → M2 → M1 → O); a junior lifter cascades up (e.g. sub-junior → junior → O).
+- **Record type** — a lift can take both the full-meet (within-powerlifting) record and the single-lift record for that discipline.
+
+Example ceiling: an M4 deadlift record cascading to open can be **8 different records** (O, M1, M2, M3, M4 across single-lift and full-meet types).
+
+UI displaying "this result is a record" must therefore handle one result mapping to many record slots.
+
+### Equipment era
+
+Records are scoped by equipment: **classic** (raw) vs. **equipped**, and by era (`Era` date range). Only slots in the current era are "current records".
+
+### Single-lift and discipline flags
+
+- **Single-lift record** (`IsSingleLift`) — set in a single-lift meet (e.g. bench-only). Marked "SL" in the UI.
+- **Within-powerlifting record** (`IsWithinPowerlifting`) — a bench/deadlift record achieved during a full powerlifting meet.
+- **Standalone-discipline record** (`IsStandaloneDiscipline`) — the discipline is contested as its own event.
+
+### Personal best vs. record
+
+A **personal best** is the athlete's best result per equipment × discipline × single-lift combination. A personal best may simultaneously hold multiple current record slots (via the record cascade). Which slots a PB holds is server-derivable knowledge — the record rows stem from the same result — and is computed on the API, not re-derived client-side.
+
+---
+
 ## WADA / IPF Reference
 
 KRAFT (Icelandic Powerlifting Federation) follows IPF rules, which implement the WADA Code. Anti-doping oversight for Icelandic athletes is handled by **Lyfjaeftirlit Islands** (Icelandic Anti-Doping Authority). KRAFT does not maintain independent ban rules.
