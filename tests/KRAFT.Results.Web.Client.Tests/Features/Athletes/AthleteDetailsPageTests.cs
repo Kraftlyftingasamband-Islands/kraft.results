@@ -18,7 +18,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
     private readonly BunitContext _context = new();
 
     [Fact]
-    public void RecordCard_ShowsSingleLiftBadge_WhenIsSingleLift()
+    public void RecordCard_ShowsSingleLiftPill_WhenIsSingleLift()
     {
         // Arrange
         List<AthleteRecord> records =
@@ -46,16 +46,16 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> badges = cut.FindAll(".arg-sl-badge")
-                .Select(e => e.TextContent)
+            List<string> slPills = cut.FindAll(".esc-pill--single-lift")
+                .Select(e => e.TextContent.Trim())
                 .ToList();
 
-            badges.ShouldContain(Constants.SingeLift);
+            slPills.ShouldContain(Constants.SingeLift);
         });
     }
 
     [Fact]
-    public void RecordCard_DoesNotShowSingleLiftBadge_WhenIsNotSingleLift()
+    public void RecordCard_DoesNotShowSingleLiftPill_WhenIsNotSingleLift()
     {
         // Arrange
         List<AthleteRecord> records =
@@ -83,8 +83,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".arg-card").Count.ShouldBeGreaterThan(0);
-            cut.FindAll(".arg-sl-badge").Count.ShouldBe(0);
+            cut.FindAll("span.esc-leading--badge").Count.ShouldBeGreaterThan(0);
+            cut.FindAll(".esc-pill--single-lift").Count.ShouldBe(0);
         });
     }
 
@@ -408,6 +408,41 @@ public sealed class AthleteDetailsPageTests : IDisposable
         {
             cut.Find(".athlete-detail-header svg").ShouldNotBeNull();
             cut.FindAll(".athlete-detail-header img").Count.ShouldBe(0);
+        });
+    }
+
+    [Fact]
+    public void WhenAthleteHasCurrentRecords_RendersPerEraRecordHeading()
+    {
+        // Arrange
+        List<AthleteRecord> records =
+        [
+            new(
+                Date: new DateOnly(2024, 3, 15),
+                IsClassic: true,
+                IsSingleLift: false,
+                IsWithinPowerlifting: false,
+                IsStandaloneDiscipline: false,
+                WeightCategory: "83 kg",
+                AgeCategory: "open",
+                Type: Constants.Total,
+                Weight: 600.0m,
+                Meet: "Test Meet",
+                MeetSlug: "test-meet"),
+        ];
+
+        RegisterHttpClient(records: records);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string headingText = cut.Find("h4").TextContent.Trim();
+            string expectedEquipment = DisplayNames.EquipmentType(isClassic: true).ToLowerInvariant();
+            headingText.ShouldBe($"Íslandsmet {expectedEquipment} (1)");
         });
     }
 

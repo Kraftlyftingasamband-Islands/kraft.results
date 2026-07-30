@@ -162,11 +162,11 @@ a.esc-leading--badge::before {
 ::deep a.esc-value {
     font-size: 1.125rem;
     white-space: nowrap;
+    color: var(--color-primary);
 }
 
 ::deep a.esc-value {
     position: relative;
-    color: var(--color-primary);
     text-decoration: none;
 }
 

@@ -29,6 +29,14 @@
     margin-block-end: 1rem;
 }
 
+.record-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    container-type: inline-size;
+}
+
 .pb-group-container {
     display: flex;
     gap: 16px;

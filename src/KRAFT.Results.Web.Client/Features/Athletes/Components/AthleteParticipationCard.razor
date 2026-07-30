@@ -7,7 +7,7 @@
     <div class="ap-header-row">
         <div class="ap-rank @_rankClass">@_rankDisplay</div>
         <div class="ap-name-col">
-            <NavLink class="ap-meet" href="@($"/meets/{Participation.MeetSlug}")">@Participation.Meet</NavLink>
+            <NavLink class="ap-meet" href="@SlugSanitizer.SlugHref("/meets/", Participation.MeetSlug)">@Participation.Meet</NavLink>
             @if (Participation.IsDisqualified)
             {
                 <span class="card-status">Úr leik</span>

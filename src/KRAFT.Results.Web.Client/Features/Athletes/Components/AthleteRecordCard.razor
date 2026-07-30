@@ -1,0 +1,31 @@
+@using System.Globalization
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Web.Client.Components.Cards
+
+<EntityStatCard Leading="@CardLeading.Badge(Record.WeightCategory)"
+                Name="@Record.Type"
+                Pills="@_pills"
+                MetaText="@Record.Date.ToString("dd.MM.yyyy")"
+                Value="@Record.Weight.ToString("F1", CultureInfo.InvariantCulture)"
+                Unit="kg"
+                ValueHref="@SlugSanitizer.SlugHref("/meets/", Record.MeetSlug)"
+                ValueAriaLabel="@($"{Record.Type} — {Record.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg — {Record.Meet}")"
+                CssClass="card-spaced" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required AthleteRecord Record { get; set; }
+
+    private List<MetaPill> _pills = [];
+
+    protected override void OnParametersSet()
+    {
+        _pills = [new MetaPill(PillKind.AgeCategory, Record.AgeCategory)];
+
+        if (Record.IsSingleLift)
+        {
+            _pills.Add(new MetaPill(PillKind.SingleLift, Constants.SingeLift));
+        }
+    }
+}
