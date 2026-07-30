@@ -5,7 +5,6 @@
                 Name="@Entry.Athlete"
                 NameHref="@SlugSanitizer.SlugHref("/athletes/", Entry.AthleteSlug)"
                 Pills="@_pills"
-                MetaText="@_metaText"
                 Label="IPF stig"
                 Value="@_value"
                 ValueHref="@_valueHref"
@@ -16,24 +15,14 @@
     [Parameter, EditorRequired]
     public required RankingEntry Entry { get; set; }
 
-    [Parameter]
-    public string DisciplineLabel { get; set; } = string.Empty;
-
     private IReadOnlyList<MetaPill> _pills = [];
-    private string _metaText = string.Empty;
     private string _value = string.Empty;
     private string? _valueHref;
     private string _valueAriaLabel = string.Empty;
 
     protected override void OnParametersSet()
     {
-        _pills =
-        [
-            new MetaPill(PillKind.Neutral, $"{Entry.WeightCategory} kg"),
-            new MetaPill(PillKind.Neutral, $"{Entry.BodyWeight:F2} kg"),
-        ];
-
-        _metaText = $"{Entry.Result:F1} {DisciplineLabel}";
+        _pills = [new MetaPill(PillKind.Neutral, $"{Entry.BodyWeight:F2} kg")];
 
         if (Entry.IpfPoints.HasValue)
         {
