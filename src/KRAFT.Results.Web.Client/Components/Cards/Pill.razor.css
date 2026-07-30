@@ -27,6 +27,10 @@
     color: var(--pill-text-equipment-equipped);
 }
 
+.esc-pill--single-lift {
+    background: var(--pill-tint-single-lift);
+}
+
 .esc-pill--neutral {
     background: var(--pill-tint-neutral);
 }

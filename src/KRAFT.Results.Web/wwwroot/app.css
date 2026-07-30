@@ -26,9 +26,10 @@
     --transition-base: 250ms;
 
     /* Pill tint tokens — kind-keyed background tints for Pill component */
-    --pill-tint-weight:    color-mix(in oklch, var(--color-primary)    14%, transparent);
-    --pill-tint-age:       color-mix(in oklch, var(--color-success)    14%, transparent);
-    --pill-tint-neutral:   color-mix(in oklch, var(--color-text-muted) 13%, transparent);
+    --pill-tint-weight:       color-mix(in oklch, var(--color-primary)    14%, transparent);
+    --pill-tint-age:          color-mix(in oklch, var(--color-success)    14%, transparent);
+    --pill-tint-single-lift:  color-mix(in oklch, #7c3aed                 15%, transparent);
+    --pill-tint-neutral:      color-mix(in oklch, var(--color-text-muted) 13%, transparent);
 
     /* Equipment pill — hex-snapped tokens (dark-mode overrides deferred to #377) */
     --pill-tint-equipment-classic:  #eff6ff;
