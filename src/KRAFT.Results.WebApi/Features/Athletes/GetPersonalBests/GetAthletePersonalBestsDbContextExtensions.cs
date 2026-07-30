@@ -60,8 +60,7 @@ internal static class GetAthletePersonalBestsDbContextExtensions
             .Select(r => new TotalMatchRow(
                 r.Attempt!.ParticipationId,
                 r.AgeCategory.Slug ?? r.AgeCategory.Title,
-                r.WeightCategory.Title,
-                r.Attempt.Participation.Meet.Category != MeetCategory.Powerlifting))
+                r.WeightCategory.Title))
             .ToListAsync(cancellationToken);
 
         return rows.ToLookup(r => r.ParticipationId, r => r.ToMatch());
@@ -85,14 +84,13 @@ internal static class GetAthletePersonalBestsDbContextExtensions
     private sealed record TotalMatchRow(
         int ParticipationId,
         string AgeCategory,
-        string WeightCategory,
-        bool IsSingleLift)
+        string WeightCategory)
     {
         internal AthleteRecordMatch ToMatch() => new(
             AgeCategory,
             WeightCategory,
             IsWithinPowerlifting: false,
-            IsSingleLift,
+            IsSingleLift: false,
             IsStandaloneDiscipline: false);
     }
 }
