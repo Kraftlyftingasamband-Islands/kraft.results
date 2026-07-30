@@ -107,7 +107,7 @@ public sealed class GetAthletePersonalBestsTests(CollectionFixture fixture) : IA
     }
 
     [Fact]
-    public async Task ReturnsOk_WhenAthleteExists()
+    public async Task WhenAthleteExists_ReturnsOk()
     {
         // Arrange
 
