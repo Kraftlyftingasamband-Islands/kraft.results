@@ -93,48 +93,36 @@ internal sealed class GetRankingsHandler
                 p.Athlete.Slug,
                 p.Athlete.Gender.Value,
                 p.Squat,
-                p.WeightCategory.Title,
                 p.Weight.Value,
-                p.Wilks,
                 p.Meet.Slug,
-                p.Meet.IsRaw,
-                DateOnly.FromDateTime(p.Meet.StartDate))),
+                p.Meet.IsRaw)),
             "bench" => query.Select(p => new RawRankingData(
                 p.AthleteId,
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
                 p.Athlete.Slug,
                 p.Athlete.Gender.Value,
                 p.Benchpress,
-                p.WeightCategory.Title,
                 p.Weight.Value,
-                p.Wilks,
                 p.Meet.Slug,
-                p.Meet.IsRaw,
-                DateOnly.FromDateTime(p.Meet.StartDate))),
+                p.Meet.IsRaw)),
             "deadlift" => query.Select(p => new RawRankingData(
                 p.AthleteId,
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
                 p.Athlete.Slug,
                 p.Athlete.Gender.Value,
                 p.Deadlift,
-                p.WeightCategory.Title,
                 p.Weight.Value,
-                p.Wilks,
                 p.Meet.Slug,
-                p.Meet.IsRaw,
-                DateOnly.FromDateTime(p.Meet.StartDate))),
+                p.Meet.IsRaw)),
             _ => query.Select(p => new RawRankingData(
                 p.AthleteId,
                 p.Athlete.Firstname + " " + p.Athlete.Lastname,
                 p.Athlete.Slug,
                 p.Athlete.Gender.Value,
                 p.Total,
-                p.WeightCategory.Title,
                 p.Weight.Value,
-                p.Wilks,
                 p.Meet.Slug,
-                p.Meet.IsRaw,
-                DateOnly.FromDateTime(p.Meet.StartDate))),
+                p.Meet.IsRaw)),
         };
 
         List<RawRankingData> rawData = await rawQuery.ToListAsync(cancellationToken);
@@ -166,15 +154,9 @@ internal sealed class GetRankingsHandler
                 skip + i + 1,
                 r.AthleteName,
                 r.AthleteSlug,
-                r.Gender,
-                r.Result,
-                r.WeightCategory,
                 r.BodyWeight,
                 r.CalculatedIpfPoints,
-                r.Wilks,
-                r.MeetSlug,
-                r.IsRaw,
-                r.MeetDate))
+                r.MeetSlug))
             .ToList();
 
         return new PagedResponse<RankingEntry>(items, page, pageSize, totalCount);
@@ -186,12 +168,9 @@ internal sealed class GetRankingsHandler
         string AthleteSlug,
         string Gender,
         decimal Result,
-        string WeightCategory,
         decimal BodyWeight,
-        decimal Wilks,
         string MeetSlug,
-        bool IsRaw,
-        DateOnly MeetDate)
+        bool IsRaw)
     {
         public decimal CalculatedIpfPoints { get; set; }
     }
