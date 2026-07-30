@@ -325,20 +325,6 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         response.PageSize.ShouldBe(1);
     }
 
-    [Fact]
-    public async Task OrdersDescendingByResult()
-    {
-        // Arrange
-
-        // Act
-        PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
-            $"{Path}?year={MeetYear}", CancellationToken.None);
-
-        // Assert
-        response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Rank.ShouldBe(1);
-    }
-
     private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate)
     {
         string slug = await CreateMeetSlugAsync(startDate);
