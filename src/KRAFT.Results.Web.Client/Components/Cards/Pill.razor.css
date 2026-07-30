@@ -39,3 +39,54 @@
 .esc-pill--neutral {
     background: var(--pill-tint-neutral);
 }
+
+/* Tooltip — revealed on hover and keyboard-focus; anchored below the pill */
+.esc-pill[data-tooltip] {
+    position: relative;
+    display: inline-flex;
+    cursor: default;
+}
+
+.esc-pill[data-tooltip]:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+.esc-pill[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 6px);
+    inset-inline-start: 0;
+    background: #1c1c2e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: pre-line;
+    text-align: start;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 120ms ease, transform 120ms ease;
+    z-index: 10;
+    font-family: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    max-width: 16rem;
+}
+
+.esc-pill[data-tooltip]:hover::after,
+.esc-pill[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .esc-pill[data-tooltip]::after {
+        transition: none;
+        transform: none;
+    }
+}

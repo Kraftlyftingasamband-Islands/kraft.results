@@ -150,6 +150,62 @@ public sealed class PillTests : IDisposable
         cut.Find(".esc-pill--record").ShouldNotBeNull();
     }
 
+    [Fact]
+    public void WhenTooltipIsPresent_RendersDataTooltipAttribute()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.Record, "★ Íslandsmet", "Open · -83kg (kraftlyftingar)");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill").GetAttribute("data-tooltip").ShouldBe("Open · -83kg (kraftlyftingar)");
+    }
+
+    [Fact]
+    public void WhenTooltipIsPresent_RendersTabindex()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.Record, "★ Íslandsmet", "Open · -83kg (kraftlyftingar)");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill").GetAttribute("tabindex").ShouldBe("0");
+    }
+
+    [Fact]
+    public void WhenTooltipIsAbsent_DoesNotRenderDataTooltipAttribute()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.WeightCategory, "-83kg");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill").GetAttribute("data-tooltip").ShouldBeNull();
+    }
+
+    [Fact]
+    public void WhenTooltipIsAbsent_DoesNotRenderTabindex()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.WeightCategory, "-83kg");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill").GetAttribute("tabindex").ShouldBeNull();
+    }
+
     public void Dispose()
     {
         _context.Dispose();
