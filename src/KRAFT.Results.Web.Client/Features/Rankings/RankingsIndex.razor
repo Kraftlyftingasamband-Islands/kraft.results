@@ -63,7 +63,7 @@
             <div class="content-column rankings-list">
                 @foreach (RankingEntry entry in response.Items)
                 {
-                    <RankingCard Entry="entry" DisciplineLabel="@DisciplineLabel" />
+                    <RankingCard Entry="entry" />
                 }
             </div>
 
@@ -114,14 +114,6 @@
     private int _page = 1;
 
     private string FilterKey => $"{Discipline}|{Year}|{EquipmentType}|{Gender}|{_page}";
-
-    private string DisciplineLabel => Discipline?.ToLowerInvariant() switch
-    {
-        "squat" => Constants.Squat,
-        "bench" => Constants.Bench,
-        "deadlift" => Constants.Deadlift,
-        _ => Constants.Total,
-    };
 
     protected override void OnInitialized()
     {
