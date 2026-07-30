@@ -136,6 +136,20 @@ public sealed class PillTests : IDisposable
         cut.Find(".esc-pill").TextContent.Trim().ShouldBe("-83kg");
     }
 
+    [Fact]
+    public void WhenKindIsRecord_RendersRecordVariantClass()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.Record, "★ Íslandsmet");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill--record").ShouldNotBeNull();
+    }
+
     public void Dispose()
     {
         _context.Dispose();
