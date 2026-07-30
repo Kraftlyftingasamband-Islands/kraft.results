@@ -600,6 +600,12 @@ h1:focus {
 @media (max-width: 600px) { .card-half { flex: 1 1 auto; } }
 .card-spaced { margin-block-end: 6px; }
 
+/* Total PB card — subtle emphasis over lift PBs (matches .rhc-current tint recipe) */
+.esc-total {
+    --card-bg: color-mix(in oklch, var(--color-primary) 5%, transparent);
+    border-inline-start: 3px solid var(--color-primary);
+}
+
 .meet-card { margin-block-end: 0.75rem; }
 
 .meet-card--active { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }

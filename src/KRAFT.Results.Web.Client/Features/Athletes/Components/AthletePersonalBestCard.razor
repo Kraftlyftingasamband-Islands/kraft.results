@@ -1,0 +1,79 @@
+@using System.Globalization
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Athletes
+@using KRAFT.Results.Web.Client.Components.Cards
+
+<EntityStatCard Name="@_name"
+                Pills="@_pills"
+                MetaText="@_metaText"
+                Value="@Best.Weight.ToString("F1", CultureInfo.InvariantCulture)"
+                Unit="kg"
+                ValueHref="@SlugSanitizer.SlugHref("/meets/", Best.MeetSlug)"
+                ValueAriaLabel="@_valueAriaLabel"
+                CssClass="@_cssClass" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required AthletePersonalBest Best { get; set; }
+
+    private string _name = string.Empty;
+    private string _metaText = string.Empty;
+    private string _valueAriaLabel = string.Empty;
+    private string _cssClass = string.Empty;
+    private List<MetaPill> _pills = [];
+
+    protected override void OnParametersSet()
+    {
+        _name = Best.Discipline == Discipline.None
+            ? "Samanlagt"
+            : Best.Discipline.ToDisplayName();
+
+        _metaText = $"{Best.Date.ToString("dd.MM.yyyy")} · {Best.BodyWeight.ToString("F1", CultureInfo.InvariantCulture)} kg";
+
+        _pills = [];
+
+        if (Best.IsSingleLift)
+        {
+            _pills.Add(new MetaPill(PillKind.SingleLift, Constants.SingeLift));
+        }
+
+        if (Best.Matches.Count > 0)
+        {
+            string pillText = Best.Matches.Count == 1
+                ? "★ Íslandsmet"
+                : $"★ Íslandsmet ×{Best.Matches.Count}";
+
+            string tooltip = string.Join("\n", Best.Matches.Select(BuildMatchLine));
+            _pills.Add(new MetaPill(PillKind.Record, pillText, tooltip));
+        }
+
+        string recordSuffix = Best.Matches.Count > 0
+            ? " — " + string.Join(", ", Best.Matches.Select(BuildMatchLine))
+            : string.Empty;
+
+        _valueAriaLabel = $"{_name} — {Best.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg{recordSuffix}";
+
+        _cssClass = Best.Discipline == Discipline.None
+            ? "card-spaced esc-total"
+            : "card-spaced";
+    }
+
+    private static string BuildMatchLine(AthleteRecordMatch match)
+    {
+        string ageLabel = match.AgeCategory.ToAgeCategoryLabel();
+        string translatedAge = ageLabel.Length > 0 ? ageLabel : match.AgeCategory;
+        string line = $"{translatedAge} · {match.WeightCategory}";
+
+        if (match.IsWithinPowerlifting)
+        {
+            return $"{line} (kraftlyftingar)";
+        }
+
+        if (match.IsSingleLift || match.IsStandaloneDiscipline)
+        {
+            return $"{line} (stök grein)";
+        }
+
+        return line;
+    }
+}
