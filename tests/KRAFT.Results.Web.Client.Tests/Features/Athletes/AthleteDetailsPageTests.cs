@@ -18,7 +18,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
     private readonly BunitContext _context = new();
 
     [Fact]
-    public void RecordCard_ShowsSingleLiftBadge_WhenIsSingleLift()
+    public void RecordCard_ShowsSingleLiftPill_WhenIsSingleLift()
     {
         // Arrange
         List<AthleteRecord> records =
@@ -46,16 +46,16 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> badges = cut.FindAll(".arg-sl-badge")
-                .Select(e => e.TextContent)
+            List<string> slPills = cut.FindAll(".esc-pill--single-lift")
+                .Select(e => e.TextContent.Trim())
                 .ToList();
 
-            badges.ShouldContain(Constants.SingeLift);
+            slPills.ShouldContain(Constants.SingeLift);
         });
     }
 
     [Fact]
-    public void RecordCard_DoesNotShowSingleLiftBadge_WhenIsNotSingleLift()
+    public void RecordCard_DoesNotShowSingleLiftPill_WhenIsNotSingleLift()
     {
         // Arrange
         List<AthleteRecord> records =
@@ -83,8 +83,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".arg-card").Count.ShouldBeGreaterThan(0);
-            cut.FindAll(".arg-sl-badge").Count.ShouldBe(0);
+            cut.FindAll("span.esc-leading--badge").Count.ShouldBeGreaterThan(0);
+            cut.FindAll(".esc-pill--single-lift").Count.ShouldBe(0);
         });
     }
 
