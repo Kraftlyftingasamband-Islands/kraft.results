@@ -89,7 +89,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
     }
 
     [Fact]
-    public void PersonalBestGroupCard_ShowsRecordStar_WhenMatchingRecordExists()
+    public void WhenPbHoldsOneRecord_ShowsRecordPill()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -104,26 +104,13 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
                 Date: new DateOnly(2024, 5, 10),
-                Matches: []),
+                Matches:
+                [
+                    new AthleteRecordMatch("open", "93 kg", false, false, false),
+                ]),
         ];
 
-        List<AthleteRecord> records =
-        [
-            new(
-                Date: new DateOnly(2024, 5, 10),
-                IsClassic: true,
-                IsSingleLift: false,
-                IsWithinPowerlifting: false,
-                IsStandaloneDiscipline: false,
-                WeightCategory: "93 kg",
-                AgeCategory: "open",
-                Type: Constants.Squat,
-                Weight: 200.0m,
-                Meet: "Test Meet",
-                MeetSlug: "test-meet"),
-        ];
-
-        RegisterHttpClient(records: records, personalBests: personalBests);
+        RegisterHttpClient(personalBests: personalBests);
 
         // Act
         IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
@@ -132,17 +119,12 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> stars = cut.FindAll(".pbg-star")
-                .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
-                .ToList();
-
-            stars.Count.ShouldBe(1);
-            stars[0].ShouldBe("Íslandsmet · Opinn flokkur · 93 kg");
+            cut.Find(".esc-pill--record").TextContent.Trim().ShouldBe("★ Íslandsmet");
         });
     }
 
     [Fact]
-    public void PersonalBestGroupCard_ShowsMultipleRecordStars_WhenMultipleAgeCategoriesMatch()
+    public void WhenPbHoldsMultipleRecords_ShowsCountSuffix()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -157,38 +139,14 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
                 Date: new DateOnly(2024, 5, 10),
-                Matches: []),
+                Matches:
+                [
+                    new AthleteRecordMatch("open", "93 kg", false, false, false),
+                    new AthleteRecordMatch("junior", "93 kg", false, false, false),
+                ]),
         ];
 
-        List<AthleteRecord> records =
-        [
-            new(
-                Date: new DateOnly(2024, 5, 10),
-                IsClassic: true,
-                IsSingleLift: false,
-                IsWithinPowerlifting: false,
-                IsStandaloneDiscipline: false,
-                WeightCategory: "93 kg",
-                AgeCategory: "open",
-                Type: Constants.Total,
-                Weight: 600.0m,
-                Meet: "Test Meet",
-                MeetSlug: "test-meet"),
-            new(
-                Date: new DateOnly(2024, 5, 10),
-                IsClassic: true,
-                IsSingleLift: false,
-                IsWithinPowerlifting: false,
-                IsStandaloneDiscipline: false,
-                WeightCategory: "93 kg",
-                AgeCategory: "junior",
-                Type: Constants.Total,
-                Weight: 600.0m,
-                Meet: "Test Meet",
-                MeetSlug: "test-meet"),
-        ];
-
-        RegisterHttpClient(records: records, personalBests: personalBests);
+        RegisterHttpClient(personalBests: personalBests);
 
         // Act
         IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
@@ -197,18 +155,49 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> stars = cut.FindAll(".pbg-star")
-                .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
-                .ToList();
-
-            stars.Count.ShouldBe(2);
-            stars.ShouldContain("Íslandsmet · Opinn flokkur · 93 kg");
-            stars.ShouldContain("Íslandsmet · Unglingaflokkur · 93 kg");
+            cut.Find(".esc-pill--record").TextContent.Trim().ShouldBe("★ Íslandsmet ×2");
         });
     }
 
     [Fact]
-    public void PersonalBestGroupCard_ShowsTranslatedMastersCategory_InTooltip()
+    public void WhenPbHoldsMultipleRecords_TooltipShowsMultipleLines()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.None,
+                Weight: 600.0m,
+                WeightCategory: "93 kg",
+                BodyWeight: 90.5m,
+                MeetSlug: "test-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10),
+                Matches:
+                [
+                    new AthleteRecordMatch("open", "93 kg", false, false, false),
+                    new AthleteRecordMatch("junior", "93 kg", false, false, false),
+                ]),
+        ];
+
+        RegisterHttpClient(personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string tooltip = cut.Find(".esc-pill--record").GetAttribute("data-tooltip").ShouldNotBeNull();
+            tooltip.ShouldBe("Opinn flokkur · 93 kg\nUnglingaflokkur · 93 kg");
+        });
+    }
+
+    [Fact]
+    public void WhenPbHoldsNoRecord_ShowsNoRecordPill()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -226,23 +215,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 Matches: []),
         ];
 
-        List<AthleteRecord> records =
-        [
-            new(
-                Date: new DateOnly(2024, 5, 10),
-                IsClassic: true,
-                IsSingleLift: false,
-                IsWithinPowerlifting: false,
-                IsStandaloneDiscipline: false,
-                WeightCategory: "93 kg",
-                AgeCategory: "masters1",
-                Type: Constants.Squat,
-                Weight: 200.0m,
-                Meet: "Test Meet",
-                MeetSlug: "test-meet"),
-        ];
-
-        RegisterHttpClient(records: records, personalBests: personalBests);
+        RegisterHttpClient(personalBests: personalBests);
 
         // Act
         IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
@@ -251,17 +224,13 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            List<string> stars = cut.FindAll(".pbg-star")
-                .Select(e => e.GetAttribute("data-tooltip") ?? string.Empty)
-                .ToList();
-
-            stars.Count.ShouldBe(1);
-            stars[0].ShouldBe("Íslandsmet · Öldungaflokkur 1 · 93 kg");
+            cut.FindAll("div.esc").Count.ShouldBeGreaterThan(0);
+            cut.FindAll(".esc-pill--record").Count.ShouldBe(0);
         });
     }
 
     [Fact]
-    public void PersonalBestGroupCard_DoesNotShowRecordStar_WhenNoMatchingRecord()
+    public void WhenPbHoldsMastersRecord_TooltipTranslatesToIcelandicLabel()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -276,26 +245,57 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 MeetSlug: "test-meet",
                 MeetType: Constants.Powerlifting,
                 Date: new DateOnly(2024, 5, 10),
-                Matches: []),
+                Matches:
+                [
+                    new AthleteRecordMatch("masters1", "93 kg", true, false, false),
+                ]),
         ];
 
-        List<AthleteRecord> records =
+        RegisterHttpClient(personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string tooltip = cut.Find(".esc-pill--record").GetAttribute("data-tooltip").ShouldNotBeNull();
+            tooltip.ShouldBe("Öldungaflokkur 1 · 93 kg (kraftlyftingar)");
+        });
+    }
+
+    [Fact]
+    public void WhenClassicAndEquipmentPbsBothExist_RendersClassicEraFirst()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
         [
             new(
-                Date: new DateOnly(2024, 5, 10),
-                IsClassic: true,
+                IsClassic: false,
                 IsSingleLift: false,
-                IsWithinPowerlifting: false,
-                IsStandaloneDiscipline: false,
-                WeightCategory: "93 kg",
-                AgeCategory: "Open",
-                Type: Constants.Bench,
+                Discipline: Discipline.Squat,
                 Weight: 150.0m,
-                Meet: "Test Meet",
-                MeetSlug: "test-meet"),
+                WeightCategory: "83 kg",
+                BodyWeight: 80.0m,
+                MeetSlug: "equipped-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2023, 1, 1),
+                Matches: []),
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.Squat,
+                Weight: 200.0m,
+                WeightCategory: "83 kg",
+                BodyWeight: 80.0m,
+                MeetSlug: "classic-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10),
+                Matches: []),
         ];
 
-        RegisterHttpClient(records: records, personalBests: personalBests);
+        RegisterHttpClient(personalBests: personalBests);
 
         // Act
         IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
@@ -304,8 +304,88 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".pbg-card").Count.ShouldBeGreaterThan(0);
-            cut.FindAll(".pbg-star").Count.ShouldBe(0);
+            List<AngleSharp.Dom.IElement> headings = cut.FindAll("h4")
+                .Where(h => h.TextContent.Contains("Besti árangur", StringComparison.Ordinal))
+                .ToList();
+
+            headings.Count.ShouldBe(2);
+            string classicEquipment = DisplayNames.EquipmentType(isClassic: true).ToLowerInvariant();
+            string equippedEquipment = DisplayNames.EquipmentType(isClassic: false).ToLowerInvariant();
+            headings[0].TextContent.Trim().ShouldBe($"Besti árangur {classicEquipment}");
+            headings[1].TextContent.Trim().ShouldBe($"Besti árangur {equippedEquipment}");
+        });
+    }
+
+    [Fact]
+    public void WhenPbExists_RendersUnderCorrectEquipmentEraHeading()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.Squat,
+                Weight: 200.0m,
+                WeightCategory: "83 kg",
+                BodyWeight: 80.0m,
+                MeetSlug: "classic-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10),
+                Matches: []),
+        ];
+
+        RegisterHttpClient(personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string expectedEquipment = DisplayNames.EquipmentType(isClassic: true).ToLowerInvariant();
+            AngleSharp.Dom.IElement heading = cut.FindAll("h4")
+                .Single(h => h.TextContent.Contains("Besti árangur", StringComparison.Ordinal));
+            heading.TextContent.Trim().ShouldBe($"Besti árangur {expectedEquipment}");
+        });
+    }
+
+    [Fact]
+    public void WhenPbHoldsOneRecord_EndToEndShowsRecordPillOnPage()
+    {
+        // Arrange
+        List<AthletePersonalBest> personalBests =
+        [
+            new(
+                IsClassic: true,
+                IsSingleLift: false,
+                Discipline: Discipline.Squat,
+                Weight: 200.0m,
+                WeightCategory: "93 kg",
+                BodyWeight: 90.5m,
+                MeetSlug: "test-meet",
+                MeetType: Constants.Powerlifting,
+                Date: new DateOnly(2024, 5, 10),
+                Matches:
+                [
+                    new AthleteRecordMatch("open", "93 kg", true, false, false),
+                ]),
+        ];
+
+        RegisterHttpClient(personalBests: personalBests);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement pill = cut.Find(".esc-pill--record");
+            pill.TextContent.Trim().ShouldBe("★ Íslandsmet");
+            string tooltip = pill.GetAttribute("data-tooltip").ShouldNotBeNull();
+            tooltip.ShouldBe("Opinn flokkur · 93 kg (kraftlyftingar)");
         });
     }
 

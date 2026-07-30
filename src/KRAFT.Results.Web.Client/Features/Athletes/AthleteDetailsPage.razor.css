@@ -37,18 +37,6 @@
     container-type: inline-size;
 }
 
-.pb-group-container {
-    display: flex;
-    gap: 16px;
-    margin-block-end: 1.5rem;
-}
-
-@media (max-width: 600px) {
-    .pb-group-container {
-        flex-direction: column;
-    }
-}
-
 
 .career-group {
     margin-block-end: 0.5rem;
