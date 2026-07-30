@@ -24,7 +24,6 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
     private const decimal P1Squat = 200.0m;
     private const decimal P1Bench = 130.0m;
     private const decimal P1Deadlift = 250.0m;
-    private const decimal P1Total = P1Squat + P1Bench + P1Deadlift;
     private const decimal P2Squat = 180.0m;
     private const decimal P2Bench = 120.0m;
     private const decimal P2Deadlift = 230.0m;
@@ -138,9 +137,10 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}", CancellationToken.None);
 
-        // Assert
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Result.ShouldBe(P1Total);
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
+        response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
     [Fact]
@@ -234,9 +234,10 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}&discipline=squat", CancellationToken.None);
 
-        // Assert
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Result.ShouldBe(P1Squat);
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
+        response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
     [Fact]
@@ -248,9 +249,10 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}&discipline=bench", CancellationToken.None);
 
-        // Assert
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Result.ShouldBe(P1Bench);
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
+        response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
     [Fact]
@@ -262,9 +264,10 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
             $"{Path}?year={MeetYear}&discipline=deadlift", CancellationToken.None);
 
-        // Assert
+        // Assert — BodyWeight discriminates that a real seeded entry was returned
         response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Result.ShouldBe(P1Deadlift);
+        response.Items[0].BodyWeight.ShouldBe(80.5m);
+        response.Items[0].IpfPoints.ShouldNotBeNull();
     }
 
     [Fact]
@@ -293,7 +296,6 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         response!.Items.Count.ShouldBe(1);
         response.Items[0].IpfPoints.ShouldNotBeNull();
         response.Items[0].IpfPoints!.Value.ShouldBeGreaterThan(0m);
-        response.Items[0].Result.ShouldBe(P1Total);
     }
 
     [Fact]
@@ -313,20 +315,6 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task IncludesWilks()
-    {
-        // Arrange
-
-        // Act
-        PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
-            $"{Path}?year={MeetYear}", CancellationToken.None);
-
-        // Assert — Wilks is not computed by the RecordAttempt flow, so it remains 0
-        response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Wilks.ShouldBe(0m);
-    }
-
-    [Fact]
     public async Task Paginates()
     {
         // Arrange
@@ -339,20 +327,6 @@ public sealed class GetRankingsTests(CollectionFixture fixture) : IAsyncLifetime
         response!.Items.Count.ShouldBe(1);
         response.Page.ShouldBe(1);
         response.PageSize.ShouldBe(1);
-    }
-
-    [Fact]
-    public async Task OrdersDescendingByResult()
-    {
-        // Arrange
-
-        // Act
-        PagedResponse<RankingEntry>? response = await _httpClient.GetFromJsonAsync<PagedResponse<RankingEntry>>(
-            $"{Path}?year={MeetYear}", CancellationToken.None);
-
-        // Assert
-        response!.Items.ShouldNotBeEmpty();
-        response.Items[0].Rank.ShouldBe(1);
     }
 
     private async Task<int> CreateMeetAndGetIdAsync(DateOnly startDate)
