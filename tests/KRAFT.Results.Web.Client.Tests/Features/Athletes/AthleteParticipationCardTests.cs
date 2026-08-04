@@ -71,6 +71,59 @@ public sealed class AthleteParticipationCardTests : IDisposable
     }
 
     [Fact]
+    public void WhenRendered_MetaLineFormatsBodyWeightAsTwoDecimals()
+    {
+        // Arrange & Act
+        IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
+            p => p.Add(c => c.Participation, MakeParticipation())
+                  .Add(c => c.MeetType, Constants.Powerlifting)
+                  .Add(c => c.ShowIpfPoints, false));
+
+        // Assert
+        cut.Find(".ap-meta").TextContent.ShouldContain("82,50 kg");
+    }
+
+    [Fact]
+    public void WhenRendered_MetaLineFormatsDateAsIcelandic()
+    {
+        // Arrange & Act
+        IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
+            p => p.Add(c => c.Participation, MakeParticipation())
+                  .Add(c => c.MeetType, Constants.Powerlifting)
+                  .Add(c => c.ShowIpfPoints, false));
+
+        // Assert
+        cut.Find(".ap-meta").TextContent.ShouldContain("15.03.2024");
+    }
+
+    [Fact]
+    public void WhenShowIpfPoints_MetaLineFormatsPointsAsTwoDecimals()
+    {
+        // Arrange & Act
+        IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
+            p => p.Add(c => c.Participation, MakeParticipation(ipfPoints: 412.34m))
+                  .Add(c => c.MeetType, Constants.Powerlifting)
+                  .Add(c => c.ShowIpfPoints, true));
+
+        // Assert
+        cut.Find(".ap-meta").TextContent.ShouldContain("412,34");
+    }
+
+    [Fact]
+    public void WhenShowWeights_FormatsWeightWithOneDecimalAndComma()
+    {
+        // Arrange & Act
+        IRenderedComponent<AthleteParticipationCard> cut = _context.Render<AthleteParticipationCard>(
+            p => p.Add(c => c.Participation, MakeParticipation(squat: 245.0m))
+                  .Add(c => c.MeetType, Constants.Powerlifting)
+                  .Add(c => c.ShowIpfPoints, false));
+
+        // Assert
+        IReadOnlyList<AngleSharp.Dom.IElement> values = cut.FindAll(".ap-lift-val");
+        values[0].TextContent.ShouldBe("245,0");
+    }
+
+    [Fact]
     public void ShowsOneBenchPill_ForBenchMeet()
     {
         // Arrange

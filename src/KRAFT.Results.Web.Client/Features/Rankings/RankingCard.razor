@@ -22,11 +22,11 @@
 
     protected override void OnParametersSet()
     {
-        _pills = [new MetaPill(PillKind.Neutral, $"{Entry.BodyWeight:F2} kg")];
+        _pills = [new MetaPill(PillKind.Neutral, $"{DisplayFormat.BodyWeight(Entry.BodyWeight)} kg")];
 
         if (Entry.IpfPoints.HasValue)
         {
-            string formatted = Entry.IpfPoints.Value.ToString("F2");
+            string formatted = DisplayFormat.Points(Entry.IpfPoints.Value);
             _value = formatted;
             _valueHref = SlugSanitizer.SlugHref("/meets/", Entry.MeetSlug);
             _valueAriaLabel = $"{formatted} IPF stig, opna mót";

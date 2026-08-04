@@ -22,28 +22,28 @@
             {
                 <div class="ap-lift-pill">
                     <span class="ap-lift-label">@Constants.Squat</span>
-                    <span class="ap-lift-val">@(Participation.Squat > 0 ? Participation.Squat.ToString("F1") : "\u2013")</span>
+                    <span class="ap-lift-val">@(Participation.Squat > 0 ? DisplayFormat.Weight(Participation.Squat) : "\u2013")</span>
                 </div>
             }
             @if (MeetType == Constants.Powerlifting || MeetType.StartsWith(Constants.Bench, StringComparison.Ordinal))
             {
                 <div class="ap-lift-pill">
                     <span class="ap-lift-label">@Constants.Bench</span>
-                    <span class="ap-lift-val">@(Participation.Benchpress > 0 ? Participation.Benchpress.ToString("F1") : "\u2013")</span>
+                    <span class="ap-lift-val">@(Participation.Benchpress > 0 ? DisplayFormat.Weight(Participation.Benchpress) : "\u2013")</span>
                 </div>
             }
             @if (MeetType == Constants.Powerlifting || MeetType.StartsWith(Constants.Deadlift, StringComparison.Ordinal))
             {
                 <div class="ap-lift-pill">
                     <span class="ap-lift-label">@Constants.Deadlift</span>
-                    <span class="ap-lift-val">@(Participation.Deadlift > 0 ? Participation.Deadlift.ToString("F1") : "\u2013")</span>
+                    <span class="ap-lift-val">@(Participation.Deadlift > 0 ? DisplayFormat.Weight(Participation.Deadlift) : "\u2013")</span>
                 </div>
             }
             @if (MeetType == Constants.Powerlifting)
             {
                 <div class="ap-lift-pill ap-lift-total">
                     <span class="ap-lift-label">@Constants.Total</span>
-                    <span class="ap-lift-val">@(Participation.Total > 0 ? Participation.Total.ToString("F1") : "\u2013")</span>
+                    <span class="ap-lift-val">@(Participation.Total > 0 ? DisplayFormat.Weight(Participation.Total) : "\u2013")</span>
                 </div>
             }
         </div>
@@ -88,14 +88,14 @@
 
         List<string> metaParts =
         [
-            Participation.Date.ToString("dd.MM.yyyy"),
+            DisplayFormat.Date(Participation.Date),
             Participation.WeightCategory,
-            $"{Participation.BodyWeight:F1} kg",
+            $"{DisplayFormat.BodyWeight(Participation.BodyWeight)} kg",
         ];
 
         if (ShowIpfPoints && Participation.IpfPoints.HasValue && Participation.IpfPoints.Value > 0)
         {
-            metaParts.Add($"IPF {Participation.IpfPoints.Value:F2}");
+            metaParts.Add($"IPF {DisplayFormat.Points(Participation.IpfPoints.Value)}");
         }
 
         _metaLine = string.Join(" \u00b7 ", metaParts);

@@ -44,8 +44,8 @@ public sealed class DashboardRecordCardTests : IDisposable
         // Assert
         AngleSharp.Dom.IElement valueLink = cut.Find("a.esc-value");
         valueLink.GetAttribute("href").ShouldBe("/meets/kraftlyftingar-2024");
-        valueLink.GetAttribute("aria-label").ShouldBe("Jón Jónsson — Hnéböð — 250 kg");
-        valueLink.TextContent.Trim().ShouldContain("250");
+        valueLink.GetAttribute("aria-label").ShouldBe("Jón Jónsson — Hnéböð — 250,0 kg");
+        valueLink.TextContent.Trim().ShouldContain("250,0");
         cut.Find(".esc-unit").TextContent.Trim().ShouldBe("kg");
     }
 

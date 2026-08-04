@@ -58,10 +58,10 @@
             </AuthorizeView>
         </div>
         <p>
-            @($"{Meet?.StartDate:dd-MM-yyyy}")
+            @(Meet is not null ? DisplayFormat.Date(Meet.StartDate) : string.Empty)
             @if (Meet?.EndDate is DateOnly endDate && endDate != Meet?.StartDate)
             {
-                <span> - @($"{endDate:dd-MM-yyyy}")</span>
+                <span> - @DisplayFormat.Date(endDate)</span>
             }
             <br />
             @Meet?.Location<br />
@@ -110,10 +110,10 @@
                                             <div class="leader-info">
                                                 <NavLink class="leader-name" href="@($"/athletes/{leader.Participation.AthleteSlug}")">@leader.Participation.Athlete</NavLink>
                                                 <span class="leader-meta">
-                                                    @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @($"{leader.Participation.BodyWeight:F2}") kg
+                                                    @leader.Participation.YearOfBirth@(!string.IsNullOrWhiteSpace(leader.Participation.Club) ? $" · {leader.Participation.Club}" : string.Empty) · @DisplayFormat.BodyWeight(leader.Participation.BodyWeight) kg
                                                 </span>
                                             </div>
-                                            <span class="leader-pts">@($"{leader.Participation.IpfPoints:F2}")</span>
+                                            <span class="leader-pts">@DisplayFormat.Points(leader.Participation.IpfPoints)</span>
                                         </div>
                                     }
                                 </div>

@@ -6,10 +6,10 @@
                 NameHref="@SlugSanitizer.SlugHref("/athletes/", Record.AthleteSlug)"
                 Pills="@_pills"
                 Label="@Record.Lift"
-                Value="@Record.Weight.ToString()"
+                Value="@DisplayFormat.Weight(Record.Weight)"
                 Unit="kg"
                 ValueHref="@SlugSanitizer.SlugHref("/meets/", Record.MeetSlug)"
-                ValueAriaLabel="@($"{Record.AthleteName} — {Record.Lift} — {Record.Weight} kg")"
+                ValueAriaLabel="@($"{Record.AthleteName} — {Record.Lift} — {DisplayFormat.Weight(Record.Weight)} kg")"
                 MetaText="@DisplayFormat.MonthYear(Record.MeetDate)"
                 CssClass="card-spaced" />
 
