@@ -86,6 +86,84 @@ public sealed class ParticipationCardTests : IDisposable
         inputAgain.GetAttribute("value").ShouldBe("210,0");
     }
 
+    [Fact]
+    public async Task ExistingAttempt_WhenFirstEdited_InputPreFillsWithCommaDecimal()
+    {
+        // Arrange — participation with one existing squat attempt at 147,5 kg
+        MeetParticipation participation = MakeParticipation(
+            [new MeetAttempt(Discipline.Squat, 1, 147.5m, true, false)]);
+
+        IRenderedComponent<ParticipationCard> cut = _context.Render<ParticipationCard>(
+            p => p.Add(c => c.Participation, participation)
+                  .Add(c => c.ShowIpfPoints, false)
+                  .Add(c => c.ShowClub, false)
+                  .Add(c => c.IncludedDisciplines, new Dictionary<Discipline, bool> { [Discipline.Squat] = true })
+                  .Add(c => c.DesktopGridTemplate, "auto")
+                  .Add(c => c.IsAdmin, true));
+
+        // Act — click the pill to enter edit mode for the first time
+        AngleSharp.Dom.IElement pillButton = cut.Find("button.pill-clickable");
+        await cut.InvokeAsync(() => pillButton.Click());
+
+        // Assert — input pre-fills with Icelandic comma decimal, not a dot
+        AngleSharp.Dom.IElement input = cut.Find("input.inline-attempt-input");
+        input.GetAttribute("value").ShouldBe("147,5");
+    }
+
+    [Fact]
+    public async Task AttemptInput_WhenUserTypesDot_ParsesAndSavesCorrectly()
+    {
+        // Arrange — participation with no existing attempts
+        MeetParticipation participation = MakeParticipation([]);
+
+        IRenderedComponent<ParticipationCard> cut = _context.Render<ParticipationCard>(
+            p => p.Add(c => c.Participation, participation)
+                  .Add(c => c.ShowIpfPoints, false)
+                  .Add(c => c.ShowClub, false)
+                  .Add(c => c.IncludedDisciplines, new Dictionary<Discipline, bool> { [Discipline.Squat] = true })
+                  .Add(c => c.DesktopGridTemplate, "auto")
+                  .Add(c => c.IsAdmin, true));
+
+        // Act — click an empty pill, type using dot decimal separator, then blur to save
+        AngleSharp.Dom.IElement pillButton = cut.Find("button.pill-clickable");
+        await cut.InvokeAsync(() => pillButton.Click());
+
+        AngleSharp.Dom.IElement input = cut.Find("input.inline-attempt-input");
+        await cut.InvokeAsync(() => input.Input("147.5"));
+        await cut.InvokeAsync(() => input.Blur());
+
+        // Assert — pill shows the comma form (no attempt-error visible)
+        cut.FindAll(".attempt-error").Count.ShouldBe(0);
+        cut.Find(".pill").TextContent.Trim().ShouldBe("147,5");
+    }
+
+    [Fact]
+    public async Task AttemptInput_WhenUserTypesComma_ParsesAndSavesCorrectly()
+    {
+        // Arrange — participation with no existing attempts
+        MeetParticipation participation = MakeParticipation([]);
+
+        IRenderedComponent<ParticipationCard> cut = _context.Render<ParticipationCard>(
+            p => p.Add(c => c.Participation, participation)
+                  .Add(c => c.ShowIpfPoints, false)
+                  .Add(c => c.ShowClub, false)
+                  .Add(c => c.IncludedDisciplines, new Dictionary<Discipline, bool> { [Discipline.Squat] = true })
+                  .Add(c => c.DesktopGridTemplate, "auto")
+                  .Add(c => c.IsAdmin, true));
+
+        // Act — click an empty pill, type using comma decimal separator, then blur to save
+        AngleSharp.Dom.IElement pillButton = cut.Find("button.pill-clickable");
+        await cut.InvokeAsync(() => pillButton.Click());
+
+        AngleSharp.Dom.IElement input = cut.Find("input.inline-attempt-input");
+        await cut.InvokeAsync(() => input.Input("147,5"));
+        await cut.InvokeAsync(() => input.Blur());
+
+        // Assert — pill shows the comma form (no attempt-error visible)
+        cut.FindAll(".attempt-error").Count.ShouldBe(0);
+        cut.Find(".pill").TextContent.Trim().ShouldBe("147,5");
+    }
+
     public void Dispose()
     {
         _context.Dispose();

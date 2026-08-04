@@ -2,7 +2,6 @@
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Contracts.Teams
-@using System.Globalization
 
 @inject HttpClient HttpClient
 
@@ -222,7 +221,7 @@
 
     private bool IsFormValid =>
         !string.IsNullOrEmpty(_selectedAthleteSlug)
-        && decimal.TryParse(_bodyWeightText, System.Globalization.NumberStyles.Number, CultureInfo.CurrentCulture, out decimal _bw)
+        && DisplayFormat.TryParseWeight(_bodyWeightText, out decimal _bw)
         && _bw > 0;
 
     private string SubmitHint
@@ -236,7 +235,7 @@
                 missing.Add("veldu keppanda");
             }
 
-            if (!decimal.TryParse(_bodyWeightText, System.Globalization.NumberStyles.Number, CultureInfo.CurrentCulture, out decimal _bwHint) || _bwHint <= 0)
+            if (!DisplayFormat.TryParseWeight(_bodyWeightText, out decimal _bwHint) || _bwHint <= 0)
             {
                 missing.Add("sláðu inn þyngd");
             }
@@ -496,7 +495,7 @@
 
         try
         {
-            decimal.TryParse(_bodyWeightText, System.Globalization.NumberStyles.Number, CultureInfo.CurrentCulture, out decimal parsedBodyWeight);
+            DisplayFormat.TryParseWeight(_bodyWeightText, out decimal parsedBodyWeight);
             AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedTeamId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
                 $"/meets/{MeetId}/participants", command);
@@ -543,7 +542,7 @@
                 continue;
             }
 
-            if (!decimal.TryParse(entry.Value, CultureInfo.CurrentCulture, out decimal weight) || weight == 0)
+            if (!DisplayFormat.TryParseWeight(entry.Value, out decimal weight) || weight == 0)
             {
                 continue;
             }
