@@ -118,7 +118,7 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         masters1AthleteResponse.EnsureSuccessStatusCode();
 
         CreateMeetCommand masters1MeetCommand = new CreateMeetCommandBuilder()
-            .WithStartDate(new DateOnly(2020, 5, 1))
+            .WithStartDate(new DateOnly(2025, 1, 1))
             .WithMeetTypeId(1)
             .WithIsRaw(true)
             .WithPublishedResults(true)
