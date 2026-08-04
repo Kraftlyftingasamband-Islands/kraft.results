@@ -4,6 +4,25 @@ Domain concepts for KRAFT.Results — a powerlifting competition results managem
 
 ---
 
+## Club
+
+### Club vs Team naming
+
+**Club** is the correct domain term — athletes compete for clubs affiliated with KRAFT. The server entity is currently named `Team` (`Team.cs`), which is a naming misnomer; participation-context DTOs already use the domain term (`Club`, `ClubSlug`, `ClubLogoImageFilename` on `MeetParticipation`). New code should prefer **Club** in naming and UI copy.
+
+### Club identity fields
+
+A club has a full title and a **short name** (`TitleShort` on the entity). The short name is the display form used in dense contexts such as attempt cards on meet results.
+
+### Club logo
+
+A club's logo is **optional** — `LogoImageFilename` holds a blob filename resolved against the configured `ImageBaseUrl` (rendered by the `TeamLogo` component with size-specific resize/crop and 2x srcset). Display fallback rules:
+
+- **Attempt cards** — logo when available, otherwise the club short name as text. Any unusable logo (missing, unsafe filename, or runtime 404) degrades to the short name.
+- **Club-centric views** (clubs index, club details, team-competition standings) — logo shown beside the name; a shield-icon placeholder stands in when no logo exists.
+
+---
+
 ## Meet Visibility
 
 ### PublishedResults vs. having results
@@ -19,6 +38,26 @@ The strictness ladder, for reference: has participants (registrations only) < ha
 ### Dashboard eligibility for past meets
 
 The dashboard's recent-meets list shows only past meets (`StartDate <= today`) that are published (`PublishedResults`) **and** have actual results. The filter is role-agnostic — admins see the same list; empty past meets remain reachable via the meets index, which deliberately lists all meets.
+
+---
+
+## Age Categories
+
+### Age-category slug
+
+The **slug** is the canonical machine code for an age category: `open`, `subjunior`, `junior`, `masters1`–`masters4`. It is the value stored on the `AgeCategory` reference row (7 fixed rows), used in routes (`/records/{gender}/{ageCategory}`), form option values, and API filters. The DB `Title` column ("Open", "Masters 3") is an English legacy label inherited from the old system and is never shown in the UI.
+
+### Icelandic age-category label
+
+The user-facing name, produced solely by `DisplayNames.ToAgeCategoryLabel(slug, gender)` in Contracts: `open` → "Opinn flokkur", `junior` → "Unglingaflokkur", `masters1`–`masters4` → "Öldungaflokkur 1–4", and `subjunior` → "Drengjaflokkur" (male) / "Stúlknaflokkur" (female) — the only gender-dependent label, so gender must always be passed when the slug can be `subjunior`. Unknown input yields `string.Empty`, not the input. The Icelandic names are an invention of this codebase; the old system displayed English titles.
+
+### Translation boundary convention
+
+Age-category **display fields in DTOs carry the finished Icelandic label, translated server-side in the handler** (from slug + gender, falling back to the raw `Title` when translation yields empty). The client renders DTO display fields verbatim. Client-side calls to `ToAgeCategoryLabel` are reserved for slug-as-data cases where no DTO display field exists: route parameters (`RecordsPage`), form option values (`AddParticipantForm`), client-computed slugs (`BirthYear`), and static page structure (`RecordsIndex`). Fields carrying a slug are named `*Slug` (e.g. `AgeCategorySlug`); a field named `AgeCategory` in a DTO is always the Icelandic label.
+
+### Slug cascade
+
+A record set in a more specific category can also count in broader ones. `AgeCategory.GetCascadeSlugs` expands a biological slug (from `AgeCategory.ResolveSlug(dateOfBirth, meetDate)`, per IPF age bands) into all categories the lift competes in; `RecordAgeCategorySelector.SelectBestLabel` picks the most specific non-`open` slug when labeling a record.
 
 ---
 
