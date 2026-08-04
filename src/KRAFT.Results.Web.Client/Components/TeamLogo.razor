@@ -43,6 +43,7 @@
     {
         _sizeClass = Size switch
         {
+            TeamLogoSize.XSmall => "team-logo--xs",
             TeamLogoSize.Small => "team-logo--sm",
             TeamLogoSize.Medium => "team-logo--md",
             TeamLogoSize.Large => "team-logo--lg",
@@ -51,6 +52,10 @@
 
         (int width, int height, bool crop) dims = Size switch
         {
+            // XSmall deliberately requests its display size (24/48) rather than
+            // over-requesting like the other sizes — per issue #593 AC. Do not
+            // change this to match the Small/Medium pattern.
+            TeamLogoSize.XSmall => (24, 24, true),
             TeamLogoSize.Large => (128, 128, false),
             _ => (64, 64, true),
         };

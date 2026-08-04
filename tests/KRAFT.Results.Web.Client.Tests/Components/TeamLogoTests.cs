@@ -85,6 +85,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Theory]
+    [InlineData(TeamLogoSize.XSmall, "team-logo--xs")]
     [InlineData(TeamLogoSize.Small, "team-logo--sm")]
     [InlineData(TeamLogoSize.Medium, "team-logo--md")]
     [InlineData(TeamLogoSize.Large, "team-logo--lg")]
@@ -98,6 +99,43 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         cut.Find($".team-logo.{expectedClass}").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RendersSrcset2x_WhenSizeIsXSmall()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "thor.png")
+                .Add(c => c.Size, TeamLogoSize.XSmall));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        string? srcset = img.GetAttribute("srcset");
+        srcset.ShouldNotBeNull();
+        srcset.ShouldEndWith(" 2x");
+        srcset.ShouldContain("width=48");
+        srcset.ShouldContain("height=48");
+        srcset.ShouldContain("crop=auto");
+    }
+
+    [Fact]
+    public void SrcRemainsUnchanged_WhenSrcsetIsAdded_ForXSmall()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "thor.png")
+                .Add(c => c.Size, TeamLogoSize.XSmall));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=24&height=24&crop=auto");
     }
 
     [Fact]
