@@ -260,8 +260,14 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     [Fact]
     public async Task LatestRecordsMen_AgeCategoryIsTranslatedToIcelandicLabel()
     {
-        // Arrange — seed a masters1 male athlete locally.
+        // Arrange — seed a masters1 male athlete in a bench-only meet.
         // Born 1975, meet date 2021-01-01: IPF age = 2021 − 1975 = 46 → masters1.
+        // A bench-only meet (MeetTypeId=2, Benchpress) is used so that a single good
+        // attempt satisfies HasValidTotal (only bench is required) and creates exactly
+        // 2 IsCurrent BenchSingle records: one for masters1 and one for the open
+        // cascade slot. With only 2 records in the DB, both are guaranteed to appear
+        // in the handler's Take(3), making the assertion deterministic regardless of
+        // the random tiebreaker on Date ties.
         // The 2021 meet date keeps this meet older than the 2022 range used by
         // WhenMoreThanThreeQualifyingMeetsExist, so it does not displace any of
         // that test's meets from the top-3 recent-meets window.
@@ -286,9 +292,12 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
                 "/athletes", masters1AthleteCommand, CancellationToken.None);
             masters1AthleteResponse.EnsureSuccessStatusCode();
 
+            // MeetTypeId=2 = Benchpress (single-lift bench meet): one good bench attempt
+            // is enough for a valid total, so BenchSingle records are created for the
+            // masters1 and open cascade age categories — exactly 2 IsCurrent records.
             CreateMeetCommand masters1MeetCommand = new CreateMeetCommandBuilder()
                 .WithStartDate(new DateOnly(2021, 1, 1))
-                .WithMeetTypeId(1)
+                .WithMeetTypeId(2)
                 .WithIsRaw(true)
                 .WithPublishedResults(true)
                 .WithPublishedInCalendar(false)
@@ -322,7 +331,7 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
                 .Build();
 
             HttpResponseMessage masters1AttemptResponse = await _recordClient.PutAsJsonAsync(
-                $"{MeetsPath}/{masters1MeetId}/participants/{masters1ParticipationId}/attempts/{(int)Discipline.Squat}/1",
+                $"{MeetsPath}/{masters1MeetId}/participants/{masters1ParticipationId}/attempts/{(int)Discipline.Bench}/1",
                 masters1AttemptCommand,
                 CancellationToken.None);
             masters1AttemptResponse.EnsureSuccessStatusCode();
