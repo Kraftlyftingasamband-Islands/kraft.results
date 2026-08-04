@@ -106,7 +106,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 Date: new DateOnly(2024, 5, 10),
                 Matches:
                 [
-                    new AthleteRecordMatch("open", "93 kg", false, false, false),
+                    new AthleteRecordMatch("Opinn flokkur", "93 kg", false, false, false),
                 ]),
         ];
 
@@ -141,8 +141,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 Date: new DateOnly(2024, 5, 10),
                 Matches:
                 [
-                    new AthleteRecordMatch("open", "93 kg", false, false, false),
-                    new AthleteRecordMatch("junior", "93 kg", false, false, false),
+                    new AthleteRecordMatch("Opinn flokkur", "93 kg", false, false, false),
+                    new AthleteRecordMatch("Unglingaflokkur", "93 kg", false, false, false),
                 ]),
         ];
 
@@ -177,8 +177,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 Date: new DateOnly(2024, 5, 10),
                 Matches:
                 [
-                    new AthleteRecordMatch("open", "93 kg", false, false, false),
-                    new AthleteRecordMatch("junior", "93 kg", false, false, false),
+                    new AthleteRecordMatch("Opinn flokkur", "93 kg", false, false, false),
+                    new AthleteRecordMatch("Unglingaflokkur", "93 kg", false, false, false),
                 ]),
         ];
 
@@ -230,7 +230,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
     }
 
     [Fact]
-    public void WhenPbHoldsMastersRecord_TooltipTranslatesToIcelandicLabel()
+    public void WhenPbHoldsMastersRecord_TooltipRendersLabelVerbatim()
     {
         // Arrange
         List<AthletePersonalBest> personalBests =
@@ -247,7 +247,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 Date: new DateOnly(2024, 5, 10),
                 Matches:
                 [
-                    new AthleteRecordMatch("masters1", "93 kg", true, false, false),
+                    new AthleteRecordMatch("Öldungaflokkur 1", "93 kg", true, false, false),
                 ]),
         ];
 
@@ -369,7 +369,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
                 Date: new DateOnly(2024, 5, 10),
                 Matches:
                 [
-                    new AthleteRecordMatch("open", "93 kg", true, false, false),
+                    new AthleteRecordMatch("Opinn flokkur", "93 kg", true, false, false),
                 ]),
         ];
 
