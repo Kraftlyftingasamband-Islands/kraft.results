@@ -28,6 +28,9 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     private const decimal StandardSquatWeight = 220.0m;
     private const decimal TotalWilksWeight = 400.0m;
     private const decimal TotalIpfPointsWeight = 85.5m;
+    private const decimal MastersSquatWeight = 185.0m;
+    private const decimal MastersBenchWeight = 120.0m;
+    private const decimal MastersDeadliftWeight = 230.0m;
 
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
     private HttpClient _authorizedHttpClient = null!;
@@ -38,6 +41,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
     private string _equippedMeetSlug = string.Empty;
     private string _athleteName = string.Empty;
     private string _athleteSlug = string.Empty;
+    private string _mastersAthleteSlug = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
@@ -152,6 +156,50 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         await RecordAttempt(_equippedMeetId, equippedParticipationId, (int)Discipline.Deadlift, 1, DeadliftWeight);
         await RecordAttempt(
             _equippedMeetId, equippedParticipationId, (int)Discipline.Squat, 1, EquippedSquatWeight);
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+        // Create a masters1 athlete (born 1975 → age 40+ at meet time) in the 93kg weight class
+        string mastersCode = UniqueShortCode.Next();
+        string mastersFirstName = $"Masters{mastersCode}";
+        string mastersLastName = "Athlete";
+        _mastersAthleteSlug = Slug.Create($"{mastersFirstName} {mastersLastName}");
+
+        CreateAthleteCommand mastersAthleteCommand = new CreateAthleteCommandBuilder()
+            .WithFirstName(mastersFirstName)
+            .WithLastName(mastersLastName)
+            .WithDateOfBirth(new DateOnly(1975, 1, 1))
+            .Build();
+
+        HttpResponseMessage createMastersAthleteResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            "/athletes",
+            mastersAthleteCommand,
+            CancellationToken.None);
+
+        createMastersAthleteResponse.EnsureSuccessStatusCode();
+
+        // Add masters1 participant to the raw meet in the 93kg weight class
+        AddParticipantCommand mastersParticipantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(_mastersAthleteSlug)
+            .WithBodyWeight(88.0m)
+            .WithAgeCategorySlug("masters1")
+            .Build();
+
+        HttpResponseMessage addMastersParticipantResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{_rawMeetId}/participants",
+            mastersParticipantCommand,
+            CancellationToken.None);
+
+        addMastersParticipantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? mastersParticipantResult = await addMastersParticipantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+
+        int mastersParticipationId = mastersParticipantResult!.ParticipationId;
+
+        // Record attempts for masters1 athlete — triggers record computation for masters1 classic records
+        await RecordAttempt(_rawMeetId, mastersParticipationId, (int)Discipline.Bench, 1, MastersBenchWeight);
+        await RecordAttempt(_rawMeetId, mastersParticipationId, (int)Discipline.Deadlift, 1, MastersDeadliftWeight);
+        await RecordAttempt(_rawMeetId, mastersParticipationId, (int)Discipline.Squat, 1, MastersSquatWeight);
         await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
 
         // Find a squat attempt ID from the raw meet for negative-filter SQL INSERTs
@@ -293,7 +341,7 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         MeetRecordEntry squatRecord = records
             .Where(r => r.Weight == EquippedSquatWeight)
             .Where(r => r.Discipline == "Hnébeygja")
-            .Where(r => r.AgeCategory == "Open")
+            .Where(r => r.AgeCategory == "Opinn flokkur")
             .First(r => !r.IsClassic);
 
         squatRecord.AthleteName.ShouldBe(_athleteName);
@@ -318,6 +366,42 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
 
         MeetRecordEntry classicRecord = records.First(r => r.Weight == ClassicSquatWeight);
         classicRecord.IsClassic.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AgeCategoryLabel_IsTranslatedToIcelandic_ForOpenCategory()
+    {
+        // Arrange & Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
+            $"{BasePath}/{_equippedMeetSlug}/records",
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        List<MeetRecordEntry>? records = await response.Content
+            .ReadFromJsonAsync<List<MeetRecordEntry>>(CancellationToken.None);
+        records.ShouldNotBeNull();
+
+        records.ShouldContain(r => r.AgeCategory == "Opinn flokkur");
+        records.ShouldNotContain(r => r.AgeCategory == "Open");
+    }
+
+    [Fact]
+    public async Task AgeCategoryLabel_IsTranslatedToIcelandic_ForMasters1Category()
+    {
+        // Arrange & Act
+        HttpResponseMessage response = await _unauthorizedHttpClient.GetAsync(
+            $"{BasePath}/{_rawMeetSlug}/records",
+            CancellationToken.None);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        List<MeetRecordEntry>? records = await response.Content
+            .ReadFromJsonAsync<List<MeetRecordEntry>>(CancellationToken.None);
+        records.ShouldNotBeNull();
+
+        records.ShouldContain(r => r.AgeCategory == "Öldungaflokkur 1");
+        records.ShouldNotContain(r => r.AgeCategory == "masters1");
     }
 
     [Fact]
@@ -398,6 +482,13 @@ public sealed class GetMeetRecordsTests(CollectionFixture fixture) : IAsyncLifet
         {
             await _authorizedHttpClient.DeleteAsync(
                 $"/athletes/{_athleteSlug}",
+                CancellationToken.None);
+        }
+
+        if (_mastersAthleteSlug.Length > 0)
+        {
+            await _authorizedHttpClient.DeleteAsync(
+                $"/athletes/{_mastersAthleteSlug}",
                 CancellationToken.None);
         }
     }
