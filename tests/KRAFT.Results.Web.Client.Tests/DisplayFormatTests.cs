@@ -10,7 +10,7 @@ public sealed class DisplayFormatTests
     [InlineData(220.5, "220,5")]
     [InlineData(200.0, "200,0")]
     [InlineData(1057.5, "1057,5")]
-    public void Weight_WhenCalled_FormatsWithOneDecimalAndCommaNoThousandsSeparator(
+    public void WhenWeightFormatted_UsesOneDecimalWithCommaAndNoThousandsSeparator(
         double input,
         string expected)
     {
@@ -27,7 +27,7 @@ public sealed class DisplayFormatTests
     [Theory]
     [InlineData(82.5, "82,50")]
     [InlineData(82.0, "82,00")]
-    public void BodyWeight_WhenCalled_FormatsWithTwoDecimalsAndComma(double input, string expected)
+    public void WhenBodyWeightFormatted_UsesTwoDecimalsWithComma(double input, string expected)
     {
         // Arrange
         decimal value = (decimal)input;
@@ -42,7 +42,7 @@ public sealed class DisplayFormatTests
     [Theory]
     [InlineData(512.3, "512,30")]
     [InlineData(100.0, "100,00")]
-    public void Points_WhenCalled_FormatsWithTwoDecimalsAndComma(double input, string expected)
+    public void WhenPointsFormatted_UsesTwoDecimalsWithComma(double input, string expected)
     {
         // Arrange
         decimal value = (decimal)input;
@@ -55,7 +55,7 @@ public sealed class DisplayFormatTests
     }
 
     [Fact]
-    public void Date_WithDateOnly_FormatsAsDdMmYyyy()
+    public void WhenDateOnlyFormatted_UsesIcelandicDotSeparatedDate()
     {
         // Arrange
         DateOnly date = new(2024, 3, 15);
@@ -68,7 +68,7 @@ public sealed class DisplayFormatTests
     }
 
     [Fact]
-    public void Date_WithDateTime_FormatsAsDdMmYyyy()
+    public void WhenDateTimeFormatted_UsesIcelandicDotSeparatedDate()
     {
         // Arrange
         DateTime date = new(2024, 3, 15, 10, 30, 0, DateTimeKind.Utc);
@@ -81,7 +81,7 @@ public sealed class DisplayFormatTests
     }
 
     [Fact]
-    public void MonthYear_FormatsAsMmmYyyyWithIcelandicAbbreviation()
+    public void WhenMonthYearFormatted_UsesIcelandicAbbreviatedMonthName()
     {
         // Arrange
         DateOnly date = new(2024, 3, 15);
@@ -93,12 +93,41 @@ public sealed class DisplayFormatTests
         result.ShouldBe("mar. 2024");
     }
 
+    [Fact]
+    public void WhenMeetCardDateFormatted_UsesIcelandicAbbreviatedMonthWithSpaces()
+    {
+        // Arrange
+        DateOnly date = new(2024, 1, 15);
+
+        // Act
+        string result = DisplayFormat.MeetCardDate(date);
+
+        // Assert
+        result.ShouldBe("15. jan. 2024");
+    }
+
+    [Fact]
+    public void WhenMonthNameFormatted_UsesIcelandicFullMonthName()
+    {
+        // Arrange
+        DateOnly date = new(2024, 1, 15);
+
+        // Act
+        string result = DisplayFormat.MonthName(date);
+
+        // Assert
+        result.ShouldBe("janúar");
+    }
+
     [Theory]
     [InlineData("147,5", true, 147.5)]
     [InlineData("147.5", true, 147.5)]
     [InlineData("1057,5", true, 1057.5)]
     [InlineData("200", true, 200.0)]
-    public void TryParseWeight_WhenValidInput_ReturnsTrueAndParsedValue(
+    [InlineData("-147,5", true, -147.5)]
+    [InlineData("-147.5", true, -147.5)]
+    [InlineData(".5", true, 0.5)]
+    public void WhenInputIsValid_TryParseWeightReturnsTrueAndParsedValue(
         string input,
         bool expectedSuccess,
         double expectedValue)
@@ -120,7 +149,7 @@ public sealed class DisplayFormatTests
     [InlineData("   ")]
     [InlineData("abc")]
     [InlineData("1.500,5")]
-    public void TryParseWeight_WhenInvalidInput_ReturnsFalse(string? input)
+    public void WhenInputIsInvalid_TryParseWeightReturnsFalse(string? input)
     {
         // Arrange
         // (input supplied by theory)
