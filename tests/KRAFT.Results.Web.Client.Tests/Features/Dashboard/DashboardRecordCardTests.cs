@@ -65,10 +65,10 @@ public sealed class DashboardRecordCardTests : IDisposable
     }
 
     [Fact]
-    public void WhenRendered_AgePillTextEqualsToAgeCategoryLabel()
+    public void WhenRendered_AgePillRendersAgeCategoryVerbatim()
     {
         // Arrange
-        DashboardRecordEntry record = BuildRecord(ageCategory: "masters1");
+        DashboardRecordEntry record = BuildRecord(ageCategory: "Öldungaflokkur 1");
         RegisterServices();
 
         // Act
@@ -116,7 +116,7 @@ public sealed class DashboardRecordCardTests : IDisposable
     public void WhenRendered_ThreePillsInOrderWeightAgeEquipment()
     {
         // Arrange
-        DashboardRecordEntry record = BuildRecord(weightCategory: "-83", ageCategory: "open", isClassic: true);
+        DashboardRecordEntry record = BuildRecord(weightCategory: "-83", ageCategory: "Opinn flokkur", isClassic: true);
         RegisterServices();
 
         // Act
