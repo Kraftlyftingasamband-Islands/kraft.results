@@ -24,6 +24,19 @@ public static class DisplayFormat
     public static string MonthYear(DateOnly value) =>
         value.ToString("MMM yyyy", IcelandicCulture);
 
+    public static string MeetCardDate(DateOnly value) =>
+        value.ToString("dd. MMM yyyy", IcelandicCulture);
+
+    public static string MonthName(DateOnly value) =>
+        value.ToString("MMMM", IcelandicCulture);
+
+    /// <summary>
+    /// Attempts to parse a weight value from user input.
+    /// Accepts both comma (<c>,</c>) and dot (<c>.</c>) as the decimal separator.
+    /// Accepts a leading sign (negative values represent failed lift attempts).
+    /// Rejects input containing more than one separator, null, whitespace, or non-numeric text.
+    /// Returns <see langword="false"/> and sets <paramref name="value"/> to zero on failure.
+    /// </summary>
     public static bool TryParseWeight(string? input, out decimal value)
     {
         value = 0m;

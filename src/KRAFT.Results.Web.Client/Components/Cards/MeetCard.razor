@@ -7,7 +7,7 @@
 <Card Clickable="@_isLinked" CssClass="@_cardClasses">
     <div class="meet-card-header">
         <time class="meet-card-date" datetime="@Meet.StartDate.ToString("yyyy-MM-dd")">
-            @Meet.StartDate.ToString("dd. MMM yyyy", new System.Globalization.CultureInfo("is-IS"))
+            @DisplayFormat.MeetCardDate(Meet.StartDate)
         </time>
         <div class="meet-card-pills">
             <span class="pill pill-discipline">@Meet.Discipline</span>

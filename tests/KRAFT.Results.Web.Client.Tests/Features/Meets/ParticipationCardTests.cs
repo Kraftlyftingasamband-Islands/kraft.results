@@ -111,6 +111,30 @@ public sealed class ParticipationCardTests : IDisposable
     }
 
     [Fact]
+    public async Task WhenFailedAttemptIsEdited_InputPreFillsWithNegativeCommaForm()
+    {
+        // Arrange — participation with a failed squat attempt at 147.5 kg (IsGood = false)
+        MeetParticipation participation = MakeParticipation(
+            [new MeetAttempt(Discipline.Squat, 1, 147.5m, false, false)]);
+
+        IRenderedComponent<ParticipationCard> cut = _context.Render<ParticipationCard>(
+            p => p.Add(c => c.Participation, participation)
+                  .Add(c => c.ShowIpfPoints, false)
+                  .Add(c => c.ShowClub, false)
+                  .Add(c => c.IncludedDisciplines, new Dictionary<Discipline, bool> { [Discipline.Squat] = true })
+                  .Add(c => c.DesktopGridTemplate, "auto")
+                  .Add(c => c.IsAdmin, true));
+
+        // Act — click the pill to enter edit mode for the first time
+        AngleSharp.Dom.IElement pillButton = cut.Find("button.pill-clickable");
+        await cut.InvokeAsync(() => pillButton.Click());
+
+        // Assert — input pre-fills with Icelandic negative comma decimal
+        AngleSharp.Dom.IElement input = cut.Find("input.inline-attempt-input");
+        input.GetAttribute("value").ShouldBe("-147,5");
+    }
+
+    [Fact]
     public async Task AttemptInput_WhenUserTypesDot_ParsesAndSavesCorrectly()
     {
         // Arrange — participation with no existing attempts

@@ -495,7 +495,11 @@
 
         try
         {
-            DisplayFormat.TryParseWeight(_bodyWeightText, out decimal parsedBodyWeight);
+            if (!DisplayFormat.TryParseWeight(_bodyWeightText, out decimal parsedBodyWeight) || parsedBodyWeight <= 0)
+            {
+                return;
+            }
+
             AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedTeamId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
                 $"/meets/{MeetId}/participants", command);
