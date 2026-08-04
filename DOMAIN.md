@@ -4,6 +4,25 @@ Domain concepts for KRAFT.Results — a powerlifting competition results managem
 
 ---
 
+## Club
+
+### Club vs Team naming
+
+**Club** is the correct domain term — athletes compete for clubs affiliated with KRAFT. The server entity is currently named `Team` (`Team.cs`), which is a naming misnomer; participation-context DTOs already use the domain term (`Club`, `ClubSlug`, `ClubLogoImageFilename` on `MeetParticipation`). New code should prefer **Club** in naming and UI copy.
+
+### Club identity fields
+
+A club has a full title and a **short name** (`TitleShort` on the entity). The short name is the display form used in dense contexts such as attempt cards on meet results.
+
+### Club logo
+
+A club's logo is **optional** — `LogoImageFilename` holds a blob filename resolved against the configured `ImageBaseUrl` (rendered by the `TeamLogo` component with size-specific resize/crop and 2x srcset). Display fallback rules:
+
+- **Attempt cards** — logo when available, otherwise the club short name as text. Any unusable logo (missing, unsafe filename, or runtime 404) degrades to the short name.
+- **Club-centric views** (clubs index, club details, team-competition standings) — logo shown beside the name; a shield-icon placeholder stands in when no logo exists.
+
+---
+
 ## Meet Visibility
 
 ### PublishedResults vs. having results
