@@ -26,6 +26,7 @@ internal sealed class GetMeetRecordsHandler(ResultsDbContext dbContext)
         }
 
         var rows = await dbContext.Set<Record>()
+            .AsNoTracking()
             .Where(r => r.Attempt != null)
             .Where(r => r.Attempt!.Participation.Meet.Slug == slug)
             .Where(r => !r.IsStandard)
@@ -47,8 +48,7 @@ internal sealed class GetMeetRecordsHandler(ResultsDbContext dbContext)
         List<MeetRecordEntry> records = rows
             .Select(r =>
             {
-                string label = r.AgeCategorySlug?.ToAgeCategoryLabel(r.Gender) ?? string.Empty;
-                string ageCategory = label.Length > 0 ? label : r.AgeCategoryTitle;
+                string ageCategory = DisplayNames.ResolveAgeCategoryLabel(r.AgeCategorySlug, r.AgeCategoryTitle, r.Gender);
 
                 return new MeetRecordEntry(
                     r.AthleteName,

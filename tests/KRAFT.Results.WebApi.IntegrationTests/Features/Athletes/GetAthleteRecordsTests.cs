@@ -103,17 +103,18 @@ public sealed class GetAthleteRecordsTests(CollectionFixture fixture) : IAsyncLi
     }
 
     [Fact]
-    public async Task WhenAthleteDoesNotExist_ReturnsNotFound()
+    public async Task WhenAthleteDoesNotExist_ReturnsEmptyList()
     {
         // Arrange
 
         // Act
-        HttpResponseMessage response = await _httpClient.GetAsync(
+        List<AthleteRecord>? records = await _httpClient.GetFromJsonAsync<List<AthleteRecord>>(
             $"/athletes/does-not-exist-{_suffix}/records",
             TestContext.Current.CancellationToken);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        records.ShouldNotBeNull();
+        records.ShouldBeEmpty();
     }
 
     private async Task<string> CreateAthleteAsync(string prefix, string gender, DateOnly dateOfBirth)

@@ -93,4 +93,15 @@ public static class DisplayNames
     public static string EquipmentType(bool isClassic) => isClassic
         ? "Án búnaðar"
         : "Með búnaði";
+
+    public static string ResolveAgeCategoryLabel(string? slug, string title, string? gender = null)
+    {
+        if (slug is null)
+        {
+            return title;
+        }
+
+        string label = slug.ToAgeCategoryLabel(gender);
+        return label.Length > 0 ? label : title;
+    }
 }
