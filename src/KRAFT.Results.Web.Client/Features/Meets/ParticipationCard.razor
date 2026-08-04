@@ -2,7 +2,6 @@
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Authorization
-@using System.Globalization
 
 @inject HttpClient HttpClient
 @inject IJSRuntime JS
@@ -408,8 +407,8 @@
 
         if (attempt is not null && attempt.Weight > 0)
         {
-            decimal signedWeight = attempt.IsGood ? attempt.Weight : -attempt.Weight;
-            _editValues[(discipline, round)] = signedWeight.ToString("F1", CultureInfo.CurrentCulture);
+            string sign = attempt.IsGood ? string.Empty : "-";
+            _editValues[(discipline, round)] = sign + DisplayFormat.Weight(attempt.Weight);
         }
         else
         {
@@ -433,7 +432,7 @@
             return;
         }
 
-        if (!decimal.TryParse(value, CultureInfo.CurrentCulture, out decimal weight) || weight == 0)
+        if (!DisplayFormat.TryParseWeight(value, out decimal weight) || weight == 0)
         {
             _attemptErrors[(discipline, round)] = "Ógilt gildi";
             return;
