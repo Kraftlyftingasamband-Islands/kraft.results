@@ -22,6 +22,26 @@ The dashboard's recent-meets list shows only past meets (`StartDate <= today`) t
 
 ---
 
+## Age Categories
+
+### Age-category slug
+
+The **slug** is the canonical machine code for an age category: `open`, `subjunior`, `junior`, `masters1`–`masters4`. It is the value stored on the `AgeCategory` reference row (7 fixed rows), used in routes (`/records/{gender}/{ageCategory}`), form option values, and API filters. The DB `Title` column ("Open", "Masters 3") is an English legacy label inherited from the old system and is never shown in the UI.
+
+### Icelandic age-category label
+
+The user-facing name, produced solely by `DisplayNames.ToAgeCategoryLabel(slug, gender)` in Contracts: `open` → "Opinn flokkur", `junior` → "Unglingaflokkur", `masters1`–`masters4` → "Öldungaflokkur 1–4", and `subjunior` → "Drengjaflokkur" (male) / "Stúlknaflokkur" (female) — the only gender-dependent label, so gender must always be passed when the slug can be `subjunior`. Unknown input yields `string.Empty`, not the input. The Icelandic names are an invention of this codebase; the old system displayed English titles.
+
+### Translation boundary convention
+
+Age-category **display fields in DTOs carry the finished Icelandic label, translated server-side in the handler** (from slug + gender, falling back to the raw `Title` when translation yields empty). The client renders DTO display fields verbatim. Client-side calls to `ToAgeCategoryLabel` are reserved for slug-as-data cases where no DTO display field exists: route parameters (`RecordsPage`), form option values (`AddParticipantForm`), client-computed slugs (`BirthYear`), and static page structure (`RecordsIndex`). Fields carrying a slug are named `*Slug` (e.g. `AgeCategorySlug`); a field named `AgeCategory` in a DTO is always the Icelandic label.
+
+### Slug cascade
+
+A record set in a more specific category can also count in broader ones. `AgeCategory.GetCascadeSlugs` expands a biological slug (from `AgeCategory.ResolveSlug(dateOfBirth, meetDate)`, per IPF age bands) into all categories the lift competes in; `RecordAgeCategorySelector.SelectBestLabel` picks the most specific non-`open` slug when labeling a record.
+
+---
+
 ## Bans and Disqualification
 
 ### Ban
