@@ -10,43 +10,57 @@ namespace KRAFT.Results.WebApi.Features.Athletes.GetRecords;
 
 internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
 {
-    public Task<List<AthleteRecord>> Handle(string slug, CancellationToken cancellationToken) =>
-        dbContext.Set<Record>()
-        .Where(x => x.Attempt!.Participation.Athlete.Slug == slug)
-        .Where(x => x.IsCurrent)
-        .Where(x => x.Era.EndDate.Year > DateTime.UtcNow.Year)
-        .OrderByDescending(x => x.Attempt!.Participation.Meet.StartDate)
-        .ThenBy(x => x.WeightCategoryId)
-        .ThenBy(x => x.AgeCategory.AgeCategoryId)
-        .ThenBy(x => x.Attempt!.Discipline)
-        .Select(x => new
-        {
-            x.Date,
-            IsClassic = x.Attempt!.Participation.Meet.IsRaw,
-            IsSingleLift = x.Attempt.Participation.Meet.Category != MeetCategory.Powerlifting,
-            WeightCategory = x.WeightCategory.Title,
-            AgeCategory = x.AgeCategory.Slug ?? x.AgeCategory.Title,
-            x.Attempt.Participation.Total,
-            x.Weight,
-            x.Attempt.Discipline,
-            x.RecordCategoryId,
-            MeetTitle = x.Attempt.Participation.Meet.Title,
-            MeetYear = x.Attempt.Participation.Meet.StartDate.Year,
-            MeetSlug = x.Attempt.Participation.Meet.Slug,
-        })
-        .Select(x => new AthleteRecord(
-            x.Date,
-            x.IsClassic,
-            x.IsSingleLift,
-            IsWithinPowerlifting: (x.RecordCategoryId == RecordCategory.BenchSingle || x.RecordCategoryId == RecordCategory.DeadliftSingle) && !x.IsSingleLift,
-            IsStandaloneDiscipline: x.RecordCategoryId == RecordCategory.Bench || x.RecordCategoryId == RecordCategory.Deadlift,
-            x.WeightCategory,
-            x.AgeCategory,
-            MapRecordType(x.RecordCategoryId),
-            x.Weight,
-            $"{x.MeetTitle} {x.MeetYear}",
-            x.MeetSlug))
-        .ToListAsync(cancellationToken);
+    public async Task<List<AthleteRecord>> Handle(string slug, CancellationToken cancellationToken)
+    {
+        var rows = await dbContext.Set<Record>()
+            .AsNoTracking()
+            .Where(x => x.Attempt!.Participation.Athlete.Slug == slug)
+            .Where(x => x.IsCurrent)
+            .Where(x => x.Era.EndDate.Year > DateTime.UtcNow.Year)
+            .OrderByDescending(x => x.Attempt!.Participation.Meet.StartDate)
+            .ThenBy(x => x.WeightCategoryId)
+            .ThenBy(x => x.AgeCategory.AgeCategoryId)
+            .ThenBy(x => x.Attempt!.Discipline)
+            .Select(x => new
+            {
+                x.Date,
+                IsClassic = x.Attempt!.Participation.Meet.IsRaw,
+                IsSingleLift = x.Attempt.Participation.Meet.Category != MeetCategory.Powerlifting,
+                WeightCategory = x.WeightCategory.Title,
+                AgeCategorySlug = x.AgeCategory.Slug,
+                AgeCategoryTitle = x.AgeCategory.Title,
+                Gender = x.Attempt.Participation.Athlete.Gender,
+                x.Attempt.Participation.Total,
+                x.Weight,
+                x.Attempt.Discipline,
+                x.RecordCategoryId,
+                MeetTitle = x.Attempt.Participation.Meet.Title,
+                MeetYear = x.Attempt.Participation.Meet.StartDate.Year,
+                MeetSlug = x.Attempt.Participation.Meet.Slug,
+            })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x =>
+            {
+                string label = x.AgeCategorySlug?.ToAgeCategoryLabel(x.Gender) ?? string.Empty;
+                string ageCategory = label.Length > 0 ? label : x.AgeCategoryTitle;
+
+                return new AthleteRecord(
+                    x.Date,
+                    x.IsClassic,
+                    x.IsSingleLift,
+                    IsWithinPowerlifting: (x.RecordCategoryId == RecordCategory.BenchSingle || x.RecordCategoryId == RecordCategory.DeadliftSingle) && !x.IsSingleLift,
+                    IsStandaloneDiscipline: x.RecordCategoryId == RecordCategory.Bench || x.RecordCategoryId == RecordCategory.Deadlift,
+                    x.WeightCategory,
+                    ageCategory,
+                    MapRecordType(x.RecordCategoryId),
+                    x.Weight,
+                    $"{x.MeetTitle} {x.MeetYear}",
+                    x.MeetSlug);
+            })
+            .ToList();
+    }
 
 #pragma warning disable S3358 // Ternary operators should not be nested
     private static string MapRecordType(RecordCategory category) =>
