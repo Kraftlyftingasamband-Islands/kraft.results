@@ -1,4 +1,3 @@
-@using System.Globalization
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Client.Components.Cards
@@ -6,7 +5,7 @@
 <EntityStatCard Name="@_name"
                 Pills="@_pills"
                 MetaText="@_metaText"
-                Value="@Best.Weight.ToString("F1", CultureInfo.InvariantCulture)"
+                Value="@DisplayFormat.Weight(Best.Weight)"
                 Unit="kg"
                 ValueHref="@SlugSanitizer.SlugHref("/meets/", Best.MeetSlug)"
                 ValueAriaLabel="@_valueAriaLabel"
@@ -28,7 +27,7 @@
             ? "Samanlagt"
             : Best.Discipline.ToDisplayName();
 
-        _metaText = $"{Best.Date.ToString("dd.MM.yyyy")} · {Best.BodyWeight.ToString("F1", CultureInfo.InvariantCulture)} kg";
+        _metaText = $"{DisplayFormat.Date(Best.Date)} · {DisplayFormat.BodyWeight(Best.BodyWeight)} kg";
 
         _pills = [];
 
@@ -51,7 +50,7 @@
             ? " — " + string.Join(", ", Best.Matches.Select(BuildMatchLine))
             : string.Empty;
 
-        _valueAriaLabel = $"{_name} — {Best.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg{recordSuffix}";
+        _valueAriaLabel = $"{_name} — {DisplayFormat.Weight(Best.Weight)} kg{recordSuffix}";
 
         _cssClass = Best.Discipline == Discipline.None
             ? "card-spaced esc-total"

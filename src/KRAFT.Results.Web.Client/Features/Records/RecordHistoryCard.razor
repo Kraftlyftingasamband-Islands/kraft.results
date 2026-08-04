@@ -22,7 +22,7 @@
 
     protected override void OnParametersSet()
     {
-        _value = Entry.Weight.ToString("F1");
+        _value = DisplayFormat.Weight(Entry.Weight);
         _cssClass = Entry.IsCurrent ? "card-spaced rhc-current" : "card-spaced";
 
         if (Entry.IsStandard)
@@ -42,7 +42,7 @@
             List<MetaPill> pills = [];
             if (Entry.BodyWeight.HasValue)
             {
-                pills.Add(new MetaPill(PillKind.Neutral, $"{Entry.BodyWeight.Value:F1} kg"));
+                pills.Add(new MetaPill(PillKind.Neutral, $"{DisplayFormat.BodyWeight(Entry.BodyWeight.Value)} kg"));
             }
 
             _pills = pills;
@@ -70,7 +70,7 @@
 
         @if (Entry.Delta.HasValue)
         {
-            <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
+            <span class="rhc-delta">▲ +@DisplayFormat.Weight(Entry.Delta.Value)</span>
         }
     };
 
@@ -85,7 +85,7 @@
 
         @if (Entry.Delta.HasValue)
         {
-            <span class="rhc-delta">▲ +@Entry.Delta.Value.ToString("F1")</span>
+            <span class="rhc-delta">▲ +@DisplayFormat.Weight(Entry.Delta.Value)</span>
         }
     };
 }

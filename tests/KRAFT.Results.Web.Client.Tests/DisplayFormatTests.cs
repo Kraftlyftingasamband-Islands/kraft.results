@@ -80,6 +80,19 @@ public sealed class DisplayFormatTests
         result.ShouldBe("15.03.2024");
     }
 
+    [Fact]
+    public void MonthYear_FormatsAsMmmYyyyWithIcelandicAbbreviation()
+    {
+        // Arrange
+        DateOnly date = new(2024, 3, 15);
+
+        // Act
+        string result = DisplayFormat.MonthYear(date);
+
+        // Assert
+        result.ShouldBe("mar. 2024");
+    }
+
     [Theory]
     [InlineData("147,5", true, 147.5)]
     [InlineData("147.5", true, 147.5)]

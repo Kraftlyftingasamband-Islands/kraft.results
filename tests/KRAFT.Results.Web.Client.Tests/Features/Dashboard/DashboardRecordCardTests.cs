@@ -23,8 +23,7 @@ public sealed class DashboardRecordCardTests : IDisposable
             parameters => parameters.Add(p => p.Record, record));
 
         // Assert
-        string expectedDate = new DateOnly(2024, 3, 15).ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentCulture);
-        cut.Find(".esc-meta").TextContent.Trim().ShouldBe(expectedDate);
+        cut.Find(".esc-meta").TextContent.Trim().ShouldBe("mar. 2024");
     }
 
     [Fact]

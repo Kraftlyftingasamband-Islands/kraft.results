@@ -1,4 +1,3 @@
-@using System.Globalization
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Dashboard
 @using KRAFT.Results.Web.Client.Components.Cards
@@ -11,7 +10,7 @@
                 Unit="kg"
                 ValueHref="@SlugSanitizer.SlugHref("/meets/", Record.MeetSlug)"
                 ValueAriaLabel="@($"{Record.AthleteName} — {Record.Lift} — {Record.Weight} kg")"
-                MetaText="@Record.MeetDate.ToString("MMM yyyy", CultureInfo.CurrentCulture)"
+                MetaText="@DisplayFormat.MonthYear(Record.MeetDate)"
                 CssClass="card-spaced" />
 
 @code {
