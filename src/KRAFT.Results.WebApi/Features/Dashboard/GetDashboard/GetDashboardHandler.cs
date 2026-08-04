@@ -157,6 +157,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         string gender, CancellationToken cancellationToken)
     {
         var rows = await dbContext.Set<Record>()
+            .AsNoTracking()
             .Where(r => r.AttemptId != null)
             .Where(r => r.IsCurrent)
             .Where(r => r.RecordCategoryId != RecordCategory.TotalWilks
@@ -184,8 +185,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         return rows
             .Select(r =>
             {
-                string label = r.AgeCategorySlug?.ToAgeCategoryLabel(r.Gender) ?? string.Empty;
-                string ageCategory = label.Length > 0 ? label : r.AgeCategoryTitle;
+                string ageCategory = DisplayNames.ResolveAgeCategoryLabel(r.AgeCategorySlug, r.AgeCategoryTitle, r.Gender);
 
                 return new DashboardRecordEntry(
                     r.RecordCategoryId.ToDisplayName(),

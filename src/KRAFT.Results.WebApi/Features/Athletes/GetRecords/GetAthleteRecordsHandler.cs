@@ -30,7 +30,6 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
                 AgeCategorySlug = x.AgeCategory.Slug,
                 AgeCategoryTitle = x.AgeCategory.Title,
                 Gender = x.Attempt.Participation.Athlete.Gender,
-                x.Attempt.Participation.Total,
                 x.Weight,
                 x.Attempt.Discipline,
                 x.RecordCategoryId,
@@ -43,8 +42,7 @@ internal sealed class GetAthleteRecordsHandler(ResultsDbContext dbContext)
         return rows
             .Select(x =>
             {
-                string label = x.AgeCategorySlug?.ToAgeCategoryLabel(x.Gender) ?? string.Empty;
-                string ageCategory = label.Length > 0 ? label : x.AgeCategoryTitle;
+                string ageCategory = DisplayNames.ResolveAgeCategoryLabel(x.AgeCategorySlug, x.AgeCategoryTitle, x.Gender);
 
                 return new AthleteRecord(
                     x.Date,

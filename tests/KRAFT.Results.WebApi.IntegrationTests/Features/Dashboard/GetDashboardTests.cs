@@ -2,11 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Dashboard;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Features.Records.ComputeRecords;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Shouldly;
 
@@ -27,6 +29,10 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     private string _attemptlessMeetSlug = string.Empty;
     private int _recentMeetId;
     private int _recentParticipationId;
+    private string _masters1AthleteSlug = string.Empty;
+    private string _masters1MeetSlug = string.Empty;
+    private int _masters1MeetId;
+    private int _masters1ParticipationId;
     private HttpClient _recordClient = null!;
     private RecordComputationChannel _channel = null!;
 
@@ -92,10 +98,85 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         HttpResponseMessage upcomingResponse = await _authorizedClient.PostAsJsonAsync(MeetsPath, upcomingCommand, CancellationToken.None);
         upcomingResponse.EnsureSuccessStatusCode();
         _upcomingMeetSlug = upcomingResponse.Headers.Location!.ToString().TrimStart('/');
+
+        // Seed a masters1 male athlete for the deterministic age-category translation test.
+        // Born 1975 → age 45 at meet date → masters1.
+        string masters1Code = UniqueShortCode.Next();
+        string masters1FirstName = $"DashM1{masters1Code}";
+        string masters1LastName = "Athlete";
+        _masters1AthleteSlug = Slug.Create($"{masters1FirstName} {masters1LastName}");
+
+        CreateAthleteCommand masters1AthleteCommand = new CreateAthleteCommandBuilder()
+            .WithFirstName(masters1FirstName)
+            .WithLastName(masters1LastName)
+            .WithGender("m")
+            .WithDateOfBirth(new DateOnly(1975, 1, 1))
+            .Build();
+
+        HttpResponseMessage masters1AthleteResponse = await _authorizedClient.PostAsJsonAsync(
+            "/athletes", masters1AthleteCommand, CancellationToken.None);
+        masters1AthleteResponse.EnsureSuccessStatusCode();
+
+        CreateMeetCommand masters1MeetCommand = new CreateMeetCommandBuilder()
+            .WithStartDate(new DateOnly(2020, 5, 1))
+            .WithMeetTypeId(1)
+            .WithIsRaw(true)
+            .WithPublishedResults(true)
+            .WithPublishedInCalendar(false)
+            .Build();
+
+        HttpResponseMessage masters1MeetResponse = await _authorizedClient.PostAsJsonAsync(MeetsPath, masters1MeetCommand, CancellationToken.None);
+        masters1MeetResponse.EnsureSuccessStatusCode();
+        _masters1MeetSlug = masters1MeetResponse.Headers.Location!.ToString().TrimStart('/');
+
+        MeetDetails? masters1MeetDetails = await _authorizedClient.GetFromJsonAsync<MeetDetails>(
+            $"{MeetsPath}/{_masters1MeetSlug}", CancellationToken.None);
+        _masters1MeetId = masters1MeetDetails!.MeetId;
+
+        AddParticipantCommand masters1ParticipantCommand = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(_masters1AthleteSlug)
+            .WithBodyWeight(88.0m)
+            .WithAgeCategorySlug("masters1")
+            .Build();
+
+        HttpResponseMessage masters1ParticipantResponse = await _recordClient.PostAsJsonAsync(
+            $"{MeetsPath}/{_masters1MeetId}/participants", masters1ParticipantCommand, CancellationToken.None);
+        masters1ParticipantResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? masters1ParticipantResult = await masters1ParticipantResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+        _masters1ParticipationId = masters1ParticipantResult!.ParticipationId;
+
+        RecordAttemptCommand masters1AttemptCommand = new RecordAttemptCommandBuilder()
+            .WithWeight(185.0m)
+            .Build();
+
+        HttpResponseMessage masters1AttemptResponse = await _recordClient.PutAsJsonAsync(
+            $"{MeetsPath}/{_masters1MeetId}/participants/{_masters1ParticipationId}/attempts/{(int)Discipline.Squat}/1",
+            masters1AttemptCommand,
+            CancellationToken.None);
+        masters1AttemptResponse.EnsureSuccessStatusCode();
+        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
+        if (_masters1ParticipationId > 0)
+        {
+            await _authorizedClient.DeleteAsync(
+                $"{MeetsPath}/{_masters1MeetId}/participants/{_masters1ParticipationId}", CancellationToken.None);
+        }
+
+        if (!string.IsNullOrEmpty(_masters1MeetSlug))
+        {
+            await _authorizedClient.DeleteAsync($"{MeetsPath}/{_masters1MeetSlug}", CancellationToken.None);
+        }
+
+        if (!string.IsNullOrEmpty(_masters1AthleteSlug))
+        {
+            await _authorizedClient.DeleteAsync($"/athletes/{_masters1AthleteSlug}", CancellationToken.None);
+        }
+
         if (_recentParticipationId > 0)
         {
             await _authorizedClient.DeleteAsync(
@@ -258,22 +339,14 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     [Fact]
     public async Task LatestRecordsMen_AgeCategoryIsTranslatedToIcelandicLabel()
     {
-        // Arrange
+        // Arrange — masters1 male athlete seeded in InitializeAsync with ageCategorySlug="masters1"
 
         // Act
         DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
 
         // Assert
         DashboardSummary dashboard = result.ShouldNotBeNull();
-        dashboard.LatestRecordsMen.ShouldNotBeEmpty();
-        dashboard.LatestRecordsMen.ShouldAllBe(r =>
-            r.AgeCategory != "open"
-            && r.AgeCategory != "junior"
-            && r.AgeCategory != "subjunior"
-            && r.AgeCategory != "masters1"
-            && r.AgeCategory != "masters2"
-            && r.AgeCategory != "masters3"
-            && r.AgeCategory != "masters4");
+        dashboard.LatestRecordsMen.ShouldContain(r => r.AgeCategory == "Öldungaflokkur 1");
     }
 
     [Fact]
