@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -90,11 +89,9 @@ public sealed class RankingsIndexTests : IDisposable
     public void WhenRendered_AthleteLinkAndPillsAppear()
     {
         // Arrange
-        decimal bodyWeight = 91.5m;
-        string formattedBodyWeight = bodyWeight.ToString("F2", CultureInfo.CurrentCulture);
         PagedResponse<RankingEntry> response = MakeResponse(items:
         [
-            new(3, "Gunnar Gunnarsson", "gunnar-gunnarsson", bodyWeight, 450.25m, "spring-2024"),
+            new(3, "Gunnar Gunnarsson", "gunnar-gunnarsson", 91.5m, 450.25m, "spring-2024"),
         ]);
         RegisterHttpClient(response);
 
@@ -110,7 +107,7 @@ public sealed class RankingsIndexTests : IDisposable
 
             IReadOnlyList<IElement> pills = cut.FindAll(".esc-pill");
             pills.Count.ShouldBe(1);
-            pills[0].TextContent.ShouldContain($"{formattedBodyWeight} kg");
+            pills[0].TextContent.ShouldContain("91,50 kg");
         });
     }
 
@@ -118,11 +115,9 @@ public sealed class RankingsIndexTests : IDisposable
     public void WhenIpfPointsHasValue_ValueRendersAsLinkToMeetWithAriaLabel()
     {
         // Arrange
-        decimal ipfPoints = 450.25m;
-        string formatted = ipfPoints.ToString("F2", CultureInfo.CurrentCulture);
         PagedResponse<RankingEntry> response = MakeResponse(items:
         [
-            new(1, "Gunnar Gunnarsson", "gunnar-gunnarsson", 91.5m, ipfPoints, "spring-2024"),
+            new(1, "Gunnar Gunnarsson", "gunnar-gunnarsson", 91.5m, 450.25m, "spring-2024"),
         ]);
         RegisterHttpClient(response);
 
@@ -134,8 +129,8 @@ public sealed class RankingsIndexTests : IDisposable
         {
             IElement valueLink = cut.Find("a.esc-value");
             valueLink.GetAttribute("href").ShouldBe("/meets/spring-2024");
-            valueLink.GetAttribute("aria-label").ShouldBe($"{formatted} IPF stig, opna mót");
-            valueLink.TextContent.Trim().ShouldBe(formatted);
+            valueLink.GetAttribute("aria-label").ShouldBe("450,25 IPF stig, opna mót");
+            valueLink.TextContent.Trim().ShouldBe("450,25");
         });
     }
 

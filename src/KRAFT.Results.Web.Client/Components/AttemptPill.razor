@@ -1,4 +1,5 @@
 @using KRAFT.Results.Contracts.Meets
+@using KRAFT.Results.Web.Client
 
 @if (OnClick.HasDelegate)
 {
@@ -50,7 +51,7 @@ else
             return;
         }
 
-        _value = $"{Attempt.Weight:F1}";
+        _value = DisplayFormat.Weight(Attempt.Weight);
 
         if (Attempt.IsGood && Attempt.IsRecord)
         {

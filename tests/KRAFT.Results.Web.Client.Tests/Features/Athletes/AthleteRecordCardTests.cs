@@ -1,5 +1,3 @@
-using System.Globalization;
-
 using Bunit;
 
 using KRAFT.Results.Contracts;
@@ -97,13 +95,13 @@ public sealed class AthleteRecordCardTests : IDisposable
         // Assert
         AngleSharp.Dom.IElement valueLink = cut.Find("a.esc-value");
         valueLink.GetAttribute("href").ShouldBe("/meets/islandsmot-2024");
-        valueLink.GetAttribute("aria-label").ShouldBe($"{Constants.Squat} — 250.5 kg — Íslandsmót 2024");
-        valueLink.TextContent.Trim().ShouldContain("250.5");
+        valueLink.GetAttribute("aria-label").ShouldBe($"{Constants.Squat} — 250,5 kg — Íslandsmót 2024");
+        valueLink.TextContent.Trim().ShouldContain("250,5");
         cut.Find(".esc-unit").TextContent.Trim().ShouldBe("kg");
     }
 
     [Fact]
-    public void WhenRendered_WeightFormatsWithF1InvariantCulture()
+    public void WhenRendered_WeightFormatsWithF1IcelandicCulture()
     {
         // Arrange
         AthleteRecord record = BuildRecord(weight: 200m);
@@ -115,7 +113,7 @@ public sealed class AthleteRecordCardTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement valueLink = cut.Find("a.esc-value");
-        valueLink.TextContent.Trim().ShouldContain(200m.ToString("F1", CultureInfo.InvariantCulture));
+        valueLink.TextContent.Trim().ShouldContain("200,0");
     }
 
     [Fact]

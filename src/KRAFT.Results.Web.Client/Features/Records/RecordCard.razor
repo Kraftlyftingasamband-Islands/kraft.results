@@ -54,17 +54,17 @@
 
             if (Record.BodyWeight.HasValue)
             {
-                pills.Add(new MetaPill(PillKind.Neutral, $"{Record.BodyWeight.Value:F1} kg"));
+                pills.Add(new MetaPill(PillKind.Neutral, $"{DisplayFormat.BodyWeight(Record.BodyWeight.Value)} kg"));
             }
 
             _pills = pills;
-            _metaText = Record.Date.ToString("dd.MM.yyyy");
+            _metaText = DisplayFormat.Date(Record.Date);
             _valueHref = Record.MeetSlug is not null
                 ? SlugSanitizer.SlugHref("/meets/", Record.MeetSlug)
                 : null;
         }
 
-        _value = Record.Weight.ToString("F1");
+        _value = DisplayFormat.Weight(Record.Weight);
 
         _valueAriaLabel = _valueHref is not null
             ? $"{_value} kg, opna mót"

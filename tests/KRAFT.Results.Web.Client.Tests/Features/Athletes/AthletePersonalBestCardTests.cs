@@ -1,5 +1,3 @@
-using System.Globalization;
-
 using Bunit;
 
 using KRAFT.Results.Contracts;
@@ -58,7 +56,7 @@ public sealed class AthletePersonalBestCardTests : IDisposable
             parameters => parameters.Add(p => p.Best, best));
 
         // Assert
-        cut.Find(".esc-meta").TextContent.Trim().ShouldBe("15.03.2024 · 82.5 kg");
+        cut.Find(".esc-meta").TextContent.Trim().ShouldBe("15.03.2024 · 82,50 kg");
     }
 
     [Fact]
@@ -75,7 +73,7 @@ public sealed class AthletePersonalBestCardTests : IDisposable
         // Assert
         AngleSharp.Dom.IElement valueLink = cut.Find("a.esc-value");
         valueLink.GetAttribute("href").ShouldBe("/meets/islandsmot-2024");
-        valueLink.TextContent.Trim().ShouldContain("250.5");
+        valueLink.TextContent.Trim().ShouldContain("250,5");
         cut.Find(".esc-unit").TextContent.Trim().ShouldBe("kg");
     }
 

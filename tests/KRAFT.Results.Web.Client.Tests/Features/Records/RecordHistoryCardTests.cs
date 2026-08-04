@@ -51,7 +51,7 @@ public sealed class RecordHistoryCardTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement pill = cut.Find(".esc-pill");
-        pill.TextContent.ShouldBe("82.5 kg");
+        pill.TextContent.ShouldBe("82,50 kg");
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class RecordHistoryCardTests : IDisposable
             parameters => parameters.Add(p => p.Entry, entry));
 
         // Assert
-        cut.Find(".rhc-delta").TextContent.ShouldBe("▲ +5.0");
+        cut.Find(".rhc-delta").TextContent.ShouldBe("▲ +5,0");
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed class RecordHistoryCardTests : IDisposable
             parameters => parameters.Add(p => p.Entry, entry));
 
         // Assert
-        cut.Find(".esc-value").TextContent.Trim().ShouldBe("200.5kg");
+        cut.Find(".esc-value").TextContent.Trim().ShouldBe("200,5kg");
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public sealed class RecordHistoryCardTests : IDisposable
             parameters => parameters.Add(p => p.Entry, entry));
 
         // Assert
-        cut.Find(".rhc-delta").TextContent.ShouldBe("▲ +5.0");
+        cut.Find(".rhc-delta").TextContent.ShouldBe("▲ +5,0");
     }
 
     [Fact]

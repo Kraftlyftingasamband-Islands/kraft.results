@@ -1,4 +1,3 @@
-@using System.Globalization
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Web.Client.Components.Cards
@@ -6,11 +5,11 @@
 <EntityStatCard Leading="@CardLeading.Badge(Record.WeightCategory)"
                 Name="@Record.Type"
                 Pills="@_pills"
-                MetaText="@Record.Date.ToString("dd.MM.yyyy")"
-                Value="@Record.Weight.ToString("F1", CultureInfo.InvariantCulture)"
+                MetaText="@DisplayFormat.Date(Record.Date)"
+                Value="@DisplayFormat.Weight(Record.Weight)"
                 Unit="kg"
                 ValueHref="@SlugSanitizer.SlugHref("/meets/", Record.MeetSlug)"
-                ValueAriaLabel="@($"{Record.Type} — {Record.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg — {Record.Meet}")"
+                ValueAriaLabel="@($"{Record.Type} — {DisplayFormat.Weight(Record.Weight)} kg — {Record.Meet}")"
                 CssClass="card-spaced" />
 
 @code {

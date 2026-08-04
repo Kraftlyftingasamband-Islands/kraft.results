@@ -134,7 +134,7 @@ public sealed class RecordCardTests : IDisposable
             parameters => parameters.Add(p => p.Record, entry));
 
         // Assert
-        cut.Find("a.esc-value").GetAttribute("aria-label").ShouldBe("120.0 kg, opna mót");
+        cut.Find("a.esc-value").GetAttribute("aria-label").ShouldBe("120,0 kg, opna mót");
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public sealed class RecordCardTests : IDisposable
         System.Collections.Generic.IReadOnlyList<AngleSharp.Dom.IElement> pills = cut.FindAll(".esc-pill");
         pills.Count.ShouldBe(2);
         pills[0].TextContent.ShouldBe("1990");
-        pills[1].TextContent.ShouldBe("82.5 kg");
+        pills[1].TextContent.ShouldBe("82,50 kg");
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public sealed class RecordCardTests : IDisposable
         // Assert
         AngleSharp.Dom.IElement valueLink = cut.Find("a.esc-value");
         valueLink.GetAttribute("href").ShouldBe("/meets/nationals-2024");
-        valueLink.TextContent.Trim().ShouldBe("220.5kg");
+        valueLink.TextContent.Trim().ShouldBe("220,5kg");
     }
 
     [Fact]
@@ -311,7 +311,7 @@ public sealed class RecordCardTests : IDisposable
 
         // Assert
         cut.FindAll("a.esc-value").Count.ShouldBe(0);
-        cut.Find("span.esc-value").TextContent.Trim().ShouldBe("200.0kg");
+        cut.Find("span.esc-value").TextContent.Trim().ShouldBe("200,0kg");
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public sealed class RecordCardTests : IDisposable
         // Assert
         System.Collections.Generic.IReadOnlyList<AngleSharp.Dom.IElement> pills = cut.FindAll(".esc-pill");
         pills.Count.ShouldBe(1);
-        pills[0].TextContent.ShouldBe("82.5 kg");
+        pills[0].TextContent.ShouldBe("82,50 kg");
     }
 
     [Fact]
@@ -486,7 +486,7 @@ public sealed class RecordCardTests : IDisposable
 
         // Assert
         cut.FindAll("a.esc-value").Count.ShouldBe(0);
-        cut.Find("span.esc-value").TextContent.Trim().ShouldBe("220.5kg");
+        cut.Find("span.esc-value").TextContent.Trim().ShouldBe("220,5kg");
     }
 
     public void Dispose()

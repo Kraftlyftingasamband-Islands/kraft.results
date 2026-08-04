@@ -21,6 +21,9 @@ public static class DisplayFormat
     public static string Date(DateTime value) =>
         value.ToString("dd.MM.yyyy", IcelandicCulture);
 
+    public static string MonthYear(DateOnly value) =>
+        value.ToString("MMM yyyy", IcelandicCulture);
+
     public static bool TryParseWeight(string? input, out decimal value)
     {
         value = 0m;

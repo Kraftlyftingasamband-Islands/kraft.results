@@ -50,9 +50,8 @@ public sealed class ParticipationCardTests : IDisposable
         await cut.InvokeAsync(() => input.Input("210"));
         await cut.InvokeAsync(() => input.Blur());
 
-        // Assert — pill shows the new value, not the original 200.0
-        string expected = 210m.ToString("F1", System.Globalization.CultureInfo.CurrentCulture);
-        cut.Find(".pill").TextContent.Trim().ShouldBe(expected);
+        // Assert — pill shows the new value, not the original 200,0
+        cut.Find(".pill").TextContent.Trim().ShouldBe("210,0");
     }
 
     [Fact]
@@ -83,9 +82,8 @@ public sealed class ParticipationCardTests : IDisposable
         await cut.InvokeAsync(() => pillButtonAgain.Click());
 
         // Assert — input pre-fills with 210, not the original 200
-        string expected = 210m.ToString("F1", System.Globalization.CultureInfo.CurrentCulture);
         AngleSharp.Dom.IElement inputAgain = cut.Find("input.inline-attempt-input");
-        inputAgain.GetAttribute("value").ShouldBe(expected);
+        inputAgain.GetAttribute("value").ShouldBe("210,0");
     }
 
     public void Dispose()
