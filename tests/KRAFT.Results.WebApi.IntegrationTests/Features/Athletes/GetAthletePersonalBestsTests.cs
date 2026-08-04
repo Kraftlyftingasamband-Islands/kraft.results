@@ -140,7 +140,7 @@ public sealed class GetAthletePersonalBestsTests(CollectionFixture fixture) : IA
         AthletePersonalBest squatPb = personalBests.Single(pb => pb.Discipline == Discipline.Squat);
         squatPb.Weight.ShouldBe(SquatWeight);
         squatPb.Matches.ShouldNotBeEmpty();
-        squatPb.Matches.ShouldContain(m => m.AgeCategory == "open" && m.WeightCategory == "83");
+        squatPb.Matches.ShouldContain(m => m.AgeCategory == "Opinn flokkur" && m.WeightCategory == "83");
     }
 
     [Fact]
@@ -158,8 +158,8 @@ public sealed class GetAthletePersonalBestsTests(CollectionFixture fixture) : IA
         personalBests.ShouldContain(pb => pb.Discipline == Discipline.None);
         AthletePersonalBest totalPb = personalBests.Single(pb => pb.Discipline == Discipline.None);
         totalPb.Matches.ShouldNotBeEmpty();
-        totalPb.Matches.ShouldContain(m => m.AgeCategory == "open" && m.WeightCategory == "83");
-        AthleteRecordMatch totalMatch = totalPb.Matches.Single(m => m.AgeCategory == "open");
+        totalPb.Matches.ShouldContain(m => m.AgeCategory == "Opinn flokkur" && m.WeightCategory == "83");
+        AthleteRecordMatch totalMatch = totalPb.Matches.Single(m => m.AgeCategory == "Opinn flokkur");
         totalMatch.ShouldSatisfyAllConditions(
             () => totalMatch.WeightCategory.ShouldBe("83"),
             () => totalMatch.IsWithinPowerlifting.ShouldBeFalse(),
@@ -183,8 +183,8 @@ public sealed class GetAthletePersonalBestsTests(CollectionFixture fixture) : IA
         personalBests.ShouldContain(pb => pb.Discipline == Discipline.Squat);
         AthletePersonalBest squatPb = personalBests.Single(pb => pb.Discipline == Discipline.Squat);
         squatPb.Matches.Count.ShouldBeGreaterThanOrEqualTo(2);
-        squatPb.Matches.ShouldContain(m => m.AgeCategory == "junior");
-        squatPb.Matches.ShouldContain(m => m.AgeCategory == "open");
+        squatPb.Matches.ShouldContain(m => m.AgeCategory == "Unglingaflokkur");
+        squatPb.Matches.ShouldContain(m => m.AgeCategory == "Opinn flokkur");
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public sealed class GetAthletePersonalBestsTests(CollectionFixture fixture) : IA
         personalBests.ShouldNotBeNull();
         personalBests.ShouldContain(pb => pb.Discipline == Discipline.Bench);
         AthletePersonalBest benchPb = personalBests.Single(pb => pb.Discipline == Discipline.Bench);
-        benchPb.Matches.ShouldContain(m => m.IsWithinPowerlifting && m.AgeCategory == "open");
+        benchPb.Matches.ShouldContain(m => m.IsWithinPowerlifting && m.AgeCategory == "Opinn flokkur");
         AthleteRecordMatch withinPowerliftingMatch = benchPb.Matches.Single(m => m.IsWithinPowerlifting);
         withinPowerliftingMatch.IsSingleLift.ShouldBeFalse();
     }

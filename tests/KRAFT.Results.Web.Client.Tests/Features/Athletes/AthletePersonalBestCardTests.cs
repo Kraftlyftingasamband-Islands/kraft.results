@@ -128,7 +128,7 @@ public sealed class AthletePersonalBestCardTests : IDisposable
         // Arrange
         AthletePersonalBest best = BuildBest(matches:
         [
-            new AthleteRecordMatch("open", "93 kg", true, false, false),
+            new AthleteRecordMatch("Opinn flokkur", "93 kg", true, false, false),
         ]);
         RegisterServices();
 
@@ -146,9 +146,9 @@ public sealed class AthletePersonalBestCardTests : IDisposable
         // Arrange
         AthletePersonalBest best = BuildBest(matches:
         [
-            new AthleteRecordMatch("open", "93 kg", true, false, false),
-            new AthleteRecordMatch("masters1", "93 kg", true, false, false),
-            new AthleteRecordMatch("masters2", "93 kg", true, false, false),
+            new AthleteRecordMatch("Opinn flokkur", "93 kg", true, false, false),
+            new AthleteRecordMatch("Öldungaflokkur 1", "93 kg", true, false, false),
+            new AthleteRecordMatch("Öldungaflokkur 2", "93 kg", true, false, false),
         ]);
         RegisterServices();
 
@@ -161,12 +161,12 @@ public sealed class AthletePersonalBestCardTests : IDisposable
     }
 
     [Fact]
-    public void WhenMatchesHasOneEntry_RecordPillTooltipShowsKraftlyftingarSuffix()
+    public void WhenMatchesHasOneEntry_RecordPillTooltipRendersAgeCategoryVerbatim()
     {
         // Arrange
         AthletePersonalBest best = BuildBest(matches:
         [
-            new AthleteRecordMatch("open", "93 kg", true, false, false),
+            new AthleteRecordMatch("Opinn flokkur", "93 kg", true, false, false),
         ]);
         RegisterServices();
 
@@ -180,12 +180,12 @@ public sealed class AthletePersonalBestCardTests : IDisposable
     }
 
     [Fact]
-    public void WhenMatchesHasMastersSlug_TooltipTranslatesToIcelandicLabel()
+    public void WhenMatchesHasMastersLabel_TooltipRendersLabelVerbatim()
     {
         // Arrange
         AthletePersonalBest best = BuildBest(matches:
         [
-            new AthleteRecordMatch("masters1", "83 kg", true, false, false),
+            new AthleteRecordMatch("Öldungaflokkur 1", "83 kg", true, false, false),
         ]);
         RegisterServices();
 
@@ -204,7 +204,7 @@ public sealed class AthletePersonalBestCardTests : IDisposable
         // Arrange
         AthletePersonalBest best = BuildBest(matches:
         [
-            new AthleteRecordMatch("open", "93 kg", false, true, false),
+            new AthleteRecordMatch("Opinn flokkur", "93 kg", false, true, false),
         ]);
         RegisterServices();
 
@@ -223,8 +223,8 @@ public sealed class AthletePersonalBestCardTests : IDisposable
         // Arrange
         AthletePersonalBest best = BuildBest(matches:
         [
-            new AthleteRecordMatch("open", "93 kg", true, false, false),
-            new AthleteRecordMatch("masters1", "93 kg", true, false, false),
+            new AthleteRecordMatch("Opinn flokkur", "93 kg", true, false, false),
+            new AthleteRecordMatch("Öldungaflokkur 1", "93 kg", true, false, false),
         ]);
         RegisterServices();
 

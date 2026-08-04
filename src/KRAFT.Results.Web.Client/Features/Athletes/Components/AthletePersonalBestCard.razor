@@ -59,9 +59,7 @@
 
     private static string BuildMatchLine(AthleteRecordMatch match)
     {
-        string ageLabel = match.AgeCategory.ToAgeCategoryLabel();
-        string translatedAge = ageLabel.Length > 0 ? ageLabel : match.AgeCategory;
-        string line = $"{translatedAge} · {match.WeightCategory}";
+        string line = $"{match.AgeCategory} · {match.WeightCategory}";
 
         if (match.IsWithinPowerlifting)
         {

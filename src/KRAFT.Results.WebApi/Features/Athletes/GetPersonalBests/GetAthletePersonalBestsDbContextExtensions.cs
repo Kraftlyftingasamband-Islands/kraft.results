@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Meets;
@@ -29,10 +30,12 @@ internal static class GetAthletePersonalBestsDbContextExtensions
             .Where(r => r.Era.EndDate.Year > DateTime.UtcNow.Year)
             .Select(r => new LiftMatchRow(
                 r.AttemptId!.Value,
-                r.AgeCategory.Slug ?? r.AgeCategory.Title,
+                r.AgeCategory.Slug,
+                r.AgeCategory.Title,
                 r.WeightCategory.Title,
                 r.RecordCategoryId,
-                r.Attempt!.Participation.Meet.Category != MeetCategory.Powerlifting))
+                r.Attempt!.Participation.Meet.Category != MeetCategory.Powerlifting,
+                r.Attempt.Participation.Athlete.Gender))
             .ToListAsync(cancellationToken);
 
         return rows.ToLookup(r => r.AttemptId, r => r.ToMatch());
@@ -59,22 +62,37 @@ internal static class GetAthletePersonalBestsDbContextExtensions
             .Where(r => r.Era.EndDate.Year > DateTime.UtcNow.Year)
             .Select(r => new TotalMatchRow(
                 r.Attempt!.ParticipationId,
-                r.AgeCategory.Slug ?? r.AgeCategory.Title,
-                r.WeightCategory.Title))
+                r.AgeCategory.Slug,
+                r.AgeCategory.Title,
+                r.WeightCategory.Title,
+                r.Attempt.Participation.Athlete.Gender))
             .ToListAsync(cancellationToken);
 
         return rows.ToLookup(r => r.ParticipationId, r => r.ToMatch());
     }
 
+    private static string ResolveAgeCategoryLabel(string? slug, string title, string gender)
+    {
+        if (slug is null)
+        {
+            return title;
+        }
+
+        string label = slug.ToAgeCategoryLabel(gender);
+        return label.Length > 0 ? label : title;
+    }
+
     private sealed record LiftMatchRow(
         int AttemptId,
-        string AgeCategory,
+        string? AgeCategorySlug,
+        string AgeCategoryTitle,
         string WeightCategory,
         RecordCategory RecordCategoryId,
-        bool IsSingleLift)
+        bool IsSingleLift,
+        string Gender)
     {
         internal AthleteRecordMatch ToMatch() => new(
-            AgeCategory,
+            ResolveAgeCategoryLabel(AgeCategorySlug, AgeCategoryTitle, Gender),
             WeightCategory,
             IsWithinPowerlifting: (RecordCategoryId == RecordCategory.BenchSingle || RecordCategoryId == RecordCategory.DeadliftSingle) && !IsSingleLift,
             IsSingleLift,
@@ -83,11 +101,13 @@ internal static class GetAthletePersonalBestsDbContextExtensions
 
     private sealed record TotalMatchRow(
         int ParticipationId,
-        string AgeCategory,
-        string WeightCategory)
+        string? AgeCategorySlug,
+        string AgeCategoryTitle,
+        string WeightCategory,
+        string Gender)
     {
         internal AthleteRecordMatch ToMatch() => new(
-            AgeCategory,
+            ResolveAgeCategoryLabel(AgeCategorySlug, AgeCategoryTitle, Gender),
             WeightCategory,
             IsWithinPowerlifting: false,
             IsSingleLift: false,
