@@ -56,7 +56,14 @@
         {
             @if (!string.IsNullOrWhiteSpace(Participation.Club) && !string.IsNullOrWhiteSpace(Participation.ClubSlug))
             {
-                <NavLink class="p-club" href="@($"/teams/{Participation.ClubSlug}")">@Participation.Club</NavLink>
+                <NavLink class="p-club"
+                         href="@($"/teams/{Participation.ClubSlug}")"
+                         title="@Participation.Club">
+                    <TeamLogo Filename="@Participation.ClubLogoImageFilename"
+                              Alt="@Participation.Club"
+                              FallbackText="@Participation.Club"
+                              Size="TeamLogoSize.XSmall" />
+                </NavLink>
             }
             else
             {
