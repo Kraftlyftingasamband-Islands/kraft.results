@@ -13,6 +13,7 @@ public sealed record class MeetParticipation(
     string WeightCategory,
     string Club,
     string ClubSlug,
+    string? ClubLogoImageFilename,
     decimal BodyWeight,
     decimal Total,
     decimal IpfPoints,

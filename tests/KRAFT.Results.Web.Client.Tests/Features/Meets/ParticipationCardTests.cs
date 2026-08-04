@@ -209,6 +209,7 @@ public sealed class ParticipationCardTests : IDisposable
             WeightCategory: "83",
             Club: string.Empty,
             ClubSlug: string.Empty,
+            ClubLogoImageFilename: null,
             BodyWeight: 82.5m,
             Total: 0m,
             IpfPoints: 0m,

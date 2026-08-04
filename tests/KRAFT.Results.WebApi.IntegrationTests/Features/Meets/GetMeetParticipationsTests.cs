@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -29,6 +30,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
     private int _deltaParticipationId;
     private int _bobParticipationId;
     private int _annaParticipationId;
+    private int _logoParticipationId;
 
     public async ValueTask InitializeAsync()
     {
@@ -78,6 +80,17 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
 
     public async ValueTask DisposeAsync()
     {
+        if (_logoParticipationId != 0)
+        {
+            await _authorizedHttpClient.DeleteAsync(
+                $"/meets/{_meetId}/participants/{_logoParticipationId}",
+                CancellationToken.None);
+
+            // Reset the logo that was seeded via SQL — no write endpoint exists for LogoImageFilename
+            await fixture.ExecuteSqlAsync(
+                $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Team.Id}");
+        }
+
         if (_meetId != 0)
         {
             await _authorizedHttpClient.DeleteAsync($"/meets/{_meetSlug}", CancellationToken.None);
@@ -267,6 +280,55 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         participations.ShouldNotBeNull();
         MeetParticipation participation = participations.Single(p => p.Athlete == _annaFullName);
         participation.IpfPoints.ShouldBe(0m);
+    }
+
+    [Fact]
+    public async Task WhenTeamHasLogo_ClubLogoImageFilenameIsProjected()
+    {
+        // Arrange — seed a logo filename onto the seeded team via SQL (no write endpoint for LogoImageFilename)
+        const string LogoFilename = "test-logo.png";
+
+        await fixture.ExecuteSqlAsync(
+            $"UPDATE Teams SET LogoImageFilename = '{LogoFilename}' WHERE TeamId = {TestSeedConstants.Team.Id}");
+
+        AddParticipantCommand command = new AddParticipantCommandBuilder()
+            .WithAthleteSlug(TestSeedConstants.Athlete.Slug)
+            .WithBodyWeight(80.5m)
+            .WithTeamId(TestSeedConstants.Team.Id)
+            .WithAgeCategorySlug("open")
+            .Build();
+
+        HttpResponseMessage addResponse = await _authorizedHttpClient.PostAsJsonAsync(
+            $"/meets/{_meetId}/participants", command, CancellationToken.None);
+        addResponse.EnsureSuccessStatusCode();
+
+        AddParticipantResponse? added = await addResponse.Content
+            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+        _logoParticipationId = added!.ParticipationId;
+
+        // Act
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
+            $"/meets/{_meetSlug}/participations", CancellationToken.None);
+
+        // Assert
+        participations.ShouldNotBeNull();
+        MeetParticipation logoParticipation = participations.Single(p => p.ParticipationId == _logoParticipationId);
+        logoParticipation.ClubLogoImageFilename.ShouldBe(LogoFilename);
+    }
+
+    [Fact]
+    public async Task WhenTeamHasNoLogo_ClubLogoImageFilenameIsNull()
+    {
+        // Arrange — participants seeded in InitializeAsync use no team (teamId = null)
+
+        // Act
+        List<MeetParticipation>? participations = await _unauthorizedHttpClient.GetFromJsonAsync<List<MeetParticipation>>(
+            $"/meets/{_meetSlug}/participations", CancellationToken.None);
+
+        // Assert
+        participations.ShouldNotBeNull();
+        MeetParticipation noLogoParticipation = participations.First(p => p.Athlete == _charlieFullName);
+        noLogoParticipation.ClubLogoImageFilename.ShouldBeNull();
     }
 
     private async Task<string> CreateAthleteAsync(string firstName, string lastName)
