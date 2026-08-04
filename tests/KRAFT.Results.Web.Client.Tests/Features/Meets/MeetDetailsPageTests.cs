@@ -179,6 +179,7 @@ public sealed class MeetDetailsPageTests : IDisposable
             WeightCategory: "83",
             Club: string.Empty,
             ClubSlug: string.Empty,
+            ClubLogoImageFilename: null,
             BodyWeight: 82.5m,
             Total: 600m,
             IpfPoints: ipfPoints,

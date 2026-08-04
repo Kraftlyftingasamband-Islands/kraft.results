@@ -6,6 +6,7 @@ using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Web.Client.Features.Meets;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
@@ -14,6 +15,8 @@ namespace KRAFT.Results.Web.Client.Tests.Features.Meets;
 
 public sealed class ParticipationCardTests : IDisposable
 {
+    private const string ImageBaseUrl = "https://example.blob.core.windows.net/images";
+
     private readonly BunitContext _context = new();
     private readonly FakeHttpHandler _httpHandler = new();
     private readonly HttpClient _httpClient;
@@ -24,6 +27,14 @@ public sealed class ParticipationCardTests : IDisposable
         _context.Services.AddSingleton(_httpClient);
         _context.AddAuthorization();
         _context.JSInterop.Mode = Bunit.JSRuntimeMode.Loose;
+
+        IConfiguration configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ImageBaseUrl"] = ImageBaseUrl,
+            })
+            .Build();
+        _context.Services.AddSingleton(configuration);
     }
 
     [Fact]
@@ -188,6 +199,59 @@ public sealed class ParticipationCardTests : IDisposable
         cut.Find(".pill").TextContent.Trim().ShouldBe("147,5");
     }
 
+    [Fact]
+    public void WhenShowClubTrue_AndClubHasLogo_RendersImgInsideNavLinkWithTitleAndAlt()
+    {
+        // Arrange
+        MeetParticipation participation = MakeParticipationWithClub(
+            club: "Þór",
+            clubSlug: "thor",
+            clubLogoImageFilename: "thor.png",
+            attempts: []);
+
+        // Act
+        IRenderedComponent<ParticipationCard> cut = _context.Render<ParticipationCard>(
+            p => p.Add(c => c.Participation, participation)
+                  .Add(c => c.ShowIpfPoints, false)
+                  .Add(c => c.ShowClub, true)
+                  .Add(c => c.IncludedDisciplines, new Dictionary<Discipline, bool> { [Discipline.Squat] = true })
+                  .Add(c => c.DesktopGridTemplate, "auto")
+                  .Add(c => c.IsAdmin, false));
+
+        // Assert
+        AngleSharp.Dom.IElement navLink = cut.Find("a.p-club");
+        navLink.GetAttribute("href").ShouldBe("/teams/thor");
+        navLink.GetAttribute("title").ShouldBe("Þór");
+        AngleSharp.Dom.IElement img = cut.Find(".p-club img");
+        img.GetAttribute("alt").ShouldBe("Þór");
+    }
+
+    [Fact]
+    public void WhenShowClubTrue_AndClubHasNoLogo_RendersClubNameText()
+    {
+        // Arrange
+        MeetParticipation participation = MakeParticipationWithClub(
+            club: "Þór",
+            clubSlug: "thor",
+            clubLogoImageFilename: null,
+            attempts: []);
+
+        // Act
+        IRenderedComponent<ParticipationCard> cut = _context.Render<ParticipationCard>(
+            p => p.Add(c => c.Participation, participation)
+                  .Add(c => c.ShowIpfPoints, false)
+                  .Add(c => c.ShowClub, true)
+                  .Add(c => c.IncludedDisciplines, new Dictionary<Discipline, bool> { [Discipline.Squat] = true })
+                  .Add(c => c.DesktopGridTemplate, "auto")
+                  .Add(c => c.IsAdmin, false));
+
+        // Assert
+        AngleSharp.Dom.IElement navLink = cut.Find("a.p-club");
+        navLink.GetAttribute("href").ShouldBe("/teams/thor");
+        navLink.TextContent.Trim().ShouldContain("Þór");
+        cut.FindAll(".p-club img").Count.ShouldBe(0);
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -209,6 +273,32 @@ public sealed class ParticipationCardTests : IDisposable
             WeightCategory: "83",
             Club: string.Empty,
             ClubSlug: string.Empty,
+            ClubLogoImageFilename: null,
+            BodyWeight: 82.5m,
+            Total: 0m,
+            IpfPoints: 0m,
+            Disqualified: false,
+            Attempts: attempts);
+
+    private static MeetParticipation MakeParticipationWithClub(
+        string club,
+        string clubSlug,
+        string? clubLogoImageFilename,
+        IEnumerable<MeetAttempt> attempts) =>
+        new(
+            ParticipationId: 2,
+            MeetId: 1,
+            Rank: 1,
+            Athlete: "Jón Jónsson",
+            AthleteSlug: "jon-jonsson",
+            Gender: "M",
+            YearOfBirth: 1990,
+            AgeCategory: "Open",
+            AgeCategorySlug: "open",
+            WeightCategory: "83",
+            Club: club,
+            ClubSlug: clubSlug,
+            ClubLogoImageFilename: clubLogoImageFilename,
             BodyWeight: 82.5m,
             Total: 0m,
             IpfPoints: 0m,

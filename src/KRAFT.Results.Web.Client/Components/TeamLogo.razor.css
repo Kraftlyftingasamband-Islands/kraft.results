@@ -4,6 +4,11 @@
     overflow: hidden;
 }
 
+.team-logo--xs {
+    width: 24px;
+    height: 24px;
+}
+
 .team-logo--sm {
     width: 48px;
     height: 48px;
@@ -39,4 +44,24 @@
 .team-logo-placeholder svg {
     width: 60%;
     height: 60%;
+}
+
+.team-logo--xs.team-logo--text {
+    width: auto;
+    height: 24px;
+    overflow: visible;
+}
+
+.team-logo-placeholder .team-logo-fallback-text {
+    font: inherit;
+    color: inherit;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.team-logo--text .team-logo-placeholder {
+    background: none;
+    opacity: 1;
+    width: auto;
+    justify-content: flex-start;
 }

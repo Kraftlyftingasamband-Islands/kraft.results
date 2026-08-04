@@ -2,6 +2,7 @@
 
 public enum TeamLogoSize
 {
+    XSmall,
     Small,
     Medium,
     Large,
