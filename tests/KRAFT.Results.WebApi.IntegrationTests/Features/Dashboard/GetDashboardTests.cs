@@ -29,10 +29,6 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     private string _attemptlessMeetSlug = string.Empty;
     private int _recentMeetId;
     private int _recentParticipationId;
-    private string _masters1AthleteSlug = string.Empty;
-    private string _masters1MeetSlug = string.Empty;
-    private int _masters1MeetId;
-    private int _masters1ParticipationId;
     private HttpClient _recordClient = null!;
     private RecordComputationChannel _channel = null!;
 
@@ -98,85 +94,10 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         HttpResponseMessage upcomingResponse = await _authorizedClient.PostAsJsonAsync(MeetsPath, upcomingCommand, CancellationToken.None);
         upcomingResponse.EnsureSuccessStatusCode();
         _upcomingMeetSlug = upcomingResponse.Headers.Location!.ToString().TrimStart('/');
-
-        // Seed a masters1 male athlete for the deterministic age-category translation test.
-        // Born 1975 → age 45 at meet date → masters1.
-        string masters1Code = UniqueShortCode.Next();
-        string masters1FirstName = $"DashM1{masters1Code}";
-        string masters1LastName = "Athlete";
-        _masters1AthleteSlug = Slug.Create($"{masters1FirstName} {masters1LastName}");
-
-        CreateAthleteCommand masters1AthleteCommand = new CreateAthleteCommandBuilder()
-            .WithFirstName(masters1FirstName)
-            .WithLastName(masters1LastName)
-            .WithGender("m")
-            .WithDateOfBirth(new DateOnly(1975, 1, 1))
-            .Build();
-
-        HttpResponseMessage masters1AthleteResponse = await _authorizedClient.PostAsJsonAsync(
-            "/athletes", masters1AthleteCommand, CancellationToken.None);
-        masters1AthleteResponse.EnsureSuccessStatusCode();
-
-        CreateMeetCommand masters1MeetCommand = new CreateMeetCommandBuilder()
-            .WithStartDate(new DateOnly(2025, 1, 1))
-            .WithMeetTypeId(1)
-            .WithIsRaw(true)
-            .WithPublishedResults(true)
-            .WithPublishedInCalendar(false)
-            .Build();
-
-        HttpResponseMessage masters1MeetResponse = await _authorizedClient.PostAsJsonAsync(MeetsPath, masters1MeetCommand, CancellationToken.None);
-        masters1MeetResponse.EnsureSuccessStatusCode();
-        _masters1MeetSlug = masters1MeetResponse.Headers.Location!.ToString().TrimStart('/');
-
-        MeetDetails? masters1MeetDetails = await _authorizedClient.GetFromJsonAsync<MeetDetails>(
-            $"{MeetsPath}/{_masters1MeetSlug}", CancellationToken.None);
-        _masters1MeetId = masters1MeetDetails!.MeetId;
-
-        AddParticipantCommand masters1ParticipantCommand = new AddParticipantCommandBuilder()
-            .WithAthleteSlug(_masters1AthleteSlug)
-            .WithBodyWeight(88.0m)
-            .WithAgeCategorySlug("masters1")
-            .Build();
-
-        HttpResponseMessage masters1ParticipantResponse = await _recordClient.PostAsJsonAsync(
-            $"{MeetsPath}/{_masters1MeetId}/participants", masters1ParticipantCommand, CancellationToken.None);
-        masters1ParticipantResponse.EnsureSuccessStatusCode();
-
-        AddParticipantResponse? masters1ParticipantResult = await masters1ParticipantResponse.Content
-            .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
-        _masters1ParticipationId = masters1ParticipantResult!.ParticipationId;
-
-        RecordAttemptCommand masters1AttemptCommand = new RecordAttemptCommandBuilder()
-            .WithWeight(185.0m)
-            .Build();
-
-        HttpResponseMessage masters1AttemptResponse = await _recordClient.PutAsJsonAsync(
-            $"{MeetsPath}/{_masters1MeetId}/participants/{_masters1ParticipationId}/attempts/{(int)Discipline.Squat}/1",
-            masters1AttemptCommand,
-            CancellationToken.None);
-        masters1AttemptResponse.EnsureSuccessStatusCode();
-        await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        if (_masters1ParticipationId > 0)
-        {
-            await _authorizedClient.DeleteAsync(
-                $"{MeetsPath}/{_masters1MeetId}/participants/{_masters1ParticipationId}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_masters1MeetSlug))
-        {
-            await _authorizedClient.DeleteAsync($"{MeetsPath}/{_masters1MeetSlug}", CancellationToken.None);
-        }
-
-        if (!string.IsNullOrEmpty(_masters1AthleteSlug))
-        {
-            await _authorizedClient.DeleteAsync($"/athletes/{_masters1AthleteSlug}", CancellationToken.None);
-        }
-
         if (_recentParticipationId > 0)
         {
             await _authorizedClient.DeleteAsync(
@@ -339,14 +260,98 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     [Fact]
     public async Task LatestRecordsMen_AgeCategoryIsTranslatedToIcelandicLabel()
     {
-        // Arrange — masters1 male athlete seeded in InitializeAsync with ageCategorySlug="masters1"
+        // Arrange — seed a masters1 male athlete locally.
+        // Born 1975, meet date 2021-01-01: IPF age = 2021 − 1975 = 46 → masters1.
+        // The 2021 meet date keeps this meet older than the 2022 range used by
+        // WhenMoreThanThreeQualifyingMeetsExist, so it does not displace any of
+        // that test's meets from the top-3 recent-meets window.
+        string masters1Code = UniqueShortCode.Next();
+        string masters1FirstName = $"DashM1{masters1Code}";
+        string masters1LastName = "Athlete";
+        string masters1AthleteSlug = Slug.Create($"{masters1FirstName} {masters1LastName}");
+        string masters1MeetSlug = string.Empty;
+        int masters1MeetId = 0;
+        int masters1ParticipationId = 0;
 
-        // Act
-        DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
+        try
+        {
+            CreateAthleteCommand masters1AthleteCommand = new CreateAthleteCommandBuilder()
+                .WithFirstName(masters1FirstName)
+                .WithLastName(masters1LastName)
+                .WithGender("m")
+                .WithDateOfBirth(new DateOnly(1975, 1, 1))
+                .Build();
 
-        // Assert
-        DashboardSummary dashboard = result.ShouldNotBeNull();
-        dashboard.LatestRecordsMen.ShouldContain(r => r.AgeCategory == "Öldungaflokkur 1");
+            HttpResponseMessage masters1AthleteResponse = await _authorizedClient.PostAsJsonAsync(
+                "/athletes", masters1AthleteCommand, CancellationToken.None);
+            masters1AthleteResponse.EnsureSuccessStatusCode();
+
+            CreateMeetCommand masters1MeetCommand = new CreateMeetCommandBuilder()
+                .WithStartDate(new DateOnly(2021, 1, 1))
+                .WithMeetTypeId(1)
+                .WithIsRaw(true)
+                .WithPublishedResults(true)
+                .WithPublishedInCalendar(false)
+                .Build();
+
+            HttpResponseMessage masters1MeetResponse = await _authorizedClient.PostAsJsonAsync(
+                MeetsPath, masters1MeetCommand, CancellationToken.None);
+            masters1MeetResponse.EnsureSuccessStatusCode();
+            masters1MeetSlug = masters1MeetResponse.Headers.Location!.ToString().TrimStart('/');
+
+            MeetDetails? masters1MeetDetails = await _authorizedClient.GetFromJsonAsync<MeetDetails>(
+                $"{MeetsPath}/{masters1MeetSlug}", CancellationToken.None);
+            masters1MeetId = masters1MeetDetails!.MeetId;
+
+            AddParticipantCommand masters1ParticipantCommand = new AddParticipantCommandBuilder()
+                .WithAthleteSlug(masters1AthleteSlug)
+                .WithBodyWeight(88.0m)
+                .WithAgeCategorySlug("masters1")
+                .Build();
+
+            HttpResponseMessage masters1ParticipantResponse = await _recordClient.PostAsJsonAsync(
+                $"{MeetsPath}/{masters1MeetId}/participants", masters1ParticipantCommand, CancellationToken.None);
+            masters1ParticipantResponse.EnsureSuccessStatusCode();
+
+            AddParticipantResponse? masters1ParticipantResult = await masters1ParticipantResponse.Content
+                .ReadFromJsonAsync<AddParticipantResponse>(CancellationToken.None);
+            masters1ParticipationId = masters1ParticipantResult!.ParticipationId;
+
+            RecordAttemptCommand masters1AttemptCommand = new RecordAttemptCommandBuilder()
+                .WithWeight(185.0m)
+                .Build();
+
+            HttpResponseMessage masters1AttemptResponse = await _recordClient.PutAsJsonAsync(
+                $"{MeetsPath}/{masters1MeetId}/participants/{masters1ParticipationId}/attempts/{(int)Discipline.Squat}/1",
+                masters1AttemptCommand,
+                CancellationToken.None);
+            masters1AttemptResponse.EnsureSuccessStatusCode();
+            await _channel.WaitUntilDrainedAsync(TestContext.Current.CancellationToken);
+
+            // Act
+            DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(
+                Path, CancellationToken.None);
+
+            // Assert
+            DashboardSummary dashboard = result.ShouldNotBeNull();
+            dashboard.LatestRecordsMen.ShouldContain(r => r.AgeCategory == "Öldungaflokkur 1");
+        }
+        finally
+        {
+            if (masters1ParticipationId > 0)
+            {
+                await _authorizedClient.DeleteAsync(
+                    $"{MeetsPath}/{masters1MeetId}/participants/{masters1ParticipationId}",
+                    CancellationToken.None);
+            }
+
+            if (!string.IsNullOrEmpty(masters1MeetSlug))
+            {
+                await _authorizedClient.DeleteAsync($"{MeetsPath}/{masters1MeetSlug}", CancellationToken.None);
+            }
+
+            await _authorizedClient.DeleteAsync($"/athletes/{masters1AthleteSlug}", CancellationToken.None);
+        }
     }
 
     [Fact]
