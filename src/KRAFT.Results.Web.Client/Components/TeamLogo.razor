@@ -5,6 +5,8 @@
 <div class="team-logo @_sizeClass @_textClass">
     @if (_isValidFilename)
     {
+        @* Structural invariant: the placeholder div must remain the img's immediate next
+           sibling — the onerror handler uses nextElementSibling to reveal it on load failure. *@
         <img src="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery}")"
              srcset="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery2x} 2x")"
              alt="@Alt"
@@ -63,7 +65,7 @@
             _ => "team-logo--md",
         };
 
-        _textClass = Size == TeamLogoSize.XSmall && !string.IsNullOrEmpty(FallbackText)
+        _textClass = !string.IsNullOrEmpty(FallbackText)
             ? "team-logo--text"
             : "";
 

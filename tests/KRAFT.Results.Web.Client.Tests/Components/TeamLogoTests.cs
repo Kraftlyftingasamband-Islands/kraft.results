@@ -102,7 +102,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersSrcset2x_WhenSizeIsXSmall()
+    public void WhenSizeIsXSmall_RendersSrcset2x()
     {
         // Arrange
 
@@ -123,7 +123,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void SrcRemainsUnchanged_WhenSrcsetIsAdded_ForXSmall()
+    public void WhenSizeIsXSmall_SrcRemainsUnchanged()
     {
         // Arrange
 
@@ -197,7 +197,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersFallbackText_WhenFallbackTextSetAndFilenameIsNull()
+    public void WhenFallbackTextSetAndFilenameIsNull_RendersFallbackText()
     {
         // Arrange
 
@@ -214,7 +214,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersShieldSvg_WhenFallbackTextIsNotSet()
+    public void WhenFallbackTextIsNotSet_RendersShieldSvg()
     {
         // Arrange
 
@@ -227,7 +227,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersImgAndHiddenFallbackTextSibling_WhenFallbackTextSetAndFilenameIsValid()
+    public void WhenFallbackTextSetAndFilenameIsValid_RendersImgAndHiddenFallbackTextSibling()
     {
         // Arrange
 
@@ -252,7 +252,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void FallbackTextPlaceholder_IsNotAriaHidden_WhenFallbackTextIsSet()
+    public void WhenFallbackTextIsSet_FallbackTextPlaceholderIsNotAriaHidden()
     {
         // Arrange
 
@@ -268,7 +268,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void ShieldPlaceholder_IsAriaHidden_WhenFallbackTextIsNotSet()
+    public void WhenFallbackTextIsNotSet_ShieldPlaceholderIsAriaHidden()
     {
         // Arrange
 
@@ -282,7 +282,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void AppliesTextModifierClass_WhenSizeIsXSmallAndFallbackTextIsSet()
+    public void WhenSizeIsXSmallAndFallbackTextIsSet_AppliesTextModifierClass()
     {
         // Arrange
 
@@ -297,7 +297,7 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
-    public void DoesNotApplyTextModifierClass_WhenSizeIsNotXSmall()
+    public void WhenFallbackTextSetAndSizeIsMedium_EmitsTextModifierClass()
     {
         // Arrange
 
@@ -308,11 +308,11 @@ public sealed class TeamLogoTests : IDisposable
                 .Add(c => c.Size, TeamLogoSize.Medium));
 
         // Assert
-        cut.FindAll(".team-logo--text").Count.ShouldBe(0);
+        cut.Find(".team-logo.team-logo--md.team-logo--text").ShouldNotBeNull();
     }
 
     [Fact]
-    public void DoesNotApplyTextModifierClass_WhenFallbackTextIsNotSet()
+    public void WhenFallbackTextIsNotSet_DoesNotApplyTextModifierClass()
     {
         // Arrange
 
@@ -335,7 +335,7 @@ public sealed class TeamLogoTests : IDisposable
     [InlineData("javascript:alert(1)")]
     [InlineData("logo.png?width=999")]
     [InlineData("logo.png#section")]
-    public void RendersFallbackText_WhenFallbackTextSetAndFilenameIsUnsafe(string unsafeFilename)
+    public void WhenFallbackTextSetAndFilenameIsUnsafe_RendersFallbackText(string unsafeFilename)
     {
         // Arrange
 
