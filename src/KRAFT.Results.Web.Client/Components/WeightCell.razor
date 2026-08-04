@@ -1,6 +1,4 @@
-﻿@using System.Text
-
-<td class="@Border">
+﻿<td class="@Border">
     <div class="@Classes">
         @Value
     </div>
@@ -10,9 +8,6 @@
     [Parameter]
     [EditorRequired]
     public decimal? Weight { get; set; }
-
-    [Parameter]
-    public int SignificantDigits { get; init; } = 1;
 
     public string Border { get; set; } = string.Empty;
 
@@ -28,10 +23,7 @@
             return;
         }
 
-        Value = Weight?.ToString($"F{SignificantDigits}") ?? "-";
-
-        StringBuilder stringBuilder = new("rounded-box ");
-
-        Classes = stringBuilder.ToString();
+        Value = DisplayFormat.Weight(Weight.Value);
+        Classes = "rounded-box ";
     }
 }

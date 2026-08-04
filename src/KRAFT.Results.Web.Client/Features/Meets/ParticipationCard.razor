@@ -150,7 +150,7 @@
             <span class="p-footer-label">Samtala</span>
             @if (!Participation.Disqualified && DisplayTotal > 0)
             {
-                @($"{DisplayTotal:F1}")
+                @DisplayFormat.Weight(DisplayTotal)
             }
             else if (!Participation.Disqualified)
             {
@@ -163,7 +163,7 @@
                 <span class="p-footer-label">IPF stig</span>
                 @if (!Participation.Disqualified && DisplayIpfPoints > 0)
                 {
-                    @($"{DisplayIpfPoints:F2}")
+                    @DisplayFormat.Points(DisplayIpfPoints)
                 }
             </div>
         }
@@ -284,7 +284,7 @@
     {
         decimal bodyWeight = _freshParticipation?.BodyWeight ?? Participation.BodyWeight;
         List<string> metaParts = [Participation.YearOfBirth.ToString()];
-        metaParts.Add($"{bodyWeight:F2} kg");
+        metaParts.Add($"{DisplayFormat.BodyWeight(bodyWeight)} kg");
         _metaLine = string.Join(" · ", metaParts);
     }
 

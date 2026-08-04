@@ -57,7 +57,7 @@
             <span class="card-status card-status--active">Núverandi met</span>
         }
 
-        <span>@Entry.Date.ToString("dd.MM.yyyy")</span>
+        <span>@DisplayFormat.Date(Entry.Date)</span>
 
         @if (Entry.MeetSlug is not null && Entry.Meet is not null)
         {
@@ -81,7 +81,7 @@
             <span class="card-status card-status--active">Núverandi met</span>
         }
 
-        <span>@Entry.Date.ToString("dd.MM.yyyy")</span>
+        <span>@DisplayFormat.Date(Entry.Date)</span>
 
         @if (Entry.Delta.HasValue)
         {

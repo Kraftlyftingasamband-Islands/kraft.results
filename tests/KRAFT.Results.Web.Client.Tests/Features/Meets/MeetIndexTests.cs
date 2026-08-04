@@ -50,6 +50,27 @@ public sealed class MeetIndexTests : IDisposable
     }
 
     [Fact]
+    public void WhenMeetsInMarch_GroupHeaderUsesIcelandicMonthName()
+    {
+        // Arrange
+        List<MeetSummary> meets =
+        [
+            new("nationals-2024", "Nationals 2024", "Reykjavik", new DateOnly(2024, 3, 15), "Kraftlyftingar", false, 0),
+        ];
+        RegisterHttpClient(meets);
+
+        // Act
+        IRenderedComponent<MeetIndex> cut = _context.Render<MeetIndex>(
+            parameters => parameters.Add(p => p.Year, 2024));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("h4").TextContent.Trim().ShouldBe("Mars");
+        });
+    }
+
+    [Fact]
     public void ShowsMeetCards_WhenMeetsAreLoaded()
     {
         // Arrange

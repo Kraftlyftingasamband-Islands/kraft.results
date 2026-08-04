@@ -19,6 +19,27 @@ public sealed class MeetCardTests : IDisposable
     }
 
     [Fact]
+    public void WhenRendered_DateTextUsesIcelandicMonthAbbreviation()
+    {
+        // Arrange
+        MeetSummary meet = new(
+            Slug: "test-meet",
+            Title: "Test Meet",
+            Location: "Reykjavík",
+            StartDate: new DateOnly(2024, 3, 15),
+            Discipline: "Kraftlyftingar",
+            IsClassic: true,
+            ParticipantCount: 0);
+
+        // Act
+        IRenderedComponent<MeetCard> cut = _context.Render<MeetCard>(
+            p => p.Add(c => c.Meet, meet));
+
+        // Assert
+        cut.Find(".meet-card-date").TextContent.Trim().ShouldBe("15. mar. 2024");
+    }
+
+    [Fact]
     public void RendersArticleWithMeetCardClass_WhenPastMeet()
     {
         // Arrange

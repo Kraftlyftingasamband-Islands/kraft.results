@@ -1,4 +1,3 @@
-@using System.Globalization
 @using KRAFT.Results.Contracts.Meets
 
 <section class="mr-section content-column">
@@ -11,14 +10,14 @@
                 {
                     <a class="mr-row"
                        href="@($"/athletes/{record.AthleteSlug}")"
-                       aria-label="@($"{record.WeightCategory} — {record.Discipline} — {record.AthleteName} — {record.Weight.ToString("F1", CultureInfo.InvariantCulture)} kg")">
+                       aria-label="@($"{record.WeightCategory} — {record.Discipline} — {record.AthleteName} — {DisplayFormat.Weight(record.Weight)} kg")">
                         <span class="mr-cat">@record.WeightCategory</span>
                         <div class="mr-info">
                             <span class="mr-type">@record.Discipline</span>
                             <span class="mr-meta">@record.AgeCategory</span>
                         </div>
                         <span class="mr-name">@record.AthleteName</span>
-                        <span class="mr-weight">@record.Weight.ToString("F1", CultureInfo.InvariantCulture) <span class="mr-unit">kg</span></span>
+                        <span class="mr-weight">@DisplayFormat.Weight(record.Weight) <span class="mr-unit">kg</span></span>
                     </a>
                 }
             </div>
