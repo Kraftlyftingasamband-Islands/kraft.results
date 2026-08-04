@@ -289,7 +289,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         const string LogoFilename = "test-logo.png";
 
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Teams SET LogoImageFilename = '{LogoFilename}' WHERE TeamId = {TestSeedConstants.Team.Id}");
+            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Team.Id}");
 
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(TestSeedConstants.Athlete.Slug)
