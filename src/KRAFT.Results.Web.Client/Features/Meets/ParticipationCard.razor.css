@@ -99,6 +99,7 @@
     flex-shrink: 0;
     white-space: nowrap;
     transition: color var(--transition-fast) ease;
+    position: relative;
 }
 
 .p-club:hover {
@@ -250,6 +251,15 @@
 
     .btn-remove-participant {
         opacity: 1;
+    }
+
+    /* Expand .p-club tap target to ~44px vertically on touch without affecting
+       the visual 24px logo or card row height. The pseudo-element does not
+       extend horizontally, so it cannot overlap the adjacent athlete-name link. */
+    .p-club::after {
+        content: "";
+        position: absolute;
+        inset: -10px 0;
     }
 }
 
