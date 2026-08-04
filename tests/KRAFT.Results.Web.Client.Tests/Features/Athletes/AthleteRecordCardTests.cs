@@ -50,7 +50,7 @@ public sealed class AthleteRecordCardTests : IDisposable
     public void WhenRendered_AgeCategoryPillRendersWithCorrectText()
     {
         // Arrange
-        AthleteRecord record = BuildRecord(ageCategory: "Open");
+        AthleteRecord record = BuildRecord(ageCategory: "Opinn flokkur");
         RegisterServices();
 
         // Act
@@ -59,7 +59,39 @@ public sealed class AthleteRecordCardTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement agePill = cut.Find(".esc-pill--age");
-        agePill.TextContent.Trim().ShouldBe("Open");
+        agePill.TextContent.Trim().ShouldBe("Opinn flokkur");
+    }
+
+    [Fact]
+    public void WhenAgeCategoryIsMasters_PillRendersIcelandicLabel()
+    {
+        // Arrange
+        AthleteRecord record = BuildRecord(ageCategory: "Öldungaflokkur 1");
+        RegisterServices();
+
+        // Act
+        IRenderedComponent<AthleteRecordCard> cut = _context.Render<AthleteRecordCard>(
+            parameters => parameters.Add(p => p.Record, record));
+
+        // Assert
+        AngleSharp.Dom.IElement agePill = cut.Find(".esc-pill--age");
+        agePill.TextContent.Trim().ShouldBe("Öldungaflokkur 1");
+    }
+
+    [Fact]
+    public void WhenAgeCategoryIsMaleSubJunior_PillRendersDrengjaflokkur()
+    {
+        // Arrange
+        AthleteRecord record = BuildRecord(ageCategory: "Drengjaflokkur");
+        RegisterServices();
+
+        // Act
+        IRenderedComponent<AthleteRecordCard> cut = _context.Render<AthleteRecordCard>(
+            parameters => parameters.Add(p => p.Record, record));
+
+        // Assert
+        AngleSharp.Dom.IElement agePill = cut.Find(".esc-pill--age");
+        agePill.TextContent.Trim().ShouldBe("Drengjaflokkur");
     }
 
     [Fact]
