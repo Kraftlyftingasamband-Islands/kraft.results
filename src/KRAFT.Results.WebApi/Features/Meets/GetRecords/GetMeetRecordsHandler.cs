@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Enums;
 using KRAFT.Results.WebApi.Features.Records;
@@ -35,21 +36,29 @@ internal sealed class GetMeetRecordsHandler(ResultsDbContext dbContext)
                 AthleteSlug = r.Attempt.Participation.Athlete.Slug,
                 r.RecordCategoryId,
                 WeightCategory = r.WeightCategory.Title,
-                AgeCategory = r.AgeCategory.Title,
+                AgeCategorySlug = r.AgeCategory.Slug,
+                AgeCategoryTitle = r.AgeCategory.Title,
+                Gender = r.Attempt.Participation.Athlete.Gender,
                 r.Weight,
                 r.IsRaw,
             })
             .ToListAsync(cancellationToken);
 
         List<MeetRecordEntry> records = rows
-            .Select(r => new MeetRecordEntry(
-                r.AthleteName,
-                r.AthleteSlug,
-                r.RecordCategoryId.ToDisplayName(),
-                r.WeightCategory,
-                r.AgeCategory,
-                r.Weight,
-                r.IsRaw))
+            .Select(r =>
+            {
+                string label = r.AgeCategorySlug?.ToAgeCategoryLabel(r.Gender) ?? string.Empty;
+                string ageCategory = label.Length > 0 ? label : r.AgeCategoryTitle;
+
+                return new MeetRecordEntry(
+                    r.AthleteName,
+                    r.AthleteSlug,
+                    r.RecordCategoryId.ToDisplayName(),
+                    r.WeightCategory,
+                    ageCategory,
+                    r.Weight,
+                    r.IsRaw);
+            })
             .ToList();
 
         return records;
