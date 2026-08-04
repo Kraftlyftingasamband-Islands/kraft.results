@@ -197,6 +197,162 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Fact]
+    public void RendersFallbackText_WhenFallbackTextSetAndFilenameIsNull()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.FallbackText, "ÞOR")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        cut.Find(".team-logo-placeholder").TextContent.Trim().ShouldBe("ÞOR");
+        cut.FindAll(".team-logo svg").Count.ShouldBe(0);
+        cut.FindAll(".team-logo img").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void RendersShieldSvg_WhenFallbackTextIsNotSet()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p.Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        cut.Find(".team-logo svg").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RendersImgAndHiddenFallbackTextSibling_WhenFallbackTextSetAndFilenameIsValid()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, "thor.png")
+                .Add(c => c.FallbackText, "ÞOR")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
+        img.ShouldNotBeNull();
+
+        string onerror = img.GetAttribute("onerror").ShouldNotBeNull();
+        onerror.ShouldContain("this.nextElementSibling.style.display='flex'");
+
+        AngleSharp.Dom.IElement placeholder = cut.Find(".team-logo-placeholder");
+        placeholder.GetAttribute("style").ShouldNotBeNull().ShouldContain("display:none");
+        placeholder.TextContent.Trim().ShouldBe("ÞOR");
+        cut.FindAll(".team-logo svg").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void FallbackTextPlaceholder_IsNotAriaHidden_WhenFallbackTextIsSet()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.FallbackText, "ÞOR")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        AngleSharp.Dom.IElement placeholder = cut.Find(".team-logo-placeholder");
+        placeholder.GetAttribute("aria-hidden").ShouldBeNull();
+    }
+
+    [Fact]
+    public void ShieldPlaceholder_IsAriaHidden_WhenFallbackTextIsNotSet()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p.Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        AngleSharp.Dom.IElement placeholder = cut.Find(".team-logo-placeholder");
+        placeholder.GetAttribute("aria-hidden").ShouldBe("true");
+    }
+
+    [Fact]
+    public void AppliesTextModifierClass_WhenSizeIsXSmallAndFallbackTextIsSet()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.FallbackText, "ÞOR")
+                .Add(c => c.Size, TeamLogoSize.XSmall));
+
+        // Assert
+        cut.Find(".team-logo.team-logo--xs.team-logo--text").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void DoesNotApplyTextModifierClass_WhenSizeIsNotXSmall()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.FallbackText, "ÞOR")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        cut.FindAll(".team-logo--text").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DoesNotApplyTextModifierClass_WhenFallbackTextIsNotSet()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p.Add(c => c.Size, TeamLogoSize.XSmall));
+
+        // Assert
+        cut.FindAll(".team-logo--text").Count.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData("evil,logo.png")]
+    [InlineData("evil logo.png")]
+    [InlineData("../evil.png")]
+    [InlineData("subdir/logo.png")]
+    [InlineData(@"C:\logos\evil.png")]
+    [InlineData("http://evil.com/logo.png")]
+    [InlineData("//evil.com/logo.png")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("logo.png?width=999")]
+    [InlineData("logo.png#section")]
+    public void RendersFallbackText_WhenFallbackTextSetAndFilenameIsUnsafe(string unsafeFilename)
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+            p => p
+                .Add(c => c.Filename, unsafeFilename)
+                .Add(c => c.FallbackText, "ÞOR")
+                .Add(c => c.Size, TeamLogoSize.Medium));
+
+        // Assert
+        cut.Find(".team-logo-placeholder").TextContent.Trim().ShouldBe("ÞOR");
+        cut.FindAll(".team-logo svg").Count.ShouldBe(0);
+        cut.FindAll(".team-logo img").Count.ShouldBe(0);
+    }
+
+    [Fact]
     public void ShowsPlaceholder_WhenFilenameContainsComma()
     {
         // Arrange
