@@ -111,6 +111,18 @@ Use tracked lists (`_participations`, `_meetSlugs`, `_athleteSlugs`) populated d
 
 `GetRecordsTests.cs` is the canonical example of a fully migrated test — use it as the pattern for all remaining migrations.
 
+## Formatting
+
+All UI date/number formatting routes through the `DisplayFormat` static helper in `Web.Client` root — never use inline `InvariantCulture` or ad-hoc format strings at render sites.
+
+- **Lifted weights** (attempts, records, totals) — one decimal, comma separator, no thousands grouping (`220,5`).
+- **Bodyweight and IPF points** — two decimals, comma separator (`82,50`).
+- **Full dates** — `dd.MM.yyyy` (`15.03.2024`); contextual month variants (`MMM yyyy`, `MMMM`) use explicit is-IS culture for Icelandic month names.
+- **Numeric inputs** — accept both `,` and `.` via `DisplayFormat.TryParseWeight`; display always renders the comma form.
+- **Machine-readable attributes** (`datetime="yyyy-MM-dd"`, date-input `max`) stay ISO 8601 — do not route these through `DisplayFormat`.
+- **Culture pinning** — both hosts pin is-IS: `Web/Program.cs` and `Web.Client/Program.cs` set `CultureInfo.DefaultThreadCurrentCulture` and `CultureInfo.DefaultThreadCurrentUICulture` to `new CultureInfo("is-IS")`. bUnit tests pin is-IS via `TestCulture.cs`.
+- **Deliberate deviation from results.kraft.is** — the live site (source of truth for *values*) renders two decimals for all weights (`125,00`) and hyphenated dates (`01-02-2025`). We intentionally deviate in *presentation only*: one decimal for lifted weights and `dd.MM.yyyy` dates. Values still match the live site. Do not revert this.
+
 ## Code Style
 
 Key `.editorconfig` rules (warnings are errors in build):

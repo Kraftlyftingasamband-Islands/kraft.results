@@ -1,8 +1,13 @@
+using System.Globalization;
+
 using KRAFT.Results.Web;
 using KRAFT.Results.Web.Client.Features.Auth;
 using KRAFT.Results.Web.Components;
 
 using Microsoft.AspNetCore.Authorization;
+
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("is-IS");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("is-IS");
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
