@@ -1,8 +1,8 @@
-﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Configuration
 
 @inject IConfiguration Configuration
 
-<div class="team-logo @_sizeClass">
+<div class="team-logo @_sizeClass @_textClass">
     @if (_isValidFilename)
     {
         <img src="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery}")"
@@ -11,11 +11,20 @@
              loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
     }
-    <div class="team-logo-placeholder" style="@(_isValidFilename ? "display:none" : "")" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
-        </svg>
-    </div>
+    @if (!string.IsNullOrEmpty(FallbackText))
+    {
+        <div class="team-logo-placeholder" style="@(_isValidFilename ? "display:none" : "")">
+            <span class="team-logo-fallback-text">@FallbackText</span>
+        </div>
+    }
+    else
+    {
+        <div class="team-logo-placeholder" style="@(_isValidFilename ? "display:none" : "")" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
+            </svg>
+        </div>
+    }
 </div>
 
 @code {
@@ -28,8 +37,12 @@
     [Parameter, EditorRequired]
     public TeamLogoSize Size { get; set; }
 
+    [Parameter]
+    public string? FallbackText { get; set; }
+
     private string _teamLogoBaseUrl = "";
     private string _sizeClass = "";
+    private string _textClass = "";
     private string _sizeQuery = "";
     private string _sizeQuery2x = "";
     private bool _isValidFilename;
@@ -49,6 +62,10 @@
             TeamLogoSize.Large => "team-logo--lg",
             _ => "team-logo--md",
         };
+
+        _textClass = Size == TeamLogoSize.XSmall && !string.IsNullOrEmpty(FallbackText)
+            ? "team-logo--text"
+            : "";
 
         (int width, int height, bool crop) dims = Size switch
         {
