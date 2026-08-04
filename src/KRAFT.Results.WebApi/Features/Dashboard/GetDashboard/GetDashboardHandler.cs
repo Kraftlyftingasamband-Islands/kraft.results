@@ -174,7 +174,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 WeightCategory = r.WeightCategory.Title,
                 AgeCategorySlug = r.AgeCategory.Slug,
                 AgeCategoryTitle = r.AgeCategory.Title,
-                Gender = r.Attempt.Participation.Athlete.Gender.Value,
+                Gender = r.Attempt.Participation.Athlete.Gender,
                 r.IsRaw,
                 r.Weight,
                 MeetSlug = r.Attempt.Participation.Meet.Slug,
