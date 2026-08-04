@@ -256,6 +256,27 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     }
 
     [Fact]
+    public async Task LatestRecordsMen_AgeCategoryIsTranslatedToIcelandicLabel()
+    {
+        // Arrange
+
+        // Act
+        DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
+
+        // Assert
+        DashboardSummary dashboard = result.ShouldNotBeNull();
+        dashboard.LatestRecordsMen.ShouldNotBeEmpty();
+        dashboard.LatestRecordsMen.ShouldAllBe(r =>
+            r.AgeCategory != "open"
+            && r.AgeCategory != "junior"
+            && r.AgeCategory != "subjunior"
+            && r.AgeCategory != "masters1"
+            && r.AgeCategory != "masters2"
+            && r.AgeCategory != "masters3"
+            && r.AgeCategory != "masters4");
+    }
+
+    [Fact]
     public async Task WhenMoreThanThreeQualifyingMeetsExist_ReturnsThreeMostRecentByStartDate()
     {
         // Arrange — seed 4 past meets with distinct StartDates, all with attempts, all PublishedResults

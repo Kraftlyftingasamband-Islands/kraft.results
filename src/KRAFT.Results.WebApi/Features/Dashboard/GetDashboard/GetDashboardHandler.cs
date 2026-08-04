@@ -1,3 +1,4 @@
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Dashboard;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.Rankings;
@@ -155,7 +156,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
     private async Task<List<DashboardRecordEntry>> GetLatestRecordsAsync(
         string gender, CancellationToken cancellationToken)
     {
-        List<RawRecordRow> rows = await dbContext.Set<Record>()
+        var rows = await dbContext.Set<Record>()
             .Where(r => r.AttemptId != null)
             .Where(r => r.IsCurrent)
             .Where(r => r.RecordCategoryId != RecordCategory.TotalWilks
@@ -164,28 +165,39 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .OrderByDescending(r => r.Date)
             .ThenBy(r => Guid.NewGuid())
             .Take(3)
-            .Select(r => new RawRecordRow(
+            .Select(r => new
+            {
                 r.RecordCategoryId,
-                r.Attempt!.Participation.Athlete.Slug,
-                r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname,
-                r.WeightCategory.Title,
-                r.AgeCategory.Slug ?? string.Empty,
+                AthleteSlug = r.Attempt!.Participation.Athlete.Slug,
+                AthleteName = r.Attempt.Participation.Athlete.Firstname + " " + r.Attempt.Participation.Athlete.Lastname,
+                WeightCategory = r.WeightCategory.Title,
+                AgeCategorySlug = r.AgeCategory.Slug,
+                AgeCategoryTitle = r.AgeCategory.Title,
+                Gender = r.Attempt.Participation.Athlete.Gender.Value,
                 r.IsRaw,
                 r.Weight,
-                r.Attempt.Participation.Meet.Slug,
-                r.Date))
+                MeetSlug = r.Attempt.Participation.Meet.Slug,
+                r.Date,
+            })
             .ToListAsync(cancellationToken);
 
-        return rows.Select(r => new DashboardRecordEntry(
-            r.RecordCategoryId.ToDisplayName(),
-            r.AthleteSlug,
-            r.AthleteName,
-            r.WeightCategory,
-            r.AgeCategory,
-            r.IsRaw,
-            r.Weight,
-            r.MeetSlug,
-            r.Date))
+        return rows
+            .Select(r =>
+            {
+                string label = r.AgeCategorySlug?.ToAgeCategoryLabel(r.Gender) ?? string.Empty;
+                string ageCategory = label.Length > 0 ? label : r.AgeCategoryTitle;
+
+                return new DashboardRecordEntry(
+                    r.RecordCategoryId.ToDisplayName(),
+                    r.AthleteSlug,
+                    r.AthleteName,
+                    r.WeightCategory,
+                    ageCategory,
+                    r.IsRaw,
+                    r.Weight,
+                    r.MeetSlug,
+                    r.Date);
+            })
             .ToList();
     }
 
@@ -233,15 +245,4 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
         bool IsRaw,
         string Gender,
         string MeetSlug);
-
-    private sealed record RawRecordRow(
-        RecordCategory RecordCategoryId,
-        string AthleteSlug,
-        string AthleteName,
-        string WeightCategory,
-        string AgeCategory,
-        bool IsRaw,
-        decimal Weight,
-        string MeetSlug,
-        DateOnly Date);
 }
