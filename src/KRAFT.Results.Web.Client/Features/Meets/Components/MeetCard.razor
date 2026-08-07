@@ -28,8 +28,9 @@
     private bool _isLinked;
     private string _cssClass = string.Empty;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
+        // Synchronous (non-auth) computations first — assigned before the first render
         bool hasParticipants = Meet.ParticipantCount > 0;
 
         string variant = (Meet.IsUpcoming, hasParticipants) switch
@@ -65,17 +66,12 @@
             _metaText = locationText;
         }
 
-        _label = Meet.IsUpcoming ? "skráðir" : "keppendur";
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        bool hasParticipants = Meet.ParticipantCount > 0;
-
+        // Auth-dependent fields — resolved after the await
         if (hasParticipants)
         {
             _isLinked = true;
             _nameHref = $"/meets/{Meet.Slug}";
+            _label = Meet.IsUpcoming ? "skráðir" : "keppendur";
             _value = Meet.ParticipantCount.ToString();
             return;
         }
@@ -89,8 +85,10 @@
 
         if (isAdmin)
         {
+            // Ghost admin: clickable, shows 0, label explicit
             _isLinked = true;
             _nameHref = $"/meets/{Meet.Slug}";
+            _label = Meet.IsUpcoming ? "skráðir" : "keppendur";
             _value = "0";
         }
         else
@@ -98,8 +96,8 @@
             // Ghost non-admin: plain span, no link, no stat column
             _isLinked = false;
             _nameHref = null;
-            _value = null;
             _label = null;
+            _value = null;
         }
     }
 }

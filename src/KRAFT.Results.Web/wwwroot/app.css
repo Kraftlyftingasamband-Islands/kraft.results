@@ -610,7 +610,7 @@ h1:focus {
     border-inline-start: 3px solid var(--color-primary);
 }
 
-.meet-card { }
+/* article.meet-card is the E2E locator and variant hook for --active/--ghost modifiers */
 
 /* Active meet — emphasise the participant count (was .meet-card-count) */
 .meet-card--active { --card-bg: color-mix(in oklch, var(--color-primary) 6%, transparent); }

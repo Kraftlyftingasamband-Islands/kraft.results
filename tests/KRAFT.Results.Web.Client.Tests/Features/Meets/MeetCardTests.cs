@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
-namespace KRAFT.Results.Web.Client.Tests.Components;
+namespace KRAFT.Results.Web.Client.Tests.Features.Meets;
 
 public sealed class MeetCardTests : IDisposable
 {
@@ -353,6 +353,24 @@ public sealed class MeetCardTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             cut.Find("article.card--clickable").ShouldNotBeNull();
+        });
+    }
+
+    [Fact]
+    public void WhenGhostAdminPastMeet_StatLabelIsKeppendur()
+    {
+        // Arrange
+        MeetSummary meet = MakePastMeet(participantCount: 0);
+        _context.AddAuthorization().SetRoles("Admin");
+
+        // Act
+        IRenderedComponent<MeetCard> cut = _context.Render<MeetCard>(
+            p => p.Add(c => c.Meet, meet));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".esc-label").TextContent.Trim().ShouldBe("keppendur");
         });
     }
 
