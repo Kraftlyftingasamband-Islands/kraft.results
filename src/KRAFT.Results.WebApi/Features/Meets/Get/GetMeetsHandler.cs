@@ -27,8 +27,10 @@ internal sealed class GetMeetsHandler(ResultsDbContext dbContext)
                 x.Participations.Count))
             .ToListAsync(cancellationToken);
 
+        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+
         return raw
-            .Select(x => x.ToMeetSummary())
+            .Select(x => x.ToMeetSummary(today))
             .ToList();
     }
 }

@@ -1,4 +1,4 @@
-﻿using KRAFT.Results.Contracts.Meets;
+using KRAFT.Results.Contracts.Meets;
 
 namespace KRAFT.Results.WebApi.Features.Meets;
 
@@ -11,6 +11,6 @@ internal sealed record MeetProjection(
     bool IsRaw,
     int ParticipantCount)
 {
-    internal MeetSummary ToMeetSummary() =>
-        new(Slug, Title, Location, StartDate, Category.ToDisplayName(), IsRaw, ParticipantCount);
+    internal MeetSummary ToMeetSummary(DateOnly today) =>
+        new(Slug, Title, Location, StartDate, Category.ToDisplayName(), IsRaw, StartDate > today, ParticipantCount);
 }

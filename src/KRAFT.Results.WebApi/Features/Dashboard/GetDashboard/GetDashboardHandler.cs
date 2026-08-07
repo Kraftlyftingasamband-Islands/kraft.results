@@ -23,6 +23,8 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
 
         DashboardSeasonStats stats = await GetSeasonStatsAsync(currentYear, cancellationToken);
 
+        DateOnly todayDate = DateOnly.FromDateTime(today);
+
         List<MeetSummary> recentMeets = await ProjectMeetsAsync(
             dbContext.Set<Meet>()
                 .Where(m => m.PublishedResults)
@@ -30,6 +32,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 .Where(m => m.Participations.Any(p => p.Attempts.Count > 0))
                 .OrderByDescending(m => m.StartDate)
                 .Take(3),
+            todayDate,
             cancellationToken);
 
         List<MeetSummary> upcomingMeets = await ProjectMeetsAsync(
@@ -38,6 +41,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
                 .Where(m => m.StartDate > today)
                 .OrderBy(m => m.StartDate)
                 .Take(3),
+            todayDate,
             cancellationToken);
 
         List<RankingEntry> rankingsMen = await GetTopRankingsAsync("m", currentYear, cancellationToken);
@@ -63,6 +67,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
 
     private static async Task<List<MeetSummary>> ProjectMeetsAsync(
         IQueryable<Meet> query,
+        DateOnly today,
         CancellationToken cancellationToken)
     {
         List<MeetProjection> raw = await query
@@ -77,7 +82,7 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .ToListAsync(cancellationToken);
 
         return raw
-            .Select(m => m.ToMeetSummary())
+            .Select(m => m.ToMeetSummary(today))
             .ToList();
     }
 
