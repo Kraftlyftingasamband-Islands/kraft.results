@@ -76,6 +76,14 @@
             return;
         }
 
+        // Reset auth-gated fields to ghost-non-admin sentinels before the await so any
+        // intermediate render frame (e.g. when Blazor reuses this instance with new parameters)
+        // always shows a valid ghost-non-admin card rather than stale values from the previous meet.
+        _isLinked = false;
+        _nameHref = null;
+        _label = null;
+        _value = null;
+
         bool isAdmin = false;
         if (AuthenticationStateTask is not null)
         {
