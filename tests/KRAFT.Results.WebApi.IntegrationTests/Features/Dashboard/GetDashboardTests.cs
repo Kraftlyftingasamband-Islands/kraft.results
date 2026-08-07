@@ -184,7 +184,7 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     }
 
     [Fact]
-    public async Task RecentMeet_ReturnsDisciplineIsClassicAndParticipantCount()
+    public async Task RecentMeet_ReturnsCategoryIsClassicIsUpcomingAndParticipantCount()
     {
         // Act
         DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
@@ -194,8 +194,9 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         dashboard.RecentMeets.ShouldContain(m => m.Slug == _recentMeetSlug);
         MeetSummary meet = dashboard.RecentMeets.First(m => m.Slug == _recentMeetSlug);
         meet.ShouldSatisfyAllConditions(
-            () => meet.Discipline.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting),
+            () => meet.Category.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting),
             () => meet.IsClassic.ShouldBeTrue(),
+            () => meet.IsUpcoming.ShouldBeFalse(),
             () => meet.ParticipantCount.ShouldBe(1));
     }
 
@@ -213,7 +214,7 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
     }
 
     [Fact]
-    public async Task UpcomingMeet_ReturnsDisciplineIsClassicAndParticipantCount()
+    public async Task UpcomingMeet_ReturnsCategoryIsClassicIsUpcomingAndParticipantCount()
     {
         // Act
         DashboardSummary? result = await _client.GetFromJsonAsync<DashboardSummary>(Path, CancellationToken.None);
@@ -223,8 +224,9 @@ public sealed class GetDashboardTests(CollectionFixture fixture) : IAsyncLifetim
         dashboard.UpcomingMeets.ShouldContain(m => m.Slug == _upcomingMeetSlug);
         MeetSummary meet = dashboard.UpcomingMeets.First(m => m.Slug == _upcomingMeetSlug);
         meet.ShouldSatisfyAllConditions(
-            () => meet.Discipline.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting),
+            () => meet.Category.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting),
             () => meet.IsClassic.ShouldBeTrue(),
+            () => meet.IsUpcoming.ShouldBeTrue(),
             () => meet.ParticipantCount.ShouldBe(0));
     }
 

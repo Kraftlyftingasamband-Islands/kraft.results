@@ -86,8 +86,9 @@ public sealed class DashboardPageTests : IDisposable
             Title: title,
             Location: "Reykjavík",
             StartDate: new DateOnly(2024, 3, 15),
-            Discipline: "Kraftlyftingar",
+            Category: "Kraftlyftingar",
             IsClassic: true,
+            IsUpcoming: false,
             ParticipantCount: 5);
 
     private static DashboardSummary MakeSummary(

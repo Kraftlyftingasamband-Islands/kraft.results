@@ -86,9 +86,9 @@ public sealed class GetMeetsTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ReturnsDisciplineAndIsClassicAndParticipantCount()
+    public async Task ReturnsCategoryIsClassicIsUpcomingAndParticipantCount()
     {
-        // Arrange
+        // Arrange — meet starting in 2099 is upcoming (strict > today)
         CreateMeetCommand command = new CreateMeetCommandBuilder()
             .WithStartDate(new DateOnly(2099, 2, 1))
             .WithMeetTypeId(1)
@@ -106,9 +106,43 @@ public sealed class GetMeetsTests(CollectionFixture fixture) : IAsyncLifetime
         IReadOnlyList<MeetSummary> meets = response.ShouldNotBeNull();
         meets.ShouldContain(x => x.Slug == _disciplineMeetSlug);
         MeetSummary meet = meets.First(x => x.Slug == _disciplineMeetSlug);
-        meet.Discipline.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting);
-        meet.IsClassic.ShouldBeTrue();
-        meet.ParticipantCount.ShouldBe(0);
+        meet.ShouldSatisfyAllConditions(
+            () => meet.Category.ShouldBe(KRAFT.Results.Contracts.Constants.Powerlifting),
+            () => meet.IsClassic.ShouldBeTrue(),
+            () => meet.IsUpcoming.ShouldBeTrue(),
+            () => meet.ParticipantCount.ShouldBe(0));
+    }
+
+    [Fact]
+    public async Task WhenMeetStartedInThePast_IsUpcomingIsFalse()
+    {
+        // Arrange — use the default meet created in InitializeAsync (2099-01-01) but also
+        // create one in the past to assert IsUpcoming=false
+        CreateMeetCommand pastCommand = new CreateMeetCommandBuilder()
+            .WithStartDate(new DateOnly(2020, 1, 1))
+            .WithMeetTypeId(1)
+            .WithIsRaw(true)
+            .Build();
+
+        HttpResponseMessage pastResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, pastCommand, CancellationToken.None);
+        pastResponse.EnsureSuccessStatusCode();
+        string pastMeetSlug = pastResponse.Headers.Location!.ToString().TrimStart('/');
+
+        try
+        {
+            // Act
+            IReadOnlyList<MeetSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<MeetSummary>>(Path, CancellationToken.None);
+
+            // Assert
+            IReadOnlyList<MeetSummary> meets = response.ShouldNotBeNull();
+            meets.ShouldContain(x => x.Slug == pastMeetSlug);
+            MeetSummary meet = meets.First(x => x.Slug == pastMeetSlug);
+            meet.IsUpcoming.ShouldBeFalse();
+        }
+        finally
+        {
+            await _authorizedHttpClient.DeleteAsync($"/meets/{pastMeetSlug}", CancellationToken.None);
+        }
     }
 
     [Fact]

@@ -6,6 +6,7 @@
 @using KRAFT.Results.Contracts.Rankings
 @using KRAFT.Results.Contracts.TeamCompetition
 @using KRAFT.Results.Web.Client.Components
+@using KRAFT.Results.Web.Client.Features.Meets.Components
 @using KRAFT.Results.Web.Client.Features.Rankings
 @using KRAFT.Results.Web.Client.Features.TeamCompetition
 
@@ -79,7 +80,7 @@
                         <div class="meet-card-list">
                             @foreach (MeetSummary meet in context.UpcomingMeets)
                             {
-                                <MeetCard @key="meet.Slug" Meet="meet" IsFuture="true" />
+                                <MeetCard @key="meet.Slug" Meet="meet" />
                             }
                         </div>
                     }

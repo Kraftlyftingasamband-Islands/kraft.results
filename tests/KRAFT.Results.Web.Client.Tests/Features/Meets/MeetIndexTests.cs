@@ -55,7 +55,7 @@ public sealed class MeetIndexTests : IDisposable
         // Arrange
         List<MeetSummary> meets =
         [
-            new("nationals-2024", "Nationals 2024", "Reykjavik", new DateOnly(2024, 3, 15), "Kraftlyftingar", false, 0),
+            new("nationals-2024", "Nationals 2024", "Reykjavik", new DateOnly(2024, 3, 15), "Kraftlyftingar", false, false, 0),
         ];
         RegisterHttpClient(meets);
 
@@ -76,8 +76,8 @@ public sealed class MeetIndexTests : IDisposable
         // Arrange
         List<MeetSummary> meets =
         [
-            new("nationals-2024", "Nationals 2024", "Reykjavik", new DateOnly(2024, 3, 15), "Kraftlyftingar", false, 0),
-            new("spring-cup-2024", "Spring Cup 2024", "Akureyri", new DateOnly(2024, 4, 20), "Kraftlyftingar", false, 0),
+            new("nationals-2024", "Nationals 2024", "Reykjavik", new DateOnly(2024, 3, 15), "Kraftlyftingar", false, false, 0),
+            new("spring-cup-2024", "Spring Cup 2024", "Akureyri", new DateOnly(2024, 4, 20), "Kraftlyftingar", false, false, 0),
         ];
         RegisterHttpClient(meets);
 
