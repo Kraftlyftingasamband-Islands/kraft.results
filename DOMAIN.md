@@ -16,10 +16,40 @@ A club has a full title and a **short name** (`TitleShort` on the entity). The s
 
 ### Club logo
 
-A club's logo is **optional** — `LogoImageFilename` holds a blob filename resolved against the configured `ImageBaseUrl` (rendered by the `TeamLogo` component with size-specific resize/crop and 2x srcset). Display fallback rules:
+A club's logo is **optional** — `LogoImageFilename` holds a blob filename resolved against the configured `ImageBaseUrl` (rendered by the `TeamLogo` component using a pinned legacy image variant — see *Legacy image host*). Display fallback rules:
 
 - **Attempt cards** — logo when available, otherwise the club short name as text. Any unusable logo (missing, unsafe filename, or runtime 404) degrades to the short name.
 - **Club-centric views** (clubs index, club details, team-competition standings) — logo shown beside the name; a shield-icon placeholder stands in when no logo exists.
+- **Athlete-centric views** (athlete details header) — the club appears as a secondary identity anchor: logo at athlete-photo height on the header's right edge, linking to the club page; no logo → the club short name as a monogram block in the same slot; no club → the slot is absent entirely. The club's full name remains a text link in the meta row — the logo never replaces the name.
+
+---
+
+## Legacy Image Host
+
+All images (club logos, athlete photos, meet photos) are served by the legacy production site at `ImageBaseUrl` (`https://results.kraft.is/azure/images`). Its dynamic resizer is **broken**: it can serve only resize variants already in its per-file cache — the variants the old site's own pages have historically requested. Any other query string returns a slow (~30s) HTTP 500, which triggers the `onerror` fallback.
+
+### Servable variant contract
+
+The cache matches the **exact literal query string** — parameter order matters (`?height=64&width=64` is cached; `?width=64&height=64` is not). The only servable variants are the ones the old site (Ferrum.Web views/scripts) emits:
+
+| Image type | Query string | Old-site consumer |
+|---|---|---|
+| Club logo | `?width=64&height=64&crop=auto` | clubs index |
+| Club logo | `?width=128&height=128` | club details |
+| Club logo | `?height=64&width=64` | team competition |
+| Athlete photo | `?width=64&height=64&crop=auto` | club member list |
+| Athlete photo | `?width=300&height=200&crop=auto` | athlete details |
+| Meet photo | `?height=50&width=50` | meet results thumbs |
+| Meet photo | `?height=75&width=75&quality=60` | gallery thumbs |
+| Meet photo | `?width=600&height=500&quality=80` | gallery main |
+| Meet photo | `?height=125&width=125` | gallery prev/next |
+
+Rules that follow:
+
+- **Never invent a query string** — new display sizes are achieved by CSS scaling of a pinned variant (`object-fit`), not by new resize parameters.
+- **No hi-DPI srcset** — no 2x variants exist in the cache; a srcset pointing at an invented variant breaks the image entirely on high-DPI displays.
+- **Pin variants as constants** (the `MeetPhotoSizes` pattern), copied verbatim from the table above — never computed from width/height numbers.
+- The bare, query-less URL is unusable — it 302-redirects to a malformed storage URL.
 
 ---
 
