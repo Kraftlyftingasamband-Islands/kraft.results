@@ -2,6 +2,7 @@
 
 @using KRAFT.Results.Contracts.Meets
 @using KRAFT.Results.Web.Client.Components
+@using KRAFT.Results.Web.Client.Features.Meets.Components
 
 @inject HttpClient HttpClient
 
@@ -19,7 +20,7 @@
                 <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
                 @foreach (MeetSummary meet in group)
                 {
-                    <MeetCard @key="meet.Slug" Meet="meet" IsFuture="meet.StartDate > _today" />
+                    <MeetCard @key="meet.Slug" Meet="meet" />
                 }
             }
         </div>
@@ -27,8 +28,6 @@
 </DataLoader>
 
 @code {
-    private DateOnly _today = DateOnly.FromDateTime(DateTime.Now);
-
     [Parameter]
     public int Year { get; set; }
 

@@ -1,0 +1,105 @@
+@using KRAFT.Results.Contracts
+@using KRAFT.Results.Contracts.Meets
+@using Microsoft.AspNetCore.Components.Authorization
+
+<EntityStatCard Name="@Meet.Title"
+                NameHref="@_nameHref"
+                Pills="@_pills"
+                MetaText="@_metaText"
+                MetaContent="@_metaContent"
+                Label="@_label"
+                Value="@_value"
+                Clickable="@_isLinked"
+                CssClass="@_cssClass" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required MeetSummary Meet { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    private string? _nameHref;
+    private IReadOnlyList<MetaPill> _pills = [];
+    private string? _metaText;
+    private RenderFragment? _metaContent;
+    private string? _label;
+    private string? _value;
+    private bool _isLinked;
+    private string _cssClass = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        bool hasParticipants = Meet.ParticipantCount > 0;
+
+        string variant = (Meet.IsUpcoming, hasParticipants) switch
+        {
+            (true, true) => "meet-card--active",
+            (true, false) => "meet-card--ghost",
+            (false, false) => "meet-card--ghost",
+            _ => string.Empty,
+        };
+
+        _cssClass = string.IsNullOrEmpty(variant)
+            ? "card-spaced meet-card"
+            : $"card-spaced meet-card {variant}";
+
+        PillKind equipmentKind = Meet.IsClassic ? PillKind.EquipmentClassic : PillKind.EquipmentEquipped;
+        string equipmentText = DisplayNames.EquipmentType(Meet.IsClassic);
+        _pills = [new MetaPill(PillKind.MeetCategory, Meet.Category), new MetaPill(equipmentKind, equipmentText)];
+
+        string dateText = DisplayFormat.MeetCardDate(Meet.StartDate);
+        string locationText = Meet.Location is null ? dateText : $"{dateText} · {Meet.Location}";
+
+        if (variant == "meet-card--active")
+        {
+            // Rich meta: date·location text plus "Skráning opin" status badge
+            // Title is the sole anchor — no ValueHref on clickable cards
+            string capturedLocationText = locationText;
+            _metaContent = @<text>@capturedLocationText <span class="card-status card-status--active">Skráning opin</span></text>;
+            _metaText = null;
+        }
+        else
+        {
+            _metaContent = null;
+            _metaText = locationText;
+        }
+
+        _label = Meet.IsUpcoming ? "skráðir" : "keppendur";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        bool hasParticipants = Meet.ParticipantCount > 0;
+
+        if (hasParticipants)
+        {
+            _isLinked = true;
+            _nameHref = $"/meets/{Meet.Slug}";
+            _value = Meet.ParticipantCount.ToString();
+            return;
+        }
+
+        bool isAdmin = false;
+        if (AuthenticationStateTask is not null)
+        {
+            AuthenticationState authState = await AuthenticationStateTask;
+            isAdmin = authState.User.IsInRole("Admin");
+        }
+
+        if (isAdmin)
+        {
+            _isLinked = true;
+            _nameHref = $"/meets/{Meet.Slug}";
+            _value = "0";
+        }
+        else
+        {
+            // Ghost non-admin: plain span, no link, no stat column
+            _isLinked = false;
+            _nameHref = null;
+            _value = null;
+            _label = null;
+        }
+    }
+}
