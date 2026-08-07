@@ -206,6 +206,42 @@ public sealed class PillTests : IDisposable
         cut.Find(".esc-pill").GetAttribute("tabindex").ShouldBeNull();
     }
 
+    [Fact]
+    public void WhenKindIsMeetCategory_RendersMeetCategoryVariantClass()
+    {
+        // Arrange
+        MetaPill pill = new(PillKind.MeetCategory, "Kraftlyftingar");
+
+        // Act
+        IRenderedComponent<Pill> cut = _context.Render<Pill>(
+            p => p.Add(c => c.Value, pill));
+
+        // Assert
+        cut.Find(".esc-pill--meet-category").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenMeetCategoryAndEquipmentClassicAreMixed_MeetCategorySortFirst()
+    {
+        // Arrange
+        MetaPill meetCategoryPill = new(PillKind.MeetCategory, "Kraftlyftingar");
+        MetaPill equipmentPill = new(PillKind.EquipmentClassic, "Klassískt");
+        IReadOnlyList<MetaPill> pills = [equipmentPill, meetCategoryPill];
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "10")
+                .Add(c => c.Pills, pills));
+
+        // Assert
+        List<AngleSharp.Dom.IElement> pillEls = cut.FindAll(".esc-pills .esc-pill").ToList();
+        pillEls.Count.ShouldBe(2);
+        pillEls[0].ClassList.ShouldContain("esc-pill--meet-category");
+        pillEls[1].ClassList.ShouldContain("esc-pill--equipment-classic");
+    }
+
     public void Dispose()
     {
         _context.Dispose();

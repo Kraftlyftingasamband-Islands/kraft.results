@@ -9,6 +9,11 @@
 }
 
 /* Tint tokens are defined in app.css :root; these classes reference them */
+.esc-pill--meet-category {
+    background: var(--pill-tint-meet-category);
+    color: var(--pill-text-meet-category);
+}
+
 .esc-pill--weight {
     background: var(--pill-tint-weight);
 }

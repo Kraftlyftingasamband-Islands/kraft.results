@@ -41,6 +41,10 @@
     /* Record pill — aggregate Íslandsmet marker (WCAG AA: 6.53:1) */
     --pill-tint-record: #fef3c7;
     --pill-text-record: #7a4d00;
+
+    /* Meet-category pill — neutral-slate categorical tint (matches legacy discipline pill) */
+    --pill-tint-meet-category: color-mix(in oklch, var(--color-text-secondary) 12%, transparent);
+    --pill-text-meet-category: var(--color-text-secondary);
 }
 
 *, *::before, *::after {
