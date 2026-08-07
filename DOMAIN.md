@@ -23,6 +23,32 @@ A club's logo is **optional** — `LogoImageFilename` holds a blob filename reso
 
 ---
 
+## Meet
+
+### Meet category vs discipline
+
+A meet's **category** (`MeetCategory` — e.g. powerlifting, bench-only) classifies the competition itself and is a different concept from **Discipline** (Squat/Bench/Deadlift — the individual lifts). `MeetSummary.Category` carries the category's display name; the field was renamed from `Discipline` to resolve the naming collision with the `Discipline` enum in the same Contracts assembly.
+
+### Registration vs competitor count
+
+A meet carries a single `ParticipantCount`, but its meaning follows the meet's timing: for an **upcoming** meet it counts registrations (labeled "skráðir"); for a past meet it counts competitors (labeled "keppendur"). Same field, two domain readings — the label switches on the upcoming flag.
+
+### Upcoming flag
+
+Whether a meet is upcoming is **server-derived** (`MeetSummary.IsUpcoming`, computed as `StartDate > today` at query time in the projection). The client performs no date comparison — this keeps the meets index, dashboard split, and card states on one source of truth.
+
+### Meet card states
+
+Meet cards render through the shared entity-card layout (`EntityStatCard`) like every other entity card. A meet card is in one of three states derived from `(IsUpcoming, has participants)`:
+
+- **Active** (`meet-card--active`) — upcoming meet with at least one registrant; highlighted card background plus the "Skráning opin" status badge.
+- **Ghost** (`meet-card--ghost`) — meet with no participants, upcoming or past; dimmed card background. The dimming is the **sole** signal — ghost cards carry no status badge (the former "Væntanlegt" badge was deliberately removed).
+- **Plain** — past meet with participants.
+
+Ghost cards are clickable (and show their zero participant count) only for admins; other users see static text.
+
+---
+
 ## Meet Visibility
 
 ### PublishedResults vs. having results
