@@ -2,7 +2,7 @@
 @using System.Diagnostics
 @using Microsoft.AspNetCore.Components.Routing
 
-<Card Compact CssClass="@CssClass">
+<Card Compact Clickable="@Clickable" CssClass="@CssClass">
     <div class="esc">
         @if (Leading is not null)
         {
@@ -62,35 +62,38 @@
                 <div class="esc-meta">@MetaText</div>
             }
         </div>
-        <div class="esc-stat">
-            @if (!string.IsNullOrEmpty(Label))
-            {
-                <div class="esc-label stat-label">@Label</div>
-            }
-            @if (string.IsNullOrEmpty(_safeValueHref))
-            {
-                <span class="esc-value stat-value"
-                      aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
-                    @Value
-                    @if (!string.IsNullOrEmpty(Unit))
-                    {
-                        <span class="esc-unit stat-unit">@Unit</span>
-                    }
-                </span>
-            }
-            else
-            {
-                <NavLink class="esc-value stat-value"
-                         href="@_safeValueHref"
-                         aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
-                    @Value
-                    @if (!string.IsNullOrEmpty(Unit))
-                    {
-                        <span class="esc-unit stat-unit">@Unit</span>
-                    }
-                </NavLink>
-            }
-        </div>
+        @if (!string.IsNullOrEmpty(Label) || !string.IsNullOrEmpty(Value))
+        {
+            <div class="esc-stat">
+                @if (!string.IsNullOrEmpty(Label))
+                {
+                    <div class="esc-label stat-label">@Label</div>
+                }
+                @if (string.IsNullOrEmpty(_safeValueHref))
+                {
+                    <span class="esc-value stat-value"
+                          aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
+                        @Value
+                        @if (!string.IsNullOrEmpty(Unit))
+                        {
+                            <span class="esc-unit stat-unit">@Unit</span>
+                        }
+                    </span>
+                }
+                else
+                {
+                    <NavLink class="esc-value stat-value"
+                             href="@_safeValueHref"
+                             aria-label="@(string.IsNullOrEmpty(ValueAriaLabel) ? null : ValueAriaLabel)">
+                        @Value
+                        @if (!string.IsNullOrEmpty(Unit))
+                        {
+                            <span class="esc-unit stat-unit">@Unit</span>
+                        }
+                    </NavLink>
+                }
+            </div>
+        }
     </div>
 </Card>
 
@@ -119,8 +122,8 @@
     [Parameter]
     public string? Label { get; set; }
 
-    [Parameter, EditorRequired]
-    public required string Value { get; set; }
+    [Parameter]
+    public string? Value { get; set; }
 
     [Parameter]
     public string? Unit { get; set; }
@@ -133,6 +136,11 @@
 
     [Parameter]
     public string? CssClass { get; set; }
+
+    // A clickable card allows exactly one anchor (`.card--clickable ::deep a::after` overlay),
+    // so the title is the sole anchor — ValueHref must stay null on such cards.
+    [Parameter]
+    public bool Clickable { get; set; }
 
     private string? _safeNameHref;
     private string? _safeValueHref;

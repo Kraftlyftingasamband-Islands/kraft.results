@@ -378,7 +378,7 @@ public sealed class EntityStatCardTests : IDisposable
         List<AngleSharp.Dom.IElement> pillEls = cut.FindAll(".esc-pills .esc-pill").ToList();
         pillEls.Count.ShouldBe(2);
 
-        // WeightCategory (0) sorts before Neutral (4)
+        // WeightCategory (1) sorts before Neutral (7)
         pillEls[0].TextContent.Trim().ShouldBe("-83kg");
         pillEls[1].TextContent.Trim().ShouldBe("IPF");
     }
@@ -858,6 +858,67 @@ public sealed class EntityStatCardTests : IDisposable
 
         // Assert
         cut.FindAll(".esc-meta").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenValueAndLabelAreBothNull_DoesNotRenderStatColumn()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete"));
+
+        // Assert
+        cut.FindAll(".esc-stat").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void WhenValueIsPresent_RendersStatColumn()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750"));
+
+        // Assert
+        cut.Find(".esc-stat").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenClickableIsTrue_RendersCardClickableClass()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.Clickable, true));
+
+        // Assert
+        cut.Find("article.card--clickable").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WhenClickableIsFalse_DoesNotRenderCardClickableClass()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<EntityStatCard> cut = _context.Render<EntityStatCard>(
+            p => p
+                .Add(c => c.Name, "Athlete")
+                .Add(c => c.Value, "750")
+                .Add(c => c.Clickable, false));
+
+        // Assert
+        cut.FindAll("article.card--clickable").Count.ShouldBe(0);
     }
 
     public void Dispose()
