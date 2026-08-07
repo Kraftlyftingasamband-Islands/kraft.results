@@ -1,10 +1,11 @@
-﻿namespace KRAFT.Results.Contracts.Meets;
+namespace KRAFT.Results.Contracts.Meets;
 
 public sealed record class MeetSummary(
     string Slug,
     string Title,
     string? Location,
     DateOnly StartDate,
-    string Discipline,
+    string Category,
     bool IsClassic,
+    bool IsUpcoming,
     int ParticipantCount);
