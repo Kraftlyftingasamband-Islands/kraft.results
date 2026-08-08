@@ -496,6 +496,75 @@ public sealed class AthleteDetailsPageTests : IDisposable
     }
 
     [Fact]
+    public void WhenAthleteHasClubWithLogo_RendersClubLogoImgWithPinnedVariantInsideNavLink()
+    {
+        // Arrange
+        AthleteDetails athlete = AthleteDetailsPageMockHandler.AthleteWithClubLogo("breidablik.png");
+        RegisterHttpClient(athlete: athlete);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement anchor = cut.Find(".club-anchor");
+            anchor.GetAttribute("href").ShouldBe("/teams/test-club");
+            anchor.GetAttribute("title").ShouldBe("Test Club");
+
+            AngleSharp.Dom.IElement img = anchor.QuerySelector("img").ShouldNotBeNull();
+            string src = img.GetAttribute("src").ShouldNotBeNull();
+            src.ShouldStartWith($"{ImageBaseUrl}/breidablik.png");
+            src.ShouldContain("width=128");
+            src.ShouldContain("height=128");
+        });
+    }
+
+    [Fact]
+    public void WhenAthleteHasClubWithNoLogo_RendersMonogramInsideNavLink()
+    {
+        // Arrange
+        AthleteDetails athlete = AthleteDetailsPageMockHandler.AthleteWithClubNoLogo();
+        RegisterHttpClient(athlete: athlete);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            AngleSharp.Dom.IElement anchor = cut.Find(".club-anchor");
+            anchor.GetAttribute("href").ShouldBe("/teams/test-club");
+
+            AngleSharp.Dom.IElement fallback = anchor.QuerySelector(".team-logo-fallback-text").ShouldNotBeNull();
+            fallback.TextContent.Trim().ShouldBe("TCL");
+
+            anchor.QuerySelector("img").ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void WhenAthleteHasNoClub_ClubAnchorIsAbsent()
+    {
+        // Arrange
+        AthleteDetails athlete = AthleteDetailsPageMockHandler.AthleteWithNoClub();
+        RegisterHttpClient(athlete: athlete);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".club-anchor").Count.ShouldBe(0);
+            cut.Find("h1").ShouldNotBeNull();
+        });
+    }
+
+    [Fact]
     public void WhenAthleteHasCurrentRecords_RendersPerEraRecordHeading()
     {
         // Arrange

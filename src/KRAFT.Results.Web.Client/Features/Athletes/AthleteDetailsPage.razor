@@ -17,6 +17,17 @@
                               Alt="@pageData.Athlete.Name"
                               Size="AthletePhotoSize.Large" />
                 <h1>@pageData.Athlete.Name</h1>
+                @if (pageData.ShowClubs)
+                {
+                    <NavLink class="club-anchor"
+                             href="@SlugSanitizer.SlugHref("/teams/", pageData.Athlete.ClubSlug ?? string.Empty)"
+                             title="@pageData.Athlete.Club">
+                        <TeamLogo Filename="@pageData.Athlete.ClubLogoImageFilename"
+                                  Alt="@pageData.Athlete.Club"
+                                  FallbackText="@pageData.Athlete.ClubShortTitle"
+                                  Size="TeamLogoSize.Large" />
+                    </NavLink>
+                }
             </div>
             <AuthorizeView Roles="Admin">
                 <div class="admin-actions">
