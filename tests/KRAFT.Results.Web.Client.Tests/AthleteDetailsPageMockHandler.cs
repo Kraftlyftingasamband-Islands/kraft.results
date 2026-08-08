@@ -19,7 +19,7 @@ internal sealed class AthleteDetailsPageMockHandler(
         Club: "Test Club",
         ClubSlug: "test-club",
         ClubShortTitle: "TCL",
-        ClubLogoImageFilename: null,
+        ClubLogoImageFilename: "default-club-logo.png",
         RecordCount: 0,
         ProfileImageFilename: null);
 
@@ -32,7 +32,10 @@ internal sealed class AthleteDetailsPageMockHandler(
         DefaultAthlete with { ClubLogoImageFilename = logoFilename };
 
     internal static AthleteDetails AthleteWithClubNoLogo() =>
-        DefaultAthlete with { ClubLogoImageFilename = null };
+        DefaultAthlete with { ClubLogoImageFilename = null, ClubShortTitle = "KSV" };
+
+    internal static AthleteDetails AthleteWithClubButNoSlug() =>
+        DefaultAthlete with { ClubSlug = null };
 
     internal static AthleteDetails AthleteWithNoClub() =>
         DefaultAthlete with

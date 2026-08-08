@@ -39,7 +39,12 @@
 }
 
 @media (max-width: 56rem) {
-    .club-anchor .team-logo--lg {
+    .club-anchor ::deep .team-logo--lg {
+        width: 56px;
+        height: 56px;
+    }
+
+    .club-anchor ::deep .team-logo--lg.team-logo--text {
         width: 56px;
         height: 56px;
     }

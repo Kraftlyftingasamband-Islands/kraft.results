@@ -43,10 +43,6 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
             }
         }
 
-        // Reset the logo that was seeded via SQL — no write endpoint exists for LogoImageFilename
-        await fixture.ExecuteSqlAsync(
-            $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Team.Id}");
-
         _authorizedClient.Dispose();
         _unauthorizedHttpClient.Dispose();
     }
@@ -106,29 +102,42 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
     [Fact]
     public async Task WhenTeamHasLogo_ProjectsClubShortTitleAndClubLogoImageFilename()
     {
-        // Arrange — seed a logo filename onto the seeded team via SQL (no write endpoint for LogoImageFilename)
+        // Arrange — seed a logo filename onto the seeded team via SQL (no write endpoint for LogoImageFilename).
+        // Uses TestSeedConstants.Athlete.Slug because that athlete is pre-assigned to TestSeedConstants.Team
+        // in the database seed, which is the team whose logo we mutate here.
         const string LogoFilename = "team-logo.png";
 
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Team.Id}");
+            $"UPDATE Teams SET LogoImageFilename = '{LogoFilename}' WHERE TeamId = {TestSeedConstants.Team.Id}");
 
-        string path = $"{BasePath}/{TestSeedConstants.Athlete.Slug}";
+        try
+        {
+            string path = $"{BasePath}/{TestSeedConstants.Athlete.Slug}";
 
-        // Act
-        AthleteDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<AthleteDetails>(path, CancellationToken.None);
+            // Act
+            AthleteDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<AthleteDetails>(path, CancellationToken.None);
 
-        // Assert
-        response.ShouldNotBeNull();
-        response.ShouldSatisfyAllConditions(
-            () => response.Club.ShouldBe(TestSeedConstants.Team.TitleFull),
-            () => response.ClubShortTitle.ShouldBe(TestSeedConstants.Team.TitleShort),
-            () => response.ClubLogoImageFilename.ShouldBe(LogoFilename));
+            // Assert
+            response.ShouldNotBeNull();
+            response.ShouldSatisfyAllConditions(
+                () => response.Club.ShouldBe(TestSeedConstants.Team.TitleFull),
+                () => response.ClubShortTitle.ShouldBe(TestSeedConstants.Team.TitleShort),
+                () => response.ClubLogoImageFilename.ShouldBe(LogoFilename),
+                () => response.ClubSlug.ShouldBe(TestSeedConstants.Team.Slug));
+        }
+        finally
+        {
+            // Restore to NULL so this test's mutation does not bleed into other tests.
+            await fixture.ExecuteSqlAsync(
+                $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Team.Id}");
+        }
     }
 
     [Fact]
     public async Task WhenTeamHasNoLogo_ClubLogoImageFilenameIsNull()
     {
-        // Arrange — the seeded team has no logo by default (LogoImageFilename is NULL in seed)
+        // Arrange — the seeded team has no logo by default (LogoImageFilename is NULL in seed).
+        // Uses TestSeedConstants.Athlete.Slug because that athlete is pre-assigned to TestSeedConstants.Team.
         string path = $"{BasePath}/{TestSeedConstants.Athlete.Slug}";
 
         // Act

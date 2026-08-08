@@ -17,11 +17,12 @@
                               Alt="@pageData.Athlete.Name"
                               Size="AthletePhotoSize.Large" />
                 <h1>@pageData.Athlete.Name</h1>
-                @if (pageData.ShowClubs)
+                @if (pageData.ShowClubLogo)
                 {
                     <NavLink class="club-anchor"
                              href="@SlugSanitizer.SlugHref("/teams/", pageData.Athlete.ClubSlug ?? string.Empty)"
-                             title="@pageData.Athlete.Club">
+                             title="@pageData.Athlete.Club"
+                             aria-label="@pageData.Athlete.Club">
                         <TeamLogo Filename="@pageData.Athlete.ClubLogoImageFilename"
                                   Alt="@pageData.Athlete.Club"
                                   FallbackText="@pageData.Athlete.ClubShortTitle"
@@ -160,7 +161,8 @@
         IReadOnlyList<AthleteRecord> Records,
         IReadOnlyList<AthleteParticipation> Participations,
         List<SectionNav.SectionNavLink> NavLinks,
-        bool ShowClubs);
+        bool ShowClubs,
+        bool ShowClubLogo);
 
     private ConfirmDialog? _deleteDialog;
     private bool _isDeleting;
@@ -186,13 +188,14 @@
             await HttpClient.GetFromJsonAsync<IReadOnlyList<AthleteParticipation>>($"/athletes/{Slug}/participations") ?? [];
 
         bool showClubs = !string.IsNullOrWhiteSpace(athlete.Club);
+        bool showClubLogo = showClubs && !string.IsNullOrWhiteSpace(athlete.ClubSlug);
 
         List<SectionNav.SectionNavLink> navLinks = [];
         if (personalBests.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Besti árangur", $"/athletes/{Slug}#bestaragangur")); }
         if (records.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Íslandsmet", $"/athletes/{Slug}#islandsmet")); }
         if (participations.Count > 0) { navLinks.Add(new SectionNav.SectionNavLink("Ferill", $"/athletes/{Slug}#ferill")); }
 
-        return new AthletePageData(athlete, personalBests, records, participations, navLinks, showClubs);
+        return new AthletePageData(athlete, personalBests, records, participations, navLinks, showClubs, showClubLogo);
     }
 
     private async Task ShowDeleteDialog()
