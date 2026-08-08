@@ -65,3 +65,19 @@
     width: auto;
     justify-content: flex-start;
 }
+
+.team-logo--lg.team-logo--text {
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+}
+
+.team-logo--lg.team-logo--text .team-logo-placeholder {
+    background: color-mix(in oklch, var(--color-border), transparent 40%);
+    opacity: 1;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--color-text-muted);
+}
