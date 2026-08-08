@@ -6,5 +6,7 @@ public sealed record class AthleteDetails(
     int? YearOfBirth,
     string? Club,
     string? ClubSlug,
+    string? ClubShortTitle,
+    string? ClubLogoImageFilename,
     int RecordCount,
     string? ProfileImageFilename);

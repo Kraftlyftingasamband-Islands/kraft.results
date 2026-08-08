@@ -18,6 +18,8 @@ internal sealed class AthleteDetailsPageMockHandler(
         YearOfBirth: 1990,
         Club: "Test Club",
         ClubSlug: "test-club",
+        ClubShortTitle: "TCL",
+        ClubLogoImageFilename: null,
         RecordCount: 0,
         ProfileImageFilename: null);
 
