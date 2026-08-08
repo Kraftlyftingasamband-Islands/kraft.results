@@ -108,7 +108,7 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
         const string LogoFilename = "team-logo.png";
 
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Teams SET LogoImageFilename = '{LogoFilename}' WHERE TeamId = {TestSeedConstants.Team.Id}");
+            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Team.Id}");
 
         try
         {
