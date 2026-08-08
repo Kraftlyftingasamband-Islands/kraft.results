@@ -472,7 +472,7 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            AngleSharp.Dom.IElement img = cut.Find(".athlete-detail-header img");
+            AngleSharp.Dom.IElement img = cut.Find(".athlete-photo img");
             img.GetAttribute("src").ShouldStartWith($"{ImageBaseUrl}/jondoe.jpg");
         });
     }
@@ -490,8 +490,8 @@ public sealed class AthleteDetailsPageTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.Find(".athlete-detail-header svg").ShouldNotBeNull();
-            cut.FindAll(".athlete-detail-header img").Count.ShouldBe(0);
+            cut.Find(".athlete-photo svg").ShouldNotBeNull();
+            cut.FindAll(".athlete-photo img").Count.ShouldBe(0);
         });
     }
 
