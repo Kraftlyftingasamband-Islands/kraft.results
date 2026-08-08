@@ -6,7 +6,6 @@
     @if (_isValidFilename)
     {
         <img src="@($"{_imageBaseUrl}/{Filename}{_sizeQuery}")"
-             srcset="@($"{_imageBaseUrl}/{Filename}{_sizeQuery2x} 2x")"
              alt="@Alt"
              loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
@@ -19,6 +18,11 @@
 </div>
 
 @code {
+    // Servable variants from the legacy image host cache — parameter order is load-bearing.
+    // See DOMAIN.md § Legacy Image Host for the full table.
+    private const string SmallQuery = "?width=64&height=64&crop=auto";
+    private const string LargeQuery = "?width=300&height=200&crop=auto";
+
     [Parameter]
     public string? Filename { get; set; }
 
@@ -31,7 +35,6 @@
     private string _imageBaseUrl = "";
     private string _sizeClass = "";
     private string _sizeQuery = "";
-    private string _sizeQuery2x = "";
     private bool _isValidFilename;
 
     protected override void OnInitialized()
@@ -48,13 +51,11 @@
             _ => "athlete-photo--sm",
         };
 
-        (int width, int height) dims = Size switch
+        _sizeQuery = Size switch
         {
-            AthletePhotoSize.Large => (300, 200),
-            _ => (64, 64),
+            AthletePhotoSize.Large => LargeQuery,
+            _ => SmallQuery,
         };
-        _sizeQuery = $"?width={dims.width}&height={dims.height}&crop=auto";
-        _sizeQuery2x = $"?width={dims.width * 2}&height={dims.height * 2}&crop=auto";
 
         _isValidFilename = !string.IsNullOrEmpty(Filename)
             && !Filename.Contains('/')
@@ -63,6 +64,7 @@
             && !Filename.Contains('?')
             && !Filename.Contains('#')
             && !Filename.Contains(',')
-            && !Filename.Contains(' ');
+            && !Filename.Contains(' ')
+            && !Filename.Contains('%');
     }
 }

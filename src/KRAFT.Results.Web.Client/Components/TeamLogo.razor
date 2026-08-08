@@ -8,7 +8,6 @@
         @* Structural invariant: the placeholder div must remain the img's immediate next
            sibling — the onerror handler uses nextElementSibling to reveal it on load failure. *@
         <img src="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery}")"
-             srcset="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery2x} 2x")"
              alt="@Alt"
              loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
@@ -30,6 +29,11 @@
 </div>
 
 @code {
+    // Servable variants from the legacy image host cache — parameter order is load-bearing.
+    // See DOMAIN.md § Legacy Image Host for the full table.
+    private const string SmallQuery = "?width=64&height=64&crop=auto";
+    private const string LargeQuery = "?width=128&height=128";
+
     [Parameter]
     public string? Filename { get; set; }
 
@@ -46,7 +50,6 @@
     private string _sizeClass = "";
     private string _textClass = "";
     private string _sizeQuery = "";
-    private string _sizeQuery2x = "";
     private bool _isValidFilename;
 
     protected override void OnInitialized()
@@ -69,18 +72,11 @@
             ? "team-logo--text"
             : "";
 
-        (int width, int height, bool crop) dims = Size switch
+        _sizeQuery = Size switch
         {
-            // XSmall deliberately requests its display size (24/48) rather than
-            // over-requesting like the other sizes — per issue #593 AC. Do not
-            // change this to match the Small/Medium pattern.
-            TeamLogoSize.XSmall => (24, 24, true),
-            TeamLogoSize.Large => (128, 128, false),
-            _ => (64, 64, true),
+            TeamLogoSize.Large => LargeQuery,
+            _ => SmallQuery,
         };
-        string cropSuffix = dims.crop ? "&crop=auto" : "";
-        _sizeQuery = $"?width={dims.width}&height={dims.height}{cropSuffix}";
-        _sizeQuery2x = $"?width={dims.width * 2}&height={dims.height * 2}{cropSuffix}";
 
         _isValidFilename = Filename is not null
             && !Filename.Contains('/')
@@ -89,6 +85,7 @@
             && !Filename.Contains('?')
             && !Filename.Contains('#')
             && !Filename.Contains(',')
-            && !Filename.Contains(' ');
+            && !Filename.Contains(' ')
+            && !Filename.Contains('%');
     }
 }

@@ -1,4 +1,4 @@
-﻿using Bunit;
+using Bunit;
 
 using KRAFT.Results.Web.Client.Components;
 
@@ -101,8 +101,11 @@ public sealed class TeamLogoTests : IDisposable
         cut.Find($".team-logo.{expectedClass}").ShouldNotBeNull();
     }
 
-    [Fact]
-    public void WhenSizeIsXSmall_RendersSrcset2x()
+    [Theory]
+    [InlineData(TeamLogoSize.XSmall)]
+    [InlineData(TeamLogoSize.Small)]
+    [InlineData(TeamLogoSize.Medium)]
+    public void WhenSizeIsXSmallSmallOrMedium_SrcQueryStringIsPinned64x64Crop(TeamLogoSize size)
     {
         // Arrange
 
@@ -110,57 +113,15 @@ public sealed class TeamLogoTests : IDisposable
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.XSmall));
+                .Add(c => c.Size, size));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        string? srcset = img.GetAttribute("srcset");
-        srcset.ShouldNotBeNull();
-        srcset.ShouldEndWith(" 2x");
-        srcset.ShouldContain("width=48");
-        srcset.ShouldContain("height=48");
-        srcset.ShouldContain("crop=auto");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
     }
 
     [Fact]
-    public void WhenSizeIsXSmall_SrcRemainsUnchanged()
-    {
-        // Arrange
-
-        // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
-            p => p
-                .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.XSmall));
-
-        // Assert
-        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=24&height=24&crop=auto");
-    }
-
-    [Fact]
-    public void RendersSrcset2x_WhenSizeIsMedium()
-    {
-        // Arrange
-
-        // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
-            p => p
-                .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.Medium));
-
-        // Assert
-        AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        string? srcset = img.GetAttribute("srcset");
-        srcset.ShouldNotBeNull();
-        srcset.ShouldEndWith(" 2x");
-        srcset.ShouldContain("width=128");
-        srcset.ShouldContain("height=128");
-        srcset.ShouldContain("crop=auto");
-    }
-
-    [Fact]
-    public void RendersSrcset2x_WhenSizeIsLarge()
+    public void WhenSizeIsLarge_SrcQueryStringIsPinned128x128()
     {
         // Arrange
 
@@ -172,16 +133,15 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        string? srcset = img.GetAttribute("srcset");
-        srcset.ShouldNotBeNull();
-        srcset.ShouldEndWith(" 2x");
-        srcset.ShouldContain("width=256");
-        srcset.ShouldContain("height=256");
-        srcset.ShouldNotContain("crop=auto");
+        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
     }
 
-    [Fact]
-    public void SrcRemainsUnchanged_WhenSrcsetIsAdded_ForMedium()
+    [Theory]
+    [InlineData(TeamLogoSize.XSmall)]
+    [InlineData(TeamLogoSize.Small)]
+    [InlineData(TeamLogoSize.Medium)]
+    [InlineData(TeamLogoSize.Large)]
+    public void DoesNotEmitSrcset_ForAnySize(TeamLogoSize size)
     {
         // Arrange
 
@@ -189,11 +149,11 @@ public sealed class TeamLogoTests : IDisposable
         IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, size));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
+        img.GetAttribute("srcset").ShouldBeNull();
     }
 
     [Fact]
@@ -335,6 +295,7 @@ public sealed class TeamLogoTests : IDisposable
     [InlineData("javascript:alert(1)")]
     [InlineData("logo.png?width=999")]
     [InlineData("logo.png#section")]
+    [InlineData("logo%2Fevil.png")]
     public void WhenFallbackTextSetAndFilenameIsUnsafe_RendersFallbackText(string unsafeFilename)
     {
         // Arrange
@@ -393,6 +354,7 @@ public sealed class TeamLogoTests : IDisposable
     [InlineData("javascript:alert(1)")]
     [InlineData("logo.png?width=999")]
     [InlineData("logo.png#section")]
+    [InlineData("logo%2Fevil.png")]
     public void ShowsPlaceholder_WhenFilenameIsInvalid(string invalidFilename)
     {
         // Arrange
