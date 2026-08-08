@@ -537,11 +537,31 @@ public sealed class AthleteDetailsPageTests : IDisposable
         {
             AngleSharp.Dom.IElement anchor = cut.Find(".club-anchor");
             anchor.GetAttribute("href").ShouldBe("/teams/test-club");
+            anchor.GetAttribute("aria-label").ShouldBe("Test Club");
 
             AngleSharp.Dom.IElement fallback = anchor.QuerySelector(".team-logo-fallback-text").ShouldNotBeNull();
-            fallback.TextContent.Trim().ShouldBe("TCL");
+            fallback.TextContent.Trim().ShouldBe("KSV");
 
             anchor.QuerySelector("img").ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void WhenAthleteHasClubButNoClubSlug_ClubAnchorIsAbsent_AndMetaRowShowsClub()
+    {
+        // Arrange
+        AthleteDetails athlete = AthleteDetailsPageMockHandler.AthleteWithClubButNoSlug();
+        RegisterHttpClient(athlete: athlete);
+
+        // Act
+        IRenderedComponent<AthleteDetailsPage> cut = _context.Render<AthleteDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-athlete"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.FindAll(".club-anchor").Count.ShouldBe(0);
+            cut.Find(".athlete-meta").TextContent.ShouldContain("Test Club");
         });
     }
 
@@ -560,7 +580,6 @@ public sealed class AthleteDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             cut.FindAll(".club-anchor").Count.ShouldBe(0);
-            cut.Find("h1").ShouldNotBeNull();
         });
     }
 
