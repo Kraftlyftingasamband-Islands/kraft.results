@@ -28,6 +28,21 @@ internal sealed class AthleteDetailsPageMockHandler(
     internal static AthleteDetails AthleteWithPhoto(string filename) =>
         DefaultAthlete with { ProfileImageFilename = filename };
 
+    internal static AthleteDetails AthleteWithClubLogo(string logoFilename) =>
+        DefaultAthlete with { ClubLogoImageFilename = logoFilename };
+
+    internal static AthleteDetails AthleteWithClubNoLogo() =>
+        DefaultAthlete with { ClubLogoImageFilename = null };
+
+    internal static AthleteDetails AthleteWithNoClub() =>
+        DefaultAthlete with
+        {
+            Club = null,
+            ClubSlug = null,
+            ClubShortTitle = null,
+            ClubLogoImageFilename = null,
+        };
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         if (delay)
