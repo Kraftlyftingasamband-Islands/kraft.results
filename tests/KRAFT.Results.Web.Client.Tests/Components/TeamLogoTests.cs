@@ -295,6 +295,7 @@ public sealed class TeamLogoTests : IDisposable
     [InlineData("javascript:alert(1)")]
     [InlineData("logo.png?width=999")]
     [InlineData("logo.png#section")]
+    [InlineData("logo%2Fevil.png")]
     public void WhenFallbackTextSetAndFilenameIsUnsafe_RendersFallbackText(string unsafeFilename)
     {
         // Arrange
@@ -353,6 +354,7 @@ public sealed class TeamLogoTests : IDisposable
     [InlineData("javascript:alert(1)")]
     [InlineData("logo.png?width=999")]
     [InlineData("logo.png#section")]
+    [InlineData("logo%2Fevil.png")]
     public void ShowsPlaceholder_WhenFilenameIsInvalid(string invalidFilename)
     {
         // Arrange

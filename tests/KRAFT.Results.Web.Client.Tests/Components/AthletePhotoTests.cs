@@ -62,6 +62,7 @@ public sealed class AthletePhotoTests : IDisposable
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
             p => p
                 .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
                 .Add(c => c.Size, AthletePhotoSize.Small));
 
         // Assert
@@ -78,6 +79,7 @@ public sealed class AthletePhotoTests : IDisposable
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
             p => p
                 .Add(c => c.Filename, "jondoe.jpg")
+                .Add(c => c.Alt, "test")
                 .Add(c => c.Size, AthletePhotoSize.Large));
 
         // Assert
@@ -164,6 +166,23 @@ public sealed class AthletePhotoTests : IDisposable
         IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
             p => p
                 .Add(c => c.Filename, "evil photo.jpg")
+                .Add(c => c.Alt, "test")
+                .Add(c => c.Size, AthletePhotoSize.Small));
+
+        // Assert
+        cut.Find(".athlete-photo svg").ShouldNotBeNull();
+        cut.FindAll(".athlete-photo img").Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ShowsPlaceholder_WhenFilenameContainsPercent()
+    {
+        // Arrange
+
+        // Act
+        IRenderedComponent<AthletePhoto> cut = _context.Render<AthletePhoto>(
+            p => p
+                .Add(c => c.Filename, "logo%2Fevil.png")
                 .Add(c => c.Alt, "test")
                 .Add(c => c.Size, AthletePhotoSize.Small));
 
