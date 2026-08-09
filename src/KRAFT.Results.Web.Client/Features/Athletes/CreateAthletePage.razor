@@ -21,7 +21,7 @@
 <DataLoader T="CreateAthleteData" Loader="LoadAsync" Noun="gögn">
     <ChildContent Context="data">
         <AthleteForm Countries="data.Countries"
-                     Teams="data.Teams"
+                     Clubs="data.Clubs"
                      OnSubmit="HandleSubmit"
                      IsLoading="_isLoading"
                      ErrorMessage="@_errorMessage"
@@ -33,7 +33,7 @@
 @code {
     private sealed record CreateAthleteData(
         IReadOnlyCollection<CountrySummary> Countries,
-        IReadOnlyCollection<ClubOption> Teams);
+        IReadOnlyCollection<ClubOption> Clubs);
 
     private bool _isLoading;
     private string? _errorMessage;

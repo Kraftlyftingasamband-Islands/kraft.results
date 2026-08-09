@@ -92,7 +92,7 @@
                          @bind-Value="_model.ClubId"
                          disabled="@IsLoading">
                 <option value="0">-- Valfrjálst --</option>
-                @foreach (ClubOption club in Teams)
+                @foreach (ClubOption club in Clubs)
                 {
                     <option value="@club.Id">@club.Title</option>
                 }
@@ -121,7 +121,7 @@
     public IReadOnlyCollection<CountrySummary> Countries { get; set; } = [];
 
     [Parameter, EditorRequired]
-    public IReadOnlyCollection<ClubOption> Teams { get; set; } = [];
+    public IReadOnlyCollection<ClubOption> Clubs { get; set; } = [];
 
     [Parameter, EditorRequired]
     public EventCallback<AthleteFormValues> OnSubmit { get; set; }
