@@ -21,7 +21,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersSvgPlaceholder_WhenFilenameIsNull()
+    public void WhenFilenameIsNull_RendersSvgPlaceholder()
     {
         // Arrange
 
@@ -35,7 +35,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersImg_WhenFilenameIsProvided()
+    public void WhenFilenameIsProvided_RendersImg()
     {
         // Arrange
 
@@ -52,7 +52,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void AltDefaultsToEmpty_ForDecorativeUse()
+    public void WhenAltNotProvided_DefaultsToEmpty()
     {
         // Arrange
 
@@ -68,7 +68,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void RendersAltText_WhenAltIsProvided()
+    public void WhenAltIsProvided_RendersAltText()
     {
         // Arrange
 
@@ -88,7 +88,7 @@ public sealed class ClubLogoTests : IDisposable
     [InlineData(ClubLogoSize.Small, "team-logo--sm")]
     [InlineData(ClubLogoSize.Medium, "team-logo--md")]
     [InlineData(ClubLogoSize.Large, "team-logo--lg")]
-    public void AppliesSizeClass_ForEachSize(ClubLogoSize size, string expectedClass)
+    public void WhenSizeIsSet_AppliesSizeClass(ClubLogoSize size, string expectedClass)
     {
         // Arrange
 
@@ -138,7 +138,7 @@ public sealed class ClubLogoTests : IDisposable
     [InlineData(ClubLogoSize.Small)]
     [InlineData(ClubLogoSize.Medium)]
     [InlineData(ClubLogoSize.Large)]
-    public void DoesNotEmitSrcset_ForAnySize(ClubLogoSize size)
+    public void WhenAnySize_DoesNotEmitSrcset(ClubLogoSize size)
     {
         // Arrange
 
@@ -311,7 +311,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void ShowsPlaceholder_WhenFilenameContainsComma()
+    public void WhenFilenameContainsComma_ShowsPlaceholder()
     {
         // Arrange
 
@@ -327,7 +327,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void ShowsPlaceholder_WhenFilenameContainsSpace()
+    public void WhenFilenameContainsSpace_ShowsPlaceholder()
     {
         // Arrange
 
@@ -352,7 +352,7 @@ public sealed class ClubLogoTests : IDisposable
     [InlineData("logo.png?width=999")]
     [InlineData("logo.png#section")]
     [InlineData("logo%2Fevil.png")]
-    public void ShowsPlaceholder_WhenFilenameIsInvalid(string invalidFilename)
+    public void WhenFilenameIsInvalid_ShowsPlaceholder(string invalidFilename)
     {
         // Arrange
 
