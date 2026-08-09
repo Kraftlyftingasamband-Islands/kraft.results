@@ -5,18 +5,18 @@ using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Teams.Update;
+namespace KRAFT.Results.WebApi.Features.Clubs.Update;
 
-internal static class UpdateTeamEndpoint
+internal static class UpdateClubEndpoint
 {
     internal const string Name = "UpdateTeam";
 
-    internal static RouteGroupBuilder MapUpdateTeamEndpoint(this RouteGroupBuilder endpoints)
+    internal static RouteGroupBuilder MapUpdateClubEndpoint(this RouteGroupBuilder endpoints)
     {
         endpoints.MapPut("/{slug}", static async (
             [FromRoute] string slug,
             [FromBody] UpdateTeamCommand command,
-            [FromServices] UpdateTeamHandler handler,
+            [FromServices] UpdateClubHandler handler,
             CancellationToken cancellationToken) =>
         {
             Result result = await handler.Handle(slug, command, cancellationToken);
@@ -25,9 +25,9 @@ internal static class UpdateTeamEndpoint
                 success: () => TypedResults.Ok(),
                 failure: error => error.Code switch
                 {
-                    TeamErrors.TeamNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
-                    TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
-                    TeamErrors.TitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    ClubErrors.ClubNotFoundCode => TypedResults.NotFound(new ErrorResponse(error.Code, error.Description)),
+                    ClubErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    ClubErrors.TitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });

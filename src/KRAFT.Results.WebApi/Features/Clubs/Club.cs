@@ -1,23 +1,23 @@
-﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Participations;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.ValueObjects;
 
-namespace KRAFT.Results.WebApi.Features.Teams;
+namespace KRAFT.Results.WebApi.Features.Clubs;
 
-internal sealed class Team : AggregateRoot
+internal sealed class Club : AggregateRoot
 {
     internal const int TitleMaxLength = 50;
     internal const int TitleFullMaxLength = 100;
     private const int ShortTitleLength = 3;
 
     // For EF core
-    private Team()
+    private Club()
     {
     }
 
-    public int TeamId { get; private set; }
+    public int ClubId { get; private set; }
 
     public string Title { get; private set; } = null!;
 
@@ -43,34 +43,34 @@ internal sealed class Team : AggregateRoot
 
     public ICollection<Participation> Participations { get; } = [];
 
-    internal static Result<Team> Create(User creator, string title, string titleShort, string titleFull, Country country)
+    internal static Result<Club> Create(User creator, string title, string titleShort, string titleFull, Country country)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            return TeamErrors.EmptyTitle;
+            return ClubErrors.EmptyTitle;
         }
 
         if (title.Length > TitleMaxLength)
         {
-            return TeamErrors.TitleTooLong;
+            return ClubErrors.TitleTooLong;
         }
 
         if (string.IsNullOrWhiteSpace(titleShort) || titleShort.Length != ShortTitleLength)
         {
-            return TeamErrors.InvalidTitleShort;
+            return ClubErrors.InvalidTitleShort;
         }
 
         if (string.IsNullOrWhiteSpace(titleFull))
         {
-            return TeamErrors.EmptyTitleFull;
+            return ClubErrors.EmptyTitleFull;
         }
 
         if (titleFull.Length > TitleFullMaxLength)
         {
-            return TeamErrors.TitleFullTooLong;
+            return ClubErrors.TitleFullTooLong;
         }
 
-        Team team = new()
+        Club club = new()
         {
             Title = title,
             TitleShort = titleShort,
@@ -81,34 +81,34 @@ internal sealed class Team : AggregateRoot
             CreatedBy = creator.Username,
         };
 
-        return team;
+        return club;
     }
 
     internal Result Update(User modifier, string title, string titleShort, string titleFull, Country country)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            return TeamErrors.EmptyTitle;
+            return ClubErrors.EmptyTitle;
         }
 
         if (title.Length > TitleMaxLength)
         {
-            return TeamErrors.TitleTooLong;
+            return ClubErrors.TitleTooLong;
         }
 
         if (string.IsNullOrWhiteSpace(titleShort) || titleShort.Length != ShortTitleLength)
         {
-            return TeamErrors.InvalidTitleShort;
+            return ClubErrors.InvalidTitleShort;
         }
 
         if (string.IsNullOrWhiteSpace(titleFull))
         {
-            return TeamErrors.EmptyTitleFull;
+            return ClubErrors.EmptyTitleFull;
         }
 
         if (titleFull.Length > TitleFullMaxLength)
         {
-            return TeamErrors.TitleFullTooLong;
+            return ClubErrors.TitleFullTooLong;
         }
 
         Title = title;

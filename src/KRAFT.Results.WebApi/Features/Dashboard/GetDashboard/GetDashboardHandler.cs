@@ -219,10 +219,10 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .Where(p => p.TeamPoints != null && p.TeamPoints > 0)
             .Select(p => new TeamStandingsBuilder.TeamPointRow(
                 p.TeamId!.Value,
-                p.Team!.Title,
-                p.Team.TitleShort,
-                p.Team.Slug,
-                p.Team.LogoImageFilename,
+                p.Club!.Title,
+                p.Club.TitleShort,
+                p.Club.Slug,
+                p.Club.LogoImageFilename,
                 p.Athlete.Gender.Value,
                 p.MeetId,
                 p.TeamPoints!.Value))

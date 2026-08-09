@@ -1,4 +1,4 @@
-﻿using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
@@ -7,15 +7,15 @@ using KRAFT.Results.WebApi.ValueObjects;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace KRAFT.Results.WebApi.Features.Teams.Update;
+namespace KRAFT.Results.WebApi.Features.Clubs.Update;
 
-internal sealed class UpdateTeamHandler
+internal sealed class UpdateClubHandler
 {
-    private readonly ILogger<UpdateTeamHandler> _logger;
+    private readonly ILogger<UpdateClubHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly IHttpContextService _httpContextService;
 
-    public UpdateTeamHandler(ILogger<UpdateTeamHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
+    public UpdateClubHandler(ILogger<UpdateClubHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -33,14 +33,14 @@ internal sealed class UpdateTeamHandler
 
         User modifier = modifierResult.FromResult();
 
-        Team? team = await _dbContext.Set<Team>()
+        Club? club = await _dbContext.Set<Club>()
             .Where(x => x.Slug == slug)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (team is null)
+        if (club is null)
         {
-            _logger.LogWarning("Team with slug '{Slug}' was not found", slug);
-            return Result.Failure(TeamErrors.TeamNotFound);
+            _logger.LogWarning("Club with slug '{Slug}' was not found", slug);
+            return Result.Failure(ClubErrors.ClubNotFound);
         }
 
         Result<Country> countryResult = Country.FromCode(command.CountryCode);
@@ -48,7 +48,7 @@ internal sealed class UpdateTeamHandler
         if (countryResult.IsFailure)
         {
             _logger.LogWarning(
-                "Failed to update team {Slug}: Country code '{CountryCode}' is invalid",
+                "Failed to update club {Slug}: Country code '{CountryCode}' is invalid",
                 slug,
                 command.CountryCode);
 
@@ -60,16 +60,16 @@ internal sealed class UpdateTeamHandler
         if (await IsDuplicateShortTitleAsync(slug, command.TitleShort, cancellationToken))
         {
             _logger.LogWarning("Short title {TitleShort} already exists", command.TitleShort);
-            return Result.Failure(TeamErrors.ShortTitleExists);
+            return Result.Failure(ClubErrors.ShortTitleExists);
         }
 
         if (await IsDuplicateTitleAsync(slug, command.Title, cancellationToken))
         {
             _logger.LogWarning("Title {Title} already exists", command.Title);
-            return Result.Failure(TeamErrors.TitleExists);
+            return Result.Failure(ClubErrors.TitleExists);
         }
 
-        Result result = team.Update(modifier, command.Title, command.TitleShort, command.TitleFull, country);
+        Result result = club.Update(modifier, command.Title, command.TitleShort, command.TitleFull, country);
 
         if (result.IsFailure)
         {
@@ -100,25 +100,25 @@ internal sealed class UpdateTeamHandler
     {
         if (message.Contains("IX_Teams_TitleShort_Unique", StringComparison.Ordinal))
         {
-            return TeamErrors.ShortTitleExists;
+            return ClubErrors.ShortTitleExists;
         }
 
         if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
         {
-            return TeamErrors.TitleExists;
+            return ClubErrors.TitleExists;
         }
 
         return null;
     }
 
     private Task<bool> IsDuplicateShortTitleAsync(string currentSlug, string titleShort, CancellationToken cancellationToken) =>
-        _dbContext.Set<Team>()
+        _dbContext.Set<Club>()
         .Where(x => x.Slug != currentSlug)
         .Where(x => x.TitleShort == titleShort)
         .AnyAsync(cancellationToken);
 
     private Task<bool> IsDuplicateTitleAsync(string currentSlug, string title, CancellationToken cancellationToken) =>
-        _dbContext.Set<Team>()
+        _dbContext.Set<Club>()
         .Where(x => x.Slug != currentSlug)
         .Where(x => x.Title == title)
         .AnyAsync(cancellationToken);

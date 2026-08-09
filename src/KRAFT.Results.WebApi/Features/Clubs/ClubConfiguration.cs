@@ -1,15 +1,18 @@
-﻿using KRAFT.Results.WebApi.ValueObjects;
+using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace KRAFT.Results.WebApi.Features.Teams;
+namespace KRAFT.Results.WebApi.Features.Clubs;
 
-internal sealed class TeamConfiguration : IEntityTypeConfiguration<Team>
+internal sealed class ClubConfiguration : IEntityTypeConfiguration<Club>
 {
-    public void Configure(EntityTypeBuilder<Team> builder)
+    public void Configure(EntityTypeBuilder<Club> builder)
     {
         builder.ToTable("Teams", "dbo");
+
+        builder.Property(e => e.ClubId)
+            .HasColumnName("TeamId");
 
         builder.HasIndex(e => e.Title, "IX_Teams_Title_Unique")
             .IsUnique();

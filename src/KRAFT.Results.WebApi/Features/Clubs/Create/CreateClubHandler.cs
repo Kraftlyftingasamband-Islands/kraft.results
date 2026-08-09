@@ -1,4 +1,4 @@
-﻿using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
@@ -7,15 +7,15 @@ using KRAFT.Results.WebApi.ValueObjects;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace KRAFT.Results.WebApi.Features.Teams.Create;
+namespace KRAFT.Results.WebApi.Features.Clubs.Create;
 
-internal sealed class CreateTeamHandler
+internal sealed class CreateClubHandler
 {
-    private readonly ILogger<CreateTeamHandler> _logger;
+    private readonly ILogger<CreateClubHandler> _logger;
     private readonly ResultsDbContext _dbContext;
     private readonly IHttpContextService _httpContextService;
 
-    public CreateTeamHandler(ILogger<CreateTeamHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
+    public CreateClubHandler(ILogger<CreateClubHandler> logger, ResultsDbContext dbContext, IHttpContextService httpContextService)
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -38,7 +38,7 @@ internal sealed class CreateTeamHandler
         if (countryResult.IsFailure)
         {
             _logger.LogWarning(
-                "Failed to create team {Title}: Country code '{CountryCode}' is invalid",
+                "Failed to create club {Title}: Country code '{CountryCode}' is invalid",
                 command.Title,
                 command.CountryCode);
 
@@ -47,19 +47,19 @@ internal sealed class CreateTeamHandler
 
         Country country = countryResult.FromResult();
 
-        if (await _dbContext.Set<Team>().AnyAsync(x => x.TitleShort == command.TitleShort, cancellationToken: cancellationToken))
+        if (await _dbContext.Set<Club>().AnyAsync(x => x.TitleShort == command.TitleShort, cancellationToken: cancellationToken))
         {
             _logger.LogWarning("Short title {Title} already exists", command.TitleShort);
-            return TeamErrors.ShortTitleExists;
+            return ClubErrors.ShortTitleExists;
         }
 
-        if (await _dbContext.Set<Team>().AnyAsync(x => x.Title == command.Title, cancellationToken: cancellationToken))
+        if (await _dbContext.Set<Club>().AnyAsync(x => x.Title == command.Title, cancellationToken: cancellationToken))
         {
             _logger.LogWarning("Title {Title} already exists", command.Title);
-            return TeamErrors.TitleExists;
+            return ClubErrors.TitleExists;
         }
 
-        Result<Team> result = Team.Create(
+        Result<Club> result = Club.Create(
             creator: creator,
             title: command.Title,
             titleShort: command.TitleShort,
@@ -71,9 +71,9 @@ internal sealed class CreateTeamHandler
             return result.Error;
         }
 
-        Team team = result.FromResult();
+        Club club = result.FromResult();
 
-        _dbContext.Set<Team>().Add(team);
+        _dbContext.Set<Club>().Add(club);
 
         try
         {
@@ -92,19 +92,19 @@ internal sealed class CreateTeamHandler
             return error;
         }
 
-        return team.TeamId;
+        return club.ClubId;
     }
 
     private static Error? UniqueConstraintToError(string message)
     {
         if (message.Contains("IX_Teams_TitleShort_Unique", StringComparison.Ordinal))
         {
-            return TeamErrors.ShortTitleExists;
+            return ClubErrors.ShortTitleExists;
         }
 
         if (message.Contains("IX_Teams_Title_Unique", StringComparison.Ordinal) || message.Contains("IX_Teams_Slug_Unique", StringComparison.Ordinal))
         {
-            return TeamErrors.TitleExists;
+            return ClubErrors.TitleExists;
         }
 
         return null;

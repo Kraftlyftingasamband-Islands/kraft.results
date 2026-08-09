@@ -1,6 +1,6 @@
-﻿using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Teams;
+using KRAFT.Results.WebApi.Features.Clubs;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -57,18 +57,18 @@ internal sealed class UpdateAthleteHandler
 
         Country country = countryResult.FromResult();
 
-        Team? team = command.TeamId is int teamId
-            ? await GetTeamAsync(teamId, cancellationToken)
+        Club? club = command.TeamId is int clubId
+            ? await GetClubAsync(clubId, cancellationToken)
             : null;
 
-        if (command.TeamId.HasValue && team is null)
+        if (command.TeamId.HasValue && club is null)
         {
             _logger.LogWarning(
-                "Failed to update athlete {Slug}: Team with Id {TeamId} does not exist",
+                "Failed to update athlete {Slug}: Club with Id {TeamId} does not exist",
                 slug,
                 command.TeamId);
 
-            return Result.Failure(TeamErrors.TeamDoesNotExist(command.TeamId.Value));
+            return Result.Failure(ClubErrors.ClubDoesNotExist(command.TeamId.Value));
         }
 
         Result result = athlete.Update(
@@ -78,7 +78,7 @@ internal sealed class UpdateAthleteHandler
             gender: command.Gender,
             country: country,
             dateOfBirth: command.DateOfBirth,
-            team: team);
+            club: club);
 
         if (result.IsFailure)
         {
@@ -90,8 +90,8 @@ internal sealed class UpdateAthleteHandler
         return Result.Success();
     }
 
-    private Task<Team?> GetTeamAsync(int teamId, CancellationToken cancellationToken) =>
-        _dbContext.Set<Team>()
-        .Where(x => x.TeamId == teamId)
+    private Task<Club?> GetClubAsync(int clubId, CancellationToken cancellationToken) =>
+        _dbContext.Set<Club>()
+        .Where(x => x.ClubId == clubId)
         .FirstOrDefaultAsync(cancellationToken);
 }

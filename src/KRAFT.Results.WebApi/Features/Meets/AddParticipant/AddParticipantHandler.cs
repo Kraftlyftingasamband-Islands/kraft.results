@@ -2,9 +2,9 @@ using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.Clubs;
 using KRAFT.Results.WebApi.Features.EraWeightCategories;
 using KRAFT.Results.WebApi.Features.Participations;
-using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
 using KRAFT.Results.WebApi.Services;
@@ -58,13 +58,13 @@ internal sealed class AddParticipantHandler
 
         if (command.TeamId is not null)
         {
-            bool teamExists = await _dbContext.Set<Team>()
-                .AnyAsync(t => t.TeamId == command.TeamId, cancellationToken);
+            bool clubExists = await _dbContext.Set<Club>()
+                .AnyAsync(t => t.ClubId == command.TeamId, cancellationToken);
 
-            if (!teamExists)
+            if (!clubExists)
             {
-                _logger.LogWarning("Team with Id {TeamId} was not found", command.TeamId);
-                return new Result<int>(TeamErrors.TeamNotFound);
+                _logger.LogWarning("Club with Id {TeamId} was not found", command.TeamId);
+                return new Result<int>(ClubErrors.ClubNotFound);
             }
         }
 
