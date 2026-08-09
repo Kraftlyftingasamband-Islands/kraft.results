@@ -81,6 +81,26 @@ public sealed class UserIndexTests : IDisposable
         });
     }
 
+    [Fact]
+    public void ShowsCreatedOnDate_AsddMMyyyyFormat()
+    {
+        // Arrange
+        List<UserSummary> users =
+        [
+            new(1, "Jon Jonsson", "jon@example.com", new DateTime(2026, 8, 9, 0, 0, 0, DateTimeKind.Utc), ["Admin"]),
+        ];
+        RegisterHttpClient(users);
+
+        // Act
+        IRenderedComponent<UserIndex> cut = _context.Render<UserIndex>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find(".user-date").TextContent.ShouldBe("09.08.2026");
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
