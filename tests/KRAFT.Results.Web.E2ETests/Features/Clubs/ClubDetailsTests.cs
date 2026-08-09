@@ -9,7 +9,7 @@ public class ClubDetailsTests(PlaywrightFixture fixture)
     private readonly PlaywrightFixture _fixture = fixture;
 
     [Fact]
-    public async Task LoadsTeamDetails()
+    public async Task LoadsClubDetails()
     {
         // Arrange
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
