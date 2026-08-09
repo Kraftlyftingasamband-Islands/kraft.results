@@ -2,7 +2,6 @@
 
 public enum ClubLogoSize
 {
-    XSmall,
     Small,
     Medium,
     Large,
