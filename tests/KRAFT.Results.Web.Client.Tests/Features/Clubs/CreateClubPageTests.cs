@@ -10,9 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
-namespace KRAFT.Results.Web.Client.Tests.Features.Teams;
+namespace KRAFT.Results.Web.Client.Tests.Features.Clubs;
 
-public sealed class CreateTeamPageTests : IDisposable
+public sealed class CreateClubPageTests : IDisposable
 {
     private readonly BunitContext _context = new();
 
@@ -71,7 +71,7 @@ public sealed class CreateTeamPageTests : IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
     private void RegisterHttpClient(bool delay = false)
     {
-        CreateTeamPageMockHandler handler = new(delay);
+        CreateClubPageMockHandler handler = new(delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         _context.AddAuthorization();
@@ -86,7 +86,7 @@ public sealed class CreateTeamPageTests : IDisposable
         _context.AddAuthorization();
     }
 
-    private sealed class CreateTeamPageMockHandler(bool delay = false) : HttpMessageHandler
+    private sealed class CreateClubPageMockHandler(bool delay = false) : HttpMessageHandler
     {
         private static readonly List<CountrySummary> DefaultCountries =
         [

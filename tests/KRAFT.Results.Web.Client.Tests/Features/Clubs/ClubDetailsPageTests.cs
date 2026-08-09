@@ -13,11 +13,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
-namespace KRAFT.Results.Web.Client.Tests.Features.Teams;
+namespace KRAFT.Results.Web.Client.Tests.Features.Clubs;
 
-public sealed class TeamDetailsPageTests : IDisposable
+public sealed class ClubDetailsPageTests : IDisposable
 {
-    private const string TeamLogoBaseUrl = "https://example.blob.core.windows.net/images";
+    private const string ClubLogoBaseUrl = "https://example.blob.core.windows.net/images";
 
     private readonly BunitContext _context = new();
 
@@ -153,7 +153,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             IElement img = cut.Find(".team-logo img");
-            img.GetAttribute("src").ShouldStartWith($"{TeamLogoBaseUrl}/thor.png");
+            img.GetAttribute("src").ShouldStartWith($"{ClubLogoBaseUrl}/thor.png");
             img.GetAttribute("alt").ShouldBe("Þór IF");
             img.GetAttribute("loading").ShouldBe("lazy");
         });
@@ -200,7 +200,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             AngleSharp.Dom.IElement img = cut.Find(".card .athlete-photo img");
-            img.GetAttribute("src").ShouldStartWith($"{TeamLogoBaseUrl}/jon.jpg");
+            img.GetAttribute("src").ShouldStartWith($"{ClubLogoBaseUrl}/jon.jpg");
         });
     }
 
@@ -248,7 +248,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
     private void RegisterNullHttpClient()
     {
-        NullTeamHttpMessageHandler handler = new();
+        NullClubHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         RegisterConfiguration();
@@ -270,7 +270,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ImageBaseUrl"] = TeamLogoBaseUrl,
+                ["ImageBaseUrl"] = ClubLogoBaseUrl,
             })
             .Build();
         _context.Services.AddSingleton(configuration);
@@ -292,7 +292,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         }
     }
 
-    private sealed class NullTeamHttpMessageHandler : HttpMessageHandler
+    private sealed class NullClubHttpMessageHandler : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

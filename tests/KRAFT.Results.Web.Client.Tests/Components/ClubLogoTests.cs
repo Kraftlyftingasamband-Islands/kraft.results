@@ -9,13 +9,13 @@ using Shouldly;
 
 namespace KRAFT.Results.Web.Client.Tests.Components;
 
-public sealed class TeamLogoTests : IDisposable
+public sealed class ClubLogoTests : IDisposable
 {
-    private const string TeamLogoBaseUrl = "https://example.blob.core.windows.net/images";
+    private const string ClubLogoBaseUrl = "https://example.blob.core.windows.net/images";
 
     private readonly BunitContext _context = new();
 
-    public TeamLogoTests()
+    public ClubLogoTests()
     {
         RegisterConfiguration();
     }
@@ -47,7 +47,7 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
+        img.GetAttribute("src").ShouldBe($"{ClubLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
         img.GetAttribute("loading").ShouldBe("lazy");
     }
 
@@ -117,7 +117,7 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
+        img.GetAttribute("src").ShouldBe($"{ClubLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public sealed class TeamLogoTests : IDisposable
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-        img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=128&height=128");
+        img.GetAttribute("src").ShouldBe($"{ClubLogoBaseUrl}/thor.png?width=128&height=128");
     }
 
     [Theory]
@@ -380,7 +380,7 @@ public sealed class TeamLogoTests : IDisposable
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ImageBaseUrl"] = TeamLogoBaseUrl,
+                ["ImageBaseUrl"] = ClubLogoBaseUrl,
             })
             .Build();
         _context.Services.AddSingleton(configuration);
