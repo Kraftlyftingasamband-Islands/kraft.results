@@ -31,8 +31,8 @@ internal static class CreateClubEndpoint
                 });
         })
         .WithName(Name)
-        .WithSummary("Creates a new Team.")
-        .WithDescription("Adds a new Team to the database and returns its Id.")
+        .WithSummary("Creates a new Club.")
+        .WithDescription("Adds a new Club to the database and returns its Id.")
         .Produces<int>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status409Conflict)
