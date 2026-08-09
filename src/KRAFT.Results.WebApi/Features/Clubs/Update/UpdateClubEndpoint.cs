@@ -9,7 +9,7 @@ namespace KRAFT.Results.WebApi.Features.Clubs.Update;
 
 internal static class UpdateClubEndpoint
 {
-    internal const string Name = "UpdateTeam";
+    internal const string Name = "UpdateClub";
 
     internal static RouteGroupBuilder MapUpdateClubEndpoint(this RouteGroupBuilder endpoints)
     {
@@ -33,8 +33,8 @@ internal static class UpdateClubEndpoint
                 });
         })
         .WithName(Name)
-        .WithSummary("Updates a team.")
-        .WithDescription("Updates an existing team's details.")
+        .WithSummary("Updates a club.")
+        .WithDescription("Updates an existing club's details.")
         .Produces(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status404NotFound)

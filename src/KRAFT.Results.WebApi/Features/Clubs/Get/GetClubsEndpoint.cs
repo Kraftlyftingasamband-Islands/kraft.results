@@ -6,7 +6,7 @@ namespace KRAFT.Results.WebApi.Features.Clubs.Get;
 
 internal static class GetClubsEndpoint
 {
-    internal const string Name = "GetTeams";
+    internal const string Name = "GetClubs";
 
     internal static RouteGroupBuilder MapGetClubsEndpoint(this RouteGroupBuilder endpoints)
     {
@@ -19,8 +19,8 @@ internal static class GetClubsEndpoint
             return result;
         })
         .WithName(Name)
-        .WithSummary("Gets teams")
-        .WithDescription("Gets a list of all teams")
+        .WithSummary("Gets clubs")
+        .WithDescription("Gets a list of all clubs")
         .Produces<IReadOnlyList<ClubSummary>>()
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 

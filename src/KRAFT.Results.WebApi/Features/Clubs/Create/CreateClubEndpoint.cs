@@ -9,7 +9,7 @@ namespace KRAFT.Results.WebApi.Features.Clubs.Create;
 
 internal static class CreateClubEndpoint
 {
-    internal const string Name = "CreateTeam";
+    internal const string Name = "CreateClub";
 
     internal static RouteGroupBuilder MapCreateClubEndpoint(this RouteGroupBuilder endpoints)
     {
