@@ -37,7 +37,7 @@ internal sealed class Athlete : AggregateRoot
 
     public Country Country { get; private set; } = Country.Iceland;
 
-    public int? TeamId { get; private set; }
+    public int? ClubId { get; private set; }
 
     public Club? Club { get; private set; }
 

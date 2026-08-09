@@ -126,7 +126,7 @@ public sealed class EditAthletePageTests : IDisposable
             DateOfBirth: new DateOnly(1990, 1, 1),
             Gender: "M",
             CountryCode: "ISL",
-            TeamId: null);
+            ClubId: null);
 
         private static readonly List<CountrySummary> DefaultCountries =
         [

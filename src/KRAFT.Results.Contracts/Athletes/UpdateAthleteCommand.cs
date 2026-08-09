@@ -4,6 +4,6 @@ public sealed record class UpdateAthleteCommand(
     string FirstName,
     string LastName,
     string CountryCode,
-    int? TeamId,
+    int? ClubId,
     DateOnly DateOfBirth,
     string Gender);

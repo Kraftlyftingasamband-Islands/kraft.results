@@ -6,4 +6,4 @@ public sealed record class AthleteEditDetails(
     DateOnly? DateOfBirth,
     string Gender,
     string CountryCode,
-    int? TeamId);
+    int? ClubId);

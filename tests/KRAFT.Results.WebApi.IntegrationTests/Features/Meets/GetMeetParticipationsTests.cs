@@ -294,7 +294,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(TestSeedConstants.Athlete.Slug)
             .WithBodyWeight(80.5m)
-            .WithTeamId(TestSeedConstants.Team.Id)
+            .WithClubId(TestSeedConstants.Team.Id)
             .WithAgeCategorySlug("open")
             .Build();
 

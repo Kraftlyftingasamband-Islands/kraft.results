@@ -9,7 +9,7 @@ internal sealed class CreateAthleteCommandBuilder
     private string _gender = "m";
     private DateOnly _dateOfBirth = DateOnly.FromDateTime(DateTime.Today.AddYears(-14));
     private string _countryCode = "ISL";
-    private int? _teamId;
+    private int? _clubId;
 
     public CreateAthleteCommandBuilder WithFirstName(string firstName)
     {
@@ -41,12 +41,12 @@ internal sealed class CreateAthleteCommandBuilder
         return this;
     }
 
-    public CreateAthleteCommandBuilder WithTeamId(int? teamId)
+    public CreateAthleteCommandBuilder WithClubId(int? clubId)
     {
-        _teamId = teamId;
+        _clubId = clubId;
         return this;
     }
 
     public CreateAthleteCommand Build() =>
-        new(_firstName, _lastName, _countryCode, _teamId, _dateOfBirth, _gender);
+        new(_firstName, _lastName, _countryCode, _clubId, _dateOfBirth, _gender);
 }

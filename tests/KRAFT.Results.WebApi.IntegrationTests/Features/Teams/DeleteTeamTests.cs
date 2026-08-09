@@ -53,7 +53,7 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
         (string slug, int teamId) = await CreateTeamWithIdAsync();
 
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
-            .WithTeamId(teamId)
+            .WithClubId(teamId)
             .Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync("/athletes", athleteCommand, CancellationToken.None);
         athleteResponse.EnsureSuccessStatusCode();
