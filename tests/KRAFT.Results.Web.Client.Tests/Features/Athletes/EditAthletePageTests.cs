@@ -133,7 +133,7 @@ public sealed class EditAthletePageTests : IDisposable
             new("ISL", "Iceland"),
         ];
 
-        private static readonly List<ClubOption> DefaultTeams =
+        private static readonly List<ClubOption> DefaultClubs =
         [
             new(1, "Þór"),
         ];
@@ -159,7 +159,7 @@ public sealed class EditAthletePageTests : IDisposable
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(DefaultTeams),
+                    Content = JsonContent.Create(DefaultClubs),
                 };
             }
 
@@ -173,7 +173,7 @@ public sealed class EditAthletePageTests : IDisposable
     private sealed class NullAthleteHttpMessageHandler : HttpMessageHandler
     {
         private static readonly List<CountrySummary> DefaultCountries = [new("ISL", "Iceland")];
-        private static readonly List<ClubOption> DefaultTeams = [new(1, "Þór")];
+        private static readonly List<ClubOption> DefaultClubs = [new(1, "Þór")];
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -191,7 +191,7 @@ public sealed class EditAthletePageTests : IDisposable
             {
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(DefaultTeams),
+                    Content = JsonContent.Create(DefaultClubs),
                 });
             }
 

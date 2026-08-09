@@ -103,7 +103,7 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
     public async Task WhenTeamHasLogo_ProjectsClubShortTitleAndClubLogoImageFilename()
     {
         // Arrange — seed a logo filename onto the seeded team via SQL (no write endpoint for LogoImageFilename).
-        // Uses TestSeedConstants.Athlete.Slug because that athlete is pre-assigned to TestSeedConstants.Team
+        // Uses TestSeedConstants.Athlete.Slug because that athlete is pre-assigned to TestSeedConstants.Club
         // in the database seed, which is the team whose logo we mutate here.
         const string LogoFilename = "team-logo.png";
 
