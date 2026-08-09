@@ -4,11 +4,6 @@
     overflow: hidden;
 }
 
-.team-logo--xs {
-    width: 24px;
-    height: 24px;
-}
-
 .team-logo--sm {
     width: 48px;
     height: 48px;
@@ -46,10 +41,14 @@
     height: 60%;
 }
 
-.team-logo--xs.team-logo--text {
+.team-logo--sm.team-logo--text {
     width: auto;
-    height: 24px;
+    height: 48px;
     overflow: visible;
+}
+
+.team-logo--sm.team-logo--text .team-logo-placeholder {
+    justify-content: center;
 }
 
 .team-logo-placeholder .team-logo-fallback-text {

@@ -85,7 +85,6 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Theory]
-    [InlineData(ClubLogoSize.XSmall, "team-logo--xs")]
     [InlineData(ClubLogoSize.Small, "team-logo--sm")]
     [InlineData(ClubLogoSize.Medium, "team-logo--md")]
     [InlineData(ClubLogoSize.Large, "team-logo--lg")]
@@ -102,10 +101,9 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Theory]
-    [InlineData(ClubLogoSize.XSmall)]
     [InlineData(ClubLogoSize.Small)]
     [InlineData(ClubLogoSize.Medium)]
-    public void WhenSizeIsXSmallSmallOrMedium_SrcQueryStringIsPinned64x64Crop(ClubLogoSize size)
+    public void WhenSizeIsSmallOrMedium_SrcQueryStringIsPinned64x64Crop(ClubLogoSize size)
     {
         // Arrange
 
@@ -137,7 +135,6 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Theory]
-    [InlineData(ClubLogoSize.XSmall)]
     [InlineData(ClubLogoSize.Small)]
     [InlineData(ClubLogoSize.Medium)]
     [InlineData(ClubLogoSize.Large)]
@@ -242,7 +239,7 @@ public sealed class ClubLogoTests : IDisposable
     }
 
     [Fact]
-    public void WhenSizeIsXSmallAndFallbackTextIsSet_AppliesTextModifierClass()
+    public void WhenSizeIsSmallAndFallbackTextIsSet_AppliesTextModifierClass()
     {
         // Arrange
 
@@ -250,10 +247,10 @@ public sealed class ClubLogoTests : IDisposable
         IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, ClubLogoSize.XSmall));
+                .Add(c => c.Size, ClubLogoSize.Small));
 
         // Assert
-        cut.Find(".team-logo.team-logo--xs.team-logo--text").ShouldNotBeNull();
+        cut.Find(".team-logo.team-logo--sm.team-logo--text").ShouldNotBeNull();
     }
 
     [Fact]
@@ -278,7 +275,7 @@ public sealed class ClubLogoTests : IDisposable
 
         // Act
         IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
-            p => p.Add(c => c.Size, ClubLogoSize.XSmall));
+            p => p.Add(c => c.Size, ClubLogoSize.Small));
 
         // Assert
         cut.FindAll(".team-logo--text").Count.ShouldBe(0);
