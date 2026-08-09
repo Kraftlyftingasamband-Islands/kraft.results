@@ -2,9 +2,9 @@ using Microsoft.Playwright;
 
 using static Microsoft.Playwright.Assertions;
 
-namespace KRAFT.Results.Web.E2ETests.Features.Teams;
+namespace KRAFT.Results.Web.E2ETests.Features.Clubs;
 
-public class CreateTeamPageTests(PlaywrightFixture fixture)
+public class CreateClubPageTests(PlaywrightFixture fixture)
 {
     private readonly PlaywrightFixture _fixture = fixture;
 
