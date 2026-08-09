@@ -2,16 +2,16 @@ using KRAFT.Results.Contracts.Teams;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Teams.GetOptions;
+namespace KRAFT.Results.WebApi.Features.Clubs.GetOptions;
 
-internal static class GetTeamOptionsEndpoint
+internal static class GetClubOptionsEndpoint
 {
     internal const string Name = "GetTeamOptions";
 
-    internal static RouteGroupBuilder MapGetTeamOptionsEndpoint(this RouteGroupBuilder endpoints)
+    internal static RouteGroupBuilder MapGetClubOptionsEndpoint(this RouteGroupBuilder endpoints)
     {
         endpoints.MapGet("/options", static async (
-            [FromServices] GetTeamOptionsHandler handler,
+            [FromServices] GetClubOptionsHandler handler,
             CancellationToken cancellationToken) =>
         {
             IReadOnlyList<TeamOption> result = await handler.Handle(cancellationToken);

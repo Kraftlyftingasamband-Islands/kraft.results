@@ -1,18 +1,18 @@
-﻿using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Teams;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Teams.GetDetails;
+namespace KRAFT.Results.WebApi.Features.Clubs.GetDetails;
 
-internal static class GetTeamDetailsEndpoint
+internal static class GetClubDetailsEndpoint
 {
     internal const string Name = "GetTeamDetails";
 
-    internal static RouteGroupBuilder MapGetTeamDetailsEndpoint(this RouteGroupBuilder endpoints)
+    internal static RouteGroupBuilder MapGetClubDetailsEndpoint(this RouteGroupBuilder endpoints)
     {
         endpoints.MapGet("/{slug}", async Task<IResult> (
             [FromRoute] string slug,
-            [FromServices] GetTeamDetailsHandler handler,
+            [FromServices] GetClubDetailsHandler handler,
             CancellationToken cancellationToken) =>
             await handler.Handle(slug, cancellationToken) is not { } result
                 ? TypedResults.NotFound()

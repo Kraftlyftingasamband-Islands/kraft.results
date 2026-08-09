@@ -1,20 +1,20 @@
-﻿using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Teams;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace KRAFT.Results.WebApi.Features.Teams.GetDetails;
+namespace KRAFT.Results.WebApi.Features.Clubs.GetDetails;
 
-internal sealed class GetTeamDetailsHandler
+internal sealed class GetClubDetailsHandler
 {
     private readonly ResultsDbContext _dbContext;
 
-    public GetTeamDetailsHandler(ResultsDbContext dbContext)
+    public GetClubDetailsHandler(ResultsDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
     public Task<TeamDetails?> Handle(string slug, CancellationToken cancellationToken) =>
-        _dbContext.Set<Team>()
+        _dbContext.Set<Club>()
         .Where(x => x.Slug == slug)
         .Select(x => new TeamDetails(
             x.Slug,

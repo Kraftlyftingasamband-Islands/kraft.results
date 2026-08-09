@@ -13,10 +13,10 @@ internal sealed class GetAthleteDetailsHandler(ResultsDbContext dbContext)
                 x.Slug,
                 $"{x.Firstname} {x.Lastname}",
                 x.DateOfBirth != null && x.DateOfBirth.Value.Year > 0 ? x.DateOfBirth.Value.Year : null,
-                x.Team != null ? x.Team.TitleFull : null,
-                x.Team != null ? x.Team.Slug : null,
-                x.Team != null ? x.Team.TitleShort : null,
-                x.Team != null ? x.Team.LogoImageFilename : null,
+                x.Club != null ? x.Club.TitleFull : null,
+                x.Club != null ? x.Club.Slug : null,
+                x.Club != null ? x.Club.TitleShort : null,
+                x.Club != null ? x.Club.LogoImageFilename : null,
                 0,
                 x.ProfileImageFilename))
             .FirstOrDefaultAsync(cancellationToken);

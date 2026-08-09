@@ -7,16 +7,16 @@ using KRAFT.Results.WebApi.Features.Athletes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace KRAFT.Results.WebApi.Features.Teams.Delete;
+namespace KRAFT.Results.WebApi.Features.Clubs.Delete;
 
-internal sealed partial class DeleteTeamHandler
+internal sealed partial class DeleteClubHandler
 {
     private const int SlugMaxLength = 200;
 
-    private readonly ILogger<DeleteTeamHandler> _logger;
+    private readonly ILogger<DeleteClubHandler> _logger;
     private readonly ResultsDbContext _dbContext;
 
-    public DeleteTeamHandler(ILogger<DeleteTeamHandler> logger, ResultsDbContext dbContext)
+    public DeleteClubHandler(ILogger<DeleteClubHandler> logger, ResultsDbContext dbContext)
     {
         _logger = logger;
         _dbContext = dbContext;
@@ -26,7 +26,7 @@ internal sealed partial class DeleteTeamHandler
     {
         if (string.IsNullOrEmpty(slug) || slug.Length > SlugMaxLength || !ValidSlugPattern().IsMatch(slug))
         {
-            return Result.Failure(TeamErrors.TeamNotFound);
+            return Result.Failure(ClubErrors.ClubNotFound);
         }
 
         IExecutionStrategy strategy = _dbContext.Database.CreateExecutionStrategy();
@@ -36,26 +36,26 @@ internal sealed partial class DeleteTeamHandler
             await using IDbContextTransaction transaction =
                 await _dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
-            Team? team = await _dbContext.Set<Team>()
+            Club? club = await _dbContext.Set<Club>()
                 .Where(t => t.Slug == slug)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (team is null)
+            if (club is null)
             {
-                _logger.LogWarning("Team with slug '{Slug}' was not found", slug);
-                return Result.Failure(TeamErrors.TeamNotFound);
+                _logger.LogWarning("Club with slug '{Slug}' was not found", slug);
+                return Result.Failure(ClubErrors.ClubNotFound);
             }
 
             bool hasAthletes = await _dbContext.Set<Athlete>()
-                .AnyAsync(a => a.TeamId == team.TeamId, cancellationToken);
+                .AnyAsync(a => a.TeamId == club.ClubId, cancellationToken);
 
             if (hasAthletes)
             {
-                _logger.LogWarning("Cannot delete team '{Slug}' because it has athletes assigned", slug);
-                return Result.Failure(TeamErrors.TeamHasAthletes);
+                _logger.LogWarning("Cannot delete club '{Slug}' because it has athletes assigned", slug);
+                return Result.Failure(ClubErrors.ClubHasAthletes);
             }
 
-            _dbContext.Set<Team>().Remove(team);
+            _dbContext.Set<Club>().Remove(club);
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 

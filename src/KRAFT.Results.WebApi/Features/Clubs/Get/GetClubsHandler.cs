@@ -1,21 +1,21 @@
-﻿using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace KRAFT.Results.WebApi.Features.Teams.Get;
+namespace KRAFT.Results.WebApi.Features.Clubs.Get;
 
-internal sealed class GetTeamsHandler
+internal sealed class GetClubsHandler
 {
     private readonly ResultsDbContext _dbContext;
 
-    public GetTeamsHandler(ResultsDbContext dbContext)
+    public GetClubsHandler(ResultsDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
     public Task<List<TeamSummary>> Handle(CancellationToken cancellationToken) =>
-        _dbContext.Set<Team>()
+        _dbContext.Set<Club>()
         .Where(x => x.Country == Country.Iceland)
         .OrderBy(x => x.Title)
         .Select(x => new TeamSummary(

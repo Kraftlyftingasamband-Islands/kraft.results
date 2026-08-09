@@ -1,31 +1,31 @@
-﻿using KRAFT.Results.Contracts;
+using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace KRAFT.Results.WebApi.Features.Teams.Create;
+namespace KRAFT.Results.WebApi.Features.Clubs.Create;
 
-internal static class CreateTeamEndpoint
+internal static class CreateClubEndpoint
 {
     internal const string Name = "CreateTeam";
 
-    internal static RouteGroupBuilder MapCreateTeamEndpoint(this RouteGroupBuilder endpoints)
+    internal static RouteGroupBuilder MapCreateClubEndpoint(this RouteGroupBuilder endpoints)
     {
         endpoints.MapPost("/", static async (
             [FromBody] CreateTeamCommand command,
-            [FromServices] CreateTeamHandler handler,
+            [FromServices] CreateClubHandler handler,
             CancellationToken cancellationToken) =>
         {
             Result<int> result = await handler.Handle(command, cancellationToken);
 
             return result.Match<IResult>(
-                success: teamId => TypedResults.Created($"/{teamId}", new { TeamId = teamId }),
+                success: clubId => TypedResults.Created($"/{clubId}", new { TeamId = clubId }),
                 failure: error => error.Code switch
                 {
-                    TeamErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
-                    TeamErrors.TitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    ClubErrors.ShortTitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
+                    ClubErrors.TitleExistsCode => TypedResults.Conflict(new ErrorResponse(error.Code, error.Description)),
                     UserErrors.UserNameClaimMissingCode => TypedResults.Unauthorized(),
                     _ => TypedResults.BadRequest(new ErrorResponse(error.Code, error.Description)),
                 });
