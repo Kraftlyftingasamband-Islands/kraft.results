@@ -175,7 +175,7 @@ public sealed class MeetCardTests : IDisposable
             p => p.Add(c => c.Meet, meet));
 
         // Assert
-        cut.Find(".esc-meta").TextContent.Trim().ShouldBe("15. mar. 2020");
+        cut.Find(".esc-meta").TextContent.Trim().ShouldBe("15.03.2020");
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public sealed class MeetCardTests : IDisposable
             p => p.Add(c => c.Meet, meet));
 
         // Assert
-        cut.Find(".esc-meta").TextContent.Trim().ShouldContain("15. mar. 2020");
+        cut.Find(".esc-meta").TextContent.Trim().ShouldContain("15.03.2020");
         cut.Find(".esc-meta").TextContent.Trim().ShouldContain("Reykjavík");
     }
 
