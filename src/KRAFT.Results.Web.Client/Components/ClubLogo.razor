@@ -41,7 +41,7 @@
     public string Alt { get; set; } = "";
 
     [Parameter, EditorRequired]
-    public TeamLogoSize Size { get; set; }
+    public ClubLogoSize Size { get; set; }
 
     [Parameter]
     public string? FallbackText { get; set; }
@@ -61,10 +61,10 @@
     {
         _sizeClass = Size switch
         {
-            TeamLogoSize.XSmall => "team-logo--xs",
-            TeamLogoSize.Small => "team-logo--sm",
-            TeamLogoSize.Medium => "team-logo--md",
-            TeamLogoSize.Large => "team-logo--lg",
+            ClubLogoSize.XSmall => "team-logo--xs",
+            ClubLogoSize.Small => "team-logo--sm",
+            ClubLogoSize.Medium => "team-logo--md",
+            ClubLogoSize.Large => "team-logo--lg",
             _ => "team-logo--md",
         };
 
@@ -74,7 +74,7 @@
 
         _sizeQuery = Size switch
         {
-            TeamLogoSize.Large => LargeQuery,
+            ClubLogoSize.Large => LargeQuery,
             _ => SmallQuery,
         };
 

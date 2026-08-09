@@ -26,8 +26,8 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
-            p => p.Add(c => c.Size, TeamLogoSize.Medium));
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
+            p => p.Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo svg").ShouldNotBeNull();
@@ -40,10 +40,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
@@ -57,10 +57,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
@@ -73,11 +73,11 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
                 .Add(c => c.Alt, "Þór IF")
-                .Add(c => c.Size, TeamLogoSize.Large));
+                .Add(c => c.Size, ClubLogoSize.Large));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
@@ -85,16 +85,16 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Theory]
-    [InlineData(TeamLogoSize.XSmall, "team-logo--xs")]
-    [InlineData(TeamLogoSize.Small, "team-logo--sm")]
-    [InlineData(TeamLogoSize.Medium, "team-logo--md")]
-    [InlineData(TeamLogoSize.Large, "team-logo--lg")]
-    public void AppliesSizeClass_ForEachSize(TeamLogoSize size, string expectedClass)
+    [InlineData(ClubLogoSize.XSmall, "team-logo--xs")]
+    [InlineData(ClubLogoSize.Small, "team-logo--sm")]
+    [InlineData(ClubLogoSize.Medium, "team-logo--md")]
+    [InlineData(ClubLogoSize.Large, "team-logo--lg")]
+    public void AppliesSizeClass_ForEachSize(ClubLogoSize size, string expectedClass)
     {
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p.Add(c => c.Size, size));
 
         // Assert
@@ -102,15 +102,15 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Theory]
-    [InlineData(TeamLogoSize.XSmall)]
-    [InlineData(TeamLogoSize.Small)]
-    [InlineData(TeamLogoSize.Medium)]
-    public void WhenSizeIsXSmallSmallOrMedium_SrcQueryStringIsPinned64x64Crop(TeamLogoSize size)
+    [InlineData(ClubLogoSize.XSmall)]
+    [InlineData(ClubLogoSize.Small)]
+    [InlineData(ClubLogoSize.Medium)]
+    public void WhenSizeIsXSmallSmallOrMedium_SrcQueryStringIsPinned64x64Crop(ClubLogoSize size)
     {
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
                 .Add(c => c.Size, size));
@@ -126,10 +126,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
-                .Add(c => c.Size, TeamLogoSize.Large));
+                .Add(c => c.Size, ClubLogoSize.Large));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
@@ -137,16 +137,16 @@ public sealed class TeamLogoTests : IDisposable
     }
 
     [Theory]
-    [InlineData(TeamLogoSize.XSmall)]
-    [InlineData(TeamLogoSize.Small)]
-    [InlineData(TeamLogoSize.Medium)]
-    [InlineData(TeamLogoSize.Large)]
-    public void DoesNotEmitSrcset_ForAnySize(TeamLogoSize size)
+    [InlineData(ClubLogoSize.XSmall)]
+    [InlineData(ClubLogoSize.Small)]
+    [InlineData(ClubLogoSize.Medium)]
+    [InlineData(ClubLogoSize.Large)]
+    public void DoesNotEmitSrcset_ForAnySize(ClubLogoSize size)
     {
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
                 .Add(c => c.Size, size));
@@ -162,10 +162,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo-placeholder").TextContent.Trim().ShouldBe("ÞOR");
@@ -179,8 +179,8 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
-            p => p.Add(c => c.Size, TeamLogoSize.Medium));
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
+            p => p.Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo svg").ShouldNotBeNull();
@@ -192,11 +192,11 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "thor.png")
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
@@ -217,10 +217,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         AngleSharp.Dom.IElement placeholder = cut.Find(".team-logo-placeholder");
@@ -233,8 +233,8 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
-            p => p.Add(c => c.Size, TeamLogoSize.Medium));
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
+            p => p.Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         AngleSharp.Dom.IElement placeholder = cut.Find(".team-logo-placeholder");
@@ -247,10 +247,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, TeamLogoSize.XSmall));
+                .Add(c => c.Size, ClubLogoSize.XSmall));
 
         // Assert
         cut.Find(".team-logo.team-logo--xs.team-logo--text").ShouldNotBeNull();
@@ -262,10 +262,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo.team-logo--md.team-logo--text").ShouldNotBeNull();
@@ -277,8 +277,8 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
-            p => p.Add(c => c.Size, TeamLogoSize.XSmall));
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
+            p => p.Add(c => c.Size, ClubLogoSize.XSmall));
 
         // Assert
         cut.FindAll(".team-logo--text").Count.ShouldBe(0);
@@ -301,11 +301,11 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, unsafeFilename)
                 .Add(c => c.FallbackText, "ÞOR")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo-placeholder").TextContent.Trim().ShouldBe("ÞOR");
@@ -319,10 +319,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "evil,logo.png")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo svg").ShouldNotBeNull();
@@ -335,10 +335,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, "evil logo.png")
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo svg").ShouldNotBeNull();
@@ -360,10 +360,10 @@ public sealed class TeamLogoTests : IDisposable
         // Arrange
 
         // Act
-        IRenderedComponent<TeamLogo> cut = _context.Render<TeamLogo>(
+        IRenderedComponent<ClubLogo> cut = _context.Render<ClubLogo>(
             p => p
                 .Add(c => c.Filename, invalidFilename)
-                .Add(c => c.Size, TeamLogoSize.Medium));
+                .Add(c => c.Size, ClubLogoSize.Medium));
 
         // Assert
         cut.Find(".team-logo svg").ShouldNotBeNull();

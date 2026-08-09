@@ -1,6 +1,6 @@
 ﻿namespace KRAFT.Results.Web.Client.Components;
 
-public enum TeamLogoSize
+public enum ClubLogoSize
 {
     XSmall,
     Small,
