@@ -199,7 +199,7 @@
     private List<TeamOption> _teams = [];
     private List<TeamOption> _filteredTeams = [];
     private string _teamSearchText = string.Empty;
-    private int? _selectedTeamId;
+    private int? _selectedClubId;
     private bool _showTeamDropdown;
     private int _highlightedTeamIndex;
     private bool _preventDefaultOnTeamInput;
@@ -398,7 +398,7 @@
     private void HandleTeamSearchInput(ChangeEventArgs e)
     {
         _teamSearchText = e.Value?.ToString() ?? string.Empty;
-        _selectedTeamId = null;
+        _selectedClubId = null;
         FilterTeams();
         _showTeamDropdown = true;
         _highlightedTeamIndex = 0;
@@ -420,7 +420,7 @@
 
     private void SelectTeam(TeamOption team)
     {
-        _selectedTeamId = team.Id;
+        _selectedClubId = team.Id;
         _teamSearchText = team.Title;
         _showTeamDropdown = false;
         _filteredTeams = [];
@@ -500,7 +500,7 @@
                 return;
             }
 
-            AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedTeamId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
+            AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedClubId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
                 $"/meets/{MeetId}/participants", command);
 
@@ -565,7 +565,7 @@
         _bodyWeightText = string.Empty;
         _errorMessage = null;
         _teamSearchText = string.Empty;
-        _selectedTeamId = null;
+        _selectedClubId = null;
         _selectedAthleteGender = null;
         _eligibleAgeCategorySlugs = [];
         _selectedAgeCategorySlug = string.Empty;
