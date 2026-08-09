@@ -14,14 +14,17 @@ namespace KRAFT.Results.Web.Client.Tests;
 /// </summary>
 public sealed partial class DateFormatConventionTests
 {
-    private static readonly string[] AllowlistedFileNames =
+    // Relative path suffixes of files permitted to contain ISO date format strings.
+    // Using path suffixes (not bare filenames) prevents any same-named file elsewhere
+    // in the tree from being silently exempted.
+    private static readonly string[] AllowlistedPathSuffixes =
     [
-        "AthleteForm.razor",
-        "AddParticipantForm.razor",
+        Path.Combine("Features", "Athletes", "AthleteForm.razor"),
+        Path.Combine("Features", "Meets", "AddParticipantForm.razor"),
     ];
 
     [Fact]
-    public void DateFormatRegex_MatchesKnownDateFormatStrings()
+    public void WhenDateFormatStringScanned_RegexMatchesKnownPatterns()
     {
         // Arrange
         string[] positives =
@@ -45,7 +48,7 @@ public sealed partial class DateFormatConventionTests
     }
 
     [Fact]
-    public void DateFormatRegex_DoesNotMatchFalsePositives()
+    public void WhenNonDateStringScanned_RegexDoesNotMatch()
     {
         // Arrange
         string[] negatives =
@@ -72,7 +75,7 @@ public sealed partial class DateFormatConventionTests
     }
 
     [Fact]
-    public void IsoDateRegex_MatchesIsoPattern()
+    public void WhenIsoPatternScanned_IsoRegexMatches()
     {
         // Arrange
         string[] positives =
@@ -91,7 +94,7 @@ public sealed partial class DateFormatConventionTests
     }
 
     [Fact]
-    public void IsoDateRegex_DoesNotMatchNonIsoDateFormats()
+    public void WhenNonIsoFormatScanned_IsoRegexDoesNotMatch()
     {
         // Arrange
         string[] negatives =
@@ -110,7 +113,7 @@ public sealed partial class DateFormatConventionTests
     }
 
     [Fact]
-    public void SourceTree_ContainsEnoughFilesToScan()
+    public void WhenSourceTreeEnumerated_ContainsMeaningfulFileCount()
     {
         // Arrange
         string repoRoot = ResolveRepoRoot();
@@ -127,26 +130,29 @@ public sealed partial class DateFormatConventionTests
     }
 
     [Fact]
-    public void SourceTree_ContainsNoRawDateFormatStrings_ExceptAllowlistedIsoSites()
+    public void WhenSourceTreeScanned_ContainsNoRawDateFormatStringsOutsideDisplayFormat()
     {
         // Arrange
         string repoRoot = ResolveRepoRoot();
         List<string> files = EnumerateSourceFiles(repoRoot);
 
-        // Guard — ensure we scanned a meaningful set of files before asserting no violations
-        files.Count.ShouldBeGreaterThan(
-            0,
-            "Source file enumeration returned zero files — repo root resolution may be broken");
+        // Inline guard — distinct from the dedicated file-count test: that test proves
+        // MeetCard.razor is reachable; this guard only prevents a zero-file false green
+        // in the main scan without duplicating the MeetCard.razor assertion.
+        files.ShouldNotBeEmpty("Source file enumeration returned zero files — repo root resolution may be broken");
 
         List<string> violations = [];
 
         // Act
         foreach (string filePath in files)
         {
-            string fileName = Path.GetFileName(filePath);
+            // Normalize to forward slashes for OS-agnostic suffix comparison
+            string normalizedPath = filePath.Replace('\\', '/');
             bool isAllowlisted = Array.Exists(
-                AllowlistedFileNames,
-                name => string.Equals(name, fileName, StringComparison.OrdinalIgnoreCase));
+                AllowlistedPathSuffixes,
+                suffix => normalizedPath.EndsWith(
+                    suffix.Replace('\\', '/'),
+                    StringComparison.OrdinalIgnoreCase));
 
             string[] lines = File.ReadAllLines(filePath);
             for (int i = 0; i < lines.Length; i++)
@@ -255,9 +261,10 @@ public sealed partial class DateFormatConventionTests
 
     private static string ResolveRepoRoot([CallerFilePath] string callerPath = "")
     {
+        const int MaxLevels = 15;
         DirectoryInfo? directory = new FileInfo(callerPath).Directory;
 
-        while (directory is not null)
+        for (int level = 0; level < MaxLevels && directory is not null; level++)
         {
             if (Directory.EnumerateFiles(directory.FullName, "KRAFT.Results.slnx").Any())
             {
@@ -268,7 +275,7 @@ public sealed partial class DateFormatConventionTests
         }
 
         throw new InvalidOperationException(
-            $"Could not locate 'KRAFT.Results.slnx' by walking up from '{callerPath}'. " +
+            $"Solution file KRAFT.Results.slnx not found within {MaxLevels} parent levels of '{callerPath}'. " +
             "Ensure the test file is within the repository.");
     }
 }
