@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
@@ -20,11 +20,11 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
 
     public async ValueTask InitializeAsync()
     {
-        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
+        CreateClubCommand command = new CreateClubCommandBuilder().Build();
         await _authorizedClient.PostAsJsonAsync(BasePath, command, CancellationToken.None);
 
-        List<TeamSummary>? teams = await _authorizedClient.GetFromJsonAsync<List<TeamSummary>>(BasePath, CancellationToken.None);
-        TeamSummary team = teams!.First(t => t.ShortTitle == command.TitleShort);
+        List<ClubSummary>? teams = await _authorizedClient.GetFromJsonAsync<List<ClubSummary>>(BasePath, CancellationToken.None);
+        ClubSummary team = teams!.First(t => t.ShortTitle == command.TitleShort);
         _slug = team.Slug;
     }
 
@@ -66,7 +66,7 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
         string path = $"{BasePath}/{_slug}";
 
         // Act
-        TeamDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<TeamDetails>(path, CancellationToken.None);
+        ClubDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<ClubDetails>(path, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -79,7 +79,7 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
         string path = $"{BasePath}/{_slug}";
 
         // Act
-        TeamDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<TeamDetails>(path, CancellationToken.None);
+        ClubDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<ClubDetails>(path, CancellationToken.None);
 
         // Assert
         response!.Slug.ShouldBe(_slug);
@@ -106,11 +106,11 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
         string path = $"{BasePath}/{Constants.TestTeamSlug}";
 
         // Act
-        TeamDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<TeamDetails>(path, CancellationToken.None);
+        ClubDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<ClubDetails>(path, CancellationToken.None);
 
         // Assert
-        TeamDetails details = response.ShouldNotBeNull();
-        TeamMember member = details.Members.Single(m => m.Slug == Constants.TestAthleteSlug);
+        ClubDetails details = response.ShouldNotBeNull();
+        ClubMember member = details.Members.Single(m => m.Slug == Constants.TestAthleteSlug);
         member.ParticipationCount.ShouldBe(3); // BaseSeedSql seeds 3 participations for the test athlete
     }
 }

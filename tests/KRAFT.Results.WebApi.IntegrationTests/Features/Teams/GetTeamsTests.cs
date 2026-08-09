@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
@@ -20,13 +20,13 @@ public sealed class GetTeamsTests(CollectionFixture fixture) : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitle("0")
             .Build();
         await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
 
-        List<TeamSummary>? teams = await _authorizedHttpClient.GetFromJsonAsync<List<TeamSummary>>(Path, CancellationToken.None);
-        TeamSummary team = teams!.First(t => t.ShortTitle == command.TitleShort);
+        List<ClubSummary>? teams = await _authorizedHttpClient.GetFromJsonAsync<List<ClubSummary>>(Path, CancellationToken.None);
+        ClubSummary team = teams!.First(t => t.ShortTitle == command.TitleShort);
         _slug = team.Slug;
     }
 
@@ -66,7 +66,7 @@ public sealed class GetTeamsTests(CollectionFixture fixture) : IAsyncLifetime
         // Arrange
 
         // Act
-        IReadOnlyList<TeamSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamSummary>>(Path, CancellationToken.None);
+        IReadOnlyList<ClubSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<ClubSummary>>(Path, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -78,7 +78,7 @@ public sealed class GetTeamsTests(CollectionFixture fixture) : IAsyncLifetime
         // Arrange
 
         // Act
-        IReadOnlyList<TeamSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamSummary>>(Path, CancellationToken.None);
+        IReadOnlyList<ClubSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<ClubSummary>>(Path, CancellationToken.None);
 
         // Assert
         response!.ShouldContain(x => x.Slug == _slug);
@@ -90,7 +90,7 @@ public sealed class GetTeamsTests(CollectionFixture fixture) : IAsyncLifetime
         // Arrange
 
         // Act
-        IReadOnlyList<TeamSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamSummary>>(Path, CancellationToken.None);
+        IReadOnlyList<ClubSummary>? response = await _unauthorizedHttpClient.GetFromJsonAsync<IReadOnlyList<ClubSummary>>(Path, CancellationToken.None);
 
         // Assert
         response![0].Title.ShouldBe("0");

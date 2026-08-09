@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +6,7 @@ namespace KRAFT.Results.WebApi.Features.Clubs.GetDetails;
 
 internal static class GetClubDetailsEndpoint
 {
-    internal const string Name = "GetTeamDetails";
+    internal const string Name = "GetClubDetails";
 
     internal static RouteGroupBuilder MapGetClubDetailsEndpoint(this RouteGroupBuilder endpoints)
     {
@@ -20,7 +20,7 @@ internal static class GetClubDetailsEndpoint
         .WithName(Name)
         .WithSummary("Gets team details")
         .WithDescription("Gets a single team's details by its slug")
-        .Produces<TeamDetails>()
+        .Produces<ClubDetails>()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 

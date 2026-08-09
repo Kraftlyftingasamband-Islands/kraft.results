@@ -8,7 +8,7 @@
 @using System.Net.Http.Json
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
@@ -31,7 +31,7 @@
 
 @code {
     private sealed record EditTeamData(
-        TeamFormInitialValues InitialValues,
+        ClubFormInitialValues InitialValues,
         IReadOnlyCollection<CountrySummary> Countries);
 
     [Parameter]
@@ -42,7 +42,7 @@
 
     private async Task<EditTeamData?> LoadAsync()
     {
-        TeamDetails? team = await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+        ClubDetails? team = await HttpClient.GetFromJsonAsync<ClubDetails>($"/teams/{Slug}");
         IReadOnlyCollection<CountrySummary> countries =
             await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
 
@@ -51,7 +51,7 @@
             return null;
         }
 
-        TeamFormInitialValues initialValues = new(
+        ClubFormInitialValues initialValues = new(
             team.Title,
             team.ShortTitle,
             team.FullTitle,
@@ -60,14 +60,14 @@
         return new EditTeamData(initialValues, countries);
     }
 
-    private async Task HandleSubmit(TeamFormValues values)
+    private async Task HandleSubmit(ClubFormValues values)
     {
         _isLoading = true;
         _errorMessage = null;
 
         try
         {
-            UpdateTeamCommand command = new(
+            UpdateClubCommand command = new(
                 values.Title,
                 values.TitleShort,
                 values.TitleFull,

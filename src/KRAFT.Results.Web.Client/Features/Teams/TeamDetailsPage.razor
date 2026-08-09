@@ -1,12 +1,12 @@
 @page "/teams/{slug}"
 
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-<DataLoader T="TeamDetails" Loader="LoadAsync" Noun="félag">
+<DataLoader T="ClubDetails" Loader="LoadAsync" Noun="félag">
     <ChildContent Context="team">
         <div class="page-header">
             <div class="team-detail-header">
@@ -41,7 +41,7 @@
         @if (team.Members is { Count: > 0 } members)
         {
             <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
-                @foreach (TeamMember member in members)
+                @foreach (ClubMember member in members)
                 {
                     <Card Clickable="true">
                         <a href="@($"/athletes/{member.Slug}")" aria-hidden="true" tabindex="-1"></a>
@@ -90,9 +90,9 @@
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    private async Task<TeamDetails?> LoadAsync()
+    private async Task<ClubDetails?> LoadAsync()
     {
-        return await HttpClient.GetFromJsonAsync<TeamDetails>($"/teams/{Slug}");
+        return await HttpClient.GetFromJsonAsync<ClubDetails>($"/teams/{Slug}");
     }
 
     private async Task ShowDeleteDialog()

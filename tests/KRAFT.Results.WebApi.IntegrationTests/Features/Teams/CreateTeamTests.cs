@@ -2,7 +2,7 @@
 using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
@@ -23,7 +23,7 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     public async Task ReturnsCreated_WhenSuccessful()
     {
         // Arrange
-        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
+        CreateClubCommand command = new CreateClubCommandBuilder().Build();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
@@ -36,7 +36,7 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
-        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
+        CreateClubCommand command = new CreateClubCommandBuilder().Build();
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
@@ -49,7 +49,7 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     public async Task ReturnsUnauthorized_WhenHttpClientIsUnauthorized()
     {
         // Arrange
-        CreateTeamCommand command = new CreateTeamCommandBuilder().Build();
+        CreateClubCommand command = new CreateClubCommandBuilder().Build();
 
         // Act
         HttpResponseMessage response = await _unauthorizedHttpClient.PostAsJsonAsync(Path, command, CancellationToken.None);
@@ -62,7 +62,7 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenTitleIsEmpty()
     {
         // Arrange
-        CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitle(string.Empty)
             .Build();
 
@@ -77,7 +77,7 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenFullTitleIsEmpty()
     {
         // Arrange
-        CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitleFull(string.Empty)
             .Build();
 
@@ -95,7 +95,7 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenShortTitleIsInvalid(string value)
     {
         // Arrange
-        CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitleShort(value)
             .Build();
 
@@ -111,10 +111,10 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     {
         // Arrange
         string shortTitle = "ABC";
-        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand firstCommand = new CreateClubCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
-        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand secondCommand = new CreateClubCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
         HttpResponseMessage firstResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
@@ -135,10 +135,10 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     {
         // Arrange
         string title = "Title-" + Guid.NewGuid().ToString()[..8];
-        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand firstCommand = new CreateClubCommandBuilder()
             .WithTitle(title)
             .Build();
-        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand secondCommand = new CreateClubCommandBuilder()
             .WithTitle(title)
             .Build();
         HttpResponseMessage firstResponse = await _authorizedHttpClient.PostAsJsonAsync(Path, firstCommand, CancellationToken.None);
@@ -159,10 +159,10 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     {
         // Arrange
         string title = "Title-" + Guid.NewGuid().ToString()[..8];
-        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand firstCommand = new CreateClubCommandBuilder()
             .WithTitle(title)
             .Build();
-        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand secondCommand = new CreateClubCommandBuilder()
             .WithTitle(title)
             .Build();
 
@@ -181,10 +181,10 @@ public sealed class CreateTeamTests(CollectionFixture fixture)
     {
         // Arrange
         string shortTitle = UniqueShortCode.Next();
-        CreateTeamCommand firstCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand firstCommand = new CreateClubCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
-        CreateTeamCommand secondCommand = new CreateTeamCommandBuilder()
+        CreateClubCommand secondCommand = new CreateClubCommandBuilder()
             .WithTitleShort(shortTitle)
             .Build();
 

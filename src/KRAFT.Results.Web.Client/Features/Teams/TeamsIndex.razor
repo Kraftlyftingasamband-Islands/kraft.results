@@ -1,6 +1,6 @@
 @page "/teams"
 
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 @using Microsoft.AspNetCore.Components.Routing
 
@@ -9,10 +9,10 @@
 
 <PageHeader Title="Félög" ActionHref="/teams/create" ActionLabel="Stofna félag" />
 
-<DataLoader T="IReadOnlyCollection<TeamSummary>" Loader="LoadAsync" Noun="félög">
+<DataLoader T="IReadOnlyCollection<ClubSummary>" Loader="LoadAsync" Noun="félög">
     <ChildContent Context="context">
         <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
-            @foreach (TeamSummary team in context)
+            @foreach (ClubSummary team in context)
             {
                 <Card Clickable="true">
                     <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
@@ -34,8 +34,8 @@
 </DataLoader>
 
 @code {
-    private async Task<IReadOnlyCollection<TeamSummary>?> LoadAsync()
+    private async Task<IReadOnlyCollection<ClubSummary>?> LoadAsync()
     {
-        return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamSummary>>("/teams");
+        return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubSummary>>("/teams");
     }
 }

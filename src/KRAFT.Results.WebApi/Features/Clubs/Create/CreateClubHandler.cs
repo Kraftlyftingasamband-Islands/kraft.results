@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
@@ -22,7 +22,7 @@ internal sealed class CreateClubHandler
         _httpContextService = httpContextService;
     }
 
-    public async Task<Result<int>> Handle(CreateTeamCommand command, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateClubCommand command, CancellationToken cancellationToken)
     {
         Result<User> creatorResult = await _dbContext.GetUserAsync(_httpContextService, cancellationToken);
 

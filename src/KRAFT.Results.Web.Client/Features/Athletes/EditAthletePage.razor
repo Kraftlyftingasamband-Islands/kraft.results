@@ -7,7 +7,7 @@
 @using System.Net
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
@@ -33,7 +33,7 @@
     private sealed record EditAthleteData(
         AthleteFormInitialValues InitialValues,
         IReadOnlyCollection<CountrySummary> Countries,
-        IReadOnlyCollection<TeamOption> Teams);
+        IReadOnlyCollection<ClubOption> Teams);
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -47,8 +47,8 @@
             HttpClient.GetFromJsonAsync<AthleteEditDetails>($"/athletes/{Slug}/edit");
         Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
-        Task<IReadOnlyCollection<TeamOption>?> teamsTask =
-            HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamOption>>("/teams/options");
+        Task<IReadOnlyCollection<ClubOption>?> teamsTask =
+            HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubOption>>("/teams/options");
 
         await Task.WhenAll(athleteTask, countriesTask, teamsTask);
 
@@ -60,7 +60,7 @@
         }
 
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
-        IReadOnlyCollection<TeamOption> teams = await teamsTask ?? [];
+        IReadOnlyCollection<ClubOption> teams = await teamsTask ?? [];
 
         AthleteFormInitialValues initialValues = new(
             athlete.FirstName,

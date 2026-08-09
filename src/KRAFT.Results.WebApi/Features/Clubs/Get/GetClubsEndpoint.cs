@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,14 +14,14 @@ internal static class GetClubsEndpoint
             [FromServices] GetClubsHandler handler,
             CancellationToken cancellationToken) =>
         {
-            IReadOnlyList<TeamSummary> result = await handler.Handle(cancellationToken);
+            IReadOnlyList<ClubSummary> result = await handler.Handle(cancellationToken);
 
             return result;
         })
         .WithName(Name)
         .WithSummary("Gets teams")
         .WithDescription("Gets a list of all teams")
-        .Produces<IReadOnlyList<TeamSummary>>()
+        .Produces<IReadOnlyList<ClubSummary>>()
         .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return endpoints;

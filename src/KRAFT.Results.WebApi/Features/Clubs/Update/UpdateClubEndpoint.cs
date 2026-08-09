@@ -1,5 +1,5 @@
 using KRAFT.Results.Contracts;
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users;
 
@@ -15,7 +15,7 @@ internal static class UpdateClubEndpoint
     {
         endpoints.MapPut("/{slug}", static async (
             [FromRoute] string slug,
-            [FromBody] UpdateTeamCommand command,
+            [FromBody] UpdateClubCommand command,
             [FromServices] UpdateClubHandler handler,
             CancellationToken cancellationToken) =>
         {

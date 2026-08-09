@@ -5,7 +5,7 @@ using AngleSharp.Dom;
 
 using Bunit;
 
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Web.Client.Features.Teams;
 
 using Microsoft.Extensions.Configuration;
@@ -25,7 +25,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsLoadingStateInitially()
     {
         // Arrange
-        RegisterHttpClient(new TeamDetails("thor", "Þór", "Þór", "Þór IF", "ISL", null, []), delay: true);
+        RegisterHttpClient(new ClubDetails("thor", "Þór", "Þór", "Þór IF", "ISL", null, []), delay: true);
 
         // Act
         IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
@@ -77,7 +77,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsTeamTitle_WhenLoaded()
     {
         // Arrange
-        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
+        ClubDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
         RegisterHttpClient(team);
 
         // Act
@@ -95,14 +95,14 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsMemberCards_WhenTeamHasMembers()
     {
         // Arrange
-        TeamDetails team = new(
+        ClubDetails team = new(
             "thor",
             "Þór IF",
             "Þór",
             "Þór IF",
             "ISL",
             null,
-            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5, null)]);
+            [new ClubMember("jon-jonsson", "Jon Jonsson", 1990, 5, null)]);
         RegisterHttpClient(team);
 
         // Act
@@ -123,7 +123,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void ShowsEmptyMembersMessage_WhenTeamHasNoMembers()
     {
         // Arrange
-        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
+        ClubDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
         RegisterHttpClient(team);
 
         // Act
@@ -142,7 +142,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void RendersLogoImg_WhenTeamHasLogo()
     {
         // Arrange
-        TeamDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", "thor.png", []);
+        ClubDetails team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", "thor.png", []);
         RegisterHttpClient(team);
 
         // Act
@@ -163,7 +163,7 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void RendersSvgPlaceholder_WhenTeamHasNoLogo()
     {
         // Arrange
-        TeamDetails team = new("kr", "KR", "KR", "Kraftlyftingafélag Reykjavíkur", "ISL", null, []);
+        ClubDetails team = new("kr", "KR", "KR", "Kraftlyftingafélag Reykjavíkur", "ISL", null, []);
         RegisterHttpClient(team);
 
         // Act
@@ -182,14 +182,14 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void RendersMemberPhotoImg_WhenMemberHasProfileImage()
     {
         // Arrange
-        TeamDetails team = new(
+        ClubDetails team = new(
             "thor",
             "Þór IF",
             "Þór",
             "Þór IF",
             "ISL",
             null,
-            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5, "jon.jpg")]);
+            [new ClubMember("jon-jonsson", "Jon Jonsson", 1990, 5, "jon.jpg")]);
         RegisterHttpClient(team);
 
         // Act
@@ -208,14 +208,14 @@ public sealed class TeamDetailsPageTests : IDisposable
     public void RendersMemberPhotoPlaceholder_WhenMemberHasNoProfileImage()
     {
         // Arrange
-        TeamDetails team = new(
+        ClubDetails team = new(
             "thor",
             "Þór IF",
             "Þór",
             "Þór IF",
             "ISL",
             null,
-            [new TeamMember("jon-jonsson", "Jon Jonsson", 1990, 5, null)]);
+            [new ClubMember("jon-jonsson", "Jon Jonsson", 1990, 5, null)]);
         RegisterHttpClient(team);
 
         // Act
@@ -236,9 +236,9 @@ public sealed class TeamDetailsPageTests : IDisposable
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
-    private void RegisterHttpClient(TeamDetails team, bool delay = false)
+    private void RegisterHttpClient(ClubDetails team, bool delay = false)
     {
-        TeamDetailsPageMockHandler handler = new(team, delay);
+        ClubDetailsPageMockHandler handler = new(team, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         RegisterConfiguration();
@@ -276,7 +276,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         _context.Services.AddSingleton(configuration);
     }
 
-    private sealed class TeamDetailsPageMockHandler(TeamDetails team, bool delay = false) : HttpMessageHandler
+    private sealed class ClubDetailsPageMockHandler(ClubDetails team, bool delay = false) : HttpMessageHandler
     {
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

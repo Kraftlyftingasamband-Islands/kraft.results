@@ -1,6 +1,6 @@
-﻿namespace KRAFT.Results.Contracts.Teams;
+namespace KRAFT.Results.Contracts.Clubs;
 
-public sealed record class TeamSummary(
+public sealed record class ClubSummary(
     string Slug,
     string Title,
     string ShortTitle,

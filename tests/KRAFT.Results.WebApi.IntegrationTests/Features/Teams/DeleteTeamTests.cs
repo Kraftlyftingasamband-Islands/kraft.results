@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
@@ -99,7 +99,7 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
 
     private async Task<(string Slug, int TeamId)> CreateTeamWithIdAsync()
     {
-        CreateTeamCommand createCommand = new CreateTeamCommandBuilder().Build();
+        CreateClubCommand createCommand = new CreateClubCommandBuilder().Build();
         HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
         createResponse.EnsureSuccessStatusCode();
 
@@ -107,8 +107,8 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
         location.ShouldNotBeNull();
         int teamId = int.Parse(location.TrimStart('/'), System.Globalization.CultureInfo.InvariantCulture);
 
-        List<TeamSummary>? teams = await _authorizedHttpClient.GetFromJsonAsync<List<TeamSummary>>(BasePath, CancellationToken.None);
-        TeamSummary team = teams!.First(t => t.ShortTitle == createCommand.TitleShort);
+        List<ClubSummary>? teams = await _authorizedHttpClient.GetFromJsonAsync<List<ClubSummary>>(BasePath, CancellationToken.None);
+        ClubSummary team = teams!.First(t => t.ShortTitle == createCommand.TitleShort);
 
         return (team.Slug, teamId);
     }

@@ -1,10 +1,10 @@
-﻿namespace KRAFT.Results.Contracts.Teams;
+namespace KRAFT.Results.Contracts.Clubs;
 
-public sealed record class TeamDetails(
+public sealed record class ClubDetails(
     string Slug,
     string Title,
     string ShortTitle,
     string FullTitle,
     string CountryCode,
     string? LogoImageFilename,
-    IReadOnlyList<TeamMember> Members);
+    IReadOnlyList<ClubMember> Members);

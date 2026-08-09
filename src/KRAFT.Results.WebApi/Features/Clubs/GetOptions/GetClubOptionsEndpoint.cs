@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +6,7 @@ namespace KRAFT.Results.WebApi.Features.Clubs.GetOptions;
 
 internal static class GetClubOptionsEndpoint
 {
-    internal const string Name = "GetTeamOptions";
+    internal const string Name = "GetClubOptions";
 
     internal static RouteGroupBuilder MapGetClubOptionsEndpoint(this RouteGroupBuilder endpoints)
     {
@@ -14,14 +14,14 @@ internal static class GetClubOptionsEndpoint
             [FromServices] GetClubOptionsHandler handler,
             CancellationToken cancellationToken) =>
         {
-            IReadOnlyList<TeamOption> result = await handler.Handle(cancellationToken);
+            IReadOnlyList<ClubOption> result = await handler.Handle(cancellationToken);
 
             return result;
         })
         .WithName(Name)
         .WithSummary("Gets team options")
         .WithDescription("Gets a list of all teams as id/title pairs for dropdowns")
-        .Produces<IReadOnlyList<TeamOption>>()
+        .Produces<IReadOnlyList<ClubOption>>()
         .ProducesProblem(StatusCodes.Status500InternalServerError)
         .RequireAuthorization();
 

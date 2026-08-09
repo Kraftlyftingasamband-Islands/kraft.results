@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
@@ -432,7 +433,7 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
 
     private async Task<int> CreateTeamAsync(string title, string titleShort)
     {
-        Contracts.Teams.CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitle(title)
             .WithTitleShort(titleShort)
             .WithTitleFull(title)

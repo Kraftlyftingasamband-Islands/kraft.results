@@ -9,7 +9,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
@@ -33,7 +33,7 @@
 @code {
     private sealed record CreateAthleteData(
         IReadOnlyCollection<CountrySummary> Countries,
-        IReadOnlyCollection<TeamOption> Teams);
+        IReadOnlyCollection<ClubOption> Teams);
 
     private bool _isLoading;
     private string? _errorMessage;
@@ -42,13 +42,13 @@
     {
         Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
-        Task<IReadOnlyCollection<TeamOption>?> teamsTask =
-            HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamOption>>("/teams/options");
+        Task<IReadOnlyCollection<ClubOption>?> teamsTask =
+            HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubOption>>("/teams/options");
 
         await Task.WhenAll(countriesTask, teamsTask);
 
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
-        IReadOnlyCollection<TeamOption> teams = await teamsTask ?? [];
+        IReadOnlyCollection<ClubOption> teams = await teamsTask ?? [];
 
         if (countries.Count == 0)
         {

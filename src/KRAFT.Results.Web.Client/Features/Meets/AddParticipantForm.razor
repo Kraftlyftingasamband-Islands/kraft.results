@@ -1,7 +1,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Meets
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 
 @inject HttpClient HttpClient
 
@@ -196,8 +196,8 @@
     private IReadOnlyList<string> _eligibleAgeCategorySlugs = [];
     private string _selectedAgeCategorySlug = string.Empty;
 
-    private List<TeamOption> _teams = [];
-    private List<TeamOption> _filteredTeams = [];
+    private List<ClubOption> _teams = [];
+    private List<ClubOption> _filteredTeams = [];
     private string _teamSearchText = string.Empty;
     private int? _selectedClubId;
     private bool _showTeamDropdown;
@@ -263,7 +263,7 @@
     {
         try
         {
-            _teams = await HttpClient.GetFromJsonAsync<List<TeamOption>>("/teams/options") ?? [];
+            _teams = await HttpClient.GetFromJsonAsync<List<ClubOption>>("/teams/options") ?? [];
         }
         catch (HttpRequestException)
         {
@@ -418,7 +418,7 @@
             .ToList();
     }
 
-    private void SelectTeam(TeamOption team)
+    private void SelectTeam(ClubOption team)
     {
         _selectedClubId = team.Id;
         _teamSearchText = team.Title;
