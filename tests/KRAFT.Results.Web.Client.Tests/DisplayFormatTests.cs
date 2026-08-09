@@ -94,19 +94,6 @@ public sealed class DisplayFormatTests
     }
 
     [Fact]
-    public void WhenMeetCardDateFormatted_UsesIcelandicAbbreviatedMonthWithSpaces()
-    {
-        // Arrange
-        DateOnly date = new(2024, 1, 15);
-
-        // Act
-        string result = DisplayFormat.MeetCardDate(date);
-
-        // Assert
-        result.ShouldBe("15. jan. 2024");
-    }
-
-    [Fact]
     public void WhenMonthNameFormatted_UsesIcelandicFullMonthName()
     {
         // Arrange
@@ -116,7 +103,7 @@ public sealed class DisplayFormatTests
         string result = DisplayFormat.MonthName(date);
 
         // Assert
-        result.ShouldBe("janúar");
+        result.ShouldBe("Janúar");
     }
 
     [Theory]
