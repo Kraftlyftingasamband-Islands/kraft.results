@@ -5,9 +5,9 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.Records;
-using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi;
@@ -151,7 +151,7 @@ internal static class TestDataSeeder
         HttpClient httpClient,
         CancellationToken cancellationToken)
     {
-        CreateTeamCommand command = new(
+        CreateClubCommand command = new(
             Title: TestSeedConstants.Team.Title,
             TitleShort: TestSeedConstants.Team.TitleShort,
             TitleFull: TestSeedConstants.Team.TitleFull,

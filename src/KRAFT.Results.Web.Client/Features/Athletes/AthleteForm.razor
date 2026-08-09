@@ -2,7 +2,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 
 <div class="form-card">
     <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="athlete-form">
@@ -92,7 +92,7 @@
                          @bind-Value="_model.ClubId"
                          disabled="@IsLoading">
                 <option value="0">-- Valfrjálst --</option>
-                @foreach (TeamOption team in Teams)
+                @foreach (ClubOption team in Teams)
                 {
                     <option value="@team.Id">@team.Title</option>
                 }
@@ -121,7 +121,7 @@
     public IReadOnlyCollection<CountrySummary> Countries { get; set; } = [];
 
     [Parameter, EditorRequired]
-    public IReadOnlyCollection<TeamOption> Teams { get; set; } = [];
+    public IReadOnlyCollection<ClubOption> Teams { get; set; } = [];
 
     [Parameter, EditorRequired]
     public EventCallback<AthleteFormValues> OnSubmit { get; set; }

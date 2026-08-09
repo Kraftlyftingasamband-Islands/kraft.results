@@ -8,7 +8,7 @@
 @using System.Net.Http.Json
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
@@ -47,14 +47,14 @@
         return new CreateTeamData(countries);
     }
 
-    private async Task HandleSubmit(TeamFormValues values)
+    private async Task HandleSubmit(ClubFormValues values)
     {
         _isLoading = true;
         _errorMessage = null;
 
         try
         {
-            CreateTeamCommand command = new(
+            CreateClubCommand command = new(
                 values.Title,
                 values.TitleShort,
                 values.TitleFull,

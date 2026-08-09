@@ -1,4 +1,4 @@
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +14,11 @@ internal sealed class GetClubsHandler
         _dbContext = dbContext;
     }
 
-    public Task<List<TeamSummary>> Handle(CancellationToken cancellationToken) =>
+    public Task<List<ClubSummary>> Handle(CancellationToken cancellationToken) =>
         _dbContext.Set<Club>()
         .Where(x => x.Country == Country.Iceland)
         .OrderBy(x => x.Title)
-        .Select(x => new TeamSummary(
+        .Select(x => new ClubSummary(
             x.Slug,
             x.Title,
             x.TitleShort,

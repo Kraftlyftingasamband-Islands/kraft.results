@@ -1,6 +1,6 @@
 @using System.ComponentModel.DataAnnotations
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 
 <div class="form-card">
     <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="team-form">
@@ -87,7 +87,7 @@
     public IReadOnlyCollection<CountrySummary> Countries { get; set; } = [];
 
     [Parameter, EditorRequired]
-    public EventCallback<TeamFormValues> OnSubmit { get; set; }
+    public EventCallback<ClubFormValues> OnSubmit { get; set; }
 
     [Parameter, EditorRequired]
     public bool IsLoading { get; set; }
@@ -102,7 +102,7 @@
     public string BackUrl { get; set; } = string.Empty;
 
     [Parameter]
-    public TeamFormInitialValues? InitialValues { get; set; }
+    public ClubFormInitialValues? InitialValues { get; set; }
 
     private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
@@ -126,7 +126,7 @@
 
     private async Task HandleValidSubmit()
     {
-        TeamFormValues values = new(
+        ClubFormValues values = new(
             _model.Title,
             _model.TitleShort,
             _model.TitleFull,

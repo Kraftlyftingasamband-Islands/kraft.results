@@ -1,8 +1,8 @@
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests.Builders.UpdateTeamCommandBuilderTests;
+namespace KRAFT.Results.WebApi.IntegrationTests.Builders.UpdateClubCommandBuilderTests;
 
 public sealed class Build
 {
@@ -16,7 +16,7 @@ public sealed class Build
         // Act
         for (int i = 0; i < count; i++)
         {
-            UpdateTeamCommand command = new UpdateTeamCommandBuilder().Build();
+            UpdateClubCommand command = new UpdateClubCommandBuilder().Build();
             titleShorts.Add(command.TitleShort);
         }
 

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
@@ -46,7 +46,7 @@ public sealed class GetTeamOptionsTests(CollectionFixture fixture)
         // Arrange
 
         // Act
-        IReadOnlyList<TeamOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
+        IReadOnlyList<ClubOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<ClubOption>>(Path, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -58,7 +58,7 @@ public sealed class GetTeamOptionsTests(CollectionFixture fixture)
         // Arrange
 
         // Act
-        IReadOnlyList<TeamOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
+        IReadOnlyList<ClubOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<ClubOption>>(Path, CancellationToken.None);
 
         // Assert
         response!.ShouldContain(x => x.Id > 0 && !string.IsNullOrEmpty(x.Title));
@@ -70,7 +70,7 @@ public sealed class GetTeamOptionsTests(CollectionFixture fixture)
         // Arrange
 
         // Act
-        IReadOnlyList<TeamOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<TeamOption>>(Path, CancellationToken.None);
+        IReadOnlyList<ClubOption>? response = await _authorizedHttpClient.GetFromJsonAsync<IReadOnlyList<ClubOption>>(Path, CancellationToken.None);
 
         // Assert
         List<string> titles = response!.Select(x => x.Title).ToList();

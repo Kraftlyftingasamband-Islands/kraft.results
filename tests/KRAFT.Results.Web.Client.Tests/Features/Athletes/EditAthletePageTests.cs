@@ -4,8 +4,8 @@ using System.Net.Http.Json;
 using Bunit;
 
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Countries;
-using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Web.Client.Features.Athletes;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -133,7 +133,7 @@ public sealed class EditAthletePageTests : IDisposable
             new("ISL", "Iceland"),
         ];
 
-        private static readonly List<TeamOption> DefaultTeams =
+        private static readonly List<ClubOption> DefaultTeams =
         [
             new(1, "Þór"),
         ];
@@ -173,7 +173,7 @@ public sealed class EditAthletePageTests : IDisposable
     private sealed class NullAthleteHttpMessageHandler : HttpMessageHandler
     {
         private static readonly List<CountrySummary> DefaultCountries = [new("ISL", "Iceland")];
-        private static readonly List<TeamOption> DefaultTeams = [new(1, "Þór")];
+        private static readonly List<ClubOption> DefaultTeams = [new(1, "Þór")];
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

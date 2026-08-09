@@ -2,7 +2,7 @@ using System.Net;
 
 using Bunit;
 
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Web.Client.Features.Teams;
 
 using Microsoft.Extensions.Configuration;
@@ -53,7 +53,7 @@ public sealed class TeamsIndexTests : IDisposable
     public void ShowsTeamCards_WhenTeamsAreLoaded()
     {
         // Arrange
-        List<TeamSummary> teams =
+        List<ClubSummary> teams =
         [
             new("thor", "Þór", "Þór", "thor.png", 12),
             new("kr", "Kraftlyftingafélag Reykjavíkur", "KR", null, 5),
@@ -74,7 +74,7 @@ public sealed class TeamsIndexTests : IDisposable
     public void RendersLogoImg_WhenTeamHasLogoImageFilename()
     {
         // Arrange
-        List<TeamSummary> teams =
+        List<ClubSummary> teams =
         [
             new("thor", "Þór", "Þór", "thor.png", 12),
         ];
@@ -97,7 +97,7 @@ public sealed class TeamsIndexTests : IDisposable
     public void RendersSvgPlaceholder_WhenTeamHasNoLogoImageFilename()
     {
         // Arrange
-        List<TeamSummary> teams =
+        List<ClubSummary> teams =
         [
             new("kr", "KR", "KR", null, 5),
         ];
@@ -120,9 +120,9 @@ public sealed class TeamsIndexTests : IDisposable
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
-    private void RegisterHttpClient(List<TeamSummary> teams, bool delay = false)
+    private void RegisterHttpClient(List<ClubSummary> teams, bool delay = false)
     {
-        MockHttpMessageHandler<TeamSummary> handler = new(teams, delay);
+        MockHttpMessageHandler<ClubSummary> handler = new(teams, delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         RegisterConfiguration();

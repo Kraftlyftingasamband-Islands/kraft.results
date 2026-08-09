@@ -1,5 +1,5 @@
 using KRAFT.Results.Contracts;
-using KRAFT.Results.Contracts.Teams;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.Users;
 
@@ -14,7 +14,7 @@ internal static class CreateClubEndpoint
     internal static RouteGroupBuilder MapCreateClubEndpoint(this RouteGroupBuilder endpoints)
     {
         endpoints.MapPost("/", static async (
-            [FromBody] CreateTeamCommand command,
+            [FromBody] CreateClubCommand command,
             [FromServices] CreateClubHandler handler,
             CancellationToken cancellationToken) =>
         {
