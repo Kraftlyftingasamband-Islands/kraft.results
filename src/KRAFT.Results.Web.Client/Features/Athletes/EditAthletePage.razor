@@ -47,10 +47,10 @@
             HttpClient.GetFromJsonAsync<AthleteEditDetails>($"/athletes/{Slug}/edit");
         Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
-        Task<IReadOnlyCollection<ClubOption>?> teamsTask =
+        Task<IReadOnlyCollection<ClubOption>?> clubsTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubOption>>("/teams/options");
 
-        await Task.WhenAll(athleteTask, countriesTask, teamsTask);
+        await Task.WhenAll(athleteTask, countriesTask, clubsTask);
 
         AthleteEditDetails? athlete = await athleteTask;
 
@@ -60,7 +60,7 @@
         }
 
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
-        IReadOnlyCollection<ClubOption> teams = await teamsTask ?? [];
+        IReadOnlyCollection<ClubOption> clubs = await clubsTask ?? [];
 
         AthleteFormInitialValues initialValues = new(
             athlete.FirstName,
@@ -70,7 +70,7 @@
             athlete.CountryCode,
             athlete.ClubId ?? 0);
 
-        return new EditAthleteData(initialValues, countries, teams);
+        return new EditAthleteData(initialValues, countries, clubs);
     }
 
     private async Task HandleSubmit(AthleteFormValues values)

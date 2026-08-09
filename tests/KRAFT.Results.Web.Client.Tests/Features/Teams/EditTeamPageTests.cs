@@ -5,7 +5,7 @@ using Bunit;
 
 using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Countries;
-using KRAFT.Results.Web.Client.Features.Teams;
+using KRAFT.Results.Web.Client.Features.Clubs;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,7 +24,7 @@ public sealed class EditTeamPageTests : IDisposable
         RegisterHttpClient(delay: true);
 
         // Act
-        IRenderedComponent<EditTeamPage> cut = _context.Render<EditTeamPage>(
+        IRenderedComponent<EditClubPage> cut = _context.Render<EditClubPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -39,7 +39,7 @@ public sealed class EditTeamPageTests : IDisposable
         RegisterNullTeamHttpClient();
 
         // Act
-        IRenderedComponent<EditTeamPage> cut = _context.Render<EditTeamPage>(
+        IRenderedComponent<EditClubPage> cut = _context.Render<EditClubPage>(
             p => p.Add(c => c.Slug, "nonexistent"));
 
         // Assert
@@ -57,7 +57,7 @@ public sealed class EditTeamPageTests : IDisposable
         RegisterFailingHttpClient();
 
         // Act
-        IRenderedComponent<EditTeamPage> cut = _context.Render<EditTeamPage>(
+        IRenderedComponent<EditClubPage> cut = _context.Render<EditClubPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -75,7 +75,7 @@ public sealed class EditTeamPageTests : IDisposable
         RegisterHttpClient();
 
         // Act
-        IRenderedComponent<EditTeamPage> cut = _context.Render<EditTeamPage>(
+        IRenderedComponent<EditClubPage> cut = _context.Render<EditClubPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert

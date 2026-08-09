@@ -6,7 +6,7 @@ using AngleSharp.Dom;
 using Bunit;
 
 using KRAFT.Results.Contracts.Clubs;
-using KRAFT.Results.Web.Client.Features.Teams;
+using KRAFT.Results.Web.Client.Features.Clubs;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +28,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(new ClubDetails("thor", "Þór", "Þór", "Þór IF", "ISL", null, []), delay: true);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -43,7 +43,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterNullHttpClient();
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "nonexistent"));
 
         // Assert
@@ -62,7 +62,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterFailingHttpClient();
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -81,7 +81,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -106,7 +106,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -127,7 +127,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -146,7 +146,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -167,7 +167,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "kr"));
 
         // Assert
@@ -193,7 +193,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert
@@ -219,7 +219,7 @@ public sealed class TeamDetailsPageTests : IDisposable
         RegisterHttpClient(team);
 
         // Act
-        IRenderedComponent<TeamDetailsPage> cut = _context.Render<TeamDetailsPage>(
+        IRenderedComponent<ClubDetailsPage> cut = _context.Render<ClubDetailsPage>(
             p => p.Add(c => c.Slug, "thor"));
 
         // Assert

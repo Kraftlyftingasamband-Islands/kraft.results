@@ -12,17 +12,17 @@
 <DataLoader T="IReadOnlyCollection<ClubSummary>" Loader="LoadAsync" Noun="félög">
     <ChildContent Context="context">
         <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
-            @foreach (ClubSummary team in context)
+            @foreach (ClubSummary club in context)
             {
                 <Card Clickable="true">
-                    <a href="@($"/teams/{team.Slug}")" aria-label="@team.Title"></a>
+                    <a href="@($"/teams/{club.Slug}")" aria-label="@club.Title"></a>
                     <div class="team-card-content">
-                        <ClubLogo Filename="@team.LogoImageFilename" Size="ClubLogoSize.Medium" />
+                        <ClubLogo Filename="@club.LogoImageFilename" Size="ClubLogoSize.Medium" />
                         <div class="team-card-text">
-                            <div class="team-name">@team.Title</div>
-                            <div class="team-short">@team.ShortTitle</div>
+                            <div class="team-name">@club.Title</div>
+                            <div class="team-short">@club.ShortTitle</div>
                             <div class="team-count">
-                                <span class="count-value">@team.AthleteCount</span>
+                                <span class="count-value">@club.AthleteCount</span>
                                 <span class="count-label">meðlimir</span>
                             </div>
                         </div>

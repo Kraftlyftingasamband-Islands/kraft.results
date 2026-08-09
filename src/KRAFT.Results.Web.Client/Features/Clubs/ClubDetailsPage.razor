@@ -72,10 +72,10 @@
         }
 
         <ConfirmDialog @ref="_deleteDialog"
-                       Id="delete-team-dialog"
-                       Title="Eyða liði"
-                       Message="@($"Ertu viss um að þú viljir eyða liðinu \"{team.FullTitle}\"?")"
-                       ConfirmLabel="Eyða liði"
+                       Id="delete-club-dialog"
+                       Title="Eyða félagi"
+                       Message="@($"Ertu viss um að þú viljir eyða félaginu \"{team.FullTitle}\"?")"
+                       ConfirmLabel="Eyða félagi"
                        OnConfirm="HandleDelete"
                        ErrorMessage="@_deleteErrorMessage"
                        IsLoading="_isDeleting" />
@@ -112,11 +112,11 @@
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
-                _deleteErrorMessage = "Ekki er hægt að eyða liði sem hefur íþróttafólk skráð.";
+                _deleteErrorMessage = "Ekki er hægt að eyða félagi sem hefur íþróttafólk skráð.";
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _deleteErrorMessage = "Lið fannst ekki.";
+                _deleteErrorMessage = "Félag fannst ekki.";
             }
             else if (!response.IsSuccessStatusCode)
             {

@@ -3,7 +3,7 @@ using System.Net;
 using Bunit;
 
 using KRAFT.Results.Contracts.Clubs;
-using KRAFT.Results.Web.Client.Features.Teams;
+using KRAFT.Results.Web.Client.Features.Clubs;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +25,7 @@ public sealed class TeamsIndexTests : IDisposable
         RegisterHttpClient([], delay: true);
 
         // Act
-        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+        IRenderedComponent<ClubsIndex> cut = _context.Render<ClubsIndex>();
 
         // Assert
         cut.Find("[role='status']").ShouldNotBeNull();
@@ -39,7 +39,7 @@ public sealed class TeamsIndexTests : IDisposable
         RegisterFailingHttpClient();
 
         // Act
-        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+        IRenderedComponent<ClubsIndex> cut = _context.Render<ClubsIndex>();
 
         // Assert
         cut.WaitForAssertion(() =>
@@ -61,7 +61,7 @@ public sealed class TeamsIndexTests : IDisposable
         RegisterHttpClient(teams);
 
         // Act
-        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+        IRenderedComponent<ClubsIndex> cut = _context.Render<ClubsIndex>();
 
         // Assert
         cut.WaitForAssertion(() =>
@@ -81,7 +81,7 @@ public sealed class TeamsIndexTests : IDisposable
         RegisterHttpClient(teams);
 
         // Act
-        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+        IRenderedComponent<ClubsIndex> cut = _context.Render<ClubsIndex>();
 
         // Assert
         cut.WaitForAssertion(() =>
@@ -104,7 +104,7 @@ public sealed class TeamsIndexTests : IDisposable
         RegisterHttpClient(teams);
 
         // Act
-        IRenderedComponent<TeamsIndex> cut = _context.Render<TeamsIndex>();
+        IRenderedComponent<ClubsIndex> cut = _context.Render<ClubsIndex>();
 
         // Assert
         cut.WaitForAssertion(() =>
