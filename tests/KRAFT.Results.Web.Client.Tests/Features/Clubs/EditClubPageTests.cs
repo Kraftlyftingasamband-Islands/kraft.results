@@ -11,9 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
-namespace KRAFT.Results.Web.Client.Tests.Features.Teams;
+namespace KRAFT.Results.Web.Client.Tests.Features.Clubs;
 
-public sealed class EditTeamPageTests : IDisposable
+public sealed class EditClubPageTests : IDisposable
 {
     private readonly BunitContext _context = new();
 
@@ -36,7 +36,7 @@ public sealed class EditTeamPageTests : IDisposable
     public void ShowsNotFoundMessage_WhenTeamReturnsNull()
     {
         // Arrange
-        RegisterNullTeamHttpClient();
+        RegisterNullClubHttpClient();
 
         // Act
         IRenderedComponent<EditClubPage> cut = _context.Render<EditClubPage>(
@@ -93,16 +93,16 @@ public sealed class EditTeamPageTests : IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
     private void RegisterHttpClient(bool delay = false)
     {
-        EditTeamPageMockHandler handler = new(delay);
+        EditClubPageMockHandler handler = new(delay);
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         _context.AddAuthorization();
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "HttpClient lifetime is managed by the DI container.")]
-    private void RegisterNullTeamHttpClient()
+    private void RegisterNullClubHttpClient()
     {
-        NullTeamHttpMessageHandler handler = new();
+        NullClubHttpMessageHandler handler = new();
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
         _context.AddAuthorization();
@@ -117,7 +117,7 @@ public sealed class EditTeamPageTests : IDisposable
         _context.AddAuthorization();
     }
 
-    private sealed class EditTeamPageMockHandler(bool delay = false) : HttpMessageHandler
+    private sealed class EditClubPageMockHandler(bool delay = false) : HttpMessageHandler
     {
         private readonly ClubDetails _team = new("thor", "Þór IF", "Þór", "Þór IF", "ISL", null, []);
 
@@ -147,7 +147,7 @@ public sealed class EditTeamPageTests : IDisposable
         }
     }
 
-    private sealed class NullTeamHttpMessageHandler : HttpMessageHandler
+    private sealed class NullClubHttpMessageHandler : HttpMessageHandler
     {
         private readonly List<CountrySummary> _countries = [new("ISL", "Iceland")];
 

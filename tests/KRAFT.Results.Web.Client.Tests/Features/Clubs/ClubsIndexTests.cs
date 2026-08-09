@@ -10,11 +10,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Shouldly;
 
-namespace KRAFT.Results.Web.Client.Tests.Features.Teams;
+namespace KRAFT.Results.Web.Client.Tests.Features.Clubs;
 
-public sealed class TeamsIndexTests : IDisposable
+public sealed class ClubsIndexTests : IDisposable
 {
-    private const string TeamLogoBaseUrl = "https://example.blob.core.windows.net/images";
+    private const string ClubLogoBaseUrl = "https://example.blob.core.windows.net/images";
 
     private readonly BunitContext _context = new();
 
@@ -87,7 +87,7 @@ public sealed class TeamsIndexTests : IDisposable
         cut.WaitForAssertion(() =>
         {
             AngleSharp.Dom.IElement img = cut.Find(".team-logo img");
-            img.GetAttribute("src").ShouldBe($"{TeamLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
+            img.GetAttribute("src").ShouldBe($"{ClubLogoBaseUrl}/thor.png?width=64&height=64&crop=auto");
             img.GetAttribute("alt").ShouldBe(string.Empty);
             img.GetAttribute("loading").ShouldBe("lazy");
         });
@@ -144,7 +144,7 @@ public sealed class TeamsIndexTests : IDisposable
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ImageBaseUrl"] = TeamLogoBaseUrl,
+                ["ImageBaseUrl"] = ClubLogoBaseUrl,
             })
             .Build();
         _context.Services.AddSingleton(configuration);
