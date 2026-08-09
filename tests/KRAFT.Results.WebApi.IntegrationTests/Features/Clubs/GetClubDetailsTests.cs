@@ -7,10 +7,10 @@ using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
+namespace KRAFT.Results.WebApi.IntegrationTests.Features.Clubs;
 
-[Collection(nameof(TeamsCollection))]
-public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifetime
+[Collection(nameof(ClubsCollection))]
+public sealed class GetClubDetailsTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const string BasePath = "/teams";
 
@@ -103,7 +103,7 @@ public sealed class GetTeamDetailsTests(CollectionFixture fixture) : IAsyncLifet
     {
         // Arrange
         // Uses the shared seed team which has a pre-seeded athlete with participations
-        string path = $"{BasePath}/{Constants.TestTeamSlug}";
+        string path = $"{BasePath}/{Constants.TestClubSlug}";
 
         // Act
         ClubDetails? response = await _unauthorizedHttpClient.GetFromJsonAsync<ClubDetails>(path, CancellationToken.None);

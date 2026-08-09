@@ -4,7 +4,7 @@ namespace KRAFT.Results.Tests.Shared;
 /// Returns raw SQL strings for seeding base test data.
 /// Methods must be called in FK-safe order:
 /// <see cref="SeedUsersAndRoles"/>
-/// → <see cref="SeedTeam"/> → <see cref="SeedAthlete"/> → <see cref="SeedAgeCategories"/>
+/// → <see cref="SeedClub"/> → <see cref="SeedAthlete"/> → <see cref="SeedAgeCategories"/>
 /// → <see cref="SeedWeightCategories"/> → <see cref="SeedEras"/> → <see cref="SeedEraWeightCategories"/>
 /// → <see cref="SeedMeet"/> → <see cref="SeedBaseParticipations"/> → <see cref="SeedBaseAttempts"/>
 /// → <see cref="SeedBaseRecords"/>.
@@ -25,11 +25,11 @@ public static class BaseSeedSql
         WHERE u.Username = '{TestSeedConstants.User.Username}';
         """;
 
-    public static string SeedTeam() =>
+    public static string SeedClub() =>
         $"""
         SET IDENTITY_INSERT Teams ON;
         INSERT INTO Teams (TeamId, Title, TitleShort, TitleFull, CountryCode, Slug)
-        VALUES ({TestSeedConstants.Team.Id}, '{TestSeedConstants.Team.Title}', '{TestSeedConstants.Team.TitleShort}', '{TestSeedConstants.Team.TitleFull}', '{TestSeedConstants.Country.Code}', '{TestSeedConstants.Team.Slug}');
+        VALUES ({TestSeedConstants.Club.Id}, '{TestSeedConstants.Club.Title}', '{TestSeedConstants.Club.TitleShort}', '{TestSeedConstants.Club.TitleFull}', '{TestSeedConstants.Country.Code}', '{TestSeedConstants.Club.Slug}');
         SET IDENTITY_INSERT Teams OFF;
         """;
 
@@ -168,9 +168,9 @@ public static class BaseSeedSql
         SET IDENTITY_INSERT Records OFF;
         """;
 
-    public static string SetAthleteTeamSql() =>
+    public static string SetAthleteClubSql() =>
         $"""
-        UPDATE Athletes SET TeamId = {TestSeedConstants.Team.Id} WHERE AthleteId = {TestSeedConstants.Athlete.Id};
+        UPDATE Athletes SET TeamId = {TestSeedConstants.Club.Id} WHERE AthleteId = {TestSeedConstants.Athlete.Id};
         """;
 
     public static string CleanupSql() =>

@@ -135,7 +135,7 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
         // Assert
         AthleteSummary? seededAthlete = response!.FirstOrDefault(x => x.Slug == TestSeedConstants.Athlete.Slug);
         seededAthlete.ShouldNotBeNull();
-        seededAthlete.Team.ShouldBe(TestSeedConstants.Team.Title);
+        seededAthlete.Team.ShouldBe(TestSeedConstants.Club.Title);
     }
 
     [Fact]

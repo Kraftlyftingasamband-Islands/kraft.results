@@ -108,7 +108,7 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
         const string LogoFilename = "team-logo.png";
 
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Team.Id}");
+            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Club.Id}");
 
         try
         {
@@ -120,16 +120,16 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
             // Assert
             response.ShouldNotBeNull();
             response.ShouldSatisfyAllConditions(
-                () => response.Club.ShouldBe(TestSeedConstants.Team.TitleFull),
-                () => response.ClubShortTitle.ShouldBe(TestSeedConstants.Team.TitleShort),
+                () => response.Club.ShouldBe(TestSeedConstants.Club.TitleFull),
+                () => response.ClubShortTitle.ShouldBe(TestSeedConstants.Club.TitleShort),
                 () => response.ClubLogoImageFilename.ShouldBe(LogoFilename),
-                () => response.ClubSlug.ShouldBe(TestSeedConstants.Team.Slug));
+                () => response.ClubSlug.ShouldBe(TestSeedConstants.Club.Slug));
         }
         finally
         {
             // Restore to NULL so this test's mutation does not bleed into other tests.
             await fixture.ExecuteSqlAsync(
-                $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Team.Id}");
+                $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Club.Id}");
         }
     }
 
@@ -137,7 +137,7 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
     public async Task WhenTeamHasNoLogo_ClubLogoImageFilenameIsNull()
     {
         // Arrange — the seeded team has no logo by default (LogoImageFilename is NULL in seed).
-        // Uses TestSeedConstants.Athlete.Slug because that athlete is pre-assigned to TestSeedConstants.Team.
+        // Uses TestSeedConstants.Athlete.Slug because that athlete is pre-assigned to TestSeedConstants.Club.
         string path = $"{BasePath}/{TestSeedConstants.Athlete.Slug}";
 
         // Act
@@ -146,7 +146,7 @@ public sealed class GetAthleteDetailsTests(CollectionFixture fixture) : IAsyncLi
         // Assert
         response.ShouldNotBeNull();
         response.ShouldSatisfyAllConditions(
-            () => response.ClubShortTitle.ShouldBe(TestSeedConstants.Team.TitleShort),
+            () => response.ClubShortTitle.ShouldBe(TestSeedConstants.Club.TitleShort),
             () => response.ClubLogoImageFilename.ShouldBeNull());
     }
 }

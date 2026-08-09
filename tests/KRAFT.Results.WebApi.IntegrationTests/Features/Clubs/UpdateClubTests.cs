@@ -8,10 +8,10 @@ using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
+namespace KRAFT.Results.WebApi.IntegrationTests.Features.Clubs;
 
-[Collection(nameof(TeamsCollection))]
-public sealed class UpdateTeamTests(CollectionFixture fixture)
+[Collection(nameof(ClubsCollection))]
+public sealed class UpdateClubTests(CollectionFixture fixture)
 {
     private const string BasePath = "/teams";
 
@@ -23,7 +23,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsOk_WhenSuccessful()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         UpdateClubCommand command = new UpdateClubCommandBuilder()
             .WithTitle("Updated Title")
             .Build();
@@ -55,7 +55,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         UpdateClubCommand command = new UpdateClubCommandBuilder().Build();
 
         // Act
@@ -82,7 +82,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenTitleIsEmpty()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         UpdateClubCommand command = new UpdateClubCommandBuilder()
             .WithTitle(string.Empty)
             .Build();
@@ -98,7 +98,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenFullTitleIsEmpty()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         UpdateClubCommand command = new UpdateClubCommandBuilder()
             .WithTitleFull(string.Empty)
             .Build();
@@ -117,7 +117,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenShortTitleIsInvalid(string value)
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         UpdateClubCommand command = new UpdateClubCommandBuilder()
             .WithTitleShort(value)
             .Build();
@@ -133,7 +133,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsBadRequest_WhenCountryCodeIsInvalid()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         UpdateClubCommand command = new UpdateClubCommandBuilder()
             .WithCountryCode("XYZ")
             .Build();
@@ -149,7 +149,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsConflict_WithErrorCode_WhenShortTitleAlreadyExists()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         string shortTitle = "ZZZ";
         CreateClubCommand otherTeam = new CreateClubCommandBuilder()
             .WithTitleShort(shortTitle)
@@ -175,7 +175,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsConflict_WithErrorCode_WhenTitleAlreadyExists()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
         string existingTitle = "Title-" + Guid.NewGuid().ToString()[..8];
         CreateClubCommand otherTeam = new CreateClubCommandBuilder()
             .WithTitle(existingTitle)
@@ -202,7 +202,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     {
         // Arrange
         string ownTitle = "Title-" + Guid.NewGuid().ToString()[..8];
-        string slug = await CreateTeamAsync(ownTitle);
+        string slug = await CreateClubAsync(ownTitle);
         UpdateClubCommand command = new UpdateClubCommandBuilder()
             .WithTitle(ownTitle)
             .Build();
@@ -218,8 +218,8 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsConflict_NotInternalServerError_WhenConcurrentUpdateRacesOnTitle()
     {
         // Arrange — two teams that will both try to adopt a brand-new title simultaneously
-        string slug1 = await CreateTeamAsync();
-        string slug2 = await CreateTeamAsync();
+        string slug1 = await CreateClubAsync();
+        string slug2 = await CreateClubAsync();
         string newTitle = "Title-" + Guid.NewGuid().ToString()[..8];
 
         UpdateClubCommand command1 = new UpdateClubCommandBuilder()
@@ -243,8 +243,8 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
     public async Task ReturnsConflict_NotInternalServerError_WhenConcurrentUpdateRacesOnShortTitle()
     {
         // Arrange — two teams that will both try to adopt the same short title simultaneously
-        string slug1 = await CreateTeamAsync();
-        string slug2 = await CreateTeamAsync();
+        string slug1 = await CreateClubAsync();
+        string slug2 = await CreateClubAsync();
         string newShortTitle = UniqueShortCode.Next();
 
         UpdateClubCommand command1 = new UpdateClubCommandBuilder()
@@ -264,7 +264,7 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         responses.ShouldContain(r => r.StatusCode == HttpStatusCode.Conflict);
     }
 
-    private async Task<string> CreateTeamAsync(string? title = null)
+    private async Task<string> CreateClubAsync(string? title = null)
     {
         CreateClubCommand createCommand = title is null
             ? new CreateClubCommandBuilder().Build()
@@ -272,10 +272,10 @@ public sealed class UpdateTeamTests(CollectionFixture fixture)
         HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
         createResponse.EnsureSuccessStatusCode();
 
-        List<ClubSummary>? teamsResponse = await _authorizedHttpClient.GetFromJsonAsync<List<ClubSummary>>(BasePath, CancellationToken.None);
-        List<ClubSummary> teams = teamsResponse.ShouldNotBeNull();
-        ClubSummary team = teams.First(t => t.ShortTitle == createCommand.TitleShort);
+        List<ClubSummary>? clubsResponse = await _authorizedHttpClient.GetFromJsonAsync<List<ClubSummary>>(BasePath, CancellationToken.None);
+        List<ClubSummary> clubs = clubsResponse.ShouldNotBeNull();
+        ClubSummary club = clubs.First(t => t.ShortTitle == createCommand.TitleShort);
 
-        return team.Slug;
+        return club.Slug;
     }
 }

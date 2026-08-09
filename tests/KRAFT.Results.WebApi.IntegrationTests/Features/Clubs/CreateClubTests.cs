@@ -8,10 +8,10 @@ using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
+namespace KRAFT.Results.WebApi.IntegrationTests.Features.Clubs;
 
-[Collection(nameof(TeamsCollection))]
-public sealed class CreateTeamTests(CollectionFixture fixture)
+[Collection(nameof(ClubsCollection))]
+public sealed class CreateClubTests(CollectionFixture fixture)
 {
     private const string Path = "/teams";
 
