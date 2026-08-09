@@ -224,6 +224,7 @@ public sealed class ParticipationCardTests : IDisposable
         navLink.GetAttribute("title").ShouldBe("Þór");
         AngleSharp.Dom.IElement img = cut.Find(".p-club img");
         img.GetAttribute("alt").ShouldBe("Þór");
+        cut.Find(".p-club .team-logo--sm").ShouldNotBeNull();
     }
 
     [Fact]
@@ -250,6 +251,7 @@ public sealed class ParticipationCardTests : IDisposable
         navLink.GetAttribute("href").ShouldBe("/teams/thor");
         navLink.TextContent.Trim().ShouldContain("Þór");
         cut.FindAll(".p-club img").Count.ShouldBe(0);
+        cut.Find(".p-club .team-logo--sm.team-logo--text").ShouldNotBeNull();
     }
 
     public void Dispose()
