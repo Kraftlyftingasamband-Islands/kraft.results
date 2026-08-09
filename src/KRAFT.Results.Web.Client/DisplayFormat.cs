@@ -24,11 +24,11 @@ public static class DisplayFormat
     public static string MonthYear(DateOnly value) =>
         value.ToString("MMM yyyy", IcelandicCulture);
 
-    public static string MeetCardDate(DateOnly value) =>
-        value.ToString("dd. MMM yyyy", IcelandicCulture);
-
-    public static string MonthName(DateOnly value) =>
-        value.ToString("MMMM", IcelandicCulture);
+    public static string MonthName(DateOnly value)
+    {
+        string name = value.ToString("MMMM", IcelandicCulture);
+        return IcelandicCulture.TextInfo.ToUpper(name[0]) + name[1..];
+    }
 
     /// <summary>
     /// Attempts to parse a weight value from user input.
