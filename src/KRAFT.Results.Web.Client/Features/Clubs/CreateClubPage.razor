@@ -1,4 +1,4 @@
-@page "/teams/{slug}/edit"
+@page "/teams/create"
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -14,50 +14,37 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
-<PageTitle>Breyta félagi</PageTitle>
-<h3>Breyta félagi</h3>
+<PageTitle>Nýtt félag</PageTitle>
+<h3>Nýtt félag</h3>
 
-<DataLoader T="EditTeamData" Loader="LoadAsync" Noun="gögn">
+<DataLoader T="CreateClubData" Loader="LoadAsync" Noun="gögn">
     <ChildContent Context="data">
-        <TeamForm Countries="data.Countries"
+        <ClubForm Countries="data.Countries"
                   OnSubmit="HandleSubmit"
                   IsLoading="_isLoading"
                   ErrorMessage="@_errorMessage"
-                  SubmitLabel="Vista breytingar"
-                  BackUrl="@($"/teams/{Slug}")"
-                  InitialValues="data.InitialValues" />
+                  SubmitLabel="Stofna félag"
+                  BackUrl="/teams" />
     </ChildContent>
 </DataLoader>
 
 @code {
-    private sealed record EditTeamData(
-        ClubFormInitialValues InitialValues,
-        IReadOnlyCollection<CountrySummary> Countries);
-
-    [Parameter]
-    public string Slug { get; set; } = string.Empty;
+    private sealed record CreateClubData(IReadOnlyCollection<CountrySummary> Countries);
 
     private bool _isLoading;
     private string? _errorMessage;
 
-    private async Task<EditTeamData?> LoadAsync()
+    private async Task<CreateClubData?> LoadAsync()
     {
-        ClubDetails? team = await HttpClient.GetFromJsonAsync<ClubDetails>($"/teams/{Slug}");
         IReadOnlyCollection<CountrySummary> countries =
             await HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries") ?? [];
 
-        if (team is null)
+        if (countries.Count == 0)
         {
-            return null;
+            throw new HttpRequestException("Required reference data is unavailable.");
         }
 
-        ClubFormInitialValues initialValues = new(
-            team.Title,
-            team.ShortTitle,
-            team.FullTitle,
-            team.CountryCode);
-
-        return new EditTeamData(initialValues, countries);
+        return new CreateClubData(countries);
     }
 
     private async Task HandleSubmit(ClubFormValues values)
@@ -67,19 +54,13 @@
 
         try
         {
-            UpdateClubCommand command = new(
+            CreateClubCommand command = new(
                 values.Title,
                 values.TitleShort,
                 values.TitleFull,
                 values.CountryCode);
 
-            HttpResponseMessage response = await HttpClient.PutAsJsonAsync($"/teams/{Slug}", command);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                _errorMessage = "Félag fannst ekki.";
-                return;
-            }
+            HttpResponseMessage response = await HttpClient.PostAsJsonAsync("/teams", command);
 
             if (response.StatusCode == HttpStatusCode.Conflict)
             {
@@ -101,7 +82,7 @@
                 return;
             }
 
-            NavigationManager.NavigateTo($"/teams/{Slug}");
+            NavigationManager.NavigateTo("/teams");
         }
         catch (HttpRequestException)
         {

@@ -42,20 +42,20 @@
     {
         Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
-        Task<IReadOnlyCollection<ClubOption>?> teamsTask =
+        Task<IReadOnlyCollection<ClubOption>?> clubsTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubOption>>("/teams/options");
 
-        await Task.WhenAll(countriesTask, teamsTask);
+        await Task.WhenAll(countriesTask, clubsTask);
 
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
-        IReadOnlyCollection<ClubOption> teams = await teamsTask ?? [];
+        IReadOnlyCollection<ClubOption> clubs = await clubsTask ?? [];
 
         if (countries.Count == 0)
         {
             throw new HttpRequestException("Required reference data is unavailable.");
         }
 
-        return new CreateAthleteData(countries, teams);
+        return new CreateAthleteData(countries, clubs);
     }
 
     private async Task HandleSubmit(AthleteFormValues values)

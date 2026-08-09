@@ -3,7 +3,7 @@
 @using KRAFT.Results.Contracts.Clubs
 
 <div class="form-card">
-    <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="team-form">
+    <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="club-form">
         <DataAnnotationsValidator />
 
         <div class="form-field">
@@ -74,13 +74,13 @@
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <ErrorMessage Id="team-form-error" Message="@ErrorMessage" />
+            <ErrorMessage Id="club-form-error" Message="@ErrorMessage" />
         }
     </EditForm>
 </div>
 
 @code {
-    private readonly TeamFormModel _model = new();
+    private readonly ClubFormModel _model = new();
     private bool _initialized;
 
     [Parameter, EditorRequired]
@@ -109,7 +109,7 @@
     private string GetAriaDescribedBy(string fieldErrorId, string? hintId = null)
     {
         string baseIds = hintId is not null ? $"{fieldErrorId} {hintId}" : fieldErrorId;
-        return HasError ? $"{baseIds} team-form-error" : baseIds;
+        return HasError ? $"{baseIds} club-form-error" : baseIds;
     }
 
     protected override void OnParametersSet()
@@ -135,7 +135,7 @@
         await OnSubmit.InvokeAsync(values);
     }
 
-    private sealed class TeamFormModel
+    private sealed class ClubFormModel
     {
         [Required(ErrorMessage = "Nafn er skylda")]
         [MaxLength(50, ErrorMessage = "Nafn má ekki vera lengra en 50 stafir")]

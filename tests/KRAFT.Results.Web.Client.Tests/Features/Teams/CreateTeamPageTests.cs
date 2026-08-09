@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using Bunit;
 
 using KRAFT.Results.Contracts.Countries;
-using KRAFT.Results.Web.Client.Features.Teams;
+using KRAFT.Results.Web.Client.Features.Clubs;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,7 +23,7 @@ public sealed class CreateTeamPageTests : IDisposable
         RegisterHttpClient(delay: true);
 
         // Act
-        IRenderedComponent<CreateTeamPage> cut = _context.Render<CreateTeamPage>();
+        IRenderedComponent<CreateClubPage> cut = _context.Render<CreateClubPage>();
 
         // Assert
         cut.Find("[role='status']").ShouldNotBeNull();
@@ -37,7 +37,7 @@ public sealed class CreateTeamPageTests : IDisposable
         RegisterFailingHttpClient();
 
         // Act
-        IRenderedComponent<CreateTeamPage> cut = _context.Render<CreateTeamPage>();
+        IRenderedComponent<CreateClubPage> cut = _context.Render<CreateClubPage>();
 
         // Assert
         cut.WaitForAssertion(() =>
@@ -54,7 +54,7 @@ public sealed class CreateTeamPageTests : IDisposable
         RegisterHttpClient();
 
         // Act
-        IRenderedComponent<CreateTeamPage> cut = _context.Render<CreateTeamPage>();
+        IRenderedComponent<CreateClubPage> cut = _context.Render<CreateClubPage>();
 
         // Assert
         cut.WaitForAssertion(() =>

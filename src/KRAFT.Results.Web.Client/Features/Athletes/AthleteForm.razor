@@ -92,9 +92,9 @@
                          @bind-Value="_model.ClubId"
                          disabled="@IsLoading">
                 <option value="0">-- Valfrjálst --</option>
-                @foreach (ClubOption team in Teams)
+                @foreach (ClubOption club in Teams)
                 {
-                    <option value="@team.Id">@team.Title</option>
+                    <option value="@club.Id">@club.Title</option>
                 }
             </InputSelect>
             <span id="team-hint" class="form-hint">Valfrjálst</span>
