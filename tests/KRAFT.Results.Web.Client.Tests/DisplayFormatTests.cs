@@ -93,17 +93,19 @@ public sealed class DisplayFormatTests
         result.ShouldBe("mar. 2024");
     }
 
-    [Fact]
-    public void WhenMonthNameFormatted_UsesIcelandicFullMonthName()
+    [Theory]
+    [InlineData(1, "Janúar")]
+    [InlineData(8, "Ágúst")]
+    public void WhenMonthNameFormatted_UsesIcelandicFullMonthName(int month, string expected)
     {
         // Arrange
-        DateOnly date = new(2024, 1, 15);
+        DateOnly date = new(2024, month, 15);
 
         // Act
         string result = DisplayFormat.MonthName(date);
 
         // Assert
-        result.ShouldBe("Janúar");
+        result.ShouldBe(expected);
     }
 
     [Theory]

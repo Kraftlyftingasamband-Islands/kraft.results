@@ -82,7 +82,7 @@ public sealed class UserIndexTests : IDisposable
     }
 
     [Fact]
-    public void ShowsCreatedOnDate_AsddMMyyyyFormat()
+    public void WhenCreatedOnDateRendered_UsesDdMmYyyyFormat()
     {
         // Arrange
         List<UserSummary> users =

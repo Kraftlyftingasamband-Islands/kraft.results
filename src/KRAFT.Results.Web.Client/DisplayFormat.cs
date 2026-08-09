@@ -27,6 +27,12 @@ public static class DisplayFormat
     public static string MonthName(DateOnly value)
     {
         string name = value.ToString("MMMM", IcelandicCulture);
+
+        if (string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
         return IcelandicCulture.TextInfo.ToUpper(name[0]) + name[1..];
     }
 
