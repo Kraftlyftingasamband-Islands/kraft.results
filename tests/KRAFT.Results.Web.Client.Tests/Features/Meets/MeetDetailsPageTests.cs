@@ -160,6 +160,45 @@ public sealed class MeetDetailsPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void ShowsSingleDate_WhenEndDateIsNull()
+    {
+        // Arrange
+        RegisterHttpClient();
+
+        // Act
+        IRenderedComponent<MeetDetailsPage> cut = _context.Render<MeetDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-meet"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string paragraphText = cut.Find("p").TextContent;
+            paragraphText.ShouldContain("15.03.2024");
+            paragraphText.ShouldNotContain(" - ");
+        });
+    }
+
+    [Fact]
+    public void ShowsDateRange_WhenEndDateIsDifferentFromStartDate()
+    {
+        // Arrange
+        RegisterHttpClient(
+            startDate: new DateOnly(2024, 3, 15),
+            endDate: new DateOnly(2024, 3, 16));
+
+        // Act
+        IRenderedComponent<MeetDetailsPage> cut = _context.Render<MeetDetailsPage>(
+            parameters => parameters.Add(p => p.Slug, "test-meet"));
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            string paragraphText = cut.Find("p").TextContent;
+            paragraphText.ShouldContain("15.03.2024 - 16.03.2024");
+        });
+    }
+
     public void Dispose()
     {
         _context.Dispose();
@@ -191,13 +230,17 @@ public sealed class MeetDetailsPageTests : IDisposable
         List<MeetParticipation>? participations = null,
         bool calculatePlaces = false,
         bool delay = false,
-        int photoCount = 0)
+        int photoCount = 0,
+        DateOnly? startDate = null,
+        DateOnly? endDate = null)
     {
         MeetDetailsPageMockHandler handler = new(
             participations ?? [],
             calculatePlaces,
             delay,
-            photoCount);
+            photoCount,
+            startDate,
+            endDate);
 
         HttpClient httpClient = new(handler) { BaseAddress = new Uri("http://localhost") };
         _context.Services.AddSingleton(httpClient);
