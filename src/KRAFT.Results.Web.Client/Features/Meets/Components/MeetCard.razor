@@ -49,7 +49,7 @@
         string equipmentText = DisplayNames.EquipmentType(Meet.IsClassic);
         _pills = [new MetaPill(PillKind.MeetCategory, Meet.Category), new MetaPill(equipmentKind, equipmentText)];
 
-        string dateText = DisplayFormat.MeetCardDate(Meet.StartDate);
+        string dateText = DisplayFormat.Date(Meet.StartDate);
         string locationText = Meet.Location is null ? dateText : $"{dateText} · {Meet.Location}";
 
         if (variant == "meet-card--active")

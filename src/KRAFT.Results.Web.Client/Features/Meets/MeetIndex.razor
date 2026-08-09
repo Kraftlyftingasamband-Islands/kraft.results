@@ -17,7 +17,7 @@
         <div class="content-column">
             @foreach (IGrouping<string, MeetSummary> group in meets.GroupBy(x => DisplayFormat.MonthName(x.StartDate)))
             {
-                <h4>@($"{char.ToUpper(group.Key[0])}{group.Key[1..]}")</h4>
+                <h4>@group.Key</h4>
                 @foreach (MeetSummary meet in group)
                 {
                     <MeetCard @key="meet.Slug" Meet="meet" />

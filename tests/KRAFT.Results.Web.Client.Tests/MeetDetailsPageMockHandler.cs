@@ -10,7 +10,9 @@ internal sealed class MeetDetailsPageMockHandler(
     List<MeetParticipation> participations,
     bool calculatePlaces = false,
     bool delay = false,
-    int photoCount = 0) : HttpMessageHandler
+    int photoCount = 0,
+    DateOnly? startDate = null,
+    DateOnly? endDate = null) : HttpMessageHandler
 {
     private readonly MeetDetails _meet = new(
         MeetId: 1,
@@ -18,8 +20,8 @@ internal sealed class MeetDetailsPageMockHandler(
         Slug: "test-meet",
         Location: "Reykjavík",
         Text: string.Empty,
-        StartDate: new DateOnly(2024, 3, 15),
-        EndDate: null,
+        StartDate: startDate ?? new DateOnly(2024, 3, 15),
+        EndDate: endDate,
         Type: "Powerlifting",
         MeetTypeId: 1,
         ResultMode: "Standard",

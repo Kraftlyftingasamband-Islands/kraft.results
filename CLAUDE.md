@@ -117,11 +117,11 @@ All UI date/number formatting routes through the `DisplayFormat` static helper i
 
 - **Lifted weights** (attempts, records, totals) — one decimal, comma separator, no thousands grouping (`220,5`).
 - **Bodyweight and IPF points** — two decimals, comma separator (`82,50`).
-- **Full dates** — `dd.MM.yyyy` (`15.03.2024`); contextual month variants (`MMM yyyy`, `MMMM`) use explicit is-IS culture for Icelandic month names.
+- **Full dates** — always render as `dd.MM.yyyy` (e.g. `15.03.2024`) via `DisplayFormat.Date`. `DisplayFormat` is the single sanctioned owner of date format strings. The only permitted date variants outside `DisplayFormat.Date` are month-granularity labels: `MMM yyyy` (e.g. `mar. 2024`) and `MMMM` (e.g. `Janúar`, capitalized) — both still routed through `DisplayFormat`. Per-context full-date variants (e.g. the former `dd. MMM yyyy` style used by `MeetCardDate`) are no longer permitted. The convention-scan test `DateFormatConventionTests` in `Web.Client.Tests` mechanically enforces this: it fails when any date-pattern format string appears outside `DisplayFormat.cs`. The only ISO allowlist exceptions are machine-readable sites noted below.
 - **Numeric inputs** — accept both `,` and `.` via `DisplayFormat.TryParseWeight`; display always renders the comma form.
-- **Machine-readable attributes** (`datetime="yyyy-MM-dd"`, date-input `max`) stay ISO 8601 — do not route these through `DisplayFormat`.
+- **Machine-readable attributes** (`datetime="yyyy-MM-dd"`, date-input `max`) stay ISO 8601 and are exempt from `DisplayFormat` routing — these are the allowlisted sites in `DateFormatConventionTests` (`AthleteForm.razor` max attribute, `AddParticipantForm.razor` query string).
 - **Culture pinning** — both hosts pin is-IS: `Web/Program.cs` and `Web.Client/Program.cs` set `CultureInfo.DefaultThreadCurrentCulture` and `CultureInfo.DefaultThreadCurrentUICulture` to `new CultureInfo("is-IS")`. bUnit tests pin is-IS via `TestCulture.cs`.
-- **Deliberate deviation from results.kraft.is** — the live site (source of truth for *values*) renders two decimals for all weights (`125,00`) and hyphenated dates (`01-02-2025`). We intentionally deviate in *presentation only*: one decimal for lifted weights and `dd.MM.yyyy` dates. Values still match the live site. Do not revert this.
+- **Deliberate deviation from results.kraft.is** — the live site (source of truth for *values*) renders two decimals for all weights (`125,00`) and hyphenated dates (`01-02-2025`). We intentionally deviate in *presentation only*: one decimal for lifted weights and `dd.MM.yyyy` dates. Values still match the live site.
 
 ## Code Style
 
