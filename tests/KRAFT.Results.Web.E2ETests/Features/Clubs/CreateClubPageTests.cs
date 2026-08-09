@@ -9,7 +9,7 @@ public class CreateClubPageTests(PlaywrightFixture fixture)
     private readonly PlaywrightFixture _fixture = fixture;
 
     [Fact]
-    public async Task DisplaysCreateTeamForm_WhenLoggedInAsAdmin()
+    public async Task DisplaysCreateClubForm_WhenLoggedInAsAdmin()
     {
         // Arrange
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
@@ -57,7 +57,7 @@ public class CreateClubPageTests(PlaywrightFixture fixture)
     }
 
     [Fact]
-    public async Task DisplaysCreateTeamButton_OnTeamsIndex_WhenLoggedInAsAdmin()
+    public async Task DisplaysCreateClubButton_OnClubsIndex_WhenLoggedInAsAdmin()
     {
         // Arrange
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
@@ -76,7 +76,7 @@ public class CreateClubPageTests(PlaywrightFixture fixture)
     }
 
     [Fact]
-    public async Task NavigatesToCreateTeamPage_WhenButtonClicked()
+    public async Task NavigatesToCreateClubPage_WhenButtonClicked()
     {
         // Arrange
         (IBrowserContext context, IPage page) = await _fixture.NewPageAsync();
