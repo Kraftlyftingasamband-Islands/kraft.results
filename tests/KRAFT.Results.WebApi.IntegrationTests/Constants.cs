@@ -7,7 +7,7 @@ internal static class Constants
     internal const string TestAthleteFirstName = TestSeedConstants.Athlete.FirstName;
     internal const string TestAthleteLastName = TestSeedConstants.Athlete.LastName;
     internal const string TestAthleteSlug = TestSeedConstants.Athlete.Slug;
-    internal const string TestTeamSlug = TestSeedConstants.Team.Slug;
+    internal const string TestClubSlug = TestSeedConstants.Club.Slug;
     internal const string TestCountryName = TestSeedConstants.Country.Name;
     internal static readonly DateOnly TestAthleteDateOfBirth = TestSeedConstants.Athlete.DateOfBirth;
 

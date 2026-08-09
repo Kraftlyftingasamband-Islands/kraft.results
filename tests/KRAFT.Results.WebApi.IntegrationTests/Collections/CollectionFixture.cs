@@ -158,9 +158,9 @@ public sealed class CollectionFixture : IAsyncLifetime
     private static async Task SeedBaseDataAsync(ResultsDbContext dbContext)
     {
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedUsersAndRoles());
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedTeam());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedClub());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAthlete());
-        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SetAthleteTeamSql());
+        await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SetAthleteClubSql());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedAgeCategories());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedWeightCategories());
         await dbContext.Database.ExecuteSqlRawAsync(BaseSeedSql.SeedEras());

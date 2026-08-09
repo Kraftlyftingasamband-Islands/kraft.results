@@ -9,10 +9,10 @@ using KRAFT.Results.WebApi.IntegrationTests.Collections;
 
 using Shouldly;
 
-namespace KRAFT.Results.WebApi.IntegrationTests.Features.Teams;
+namespace KRAFT.Results.WebApi.IntegrationTests.Features.Clubs;
 
-[Collection(nameof(TeamsCollection))]
-public sealed class DeleteTeamTests(CollectionFixture fixture)
+[Collection(nameof(ClubsCollection))]
+public sealed class DeleteClubTests(CollectionFixture fixture)
 {
     private const string BasePath = "/teams";
 
@@ -24,7 +24,7 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
     public async Task ReturnsNoContent_WhenSuccessful()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
 
         // Act
         HttpResponseMessage response = await _authorizedHttpClient.DeleteAsync($"{BasePath}/{slug}", CancellationToken.None);
@@ -50,10 +50,10 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
     public async Task ReturnsConflict_WithErrorCode_WhenTeamHasAthletes()
     {
         // Arrange
-        (string slug, int teamId) = await CreateTeamWithIdAsync();
+        (string slug, int clubId) = await CreateClubWithIdAsync();
 
         CreateAthleteCommand athleteCommand = new CreateAthleteCommandBuilder()
-            .WithClubId(teamId)
+            .WithClubId(clubId)
             .Build();
         HttpResponseMessage athleteResponse = await _authorizedHttpClient.PostAsJsonAsync("/athletes", athleteCommand, CancellationToken.None);
         athleteResponse.EnsureSuccessStatusCode();
@@ -72,7 +72,7 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
     public async Task ReturnsForbidden_WhenUserIsNotAdmin()
     {
         // Arrange
-        string slug = await CreateTeamAsync();
+        string slug = await CreateClubAsync();
 
         // Act
         HttpResponseMessage response = await _nonAdminHttpClient.DeleteAsync($"{BasePath}/{slug}", CancellationToken.None);
@@ -91,13 +91,13 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    private async Task<string> CreateTeamAsync()
+    private async Task<string> CreateClubAsync()
     {
-        (string slug, _) = await CreateTeamWithIdAsync();
+        (string slug, _) = await CreateClubWithIdAsync();
         return slug;
     }
 
-    private async Task<(string Slug, int TeamId)> CreateTeamWithIdAsync()
+    private async Task<(string Slug, int ClubId)> CreateClubWithIdAsync()
     {
         CreateClubCommand createCommand = new CreateClubCommandBuilder().Build();
         HttpResponseMessage createResponse = await _authorizedHttpClient.PostAsJsonAsync(BasePath, createCommand, CancellationToken.None);
@@ -105,11 +105,11 @@ public sealed class DeleteTeamTests(CollectionFixture fixture)
 
         string? location = createResponse.Headers.Location?.ToString();
         location.ShouldNotBeNull();
-        int teamId = int.Parse(location.TrimStart('/'), System.Globalization.CultureInfo.InvariantCulture);
+        int clubId = int.Parse(location.TrimStart('/'), System.Globalization.CultureInfo.InvariantCulture);
 
-        List<ClubSummary>? teams = await _authorizedHttpClient.GetFromJsonAsync<List<ClubSummary>>(BasePath, CancellationToken.None);
-        ClubSummary team = teams!.First(t => t.ShortTitle == createCommand.TitleShort);
+        List<ClubSummary>? clubs = await _authorizedHttpClient.GetFromJsonAsync<List<ClubSummary>>(BasePath, CancellationToken.None);
+        ClubSummary club = clubs!.First(t => t.ShortTitle == createCommand.TitleShort);
 
-        return (team.Slug, teamId);
+        return (club.Slug, clubId);
     }
 }

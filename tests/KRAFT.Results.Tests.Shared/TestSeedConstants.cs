@@ -26,7 +26,7 @@ public static class TestSeedConstants
         public static readonly DateOnly DateOfBirth = new(1985, 7, 2);
     }
 
-    public static class Team
+    public static class Club
     {
         public const int Id = 1;
         public const string Title = "Test team";
