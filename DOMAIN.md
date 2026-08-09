@@ -12,13 +12,13 @@ Domain concepts for KRAFT.Results — a powerlifting competition results managem
 
 ### Club identity fields
 
-A club has a full title and a **short name** (`TitleShort` on the entity). The short name is the display form used in dense contexts such as attempt cards on meet results.
+A club has a full title and a **short name** (`TitleShort` on the entity). The short name is the display form used in dense contexts such as participation cards on meet results.
 
 ### Club logo
 
 A club's logo is **optional** — `LogoImageFilename` holds a blob filename resolved against the configured `ImageBaseUrl` (rendered by the `TeamLogo` component using a pinned legacy image variant — see *Legacy image host*). Display fallback rules:
 
-- **Attempt cards** — logo when available, otherwise the club short name as text. Any unusable logo (missing, unsafe filename, or runtime 404) degrades to the short name.
+- **Participation cards** (`ParticipationCard`, the per-lifter row on meet results) — logo when available, otherwise the club short name as text. Any unusable logo (missing, unsafe filename, or runtime 404) degrades to the short name.
 - **Club-centric views** (clubs index, club details, team-competition standings) — logo shown beside the name; a shield-icon placeholder stands in when no logo exists.
 - **Athlete-centric views** (athlete details header) — the club appears as a secondary identity anchor: logo at athlete-photo height on the header's right edge, linking to the club page; no logo → the club short name as a monogram block in the same slot; no club → the slot is absent entirely. The club's full name remains a text link in the meta row — the logo never replaces the name.
 
