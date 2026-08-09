@@ -59,10 +59,10 @@
                 <NavLink class="p-club"
                          href="@($"/teams/{Participation.ClubSlug}")"
                          title="@Participation.Club">
-                    <TeamLogo Filename="@Participation.ClubLogoImageFilename"
+                    <ClubLogo Filename="@Participation.ClubLogoImageFilename"
                               Alt="@Participation.Club"
                               FallbackText="@Participation.Club"
-                              Size="TeamLogoSize.XSmall" />
+                              Size="ClubLogoSize.XSmall" />
                 </NavLink>
             }
             else

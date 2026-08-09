@@ -23,10 +23,10 @@
                              href="@SlugSanitizer.SlugHref("/teams/", pageData.Athlete.ClubSlug ?? string.Empty)"
                              title="@pageData.Athlete.Club"
                              aria-label="@pageData.Athlete.Club">
-                        <TeamLogo Filename="@pageData.Athlete.ClubLogoImageFilename"
+                        <ClubLogo Filename="@pageData.Athlete.ClubLogoImageFilename"
                                   Alt="@pageData.Athlete.Club"
                                   FallbackText="@pageData.Athlete.ClubShortTitle"
-                                  Size="TeamLogoSize.Large" />
+                                  Size="ClubLogoSize.Large" />
                     </NavLink>
                 }
             </div>
