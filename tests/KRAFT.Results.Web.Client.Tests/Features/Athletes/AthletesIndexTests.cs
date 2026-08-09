@@ -187,7 +187,7 @@ public sealed class AthletesIndexTests : IDisposable
     }
 
     [Fact]
-    public void CardShowsTeam_WhenAthleteHasTeam()
+    public void CardShowsClub_WhenAthleteHasClub()
     {
         // Arrange
         List<AthleteSummary> athletes =
@@ -202,13 +202,13 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            string teamText = cut.Find(".card-grid .card .athlete-team").TextContent.Trim();
-            teamText.ShouldBe("Þór");
+            string clubText = cut.Find(".card-grid .card .athlete-club").TextContent.Trim();
+            clubText.ShouldBe("Þór");
         });
     }
 
     [Fact]
-    public void CardOmitsTeamLine_WhenAthleteHasNoTeam()
+    public void CardOmitsClubLine_WhenAthleteHasNoClub()
     {
         // Arrange
         List<AthleteSummary> athletes =
@@ -223,7 +223,7 @@ public sealed class AthletesIndexTests : IDisposable
         // Assert
         cut.WaitForAssertion(() =>
         {
-            cut.FindAll(".card-grid .card .athlete-team").Count.ShouldBe(0);
+            cut.FindAll(".card-grid .card .athlete-club").Count.ShouldBe(0);
         });
     }
 

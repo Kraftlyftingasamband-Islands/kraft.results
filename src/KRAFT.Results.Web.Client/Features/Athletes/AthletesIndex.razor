@@ -34,9 +34,9 @@
                         <div class="athlete-name">
                             @(athlete.YearOfBirth is null ? athlete.Name : $"{athlete.Name} ({athlete.YearOfBirth})")
                         </div>
-                        @if (athlete.Team is not null)
+                        @if (athlete.Club is not null)
                         {
-                            <div class="athlete-team">@athlete.Team</div>
+                            <div class="athlete-club">@athlete.Club</div>
                         }
                         <div class="athlete-count"
                              role="group"

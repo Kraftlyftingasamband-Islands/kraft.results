@@ -7,4 +7,4 @@ public sealed record class AthleteSummary(
     string? Gender,
     IReadOnlyList<string> EligibleAgeCategorySlugs,
     int ParticipationCount,
-    string? Team);
+    string? Club);
