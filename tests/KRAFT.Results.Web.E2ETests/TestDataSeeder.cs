@@ -241,7 +241,7 @@ internal static class TestDataSeeder
         AddParticipantCommand command = new(
             AthleteSlug: TestSeedConstants.Athlete.Slug,
             BodyWeight: AthleteBodyWeight,
-            TeamId: null,
+            ClubId: null,
             AgeCategorySlug: null);
 
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(

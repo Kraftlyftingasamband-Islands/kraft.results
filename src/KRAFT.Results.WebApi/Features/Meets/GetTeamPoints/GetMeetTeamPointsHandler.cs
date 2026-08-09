@@ -29,10 +29,10 @@ internal sealed class GetMeetTeamPointsHandler(ResultsDbContext dbContext)
         List<TeamPointRow> rows = await dbContext.Set<Participation>()
             .Where(p => p.Meet.Slug == slug)
             .Where(p => !p.Disqualified)
-            .Where(p => p.TeamId != null)
+            .Where(p => p.ClubId != null)
             .Where(p => p.TeamPoints != null && p.TeamPoints > 0)
             .Select(p => new TeamPointRow(
-                p.TeamId!.Value,
+                p.ClubId!.Value,
                 p.Club!.Title,
                 p.Club.TitleShort,
                 p.Club.Slug,

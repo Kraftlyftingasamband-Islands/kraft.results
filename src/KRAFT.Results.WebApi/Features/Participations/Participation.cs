@@ -29,7 +29,7 @@ internal sealed class Participation : AggregateRoot
 
     public int WeightCategoryId { get; private set; }
 
-    public int? TeamId { get; private set; }
+    public int? ClubId { get; private set; }
 
     public int AgeCategoryId { get; private set; }
 
@@ -73,7 +73,7 @@ internal sealed class Participation : AggregateRoot
 
     public WeightCategory WeightCategory { get; private set; } = null!;
 
-    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, int ageCategoryId, decimal bodyWeight, int? teamId = null)
+    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, int ageCategoryId, decimal bodyWeight, int? clubId = null)
     {
         if (athleteId <= 0)
         {
@@ -109,7 +109,7 @@ internal sealed class Participation : AggregateRoot
             WeightCategoryId = weightCategoryId,
             AgeCategoryId = ageCategoryId,
             Weight = bodyWeightResult.FromResult(),
-            TeamId = teamId,
+            ClubId = clubId,
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };

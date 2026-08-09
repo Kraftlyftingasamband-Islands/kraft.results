@@ -56,14 +56,14 @@ internal sealed class AddParticipantHandler
             return new Result<int>(MeetErrors.MeetNotFound);
         }
 
-        if (command.TeamId is not null)
+        if (command.ClubId is not null)
         {
             bool clubExists = await _dbContext.Set<Club>()
-                .AnyAsync(t => t.ClubId == command.TeamId, cancellationToken);
+                .AnyAsync(t => t.ClubId == command.ClubId, cancellationToken);
 
             if (!clubExists)
             {
-                _logger.LogWarning("Club with Id {TeamId} was not found", command.TeamId);
+                _logger.LogWarning("Club with Id {ClubId} was not found", command.ClubId);
                 return new Result<int>(ClubErrors.ClubNotFound);
             }
         }
@@ -126,7 +126,7 @@ internal sealed class AddParticipantHandler
             weightCategory.WeightCategoryId,
             ageCategory!.AgeCategoryId,
             command.BodyWeight,
-            command.TeamId);
+            command.ClubId);
 
         if (participationResult.IsFailure)
         {

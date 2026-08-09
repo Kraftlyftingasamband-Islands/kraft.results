@@ -79,9 +79,12 @@ internal sealed class ParticipationConfiguration : IEntityTypeConfiguration<Part
             .HasForeignKey(d => d.MeetId)
             .HasConstraintName("FK_Participations_Meets");
 
+        builder.Property(e => e.ClubId)
+            .HasColumnName("TeamId");
+
         builder.HasOne(d => d.Club)
             .WithMany(p => p.Participations)
-            .HasForeignKey(d => d.TeamId)
+            .HasForeignKey(d => d.ClubId)
             .OnDelete(DeleteBehavior.Cascade)
             .HasConstraintName("FK_Participations_Teams");
 
