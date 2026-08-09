@@ -58,19 +58,19 @@ internal sealed class CreateAthleteHandler
 
         Country country = countryResult.FromResult();
 
-        Club? club = command.TeamId is int clubId
+        Club? club = command.ClubId is int clubId
             ? await GetClubAsync(clubId, cancellationToken)
             : null;
 
-        if (command.TeamId.HasValue && club is null)
+        if (command.ClubId.HasValue && club is null)
         {
             _logger.LogWarning(
-                "Failed to create athlete {First} {Last}: Club with Id {TeamId} does not exist",
+                "Failed to create athlete {First} {Last}: Club with Id {ClubId} does not exist",
                 command.FirstName,
                 command.LastName,
-                command.TeamId);
+                command.ClubId);
 
-            return ClubErrors.ClubDoesNotExist(command.TeamId.Value);
+            return ClubErrors.ClubDoesNotExist(command.ClubId.Value);
         }
 
         Result<Athlete> result = Athlete.Create(

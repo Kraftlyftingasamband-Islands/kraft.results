@@ -47,7 +47,7 @@ internal sealed partial class DeleteClubHandler
             }
 
             bool hasAthletes = await _dbContext.Set<Athlete>()
-                .AnyAsync(a => a.TeamId == club.ClubId, cancellationToken);
+                .AnyAsync(a => a.ClubId == club.ClubId, cancellationToken);
 
             if (hasAthletes)
             {

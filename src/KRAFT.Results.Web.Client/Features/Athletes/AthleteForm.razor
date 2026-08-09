@@ -89,7 +89,7 @@
             <InputSelect id="team"
                          class="form-input form-select"
                          aria-describedby="@GetAriaDescribedBy("team-hint")"
-                         @bind-Value="_model.TeamId"
+                         @bind-Value="_model.ClubId"
                          disabled="@IsLoading">
                 <option value="0">-- Valfrjálst --</option>
                 @foreach (TeamOption team in Teams)
@@ -158,14 +158,14 @@
             _model.DateOfBirth = InitialValues.DateOfBirth;
             _model.Gender = InitialValues.Gender;
             _model.CountryCode = InitialValues.CountryCode;
-            _model.TeamId = InitialValues.TeamId;
+            _model.ClubId = InitialValues.ClubId;
             _initialized = true;
         }
     }
 
     private async Task HandleValidSubmit()
     {
-        int? teamId = _model.TeamId > 0 ? _model.TeamId : null;
+        int? clubId = _model.ClubId > 0 ? _model.ClubId : null;
 
         AthleteFormValues values = new(
             _model.FirstName,
@@ -173,7 +173,7 @@
             _model.DateOfBirth.GetValueOrDefault(),
             _model.Gender,
             _model.CountryCode,
-            teamId);
+            clubId);
 
         await OnSubmit.InvokeAsync(values);
     }
@@ -198,7 +198,7 @@
         [Required(ErrorMessage = "Vinsamlegast veldu land")]
         public string CountryCode { get; set; } = "ISL";
 
-        public int TeamId { get; set; }
+        public int ClubId { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Property)]

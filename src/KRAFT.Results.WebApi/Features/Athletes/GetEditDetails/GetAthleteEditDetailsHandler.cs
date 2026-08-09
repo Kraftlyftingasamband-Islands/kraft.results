@@ -15,6 +15,6 @@ internal sealed class GetAthleteEditDetailsHandler(ResultsDbContext dbContext)
                 x.DateOfBirth,
                 x.Gender.Value,
                 x.Country.Value,
-                x.TeamId))
+                x.ClubId))
             .FirstOrDefaultAsync(cancellationToken);
 }

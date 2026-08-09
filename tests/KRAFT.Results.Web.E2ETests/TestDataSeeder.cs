@@ -71,9 +71,9 @@ internal static class TestDataSeeder
         string token = await LoginAsync(httpClient, cancellationToken);
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        int teamId = await CreateTeamAsync(httpClient, cancellationToken);
+        int clubId = await CreateTeamAsync(httpClient, cancellationToken);
 
-        await CreateAthleteAsync(httpClient, teamId, cancellationToken);
+        await CreateAthleteAsync(httpClient, clubId, cancellationToken);
 
         string meetSlug = await CreateMeetAsync(
             httpClient,
@@ -169,14 +169,14 @@ internal static class TestDataSeeder
 
     private static async Task CreateAthleteAsync(
         HttpClient httpClient,
-        int teamId,
+        int clubId,
         CancellationToken cancellationToken)
     {
         CreateAthleteCommand command = new(
             FirstName: TestSeedConstants.Athlete.FirstName,
             LastName: TestSeedConstants.Athlete.LastName,
             CountryCode: SeededCountryCode,
-            TeamId: teamId,
+            ClubId: clubId,
             DateOfBirth: TestSeedConstants.Athlete.DateOfBirth,
             Gender: TestSeedConstants.Athlete.Gender);
 

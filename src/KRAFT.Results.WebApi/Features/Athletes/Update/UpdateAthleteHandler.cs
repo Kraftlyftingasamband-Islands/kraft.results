@@ -57,18 +57,18 @@ internal sealed class UpdateAthleteHandler
 
         Country country = countryResult.FromResult();
 
-        Club? club = command.TeamId is int clubId
+        Club? club = command.ClubId is int clubId
             ? await GetClubAsync(clubId, cancellationToken)
             : null;
 
-        if (command.TeamId.HasValue && club is null)
+        if (command.ClubId.HasValue && club is null)
         {
             _logger.LogWarning(
-                "Failed to update athlete {Slug}: Club with Id {TeamId} does not exist",
+                "Failed to update athlete {Slug}: Club with Id {ClubId} does not exist",
                 slug,
-                command.TeamId);
+                command.ClubId);
 
-            return Result.Failure(ClubErrors.ClubDoesNotExist(command.TeamId.Value));
+            return Result.Failure(ClubErrors.ClubDoesNotExist(command.ClubId.Value));
         }
 
         Result result = athlete.Update(

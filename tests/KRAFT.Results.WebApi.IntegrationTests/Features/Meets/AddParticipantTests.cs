@@ -13,7 +13,7 @@ namespace KRAFT.Results.WebApi.IntegrationTests.Features.Meets;
 public sealed class AddParticipantTests(CollectionFixture fixture) : IAsyncLifetime
 {
     private const int NonExistentMeetId = 99999;
-    private const int ExistingTeamId = 1;
+    private const int ExistingClubId = 1;
 
     private readonly HttpClient _authorizedHttpClient = fixture.CreateAuthorizedHttpClient();
     private readonly HttpClient _unauthorizedHttpClient = fixture.Factory!.CreateClient();
@@ -207,7 +207,7 @@ public sealed class AddParticipantTests(CollectionFixture fixture) : IAsyncLifet
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(Constants.TestAthleteSlug)
             .WithBodyWeight(82.5m)
-            .WithTeamId(ExistingTeamId)
+            .WithClubId(ExistingClubId)
             .Build();
 
         // Act

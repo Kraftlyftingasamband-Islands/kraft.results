@@ -62,9 +62,12 @@ internal sealed class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
         builder.Property(e => e.Slug)
             .HasMaxLength(50);
 
+        builder.Property(e => e.ClubId)
+            .HasColumnName("TeamId");
+
         builder.HasOne(d => d.Club)
             .WithMany(p => p.Athletes)
-            .HasForeignKey(d => d.TeamId)
+            .HasForeignKey(d => d.ClubId)
             .HasConstraintName("FK_Athletes_Teams");
 
         builder.HasMany(a => a.Bans)

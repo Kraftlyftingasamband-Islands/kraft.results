@@ -68,7 +68,7 @@
             athlete.DateOfBirth,
             athlete.Gender,
             athlete.CountryCode,
-            athlete.TeamId ?? 0);
+            athlete.ClubId ?? 0);
 
         return new EditAthleteData(initialValues, countries, teams);
     }
@@ -84,7 +84,7 @@
                 values.FirstName,
                 values.LastName,
                 values.CountryCode,
-                values.TeamId,
+                values.ClubId,
                 values.DateOfBirth,
                 values.Gender);
 

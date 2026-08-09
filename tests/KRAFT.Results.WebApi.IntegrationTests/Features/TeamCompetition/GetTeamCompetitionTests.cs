@@ -505,7 +505,7 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(athleteSlug)
             .WithBodyWeight(bodyWeight)
-            .WithTeamId(teamId)
+            .WithClubId(teamId)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(

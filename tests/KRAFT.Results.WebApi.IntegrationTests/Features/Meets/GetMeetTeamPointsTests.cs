@@ -435,7 +435,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(athleteSlug)
             .WithBodyWeight(bodyWeight)
-            .WithTeamId(teamId)
+            .WithClubId(teamId)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(
