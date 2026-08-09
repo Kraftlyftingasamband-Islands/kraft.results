@@ -7,7 +7,7 @@ namespace KRAFT.Results.WebApi.Features.Clubs.Delete;
 
 internal static class DeleteClubEndpoint
 {
-    internal const string Name = "DeleteTeam";
+    internal const string Name = "DeleteClub";
 
     internal static RouteGroupBuilder MapDeleteClubEndpoint(this RouteGroupBuilder endpoints)
     {

@@ -51,6 +51,6 @@ internal static class ClubErrors
         "A club with that title already exists.");
 
     internal static Error ClubDoesNotExist(int id) => new(
-        "Teams.TeamDoesNotExist",
+        "Teams.ClubDoesNotExist",
         $"Club with Id {id} does not exist.");
 }
