@@ -1,6 +1,6 @@
 ﻿using KRAFT.Results.WebApi.Abstractions;
+using KRAFT.Results.WebApi.Features.Clubs;
 using KRAFT.Results.WebApi.Features.Participations;
-using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.ValueObjects;
 
@@ -37,15 +37,15 @@ internal sealed class Athlete : AggregateRoot
 
     public Country Country { get; private set; } = Country.Iceland;
 
-    public int? TeamId { get; private set; }
+    public int? ClubId { get; private set; }
 
-    public Team? Team { get; private set; }
+    public Club? Club { get; private set; }
 
     public ICollection<Participation> Participations { get; } = [];
 
     public ICollection<Ban> Bans { get; } = [];
 
-    internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
+    internal static Result<Athlete> Create(User creator, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Club? club)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -74,7 +74,7 @@ internal sealed class Athlete : AggregateRoot
             Gender = parsedGender,
             DateOfBirth = dateOfBirth,
             Country = country,
-            Team = team,
+            Club = club,
             Slug = ValueObjects.Slug.Create($"{firstName} {lastName}"),
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
@@ -103,7 +103,7 @@ internal sealed class Athlete : AggregateRoot
         return !HasActiveBan(meetDate);
     }
 
-    internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Team? team)
+    internal Result Update(User modifier, string firstName, string lastName, string gender, Country country, DateOnly? dateOfBirth, Club? club)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -131,7 +131,7 @@ internal sealed class Athlete : AggregateRoot
         Gender = parsedGender;
         DateOfBirth = dateOfBirth;
         Country = country;
-        Team = team;
+        Club = club;
         ModifiedOn = DateTime.UtcNow;
         ModifiedBy = modifier.Username;
 

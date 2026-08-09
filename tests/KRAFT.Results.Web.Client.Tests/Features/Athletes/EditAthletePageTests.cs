@@ -4,8 +4,8 @@ using System.Net.Http.Json;
 using Bunit;
 
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Countries;
-using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Web.Client.Features.Athletes;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -126,14 +126,14 @@ public sealed class EditAthletePageTests : IDisposable
             DateOfBirth: new DateOnly(1990, 1, 1),
             Gender: "M",
             CountryCode: "ISL",
-            TeamId: null);
+            ClubId: null);
 
         private static readonly List<CountrySummary> DefaultCountries =
         [
             new("ISL", "Iceland"),
         ];
 
-        private static readonly List<TeamOption> DefaultTeams =
+        private static readonly List<ClubOption> DefaultClubs =
         [
             new(1, "Þór"),
         ];
@@ -159,7 +159,7 @@ public sealed class EditAthletePageTests : IDisposable
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(DefaultTeams),
+                    Content = JsonContent.Create(DefaultClubs),
                 };
             }
 
@@ -173,7 +173,7 @@ public sealed class EditAthletePageTests : IDisposable
     private sealed class NullAthleteHttpMessageHandler : HttpMessageHandler
     {
         private static readonly List<CountrySummary> DefaultCountries = [new("ISL", "Iceland")];
-        private static readonly List<TeamOption> DefaultTeams = [new(1, "Þór")];
+        private static readonly List<ClubOption> DefaultClubs = [new(1, "Þór")];
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -191,7 +191,7 @@ public sealed class EditAthletePageTests : IDisposable
             {
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(DefaultTeams),
+                    Content = JsonContent.Create(DefaultClubs),
                 });
             }
 

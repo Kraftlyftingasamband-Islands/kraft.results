@@ -5,9 +5,9 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.Records;
-using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Contracts.Users;
 using KRAFT.Results.Tests.Shared;
 using KRAFT.Results.WebApi;
@@ -71,9 +71,9 @@ internal static class TestDataSeeder
         string token = await LoginAsync(httpClient, cancellationToken);
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        int teamId = await CreateTeamAsync(httpClient, cancellationToken);
+        int clubId = await CreateClubAsync(httpClient, cancellationToken);
 
-        await CreateAthleteAsync(httpClient, teamId, cancellationToken);
+        await CreateAthleteAsync(httpClient, clubId, cancellationToken);
 
         string meetSlug = await CreateMeetAsync(
             httpClient,
@@ -147,14 +147,14 @@ internal static class TestDataSeeder
         return auth.AccessToken;
     }
 
-    private static async Task<int> CreateTeamAsync(
+    private static async Task<int> CreateClubAsync(
         HttpClient httpClient,
         CancellationToken cancellationToken)
     {
-        CreateTeamCommand command = new(
-            Title: TestSeedConstants.Team.Title,
-            TitleShort: TestSeedConstants.Team.TitleShort,
-            TitleFull: TestSeedConstants.Team.TitleFull,
+        CreateClubCommand command = new(
+            Title: TestSeedConstants.Club.Title,
+            TitleShort: TestSeedConstants.Club.TitleShort,
+            TitleFull: TestSeedConstants.Club.TitleFull,
             CountryCode: SeededCountryCode);
 
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(
@@ -169,14 +169,14 @@ internal static class TestDataSeeder
 
     private static async Task CreateAthleteAsync(
         HttpClient httpClient,
-        int teamId,
+        int clubId,
         CancellationToken cancellationToken)
     {
         CreateAthleteCommand command = new(
             FirstName: TestSeedConstants.Athlete.FirstName,
             LastName: TestSeedConstants.Athlete.LastName,
             CountryCode: SeededCountryCode,
-            TeamId: teamId,
+            ClubId: clubId,
             DateOfBirth: TestSeedConstants.Athlete.DateOfBirth,
             Gender: TestSeedConstants.Athlete.Gender);
 
@@ -241,7 +241,7 @@ internal static class TestDataSeeder
         AddParticipantCommand command = new(
             AthleteSlug: TestSeedConstants.Athlete.Slug,
             BodyWeight: AthleteBodyWeight,
-            TeamId: null,
+            ClubId: null,
             AgeCategorySlug: null);
 
         HttpResponseMessage response = await httpClient.PostAsJsonAsync(

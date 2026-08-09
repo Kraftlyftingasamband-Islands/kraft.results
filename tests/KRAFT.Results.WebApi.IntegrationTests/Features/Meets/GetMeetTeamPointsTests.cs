@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
@@ -50,14 +51,14 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     private readonly string _gammaShortCode = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private readonly List<string> _meetSlugs = [];
-    private readonly List<string> _teamSlugs = [];
+    private readonly List<string> _clubSlugs = [];
 
     private string _alphaTeamName = string.Empty;
     private string _betaTeamName = string.Empty;
     private string _gammaTeamSlug = string.Empty;
-    private int _alphaTeamId;
-    private int _betaTeamId;
-    private int _gammaTeamId;
+    private int _alphaClubId;
+    private int _betaClubId;
+    private int _gammaClubId;
 
     private string _tc2025MeetSlug = string.Empty;
     private string _tc2026MeetSlug = string.Empty;
@@ -65,16 +66,16 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
 
     public async ValueTask InitializeAsync()
     {
-        // Create teams
+        // Create clubs
         _alphaTeamName = $"Alpha{_suffix}";
-        _alphaTeamId = await CreateTeamAsync(_alphaTeamName, _alphaShortCode);
+        _alphaClubId = await CreateClubAsync(_alphaTeamName, _alphaShortCode);
 
         _betaTeamName = $"Beta{_suffix}";
-        _betaTeamId = await CreateTeamAsync(_betaTeamName, _betaShortCode);
+        _betaClubId = await CreateClubAsync(_betaTeamName, _betaShortCode);
 
         string gammaTeamName = $"Gamma{_suffix}";
         _gammaTeamSlug = Slug.Create(gammaTeamName);
-        _gammaTeamId = await CreateTeamAsync(gammaTeamName, _gammaShortCode);
+        _gammaClubId = await CreateClubAsync(gammaTeamName, _gammaShortCode);
 
         // Create 3 meets
         int tc2025MeetId = await CreateMeetAndGetIdAsync(new DateOnly(2025, 6, 1));
@@ -95,13 +96,13 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         string zeroPtsSlug = await CreateAthleteAsync("ZeroPts", "m");
 
         // Add participations for 2025 meet
-        int alphaMalePid = await AddParticipantAsync(tc2025MeetId, alphaMaleSlug, _alphaTeamId);
-        int betaMalePid = await AddParticipantAsync(tc2025MeetId, betaMaleSlug, _betaTeamId);
-        int alphaFemalePid = await AddParticipantAsync(tc2025MeetId, alphaFemaleSlug, _alphaTeamId, 57.0m);
-        int betaFemalePid = await AddParticipantAsync(tc2025MeetId, betaFemaleSlug, _betaTeamId, 57.0m);
-        int dqAlphaMalePid = await AddParticipantAsync(tc2025MeetId, dqAlphaMaleSlug, _alphaTeamId);
-        int noTeamPid = await AddParticipantAsync(tc2025MeetId, noTeamSlug, teamId: null);
-        await AddParticipantAsync(tc2025MeetId, zeroPtsSlug, _gammaTeamId);
+        int alphaMalePid = await AddParticipantAsync(tc2025MeetId, alphaMaleSlug, _alphaClubId);
+        int betaMalePid = await AddParticipantAsync(tc2025MeetId, betaMaleSlug, _betaClubId);
+        int alphaFemalePid = await AddParticipantAsync(tc2025MeetId, alphaFemaleSlug, _alphaClubId, 57.0m);
+        int betaFemalePid = await AddParticipantAsync(tc2025MeetId, betaFemaleSlug, _betaClubId, 57.0m);
+        int dqAlphaMalePid = await AddParticipantAsync(tc2025MeetId, dqAlphaMaleSlug, _alphaClubId);
+        int noTeamPid = await AddParticipantAsync(tc2025MeetId, noTeamSlug, clubId: null);
+        await AddParticipantAsync(tc2025MeetId, zeroPtsSlug, _gammaClubId);
 
         // DQ the dqAlphaMale participant via 3 failed squat attempts → Place=0, TeamPoints=0
         await RecordAttemptAsync(tc2025MeetId, dqAlphaMalePid, Discipline.Squat, 1, 100.0m, good: false);
@@ -130,27 +131,27 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         // Create 6 male athletes for 2026 meet with descending totals → places 1–6 → points 12,9,8,7,6,5
         // Best 5 of 6 points = 12+9+8+7+6 = 42 (ExpectedBestN2026TotalPoints)
         string alpha26M1Slug = await CreateAthleteAsync("Alpha26M1", "m");
-        int alpha26M1Pid = await AddParticipantAsync(tc2026MeetId, alpha26M1Slug, _alphaTeamId);
+        int alpha26M1Pid = await AddParticipantAsync(tc2026MeetId, alpha26M1Slug, _alphaClubId);
         await RecordFullTotalAsync(tc2026MeetId, alpha26M1Pid, 200.0m, 150.0m, 250.0m); // Total=600 → Place 1 → 12pts
 
         string alpha26M2Slug = await CreateAthleteAsync("Alpha26M2", "m");
-        int alpha26M2Pid = await AddParticipantAsync(tc2026MeetId, alpha26M2Slug, _alphaTeamId);
+        int alpha26M2Pid = await AddParticipantAsync(tc2026MeetId, alpha26M2Slug, _alphaClubId);
         await RecordFullTotalAsync(tc2026MeetId, alpha26M2Pid, 190.0m, 140.0m, 220.0m); // Total=550 → Place 2 → 9pts
 
         string alpha26M3Slug = await CreateAthleteAsync("Alpha26M3", "m");
-        int alpha26M3Pid = await AddParticipantAsync(tc2026MeetId, alpha26M3Slug, _alphaTeamId);
+        int alpha26M3Pid = await AddParticipantAsync(tc2026MeetId, alpha26M3Slug, _alphaClubId);
         await RecordFullTotalAsync(tc2026MeetId, alpha26M3Pid, 170.0m, 130.0m, 200.0m); // Total=500 → Place 3 → 8pts
 
         string alpha26M4Slug = await CreateAthleteAsync("Alpha26M4", "m");
-        int alpha26M4Pid = await AddParticipantAsync(tc2026MeetId, alpha26M4Slug, _alphaTeamId);
+        int alpha26M4Pid = await AddParticipantAsync(tc2026MeetId, alpha26M4Slug, _alphaClubId);
         await RecordFullTotalAsync(tc2026MeetId, alpha26M4Pid, 150.0m, 120.0m, 180.0m); // Total=450 → Place 4 → 7pts
 
         string alpha26M5Slug = await CreateAthleteAsync("Alpha26M5", "m");
-        int alpha26M5Pid = await AddParticipantAsync(tc2026MeetId, alpha26M5Slug, _alphaTeamId);
+        int alpha26M5Pid = await AddParticipantAsync(tc2026MeetId, alpha26M5Slug, _alphaClubId);
         await RecordFullTotalAsync(tc2026MeetId, alpha26M5Pid, 135.0m, 110.0m, 155.0m); // Total=400 → Place 5 → 6pts
 
         string alpha26M6Slug = await CreateAthleteAsync("Alpha26M6", "m");
-        int alpha26M6Pid = await AddParticipantAsync(tc2026MeetId, alpha26M6Slug, _alphaTeamId);
+        int alpha26M6Pid = await AddParticipantAsync(tc2026MeetId, alpha26M6Slug, _alphaClubId);
         await RecordFullTotalAsync(tc2026MeetId, alpha26M6Pid, 120.0m, 100.0m, 130.0m); // Total=350 → Place 6 → 5pts
     }
 
@@ -168,8 +169,8 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
             await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
         }
 
-        // Delete teams
-        foreach (string slug in _teamSlugs)
+        // Delete clubs
+        foreach (string slug in _clubSlugs)
         {
             await _authorizedHttpClient.DeleteAsync($"/teams/{slug}", CancellationToken.None);
         }
@@ -360,9 +361,9 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
         response.EnsureSuccessStatusCode();
     }
 
-    private async Task<int> CreateTeamAsync(string title, string titleShort)
+    private async Task<int> CreateClubAsync(string title, string titleShort)
     {
-        Contracts.Teams.CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitle(title)
             .WithTitleShort(titleShort)
             .WithTitleFull(title)
@@ -372,7 +373,7 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
             "/teams", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        _teamSlugs.Add(Slug.Create(title));
+        _clubSlugs.Add(Slug.Create(title));
 
         string location = response.Headers.Location!.ToString().TrimStart('/');
         return int.Parse(location, System.Globalization.CultureInfo.InvariantCulture);
@@ -429,13 +430,13 @@ public sealed class GetMeetTeamPointsTests(CollectionFixture fixture) : IAsyncLi
     private async Task<int> AddParticipantAsync(
         int meetId,
         string athleteSlug,
-        int? teamId,
+        int? clubId,
         decimal bodyWeight = 82.0m)
     {
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(athleteSlug)
             .WithBodyWeight(bodyWeight)
-            .WithTeamId(teamId)
+            .WithClubId(clubId)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(

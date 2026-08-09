@@ -1,0 +1,91 @@
+@using Microsoft.Extensions.Configuration
+
+@inject IConfiguration Configuration
+
+<div class="team-logo @_sizeClass @_textClass">
+    @if (_isValidFilename)
+    {
+        @* Structural invariant: the placeholder div must remain the img's immediate next
+           sibling — the onerror handler uses nextElementSibling to reveal it on load failure. *@
+        <img src="@($"{_teamLogoBaseUrl}/{Filename}{_sizeQuery}")"
+             alt="@Alt"
+             loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    }
+    @if (!string.IsNullOrEmpty(FallbackText))
+    {
+        <div class="team-logo-placeholder" style="@(_isValidFilename ? "display:none" : "")">
+            <span class="team-logo-fallback-text">@FallbackText</span>
+        </div>
+    }
+    else
+    {
+        <div class="team-logo-placeholder" style="@(_isValidFilename ? "display:none" : "")" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.82-3.87-1.45-7-5.99-7-10.82V6.3l7-3.12z" />
+            </svg>
+        </div>
+    }
+</div>
+
+@code {
+    // Servable variants from the legacy image host cache — parameter order is load-bearing.
+    // See DOMAIN.md § Legacy Image Host for the full table.
+    private const string SmallQuery = "?width=64&height=64&crop=auto";
+    private const string LargeQuery = "?width=128&height=128";
+
+    [Parameter]
+    public string? Filename { get; set; }
+
+    [Parameter]
+    public string Alt { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public ClubLogoSize Size { get; set; }
+
+    [Parameter]
+    public string? FallbackText { get; set; }
+
+    private string _teamLogoBaseUrl = "";
+    private string _sizeClass = "";
+    private string _textClass = "";
+    private string _sizeQuery = "";
+    private bool _isValidFilename;
+
+    protected override void OnInitialized()
+    {
+        _teamLogoBaseUrl = Configuration["ImageBaseUrl"] ?? "";
+    }
+
+    protected override void OnParametersSet()
+    {
+        _sizeClass = Size switch
+        {
+            ClubLogoSize.XSmall => "team-logo--xs",
+            ClubLogoSize.Small => "team-logo--sm",
+            ClubLogoSize.Medium => "team-logo--md",
+            ClubLogoSize.Large => "team-logo--lg",
+            _ => "team-logo--md",
+        };
+
+        _textClass = !string.IsNullOrEmpty(FallbackText)
+            ? "team-logo--text"
+            : "";
+
+        _sizeQuery = Size switch
+        {
+            ClubLogoSize.Large => LargeQuery,
+            _ => SmallQuery,
+        };
+
+        _isValidFilename = Filename is not null
+            && !Filename.Contains('/')
+            && !Filename.Contains('\\')
+            && !Filename.Contains(':')
+            && !Filename.Contains('?')
+            && !Filename.Contains('#')
+            && !Filename.Contains(',')
+            && !Filename.Contains(' ')
+            && !Filename.Contains('%');
+    }
+}

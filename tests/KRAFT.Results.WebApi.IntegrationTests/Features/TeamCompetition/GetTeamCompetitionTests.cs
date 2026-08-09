@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 
 using KRAFT.Results.Contracts;
 using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Meets;
 using KRAFT.Results.Contracts.TeamCompetition;
 using KRAFT.Results.WebApi.IntegrationTests.Builders;
@@ -80,23 +81,23 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
     private readonly string _betaShortCode = UniqueShortCode.Next();
     private readonly List<string> _athleteSlugs = [];
     private readonly List<string> _meetSlugs = [];
-    private readonly List<string> _teamSlugs = [];
+    private readonly List<string> _clubSlugs = [];
 
     private string _alphaTeamName = string.Empty;
     private string _alphaTeamSlug = string.Empty;
     private string _betaTeamName = string.Empty;
-    private int _alphaTeamId;
-    private int _betaTeamId;
+    private int _alphaClubId;
+    private int _betaClubId;
 
     public async ValueTask InitializeAsync()
     {
-        // Create teams
+        // Create clubs
         _alphaTeamName = $"Alpha{_suffix}";
         _alphaTeamSlug = Slug.Create(_alphaTeamName);
-        _alphaTeamId = await CreateTeamAsync(_alphaTeamName, _alphaShortCode);
+        _alphaClubId = await CreateClubAsync(_alphaTeamName, _alphaShortCode);
 
         _betaTeamName = $"Beta{_suffix}";
-        _betaTeamId = await CreateTeamAsync(_betaTeamName, _betaShortCode);
+        _betaClubId = await CreateClubAsync(_betaTeamName, _betaShortCode);
 
         // Create 2025 meets (two meets in same year for cross-meet totals)
         int meet1In2025Id = await CreateMeetAndGetIdAsync(new DateOnly(Year2025, 6, 1));
@@ -112,11 +113,11 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         string zeroPtsSlug = await CreateAthleteAsync("ZeroPts", "m");
 
         // Add participants for 2025 meet1 — men (82.0m body weight, same weight category)
-        int alphaMalePid1 = await AddParticipantAsync(meet1In2025Id, alphaMaleSlug, _alphaTeamId);
-        int betaMalePid1 = await AddParticipantAsync(meet1In2025Id, betaMaleSlug, _betaTeamId);
-        int dqPid = await AddParticipantAsync(meet1In2025Id, dqAlphaMaleSlug, _alphaTeamId);
-        int noTeamPid = await AddParticipantAsync(meet1In2025Id, noTeamSlug, teamId: null);
-        await AddParticipantAsync(meet1In2025Id, zeroPtsSlug, _alphaTeamId);
+        int alphaMalePid1 = await AddParticipantAsync(meet1In2025Id, alphaMaleSlug, _alphaClubId);
+        int betaMalePid1 = await AddParticipantAsync(meet1In2025Id, betaMaleSlug, _betaClubId);
+        int dqPid = await AddParticipantAsync(meet1In2025Id, dqAlphaMaleSlug, _alphaClubId);
+        int noTeamPid = await AddParticipantAsync(meet1In2025Id, noTeamSlug, clubId: null);
+        await AddParticipantAsync(meet1In2025Id, zeroPtsSlug, _alphaClubId);
 
         // DQ the dqAlphaMale via 3 failed squat attempts → Disqualified=true, Total=0, Place=0, TeamPoints=0
         await RecordAttemptAsync(meet1In2025Id, dqPid, Discipline.Squat, 1, 100.0m, good: false);
@@ -133,8 +134,8 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         await RecordFullTotalAsync(meet1In2025Id, betaMalePid1, BetaMaleMeet1Squat, BetaMaleMeet1Bench, BetaMaleMeet1Deadlift);
 
         // Add participants for 2025 meet1 — women (57.0m body weight, separate weight category)
-        int alphaFemalePid = await AddParticipantAsync(meet1In2025Id, alphaFemaleSlug, _alphaTeamId, 57.0m);
-        int betaFemalePid = await AddParticipantAsync(meet1In2025Id, betaFemaleSlug, _betaTeamId, 57.0m);
+        int alphaFemalePid = await AddParticipantAsync(meet1In2025Id, alphaFemaleSlug, _alphaClubId, 57.0m);
+        int betaFemalePid = await AddParticipantAsync(meet1In2025Id, betaFemaleSlug, _betaClubId, 57.0m);
 
         // Meet1 women totals:
         // alphaFemale: Total=260 → Place 1 → TeamPoints=12
@@ -143,8 +144,8 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         await RecordFullTotalAsync(meet1In2025Id, betaFemalePid, BetaFemaleMeet1Squat, BetaFemaleMeet1Bench, BetaFemaleMeet1Deadlift);
 
         // Add participants for 2025 meet2 — men (82.0m body weight)
-        int alphaMalePid2 = await AddParticipantAsync(meet2In2025Id, alphaMaleSlug, _alphaTeamId);
-        int betaMalePid2 = await AddParticipantAsync(meet2In2025Id, betaMaleSlug, _betaTeamId);
+        int alphaMalePid2 = await AddParticipantAsync(meet2In2025Id, alphaMaleSlug, _alphaClubId);
+        int betaMalePid2 = await AddParticipantAsync(meet2In2025Id, betaMaleSlug, _betaClubId);
 
         // Meet2 men totals:
         // betaMale: Total=300 → Place 1 → TeamPoints=12
@@ -159,40 +160,40 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         // Meet1 2026: 6 male athletes with descending totals → places 1–6 → points 12,9,8,7,6,5
         // Best 5 of those 6 = 12+9+8+7+6 = 42
         string alpha26M1Slug = await CreateAthleteAsync("Alpha26M1", "m");
-        int alpha26M1Pid = await AddParticipantAsync(meet1In2026Id, alpha26M1Slug, _alphaTeamId);
+        int alpha26M1Pid = await AddParticipantAsync(meet1In2026Id, alpha26M1Slug, _alphaClubId);
         await RecordFullTotalAsync(meet1In2026Id, alpha26M1Pid, 200.0m, 150.0m, 250.0m); // Total=600 → Place 1 → 12pts
 
         string alpha26M2Slug = await CreateAthleteAsync("Alpha26M2", "m");
-        int alpha26M2Pid = await AddParticipantAsync(meet1In2026Id, alpha26M2Slug, _alphaTeamId);
+        int alpha26M2Pid = await AddParticipantAsync(meet1In2026Id, alpha26M2Slug, _alphaClubId);
         await RecordFullTotalAsync(meet1In2026Id, alpha26M2Pid, 190.0m, 140.0m, 220.0m); // Total=550 → Place 2 → 9pts
 
         string alpha26M3Slug = await CreateAthleteAsync("Alpha26M3", "m");
-        int alpha26M3Pid = await AddParticipantAsync(meet1In2026Id, alpha26M3Slug, _alphaTeamId);
+        int alpha26M3Pid = await AddParticipantAsync(meet1In2026Id, alpha26M3Slug, _alphaClubId);
         await RecordFullTotalAsync(meet1In2026Id, alpha26M3Pid, 170.0m, 130.0m, 200.0m); // Total=500 → Place 3 → 8pts
 
         string alpha26M4Slug = await CreateAthleteAsync("Alpha26M4", "m");
-        int alpha26M4Pid = await AddParticipantAsync(meet1In2026Id, alpha26M4Slug, _alphaTeamId);
+        int alpha26M4Pid = await AddParticipantAsync(meet1In2026Id, alpha26M4Slug, _alphaClubId);
         await RecordFullTotalAsync(meet1In2026Id, alpha26M4Pid, 150.0m, 120.0m, 180.0m); // Total=450 → Place 4 → 7pts
 
         string alpha26M5Slug = await CreateAthleteAsync("Alpha26M5", "m");
-        int alpha26M5Pid = await AddParticipantAsync(meet1In2026Id, alpha26M5Slug, _alphaTeamId);
+        int alpha26M5Pid = await AddParticipantAsync(meet1In2026Id, alpha26M5Slug, _alphaClubId);
         await RecordFullTotalAsync(meet1In2026Id, alpha26M5Pid, 135.0m, 110.0m, 155.0m); // Total=400 → Place 5 → 6pts
 
         string alpha26M6Slug = await CreateAthleteAsync("Alpha26M6", "m");
-        int alpha26M6Pid = await AddParticipantAsync(meet1In2026Id, alpha26M6Slug, _alphaTeamId);
+        int alpha26M6Pid = await AddParticipantAsync(meet1In2026Id, alpha26M6Slug, _alphaClubId);
         await RecordFullTotalAsync(meet1In2026Id, alpha26M6Pid, 120.0m, 100.0m, 130.0m); // Total=350 → Place 6 → 5pts (capped by BestN)
 
         // Meet2 2026: 3 male athletes with descending totals → places 1–3 → points 12,9,8 → sum=29
         string alpha26N0Slug = await CreateAthleteAsync("Alpha26N0", "m");
-        int alpha26N0Pid = await AddParticipantAsync(meet2In2026Id, alpha26N0Slug, _alphaTeamId);
+        int alpha26N0Pid = await AddParticipantAsync(meet2In2026Id, alpha26N0Slug, _alphaClubId);
         await RecordFullTotalAsync(meet2In2026Id, alpha26N0Pid, 100.0m, 100.0m, 100.0m); // Total=300 → Place 1 → 12pts
 
         string alpha26N1Slug = await CreateAthleteAsync("Alpha26N1", "m");
-        int alpha26N1Pid = await AddParticipantAsync(meet2In2026Id, alpha26N1Slug, _alphaTeamId);
+        int alpha26N1Pid = await AddParticipantAsync(meet2In2026Id, alpha26N1Slug, _alphaClubId);
         await RecordFullTotalAsync(meet2In2026Id, alpha26N1Pid, 90.0m, 80.0m, 80.0m); // Total=250 → Place 2 → 9pts
 
         string alpha26N2Slug = await CreateAthleteAsync("Alpha26N2", "m");
-        int alpha26N2Pid = await AddParticipantAsync(meet2In2026Id, alpha26N2Slug, _alphaTeamId);
+        int alpha26N2Pid = await AddParticipantAsync(meet2In2026Id, alpha26N2Slug, _alphaClubId);
         await RecordFullTotalAsync(meet2In2026Id, alpha26N2Pid, 70.0m, 60.0m, 70.0m); // Total=200 → Place 3 → 8pts
     }
 
@@ -210,8 +211,8 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
             await _authorizedHttpClient.DeleteAsync($"/athletes/{slug}", CancellationToken.None);
         }
 
-        // Delete teams
-        foreach (string slug in _teamSlugs)
+        // Delete clubs
+        foreach (string slug in _clubSlugs)
         {
             await _authorizedHttpClient.DeleteAsync($"/teams/{slug}", CancellationToken.None);
         }
@@ -430,9 +431,9 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
         response.EnsureSuccessStatusCode();
     }
 
-    private async Task<int> CreateTeamAsync(string title, string titleShort)
+    private async Task<int> CreateClubAsync(string title, string titleShort)
     {
-        Contracts.Teams.CreateTeamCommand command = new CreateTeamCommandBuilder()
+        CreateClubCommand command = new CreateClubCommandBuilder()
             .WithTitle(title)
             .WithTitleShort(titleShort)
             .WithTitleFull(title)
@@ -442,7 +443,7 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
             "/teams", command, CancellationToken.None);
         response.EnsureSuccessStatusCode();
 
-        _teamSlugs.Add(Slug.Create(title));
+        _clubSlugs.Add(Slug.Create(title));
 
         string location = response.Headers.Location!.ToString().TrimStart('/');
         return int.Parse(location, System.Globalization.CultureInfo.InvariantCulture);
@@ -499,13 +500,13 @@ public sealed class GetTeamCompetitionTests(CollectionFixture fixture) : IAsyncL
     private async Task<int> AddParticipantAsync(
         int meetId,
         string athleteSlug,
-        int? teamId,
+        int? clubId,
         decimal bodyWeight = 82.0m)
     {
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(athleteSlug)
             .WithBodyWeight(bodyWeight)
-            .WithTeamId(teamId)
+            .WithClubId(clubId)
             .Build();
 
         HttpResponseMessage response = await _authorizedHttpClient.PostAsJsonAsync(

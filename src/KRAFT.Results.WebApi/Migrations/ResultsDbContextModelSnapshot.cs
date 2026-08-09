@@ -17,7 +17,7 @@ namespace KRAFT.Results.WebApi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -87,6 +87,10 @@ namespace KRAFT.Results.WebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AthleteId"));
 
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int")
+                        .HasColumnName("TeamId");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -151,12 +155,9 @@ namespace KRAFT.Results.WebApi.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("int");
-
                     b.HasKey("AthleteId");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("ClubId");
 
                     b.HasIndex(new[] { "Firstname", "Lastname", "DateOfBirth" }, "IX_Athletes_NameYearUnique")
                         .IsUnique()
@@ -309,6 +310,89 @@ namespace KRAFT.Results.WebApi.Migrations
                         .HasName("PK_Reports");
 
                     b.ToTable("Cases", "dbo");
+                });
+
+            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Clubs.Club", b =>
+                {
+                    b.Property<int>("ClubId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("TeamId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClubId"));
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("char(3)")
+                        .HasColumnName("CountryCode")
+                        .IsFixedLength()
+                        .HasDefaultValue("ISL", "DF_Teams_CountryCode");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("klaus", "DF_Teams_CreatedBy");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())", "DF_Teams_CreatedOn");
+
+                    b.Property<string>("LogoImageFilename")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("klaus", "DF_Teams_ModifiedBy");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("(getdate())", "DF_Teams_ModifiedOn");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TitleFull")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasDefaultValue("", "DF_Teams_FullTitle");
+
+                    b.Property<string>("TitleShort")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.HasKey("ClubId");
+
+                    b.HasIndex(new[] { "Slug" }, "IX_Teams_Slug_Unique")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "TitleShort" }, "IX_Teams_TitleShort_Unique")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "Title" }, "IX_Teams_Title_Unique")
+                        .IsUnique();
+
+                    b.ToTable("Teams", "dbo");
                 });
 
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.EraWeightCategories.EraWeightCategory", b =>
@@ -600,6 +684,10 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.Property<decimal>("Benchpress")
                         .HasColumnType("numeric(18, 2)");
 
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int")
+                        .HasColumnName("TeamId");
+
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -648,9 +736,6 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.Property<decimal>("Squat")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("TeamPoints")
                         .HasColumnType("int");
 
@@ -670,7 +755,7 @@ namespace KRAFT.Results.WebApi.Migrations
 
                     b.HasIndex("AgeCategoryId");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("ClubId");
 
                     b.HasIndex("WeightCategoryId");
 
@@ -705,9 +790,9 @@ namespace KRAFT.Results.WebApi.Migrations
                         .HasColumnType("datetime");
 
                     b.Property<string>("ImageFilename")
-                        .HasColumnName("ImageFilname")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("ImageFilname");
 
                     b.Property<int?>("MeetId")
                         .HasColumnType("int");
@@ -812,88 +897,6 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.HasKey("RoleId");
 
                     b.ToTable("Roles", "dbo");
-                });
-
-            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Teams.Team", b =>
-                {
-                    b.Property<int>("TeamId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TeamId"));
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(3)
-                        .IsUnicode(false)
-                        .HasColumnType("char(3)")
-                        .HasColumnName("CountryCode")
-                        .IsFixedLength()
-                        .HasDefaultValue("ISL", "DF_Teams_CountryCode");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("klaus", "DF_Teams_CreatedBy");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())", "DF_Teams_CreatedOn");
-
-                    b.Property<string>("LogoImageFilename")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ModifiedBy")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("klaus", "DF_Teams_ModifiedBy");
-
-                    b.Property<DateTime>("ModifiedOn")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())", "DF_Teams_ModifiedOn");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("TitleFull")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("", "DF_Teams_FullTitle");
-
-                    b.Property<string>("TitleShort")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
-
-                    b.HasKey("TeamId");
-
-                    b.HasIndex(new[] { "Slug" }, "IX_Teams_Slug_Unique")
-                        .IsUnique();
-
-                    b.HasIndex(new[] { "TitleShort" }, "IX_Teams_TitleShort_Unique")
-                        .IsUnique();
-
-                    b.HasIndex(new[] { "Title" }, "IX_Teams_Title_Unique")
-                        .IsUnique();
-
-                    b.ToTable("Teams", "dbo");
                 });
 
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.UserRoles.UserRole", b =>
@@ -1081,12 +1084,12 @@ namespace KRAFT.Results.WebApi.Migrations
 
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.Athletes.Athlete", b =>
                 {
-                    b.HasOne("KRAFT.Results.WebApi.Features.Teams.Team", "Team")
+                    b.HasOne("KRAFT.Results.WebApi.Features.Clubs.Club", "Club")
                         .WithMany("Athletes")
-                        .HasForeignKey("TeamId")
+                        .HasForeignKey("ClubId")
                         .HasConstraintName("FK_Athletes_Teams");
 
-                    b.Navigation("Team");
+                    b.Navigation("Club");
                 });
 
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.Athletes.Ban", b =>
@@ -1162,18 +1165,18 @@ namespace KRAFT.Results.WebApi.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Participations_Athletes");
 
+                    b.HasOne("KRAFT.Results.WebApi.Features.Clubs.Club", "Club")
+                        .WithMany("Participations")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK_Participations_Teams");
+
                     b.HasOne("KRAFT.Results.WebApi.Features.Meets.Meet", "Meet")
                         .WithMany("Participations")
                         .HasForeignKey("MeetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Participations_Meets");
-
-                    b.HasOne("KRAFT.Results.WebApi.Features.Teams.Team", "Team")
-                        .WithMany("Participations")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .HasConstraintName("FK_Participations_Teams");
 
                     b.HasOne("KRAFT.Results.WebApi.Features.WeightCategories.WeightCategory", "WeightCategory")
                         .WithMany("Participations")
@@ -1186,9 +1189,9 @@ namespace KRAFT.Results.WebApi.Migrations
 
                     b.Navigation("Athlete");
 
-                    b.Navigation("Meet");
+                    b.Navigation("Club");
 
-                    b.Navigation("Team");
+                    b.Navigation("Meet");
 
                     b.Navigation("WeightCategory");
                 });
@@ -1278,6 +1281,13 @@ namespace KRAFT.Results.WebApi.Migrations
                     b.Navigation("Records");
                 });
 
+            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Clubs.Club", b =>
+                {
+                    b.Navigation("Athletes");
+
+                    b.Navigation("Participations");
+                });
+
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.Eras.Era", b =>
                 {
                     b.Navigation("EraWeightCategories");
@@ -1305,13 +1315,6 @@ namespace KRAFT.Results.WebApi.Migrations
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.Roles.Role", b =>
                 {
                     b.Navigation("UserRoles");
-                });
-
-            modelBuilder.Entity("KRAFT.Results.WebApi.Features.Teams.Team", b =>
-                {
-                    b.Navigation("Athletes");
-
-                    b.Navigation("Participations");
                 });
 
             modelBuilder.Entity("KRAFT.Results.WebApi.Features.Users.User", b =>

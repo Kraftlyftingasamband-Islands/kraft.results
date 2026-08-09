@@ -7,7 +7,7 @@
 @using System.Net
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
@@ -19,7 +19,7 @@
 <DataLoader T="EditAthleteData" Loader="LoadAsync" Noun="gögn">
     <ChildContent Context="data">
         <AthleteForm Countries="data.Countries"
-                     Teams="data.Teams"
+                     Clubs="data.Clubs"
                      OnSubmit="HandleSubmit"
                      IsLoading="_isLoading"
                      ErrorMessage="@_errorMessage"
@@ -33,7 +33,7 @@
     private sealed record EditAthleteData(
         AthleteFormInitialValues InitialValues,
         IReadOnlyCollection<CountrySummary> Countries,
-        IReadOnlyCollection<TeamOption> Teams);
+        IReadOnlyCollection<ClubOption> Clubs);
 
     [Parameter]
     public string Slug { get; set; } = string.Empty;
@@ -47,10 +47,10 @@
             HttpClient.GetFromJsonAsync<AthleteEditDetails>($"/athletes/{Slug}/edit");
         Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
-        Task<IReadOnlyCollection<TeamOption>?> teamsTask =
-            HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamOption>>("/teams/options");
+        Task<IReadOnlyCollection<ClubOption>?> clubsTask =
+            HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubOption>>("/teams/options");
 
-        await Task.WhenAll(athleteTask, countriesTask, teamsTask);
+        await Task.WhenAll(athleteTask, countriesTask, clubsTask);
 
         AthleteEditDetails? athlete = await athleteTask;
 
@@ -60,7 +60,7 @@
         }
 
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
-        IReadOnlyCollection<TeamOption> teams = await teamsTask ?? [];
+        IReadOnlyCollection<ClubOption> clubs = await clubsTask ?? [];
 
         AthleteFormInitialValues initialValues = new(
             athlete.FirstName,
@@ -68,9 +68,9 @@
             athlete.DateOfBirth,
             athlete.Gender,
             athlete.CountryCode,
-            athlete.TeamId ?? 0);
+            athlete.ClubId ?? 0);
 
-        return new EditAthleteData(initialValues, countries, teams);
+        return new EditAthleteData(initialValues, countries, clubs);
     }
 
     private async Task HandleSubmit(AthleteFormValues values)
@@ -84,7 +84,7 @@
                 values.FirstName,
                 values.LastName,
                 values.CountryCode,
-                values.TeamId,
+                values.ClubId,
                 values.DateOfBirth,
                 values.Gender);
 

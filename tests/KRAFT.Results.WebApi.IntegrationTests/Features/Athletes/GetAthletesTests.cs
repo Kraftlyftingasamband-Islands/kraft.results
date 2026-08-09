@@ -135,7 +135,7 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
         // Assert
         AthleteSummary? seededAthlete = response!.FirstOrDefault(x => x.Slug == TestSeedConstants.Athlete.Slug);
         seededAthlete.ShouldNotBeNull();
-        seededAthlete.Team.ShouldBe(TestSeedConstants.Team.Title);
+        seededAthlete.Club.ShouldBe(TestSeedConstants.Club.Title);
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task NewAthlete_ReturnsNullTeam()
+    public async Task NewAthlete_ReturnsNullClub()
     {
         // Arrange
 
@@ -163,6 +163,6 @@ public sealed class GetAthletesTests(CollectionFixture fixture) : IAsyncLifetime
         // Assert
         AthleteSummary? newAthlete = response!.FirstOrDefault(x => x.Slug == _slug);
         newAthlete.ShouldNotBeNull();
-        newAthlete.Team.ShouldBeNull();
+        newAthlete.Club.ShouldBeNull();
     }
 }

@@ -106,8 +106,8 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .CountAsync(cancellationToken);
 
         int clubs = await dbContext.Set<Participation>()
-            .Where(p => p.Meet.PublishedResults && p.Meet.StartDate.Year == year && p.TeamId != null)
-            .Select(p => p.TeamId)
+            .Where(p => p.Meet.PublishedResults && p.Meet.StartDate.Year == year && p.ClubId != null)
+            .Select(p => p.ClubId)
             .Distinct()
             .CountAsync(cancellationToken);
 
@@ -215,14 +215,14 @@ internal sealed class GetDashboardHandler(ResultsDbContext dbContext)
             .Where(p => !p.Disqualified)
             .Where(p => p.Meet.IsInTeamCompetition)
             .Where(p => p.Meet.StartDate.Year == year)
-            .Where(p => p.TeamId != null)
+            .Where(p => p.ClubId != null)
             .Where(p => p.TeamPoints != null && p.TeamPoints > 0)
             .Select(p => new TeamStandingsBuilder.TeamPointRow(
-                p.TeamId!.Value,
-                p.Team!.Title,
-                p.Team.TitleShort,
-                p.Team.Slug,
-                p.Team.LogoImageFilename,
+                p.ClubId!.Value,
+                p.Club!.Title,
+                p.Club.TitleShort,
+                p.Club.Slug,
+                p.Club.LogoImageFilename,
                 p.Athlete.Gender.Value,
                 p.MeetId,
                 p.TeamPoints!.Value))

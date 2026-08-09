@@ -3,9 +3,9 @@ using KRAFT.Results.WebApi.Abstractions;
 using KRAFT.Results.WebApi.Features.AgeCategories;
 using KRAFT.Results.WebApi.Features.Athletes;
 using KRAFT.Results.WebApi.Features.Attempts;
+using KRAFT.Results.WebApi.Features.Clubs;
 using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.TeamCompetition;
-using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Features.WeightCategories;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -29,7 +29,7 @@ internal sealed class Participation : AggregateRoot
 
     public int WeightCategoryId { get; private set; }
 
-    public int? TeamId { get; private set; }
+    public int? ClubId { get; private set; }
 
     public int AgeCategoryId { get; private set; }
 
@@ -69,11 +69,11 @@ internal sealed class Participation : AggregateRoot
 
     public Meet Meet { get; private set; } = null!;
 
-    public Team? Team { get; private set; }
+    public Club? Club { get; private set; }
 
     public WeightCategory WeightCategory { get; private set; } = null!;
 
-    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, int ageCategoryId, decimal bodyWeight, int? teamId = null)
+    internal static Result<Participation> Create(User creator, int athleteId, int meetId, int weightCategoryId, int ageCategoryId, decimal bodyWeight, int? clubId = null)
     {
         if (athleteId <= 0)
         {
@@ -109,7 +109,7 @@ internal sealed class Participation : AggregateRoot
             WeightCategoryId = weightCategoryId,
             AgeCategoryId = ageCategoryId,
             Weight = bodyWeightResult.FromResult(),
-            TeamId = teamId,
+            ClubId = clubId,
             CreatedOn = DateTime.UtcNow,
             CreatedBy = creator.Username,
         };

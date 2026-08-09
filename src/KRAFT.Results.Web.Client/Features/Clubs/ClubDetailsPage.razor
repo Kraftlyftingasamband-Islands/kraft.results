@@ -1,0 +1,140 @@
+@page "/teams/{slug}"
+
+@using KRAFT.Results.Contracts.Clubs
+@using KRAFT.Results.Web.Client.Components
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<DataLoader T="ClubDetails" Loader="LoadAsync" Noun="félag">
+    <ChildContent Context="team">
+        <div class="page-header">
+            <div class="team-detail-header">
+                <ClubLogo Filename="@team.LogoImageFilename" Alt="@team.FullTitle" Size="ClubLogoSize.Large" />
+                <h1>@team.FullTitle (@team.ShortTitle)</h1>
+            </div>
+            <AuthorizeView Roles="Admin">
+                <div class="admin-actions">
+                    <a href="/teams/@Slug/edit" class="btn-action" aria-label="Breyta félagi">
+                        <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                        </svg>
+                        Breyta
+                    </a>
+                    <button class="btn-action btn-danger" aria-label="Eyða félagi" @onclick="ShowDeleteDialog">
+                        <svg class="btn-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <line x1="10" x2="10" y1="11" y2="17"/>
+                            <line x1="14" x2="14" y1="11" y2="17"/>
+                        </svg>
+                        Eyða
+                    </button>
+                </div>
+            </AuthorizeView>
+        </div>
+
+        <h2>Meðlimir</h2>
+
+        @if (team.Members is { Count: > 0 } members)
+        {
+            <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
+                @foreach (ClubMember member in members)
+                {
+                    <Card Clickable="true">
+                        <a href="@($"/athletes/{member.Slug}")" aria-hidden="true" tabindex="-1"></a>
+                        <div class="member-row">
+                            <AthletePhoto Filename="@member.ProfileImageFilename"
+                                          Alt="@member.Name"
+                                          Size="AthletePhotoSize.Small" />
+                            <div class="member-info">
+                                <div class="member-name">
+                                    @(member.YearOfBirth is null ? member.Name : $"{member.Name} ({member.YearOfBirth})")
+                                </div>
+                                <div class="member-count"
+                                     role="group"
+                                     aria-label="@($"{member.ParticipationCount} mót")"
+                                     title="Fjöldi keppnismóta">
+                                    <span class="count-value">@member.ParticipationCount</span>
+                                    <span class="count-label">mót</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                }
+            </div>
+        }
+        else
+        {
+            <EmptyState Message="Engir meðlimir skráðir." />
+        }
+
+        <ConfirmDialog @ref="_deleteDialog"
+                       Id="delete-club-dialog"
+                       Title="Eyða félagi"
+                       Message="@($"Ertu viss um að þú viljir eyða félaginu \"{team.FullTitle}\"?")"
+                       ConfirmLabel="Eyða félagi"
+                       OnConfirm="HandleDelete"
+                       ErrorMessage="@_deleteErrorMessage"
+                       IsLoading="_isDeleting" />
+    </ChildContent>
+</DataLoader>
+
+@code {
+    private ConfirmDialog? _deleteDialog;
+    private bool _isDeleting;
+    private string? _deleteErrorMessage;
+
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private async Task<ClubDetails?> LoadAsync()
+    {
+        return await HttpClient.GetFromJsonAsync<ClubDetails>($"/teams/{Slug}");
+    }
+
+    private async Task ShowDeleteDialog()
+    {
+        _deleteErrorMessage = null;
+        await (_deleteDialog?.ShowAsync() ?? Task.CompletedTask);
+    }
+
+    private async Task HandleDelete()
+    {
+        try
+        {
+            _isDeleting = true;
+            _deleteErrorMessage = null;
+
+            HttpResponseMessage response = await HttpClient.DeleteAsync($"/teams/{Slug}");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _deleteErrorMessage = "Ekki er hægt að eyða félagi sem hefur íþróttafólk skráð.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _deleteErrorMessage = "Félag fannst ekki.";
+            }
+            else if (!response.IsSuccessStatusCode)
+            {
+                _deleteErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/teams");
+                return;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _deleteErrorMessage = "Villa kom upp. Reyndu aftur síðar.";
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+}

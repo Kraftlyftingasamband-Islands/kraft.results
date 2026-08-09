@@ -80,7 +80,7 @@ public sealed class CreateAthleteTests(CollectionFixture fixture)
     {
         // Arrange
         CreateAthleteCommand command = new CreateAthleteCommandBuilder()
-            .WithTeamId(int.MaxValue)
+            .WithClubId(int.MaxValue)
             .Build();
 
         // Act

@@ -88,7 +88,7 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
 
             // Reset the logo that was seeded via SQL — no write endpoint exists for LogoImageFilename
             await fixture.ExecuteSqlAsync(
-                $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Team.Id}");
+                $"UPDATE Teams SET LogoImageFilename = NULL WHERE TeamId = {TestSeedConstants.Club.Id}");
         }
 
         if (_meetId != 0)
@@ -289,12 +289,12 @@ public sealed class GetMeetParticipationsTests(CollectionFixture fixture) : IAsy
         const string LogoFilename = "test-logo.png";
 
         await fixture.ExecuteSqlAsync(
-            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Team.Id}");
+            $"UPDATE Teams SET LogoImageFilename = {LogoFilename} WHERE TeamId = {TestSeedConstants.Club.Id}");
 
         AddParticipantCommand command = new AddParticipantCommandBuilder()
             .WithAthleteSlug(TestSeedConstants.Athlete.Slug)
             .WithBodyWeight(80.5m)
-            .WithTeamId(TestSeedConstants.Team.Id)
+            .WithClubId(TestSeedConstants.Club.Id)
             .WithAgeCategorySlug("open")
             .Build();
 

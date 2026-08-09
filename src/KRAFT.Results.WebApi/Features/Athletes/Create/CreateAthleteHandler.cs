@@ -1,6 +1,6 @@
-﻿using KRAFT.Results.Contracts.Athletes;
+using KRAFT.Results.Contracts.Athletes;
 using KRAFT.Results.WebApi.Abstractions;
-using KRAFT.Results.WebApi.Features.Teams;
+using KRAFT.Results.WebApi.Features.Clubs;
 using KRAFT.Results.WebApi.Features.Users;
 using KRAFT.Results.WebApi.Services;
 using KRAFT.Results.WebApi.ValueObjects;
@@ -58,19 +58,19 @@ internal sealed class CreateAthleteHandler
 
         Country country = countryResult.FromResult();
 
-        Team? team = command.TeamId is int teamId
-            ? await GetTeamAsync(teamId, cancellationToken)
+        Club? club = command.ClubId is int clubId
+            ? await GetClubAsync(clubId, cancellationToken)
             : null;
 
-        if (command.TeamId.HasValue && team is null)
+        if (command.ClubId.HasValue && club is null)
         {
             _logger.LogWarning(
-                "Failed to create athlete {First} {Last}: Team with Id {TeamId} does not exist",
+                "Failed to create athlete {First} {Last}: Club with Id {ClubId} does not exist",
                 command.FirstName,
                 command.LastName,
-                command.TeamId);
+                command.ClubId);
 
-            return TeamErrors.TeamDoesNotExist(command.TeamId.Value);
+            return ClubErrors.ClubDoesNotExist(command.ClubId.Value);
         }
 
         Result<Athlete> result = Athlete.Create(
@@ -79,7 +79,7 @@ internal sealed class CreateAthleteHandler
             lastName: command.LastName,
             gender: command.Gender,
             country: country,
-            team: team,
+            club: club,
             dateOfBirth: command.DateOfBirth);
 
         if (result.IsFailure)
@@ -97,9 +97,9 @@ internal sealed class CreateAthleteHandler
         return athlete.AthleteId;
     }
 
-    private Task<Team?> GetTeamAsync(int teamId, CancellationToken cancellationToken) =>
-        _dbContext.Set<Team>()
-        .Where(x => x.TeamId == teamId)
+    private Task<Club?> GetClubAsync(int clubId, CancellationToken cancellationToken) =>
+        _dbContext.Set<Club>()
+        .Where(x => x.ClubId == clubId)
         .FirstOrDefaultAsync(cancellationToken);
 
     private Task<bool> IsDuplicateAthlete(string firstName, string lastName, DateOnly dateOfBirth, CancellationToken cancellationToken) =>

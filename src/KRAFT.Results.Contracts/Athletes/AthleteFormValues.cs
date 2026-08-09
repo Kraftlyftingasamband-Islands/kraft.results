@@ -6,4 +6,4 @@ public sealed record class AthleteFormValues(
     DateOnly DateOfBirth,
     string Gender,
     string CountryCode,
-    int? TeamId);
+    int? ClubId);

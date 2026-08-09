@@ -6,7 +6,7 @@ internal sealed class AddParticipantCommandBuilder
 {
     private string _athleteSlug = Constants.TestAthleteSlug;
     private decimal _bodyWeight = 80.5m;
-    private int? _teamId;
+    private int? _clubId;
     private string? _ageCategorySlug;
 
     public AddParticipantCommandBuilder WithAthleteSlug(string slug)
@@ -21,9 +21,9 @@ internal sealed class AddParticipantCommandBuilder
         return this;
     }
 
-    public AddParticipantCommandBuilder WithTeamId(int? teamId)
+    public AddParticipantCommandBuilder WithClubId(int? clubId)
     {
-        _teamId = teamId;
+        _clubId = clubId;
         return this;
     }
 
@@ -34,5 +34,5 @@ internal sealed class AddParticipantCommandBuilder
     }
 
     public AddParticipantCommand Build() =>
-        new(_athleteSlug, _bodyWeight, _teamId, _ageCategorySlug);
+        new(_athleteSlug, _bodyWeight, _clubId, _ageCategorySlug);
 }

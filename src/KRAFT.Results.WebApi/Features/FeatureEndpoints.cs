@@ -1,4 +1,5 @@
 ﻿using KRAFT.Results.WebApi.Features.Athletes;
+using KRAFT.Results.WebApi.Features.Clubs;
 using KRAFT.Results.WebApi.Features.Countries;
 using KRAFT.Results.WebApi.Features.Dashboard;
 using KRAFT.Results.WebApi.Features.Eras;
@@ -6,7 +7,6 @@ using KRAFT.Results.WebApi.Features.Meets;
 using KRAFT.Results.WebApi.Features.Rankings;
 using KRAFT.Results.WebApi.Features.Records;
 using KRAFT.Results.WebApi.Features.TeamCompetition;
-using KRAFT.Results.WebApi.Features.Teams;
 using KRAFT.Results.WebApi.Features.Users;
 
 namespace KRAFT.Results.WebApi.Features;
@@ -23,7 +23,7 @@ internal static class FeatureEndpoints
         builder.MapRankingEndpoints();
         builder.MapRecordEndpoints();
         builder.MapTeamCompetitionEndpoints();
-        builder.MapTeamEndpoints();
+        builder.MapClubEndpoints();
         builder.MapUserEndpoints();
 
         return builder;

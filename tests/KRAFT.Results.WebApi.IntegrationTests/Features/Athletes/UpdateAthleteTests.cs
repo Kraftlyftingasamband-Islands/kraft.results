@@ -157,7 +157,7 @@ public sealed class UpdateAthleteTests(CollectionFixture fixture)
         // Arrange
         string slug = await CreateAthleteAsync();
         UpdateAthleteCommand command = new UpdateAthleteCommandBuilder()
-            .WithTeamId(int.MaxValue)
+            .WithClubId(int.MaxValue)
             .Build();
 
         // Act

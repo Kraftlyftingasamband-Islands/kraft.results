@@ -1,0 +1,41 @@
+@page "/teams"
+
+@using KRAFT.Results.Contracts.Clubs
+@using KRAFT.Results.Web.Client.Components
+@using Microsoft.AspNetCore.Components.Routing
+
+@inject HttpClient HttpClient;
+@inject NavigationManager NavigationManager;
+
+<PageHeader Title="Félög" ActionHref="/teams/create" ActionLabel="Stofna félag" />
+
+<DataLoader T="IReadOnlyCollection<ClubSummary>" Loader="LoadAsync" Noun="félög">
+    <ChildContent Context="context">
+        <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr))">
+            @foreach (ClubSummary club in context)
+            {
+                <Card Clickable="true">
+                    <a href="@($"/teams/{club.Slug}")" aria-label="@club.Title"></a>
+                    <div class="team-card-content">
+                        <ClubLogo Filename="@club.LogoImageFilename" Size="ClubLogoSize.Medium" />
+                        <div class="team-card-text">
+                            <div class="team-name">@club.Title</div>
+                            <div class="team-short">@club.ShortTitle</div>
+                            <div class="team-count">
+                                <span class="count-value">@club.AthleteCount</span>
+                                <span class="count-label">meðlimir</span>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            }
+        </div>
+    </ChildContent>
+</DataLoader>
+
+@code {
+    private async Task<IReadOnlyCollection<ClubSummary>?> LoadAsync()
+    {
+        return await HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubSummary>>("/teams");
+    }
+}

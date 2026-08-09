@@ -1,7 +1,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Meets
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 
 @inject HttpClient HttpClient
 
@@ -64,7 +64,7 @@
             </div>
 
             <div class="field field-team">
-                <label class="form-label" for="team-input">Lið</label>
+                <label class="form-label" for="team-input">Félag</label>
                 <div class="team-typeahead">
                     <input id="team-input"
                            class="form-input"
@@ -74,27 +74,27 @@
                            disabled="@(string.IsNullOrEmpty(_selectedAthleteSlug))"
                            role="combobox"
                            aria-autocomplete="list"
-                           aria-controls="team-listbox"
-                           aria-expanded="@_showTeamDropdown.ToString().ToLowerInvariant()"
-                           aria-activedescendant="@(_showTeamDropdown && _filteredTeams.Count > 0 ? $"team-option-{_highlightedTeamIndex}" : "")"
-                           value="@_teamSearchText"
-                           @oninput="HandleTeamSearchInput"
-                           @onfocus="() => _showTeamDropdown = true"
-                           @onblur="HandleTeamBlur"
-                           @onkeydown="HandleTeamKeyDown"
-                           @onkeydown:preventDefault="@_preventDefaultOnTeamInput" />
-                    @if (_showTeamDropdown && _filteredTeams.Count > 0)
+                           aria-controls="club-listbox"
+                           aria-expanded="@_showClubDropdown.ToString().ToLowerInvariant()"
+                           aria-activedescendant="@(_showClubDropdown && _filteredClubs.Count > 0 ? $"club-option-{_highlightedClubIndex}" : "")"
+                           value="@_clubSearchText"
+                           @oninput="HandleClubSearchInput"
+                           @onfocus="() => _showClubDropdown = true"
+                           @onblur="HandleClubBlur"
+                           @onkeydown="HandleClubKeyDown"
+                           @onkeydown:preventDefault="@_preventDefaultOnClubInput" />
+                    @if (_showClubDropdown && _filteredClubs.Count > 0)
                     {
-                        <ul id="team-listbox" class="typeahead-dropdown" role="listbox">
-                            @for (int i = 0; i < _filteredTeams.Count; i++)
+                        <ul id="club-listbox" class="typeahead-dropdown" role="listbox">
+                            @for (int i = 0; i < _filteredClubs.Count; i++)
                             {
                                 int index = i;
-                                <li id="team-option-@index"
+                                <li id="club-option-@index"
                                     role="option"
-                                    aria-selected="@((index == _highlightedTeamIndex).ToString().ToLowerInvariant())"
-                                    class="@(index == _highlightedTeamIndex ? "highlighted" : "")"
-                                    @onmousedown="() => SelectTeam(_filteredTeams[index])">
-                                    @_filteredTeams[index].Title
+                                    aria-selected="@((index == _highlightedClubIndex).ToString().ToLowerInvariant())"
+                                    class="@(index == _highlightedClubIndex ? "highlighted" : "")"
+                                    @onmousedown="() => SelectClub(_filteredClubs[index])">
+                                    @_filteredClubs[index].Title
                                 </li>
                             }
                         </ul>
@@ -196,13 +196,13 @@
     private IReadOnlyList<string> _eligibleAgeCategorySlugs = [];
     private string _selectedAgeCategorySlug = string.Empty;
 
-    private List<TeamOption> _teams = [];
-    private List<TeamOption> _filteredTeams = [];
-    private string _teamSearchText = string.Empty;
-    private int? _selectedTeamId;
-    private bool _showTeamDropdown;
-    private int _highlightedTeamIndex;
-    private bool _preventDefaultOnTeamInput;
+    private List<ClubOption> _clubs = [];
+    private List<ClubOption> _filteredClubs = [];
+    private string _clubSearchText = string.Empty;
+    private int? _selectedClubId;
+    private bool _showClubDropdown;
+    private int _highlightedClubIndex;
+    private bool _preventDefaultOnClubInput;
 
     [Parameter, EditorRequired]
     public int MeetId { get; set; }
@@ -263,11 +263,11 @@
     {
         try
         {
-            _teams = await HttpClient.GetFromJsonAsync<List<TeamOption>>("/teams/options") ?? [];
+            _clubs = await HttpClient.GetFromJsonAsync<List<ClubOption>>("/teams/options") ?? [];
         }
         catch (HttpRequestException)
         {
-            _teams = [];
+            _clubs = [];
         }
 
         InitializeAttemptValues();
@@ -395,85 +395,85 @@
         _showDropdown = false;
     }
 
-    private void HandleTeamSearchInput(ChangeEventArgs e)
+    private void HandleClubSearchInput(ChangeEventArgs e)
     {
-        _teamSearchText = e.Value?.ToString() ?? string.Empty;
-        _selectedTeamId = null;
-        FilterTeams();
-        _showTeamDropdown = true;
-        _highlightedTeamIndex = 0;
+        _clubSearchText = e.Value?.ToString() ?? string.Empty;
+        _selectedClubId = null;
+        FilterClubs();
+        _showClubDropdown = true;
+        _highlightedClubIndex = 0;
     }
 
-    private void FilterTeams()
+    private void FilterClubs()
     {
-        if (string.IsNullOrWhiteSpace(_teamSearchText))
+        if (string.IsNullOrWhiteSpace(_clubSearchText))
         {
-            _filteredTeams = [];
+            _filteredClubs = [];
             return;
         }
 
-        _filteredTeams = _teams
-            .Where(t => t.Title.Contains(_teamSearchText, StringComparison.OrdinalIgnoreCase))
+        _filteredClubs = _clubs
+            .Where(t => t.Title.Contains(_clubSearchText, StringComparison.OrdinalIgnoreCase))
             .Take(10)
             .ToList();
     }
 
-    private void SelectTeam(TeamOption team)
+    private void SelectClub(ClubOption club)
     {
-        _selectedTeamId = team.Id;
-        _teamSearchText = team.Title;
-        _showTeamDropdown = false;
-        _filteredTeams = [];
+        _selectedClubId = club.Id;
+        _clubSearchText = club.Title;
+        _showClubDropdown = false;
+        _filteredClubs = [];
     }
 
-    private async Task HandleTeamBlur()
+    private async Task HandleClubBlur()
     {
         await Task.Delay(200);
-        _showTeamDropdown = false;
+        _showClubDropdown = false;
     }
 
-    private void HandleTeamKeyDown(KeyboardEventArgs e)
+    private void HandleClubKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "ArrowDown")
         {
-            _highlightedTeamIndex = Math.Min(_highlightedTeamIndex + 1, _filteredTeams.Count - 1);
-            _preventDefaultOnTeamInput = true;
+            _highlightedClubIndex = Math.Min(_highlightedClubIndex + 1, _filteredClubs.Count - 1);
+            _preventDefaultOnClubInput = true;
         }
         else if (e.Key == "ArrowUp")
         {
-            _highlightedTeamIndex = Math.Max(_highlightedTeamIndex - 1, 0);
-            _preventDefaultOnTeamInput = true;
+            _highlightedClubIndex = Math.Max(_highlightedClubIndex - 1, 0);
+            _preventDefaultOnClubInput = true;
         }
         else if (e.Key == "Enter")
         {
-            if (_showTeamDropdown && _filteredTeams.Count > 0)
+            if (_showClubDropdown && _filteredClubs.Count > 0)
             {
-                SelectTeam(_filteredTeams[_highlightedTeamIndex]);
+                SelectClub(_filteredClubs[_highlightedClubIndex]);
                 _suppressNextSubmit = true;
-                _preventDefaultOnTeamInput = false;
+                _preventDefaultOnClubInput = false;
             }
             else
             {
-                _preventDefaultOnTeamInput = true;
+                _preventDefaultOnClubInput = true;
             }
         }
         else if (e.Key == "Tab")
         {
-            if (_showTeamDropdown && _filteredTeams.Count > 0)
+            if (_showClubDropdown && _filteredClubs.Count > 0)
             {
-                SelectTeam(_filteredTeams[_highlightedTeamIndex]);
+                SelectClub(_filteredClubs[_highlightedClubIndex]);
             }
 
-            _preventDefaultOnTeamInput = false;
+            _preventDefaultOnClubInput = false;
         }
         else if (e.Key == "Escape")
         {
-            _showTeamDropdown = false;
-            _preventDefaultOnTeamInput = true;
+            _showClubDropdown = false;
+            _preventDefaultOnClubInput = true;
         }
         else
         {
-            _preventDefaultOnTeamInput = false;
+            _preventDefaultOnClubInput = false;
         }
     }
 
@@ -500,7 +500,7 @@
                 return;
             }
 
-            AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedTeamId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
+            AddParticipantCommand command = new(_selectedAthleteSlug, parsedBodyWeight, _selectedClubId, _selectedAgeCategorySlug.Length > 0 ? _selectedAgeCategorySlug : null);
             HttpResponseMessage response = await HttpClient.PostAsJsonAsync(
                 $"/meets/{MeetId}/participants", command);
 
@@ -564,8 +564,8 @@
         _selectedAthleteSlug = string.Empty;
         _bodyWeightText = string.Empty;
         _errorMessage = null;
-        _teamSearchText = string.Empty;
-        _selectedTeamId = null;
+        _clubSearchText = string.Empty;
+        _selectedClubId = null;
         _selectedAthleteGender = null;
         _eligibleAgeCategorySlugs = [];
         _selectedAgeCategorySlug = string.Empty;

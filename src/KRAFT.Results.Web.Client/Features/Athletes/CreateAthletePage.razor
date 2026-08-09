@@ -9,7 +9,7 @@
 @using KRAFT.Results.Contracts
 @using KRAFT.Results.Contracts.Athletes
 @using KRAFT.Results.Contracts.Countries
-@using KRAFT.Results.Contracts.Teams
+@using KRAFT.Results.Contracts.Clubs
 @using KRAFT.Results.Web.Client.Components
 
 @inject HttpClient HttpClient
@@ -21,7 +21,7 @@
 <DataLoader T="CreateAthleteData" Loader="LoadAsync" Noun="gögn">
     <ChildContent Context="data">
         <AthleteForm Countries="data.Countries"
-                     Teams="data.Teams"
+                     Clubs="data.Clubs"
                      OnSubmit="HandleSubmit"
                      IsLoading="_isLoading"
                      ErrorMessage="@_errorMessage"
@@ -33,7 +33,7 @@
 @code {
     private sealed record CreateAthleteData(
         IReadOnlyCollection<CountrySummary> Countries,
-        IReadOnlyCollection<TeamOption> Teams);
+        IReadOnlyCollection<ClubOption> Clubs);
 
     private bool _isLoading;
     private string? _errorMessage;
@@ -42,20 +42,20 @@
     {
         Task<IReadOnlyCollection<CountrySummary>?> countriesTask =
             HttpClient.GetFromJsonAsync<IReadOnlyCollection<CountrySummary>>("/countries");
-        Task<IReadOnlyCollection<TeamOption>?> teamsTask =
-            HttpClient.GetFromJsonAsync<IReadOnlyCollection<TeamOption>>("/teams/options");
+        Task<IReadOnlyCollection<ClubOption>?> clubsTask =
+            HttpClient.GetFromJsonAsync<IReadOnlyCollection<ClubOption>>("/teams/options");
 
-        await Task.WhenAll(countriesTask, teamsTask);
+        await Task.WhenAll(countriesTask, clubsTask);
 
         IReadOnlyCollection<CountrySummary> countries = await countriesTask ?? [];
-        IReadOnlyCollection<TeamOption> teams = await teamsTask ?? [];
+        IReadOnlyCollection<ClubOption> clubs = await clubsTask ?? [];
 
         if (countries.Count == 0)
         {
             throw new HttpRequestException("Required reference data is unavailable.");
         }
 
-        return new CreateAthleteData(countries, teams);
+        return new CreateAthleteData(countries, clubs);
     }
 
     private async Task HandleSubmit(AthleteFormValues values)
@@ -69,7 +69,7 @@
                 values.FirstName,
                 values.LastName,
                 values.CountryCode,
-                values.TeamId,
+                values.ClubId,
                 values.DateOfBirth,
                 values.Gender);
 

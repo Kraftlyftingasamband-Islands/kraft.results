@@ -3,8 +3,8 @@ using System.Net.Http.Json;
 
 using Bunit;
 
+using KRAFT.Results.Contracts.Clubs;
 using KRAFT.Results.Contracts.Countries;
-using KRAFT.Results.Contracts.Teams;
 using KRAFT.Results.Web.Client.Features.Athletes;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -94,7 +94,7 @@ public sealed class CreateAthletePageTests : IDisposable
             new("ISL", "Iceland"),
         ];
 
-        private static readonly List<TeamOption> DefaultTeams =
+        private static readonly List<ClubOption> DefaultClubs =
         [
             new(1, "Þór"),
         ];
@@ -120,7 +120,7 @@ public sealed class CreateAthletePageTests : IDisposable
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(DefaultTeams),
+                    Content = JsonContent.Create(DefaultClubs),
                 };
             }
 
