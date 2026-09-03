@@ -6,10 +6,13 @@ using Aspire.Hosting.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 
+using Xunit.Sdk;
+using Xunit.v3;
+
 using static Microsoft.Playwright.Assertions;
 
 [assembly: AssemblyFixture(typeof(KRAFT.Results.Web.E2ETests.PlaywrightFixture))]
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
+[assembly: Parallelization(Mode = ParallelMode.None)]
 
 namespace KRAFT.Results.Web.E2ETests;
 
