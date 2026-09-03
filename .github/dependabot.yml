@@ -5,10 +5,32 @@ updates:
     schedule:
       interval: daily
     target-branch: main
+    open-pull-requests-limit: 10
     groups:
-      nuget-all:
+      # Lockstep families: update-types is intentionally omitted so majors arrive
+      # in the same grouped PR where peer pins must be reconciled together.
+      # catch-all (nuget-minor-patch) must remain last — Dependabot assigns each
+      # dependency to the first group whose pattern matches.
+      dotnet-extensions:
+        patterns:
+          - "Microsoft.AspNetCore.*"
+          - "Microsoft.EntityFrameworkCore.*"
+          - "Microsoft.Extensions.*"
+      xunit:
+        patterns:
+          - "xunit*"
+      opentelemetry:
+        patterns:
+          - "OpenTelemetry.*"
+      aspire:
+        patterns:
+          - "Aspire.*"
+      nuget-minor-patch:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: github-actions
     directory: /
