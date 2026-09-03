@@ -52,9 +52,13 @@ jobs:
       run: pwsh tests/KRAFT.Results.Web.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps
     - name: Test
       run: |
-        dotnet test tests/KRAFT.Results.WebApi.UnitTests/KRAFT.Results.WebApi.UnitTests.csproj --no-build --verbosity normal
-        dotnet test tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj --no-build --verbosity normal
-        dotnet test tests/KRAFT.Results.Web.Client.Tests/KRAFT.Results.Web.Client.Tests.csproj --no-build --verbosity normal
+        # Explicit project list — update when adding a test project under tests/.
+        # MTP requires explicit paths; the old solution-wide filter auto-discovered them.
+        failed=0
+        dotnet test tests/KRAFT.Results.WebApi.UnitTests/KRAFT.Results.WebApi.UnitTests.csproj --no-build --verbosity normal || failed=1
+        dotnet test tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj --no-build --verbosity normal || failed=1
+        dotnet test tests/KRAFT.Results.Web.Client.Tests/KRAFT.Results.Web.Client.Tests.csproj --no-build --verbosity normal || failed=1
+        exit $failed
     - name: E2E Test
       if: github.event_name == 'push' || steps.ui-changes.outputs.ui == 'true'
       run: dotnet test tests/KRAFT.Results.Web.E2ETests/KRAFT.Results.Web.E2ETests.csproj --no-build --verbosity normal
