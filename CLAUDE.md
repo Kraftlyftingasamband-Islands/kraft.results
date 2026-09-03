@@ -18,8 +18,8 @@ dotnet test
 # Run locally (starts SQL Server container, migrates DB, seeds data)
 dotnet run --project src/KRAFT.Results.AppHost
 
-# Run single test
-dotnet test --filter "FullyQualifiedName~CreateAthleteTests.ReturnsCreated_WhenSuccessful"
+# Run single test (repo uses xunit under Microsoft.Testing.Platform — VSTest --filter syntax does not apply)
+dotnet test tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj -- --filter-method "*CreateAthleteTests.ReturnsCreated_WhenSuccessful"
 
 # Add EF migration
 dotnet ef migrations add {MigrationName} --project src/KRAFT.Results.WebApi

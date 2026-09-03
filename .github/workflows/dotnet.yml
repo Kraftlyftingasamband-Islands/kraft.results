@@ -51,11 +51,10 @@ jobs:
       if: github.event_name == 'push' || steps.ui-changes.outputs.ui == 'true'
       run: pwsh tests/KRAFT.Results.Web.E2ETests/bin/Debug/net10.0/playwright.ps1 install --with-deps
     - name: Test
-      run: >-
-        dotnet test --no-build --verbosity normal
-        --filter "FullyQualifiedName!~KRAFT.Results.Web.E2ETests"
+      run: |
+        dotnet test tests/KRAFT.Results.WebApi.UnitTests/KRAFT.Results.WebApi.UnitTests.csproj --no-build --verbosity normal
+        dotnet test tests/KRAFT.Results.WebApi.IntegrationTests/KRAFT.Results.WebApi.IntegrationTests.csproj --no-build --verbosity normal
+        dotnet test tests/KRAFT.Results.Web.Client.Tests/KRAFT.Results.Web.Client.Tests.csproj --no-build --verbosity normal
     - name: E2E Test
       if: github.event_name == 'push' || steps.ui-changes.outputs.ui == 'true'
-      run: >-
-        dotnet test --no-build --verbosity normal
-        --filter "FullyQualifiedName~KRAFT.Results.Web.E2ETests"
+      run: dotnet test tests/KRAFT.Results.Web.E2ETests/KRAFT.Results.Web.E2ETests.csproj --no-build --verbosity normal
